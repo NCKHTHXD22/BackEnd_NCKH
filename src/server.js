@@ -1,5 +1,35 @@
 import express from 'express';
+import cors from "cors";
+
+import { ENV } from './api/config/env.js';
+import { connectDB } from './api/config/database.js'; 
+
+import floodTowerRoutes from "./api/routes/floodtower.routes.js";
+import floodWarningRoutes from "./api/routes/floodWarning.routes.js";
+import rainStationRoutes from "./api/routes/rainStation.routes.js";
+import waterLevelRoutes from "./api/routes/waterLevel.routes.js";
+
+import { logger } from "./api/middlewares/logger.js";
 
 const app = express();
 
-app.listen(5001,  () => console.log('Server is running on port 5001'));
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(logger);
+
+// Database
+connectDB();
+
+// Routes
+app.use("/api/flood-tower", floodTowerRoutes);
+app.use("/api/flood-warning", floodWarningRoutes);
+app.use("/api/rain-station", rainStationRoutes);
+app.use("/api/water-level", waterLevelRoutes);
+
+// Start Server
+const PORT = ENV.PORT || 5001;
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port: ${PORT}`);
+});
