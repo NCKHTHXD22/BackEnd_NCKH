@@ -3,23 +3,28 @@ export class BaseRepository {
         this.model = model;
     }
 
-    async findAll() {
-        return this.model.find();
+    findAll() {
+        return this.model.find({});
     }
 
-    async findById(id) {
-        return this.model.findOne({ id });
+    findOne(filter) {
+        return this.model.findOne(filter);
     }
 
-    async create(data) {
+    create(data) {
         return this.model.create(data);
     }
 
-    async update(id, data) {
-        return this.model.findOneAndUpdate({ id }, data, { new: true });
+    update(id, data) {
+        return this.model.findByIdAndUpdate(id, data, { new: true });
     }
 
-    async delete(id) {
-        return this.model.findOneAndDelete({ id });
+    delete(id) {
+        return this.model.findByIdAndDelete(id);
+    }
+
+    // ⭐ Thêm hàm này để fix lỗi
+    deleteMany(filter) {
+        return this.model.deleteMany(filter);
     }
 }

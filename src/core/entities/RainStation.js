@@ -1,33 +1,33 @@
 import mongoose from "mongoose";
-import Counter from "./Counter.js";
+
+const SubLocationSchema = new mongoose.Schema({
+    id: Number,
+    name: String,
+    type: String
+}, { _id: false });   // 👈 Quan trọng: không tạo _id cho subdocument
 
 const RainStationSchema = new mongoose.Schema({
-    id: { type: Number, unique: true },
+
+    uuid: { type: String, unique: true, required: true },
+
     name: String,
+    address: String,
+
     location: {
         lat: Number,
         lng: Number
     },
-    rainfall: {
-        today: Number,
-        lastHour: Number,
-        yesterday: Number,
-        hourlyData: [Number]
-    },
-    createdAt: { type: Date, default: Date.now }
-});
 
-RainStationSchema.pre("save", async function (next) {
-    if (this.id) return next();
+    // ⭐ DÙNG SUB-SCHEMA → KHÔNG ERROR
+    city: { type: SubLocationSchema, default: {} },
+    area: { type: SubLocationSchema, default: {} },
 
-    const counter = await Counter.findOneAndUpdate(
-        { model: "RainStation" },
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-    );
+    level: String,
+    color: String,
+    sumDepth: { type: Number, default: 0 },
 
-    this.id = counter.seq;
-    next();
-});
+    lastUpdate: { type: Date, default: Date.now }
+
+}, { versionKey: false });
 
 export default mongoose.model("RainStation", RainStationSchema);

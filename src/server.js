@@ -7,9 +7,13 @@ import { connectDB } from './api/config/database.js';
 import floodTowerRoutes from "./api/routes/floodtower.routes.js";
 import floodWarningRoutes from "./api/routes/floodWarning.routes.js";
 import rainStationRoutes from "./api/routes/rainStation.routes.js";
+import rainHistoryRoutes from "./api/routes/rainHistory.routes.js";
 import waterLevelRoutes from "./api/routes/waterLevel.routes.js";
 
 import { logger } from "./api/middlewares/logger.js";
+
+// ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
+import "./jobs/fetchRainData.job.js";
 
 const app = express();
 
@@ -25,6 +29,7 @@ connectDB();
 app.use("/api/flood-tower", floodTowerRoutes);
 app.use("/api/flood-warning", floodWarningRoutes);
 app.use("/api/rain-station", rainStationRoutes);
+app.use("/api/rain-history", rainHistoryRoutes);   // ⭐ PHẢI THÊM
 app.use("/api/water-level", waterLevelRoutes);
 
 // Start Server

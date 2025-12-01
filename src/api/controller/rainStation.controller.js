@@ -4,9 +4,11 @@ export const getAllRainStations = async (req, res) => {
     res.json(await rainStationService.getAll());
 };
 
-export const getRainStationById = async (req, res) => {
-    res.json(await rainStationService.getById(req.params.id));
+export const getRainStationByUUID = async (req, res) => {
+    res.json(await rainStationService.getByUUID(req.params.uuid));
 };
+
+
 
 export const createRainStation = async (req, res) => {
     res.json(await rainStationService.create(req.body));
