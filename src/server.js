@@ -9,6 +9,7 @@ import floodWarningRoutes from "./api/routes/floodWarning.routes.js";
 import rainStationRoutes from "./api/routes/rainStation.routes.js";
 import rainHistoryRoutes from "./api/routes/rainHistory.routes.js";
 import waterLevelRoutes from "./api/routes/waterLevel.routes.js";
+import forecastRoutes from "./api/routes/forecast.routes.js";
 
 import { logger } from "./api/middlewares/logger.js";
 
@@ -29,12 +30,12 @@ connectDB();
 app.use("/api/flood-tower", floodTowerRoutes);
 app.use("/api/flood-warning", floodWarningRoutes);
 app.use("/api/rain-station", rainStationRoutes);
-app.use("/api/rain-history", rainHistoryRoutes);   // ⭐ PHẢI THÊM
+app.use("/api/rain-history", rainHistoryRoutes);   
 app.use("/api/water-level", waterLevelRoutes);
-
+app.use("/api/forecast", forecastRoutes);
 // Start Server
 const PORT = ENV.PORT || 5001;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port: ${PORT}`);
+    console.log(` Server is running on port: ${PORT}`);
 });
