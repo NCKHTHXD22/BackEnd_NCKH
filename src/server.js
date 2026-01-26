@@ -10,12 +10,14 @@ import rainStationRoutes from "./api/routes/rainStation.routes.js";
 import rainHistoryRoutes from "./api/routes/rainHistory.routes.js";
 import waterLevelRoutes from "./api/routes/waterLevel.routes.js";
 import forecastRoutes from "./api/routes/forecast.routes.js";
-import rainlakeRoutes from "./api/routes/rainlake.routes.js";
+import rainlakeRoutes from "./api/routes/rainLake.routes.js";
+import rainlakeHistory from "./api/routes/rainLakeHistories.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
 import "./jobs/fetchRainData.job.js";
 import "./jobs/rainLake.job.js";
+import "./jobs/rainLakeHistory.job.js";
 const app = express();
 
 // Middlewares
@@ -34,6 +36,7 @@ app.use("/api/rain-history", rainHistoryRoutes);
 app.use("/api/water-level", waterLevelRoutes);
 app.use("/api/forecast", forecastRoutes);
 app.use("/api/rain-lake", rainlakeRoutes);
+app.use("/api/rain-lake-history", rainlakeHistory);
 // Start Server
 const PORT = ENV.PORT || 5001;
 
