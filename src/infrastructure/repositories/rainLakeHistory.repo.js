@@ -1,12 +1,19 @@
+// src/infrastructure/repositories/rainLakeHistory.repo.js
 import RainLakeHistory from '../../core/entities/RainLakeHistory.js';
 
 class RainLakeHistoryRepository {
-  create(data) {
-    return RainLakeHistory.create(data);
-  }
-
-  exists(Id_Lake, timestamp) {
-    return RainLakeHistory.exists({ Id_Lake, timestamp });
+  upsert({ Id_Lake, lakeName, sumDepth, level, timestamp }) {
+    return RainLakeHistory.findOneAndUpdate(
+      { Id_Lake, timestamp },
+      {
+        $set: {
+          lakeName,
+          sumDepth,
+          level
+        }
+      },
+      { upsert: true, new: true }
+    );
   }
 
   getByLake(Id_Lake) {
