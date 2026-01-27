@@ -5,6 +5,10 @@ class RainLakeHistoryRepository {
     return RainLakeHistory.create(data);
   }
 
+  exists(Id_Lake, timestamp) {
+    return RainLakeHistory.exists({ Id_Lake, timestamp });
+  }
+
   getByLake(Id_Lake) {
     return RainLakeHistory.find({ Id_Lake }).sort({ timestamp: -1 });
   }
@@ -14,10 +18,6 @@ class RainLakeHistoryRepository {
       Id_Lake,
       timestamp: { $gte: from, $lte: to }
     }).sort({ timestamp: 1 });
-  }
-
-  exists(Id_Lake, timestamp) {
-    return RainLakeHistory.exists({ Id_Lake, timestamp });
   }
 }
 

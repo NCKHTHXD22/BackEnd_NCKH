@@ -5,14 +5,12 @@ import { ENV } from '../api/config/env.js';
 (async () => {
   try {
     await mongoose.connect(ENV.MONGODB_URI);
-
-    console.log('🚀 Bắt đầu backfill RainLakeHistory...');
+    console.log(' Bắt đầu backfill RainLakeHistory...');
     await rainLakeHistoryService.backfillFromRainHistory();
-
-    console.log('🎉 Backfill hoàn tất');
+    console.log(' Backfill hoàn tất');
     process.exit();
   } catch (err) {
-    console.error('❌ Backfill lỗi:', err.message);
+    console.error(' Backfill lỗi:', err.message);
     process.exit(1);
   }
 })();
