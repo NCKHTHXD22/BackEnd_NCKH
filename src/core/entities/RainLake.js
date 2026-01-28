@@ -10,10 +10,18 @@ const RainLakeSchema = new mongoose.Schema(
 
     location: {
       type: { type: String, enum: ['Point'], default: 'Point' },
-      coordinates: { type: [Number], required: true } // [lon, lat]
+      coordinates: { type: [Number], required: true }
     },
 
     sumDepth: { type: Number, default: 0 },
+
+    // ✅ THÊM
+    level: {
+      type: String,
+      enum: ['Không mưa', 'Mưa nhỏ', 'Mưa vừa', 'Mưa lớn'],
+      default: 'Không mưa'
+    },
+
     lastUpdate: { type: Date, default: Date.now }
   },
   { timestamps: true, versionKey: false }
@@ -21,6 +29,4 @@ const RainLakeSchema = new mongoose.Schema(
 
 RainLakeSchema.index({ location: '2dsphere' });
 
-const RainLake = mongoose.model('RainLake', RainLakeSchema);
-
-export default RainLake;
+export default mongoose.model('RainLake', RainLakeSchema);

@@ -9,10 +9,15 @@ class RainLakeRepository {
     return RainLake.findOne({ Id_Lake });
   }
 
-  updateSumDepth(Id_Lake, sumDepth) {
+  // ✅ update cả sumDepth + level
+  updateFromHistory(Id_Lake, sumDepth, level, timestamp) {
     return RainLake.findOneAndUpdate(
       { Id_Lake },
-      { sumDepth, lastUpdate: new Date() },
+      {
+        sumDepth,
+        level,
+        lastUpdate: timestamp
+      },
       { new: true }
     );
   }
