@@ -20,3 +20,26 @@ export const getHistoryByRange = async (req, res) => {
 
     res.json(await rainHistoryService.getByRange(uuid, from, to));
 };
+
+ /* DELETE /rain-history/delete-by-date?date=YYYY-MM-DD
+ */
+export const deleteHistoryByDate = async (req, res) => {
+  const { date } = req.query;
+
+  if (!date) {
+    return res.status(400).json({ error: "Missing 'date' query" });
+  }
+
+  const start = new Date(`${date}T00:00:00.000Z`);
+  const end = new Date(`${date}T23:59:59.999Z`);
+
+  const result = await RainHistory.deleteMany({
+    timestamp: { $gte: start, $lte: end }
+  });
+
+  res.json({
+    date,
+    deletedCount: result.deletedCount
+  });
+};
+
