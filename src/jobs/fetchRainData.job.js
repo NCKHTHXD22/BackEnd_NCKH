@@ -1,37 +1,66 @@
 import cron from "node-cron";
-import axios from "axios";
-import { rainStationService } from "../services/rainStation.service.js";
+import RainHistory from "../core/entities/RainHistory.js";
+import { getRainDetailByDay } from "../services/external/vrain.service.js";
 
-async function fetchRainData() {
-    try {
-        const url = "https://vrain.vn/data/32.json";  // bạn đã kiểm tra rồi OK
+function normalizeIntervals(intervals) {
+  const result = {};
+  for (let h = 0; h < 24; h++) {
+    const hh = String(h).padStart(2, "0");
+    result[`${hh}:00`] = 0;
+  }
 
-        const { data } = await axios.get(url);
-
-        if (!Array.isArray(data)) return;
-
-        const uuidList = [];
-
-        for (const item of data) {
-            uuidList.push(item.station.uuid);
-
-            await rainStationService.upsertFromVrain(item);
-        }
-
-        // ⭐ XÓA TRẠM KHÔNG CÒN TRÊN WEBSITE
-        await rainStationService.deleteManyNotIn(uuidList);
-
-        console.log("✔ Đồng bộ mưa hoàn tất:", new Date().toLocaleString());
-
-    } catch (err) {
-        console.error("❌ Lỗi đồng bộ mưa:", err.message);
+  if (intervals && typeof intervals === "object") {
+    for (const [hour, value] of Object.entries(intervals)) {
+      result[hour] = Number(value);
     }
+  }
+
+  return result;
 }
 
-// Chạy mỗi 1 giờ
-cron.schedule("0 * * * *", fetchRainData);
+async function fetchRainOnce() {
+  try {
+    console.log(" [VRAIN] START FETCH");
 
-// Chạy ngay khi server khởi động
-fetchRainData();
+    const date = new Date().toISOString().slice(0, 10);
+    console.log(" DATE:", date);
 
-export default fetchRainData;
+    const stations = await getRainDetailByDay(date);
+    console.log(" STATIONS COUNT:", stations.length);
+
+    for (const st of stations) {
+      const intervals = normalizeIntervals(st.intervals);
+
+      console.log(`🏷️ STATION: ${st.name}`);
+
+      for (const [hour, value] of Object.entries(intervals)) {
+        const timestamp = new Date(`${date}T${hour}:00`);
+
+        await RainHistory.updateOne(
+          { uuid: st.sid, timestamp },
+          {
+            $setOnInsert: {
+              uuid: st.sid,
+              name: st.name,
+              sumDepth: value,
+              level: "RAIN",
+              color: "#4FC3F7",
+              timestamp
+            }
+          },
+          { upsert: true }
+        );
+      }
+    }
+
+    console.log("✅ [VRAIN] FETCH DONE");
+  } catch (err) {
+    console.error("❌ [VRAIN] ERROR:", err.message);
+  }
+}
+
+// chạy test
+fetchRainOnce();
+
+// cron mỗi giờ
+cron.schedule("0 * * * *", fetchRainOnce);
