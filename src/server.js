@@ -12,6 +12,7 @@ import waterLevelRoutes from "./api/routes/waterLevel.routes.js";
 import forecastRoutes from "./api/routes/forecast.routes.js";
 import rainlakeRoutes from "./api/routes/rainLake.routes.js";
 import rainlakeHistory from "./api/routes/rainLakeHistories.routes.js";
+import rainLake_QLake from "./api/routes/rainLakeQLake.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
@@ -37,6 +38,7 @@ app.use("/api/water-level", waterLevelRoutes);
 app.use("/api/forecast", forecastRoutes);
 app.use("/api/rain-lake", rainlakeRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
+app.use("/api/rain-lake-qlake", rainLake_QLake);
 // Start Server
 const PORT = ENV.PORT || 5001;
 

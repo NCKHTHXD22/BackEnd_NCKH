@@ -12,11 +12,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "axios": "^1.13.2",
+    "axios": "^1.13.4",
+    "axios-cookiejar-support": "^6.0.5",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mongoose": "^9.0.0",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "playwright": "^1.58.1",
+    "puppeteer": "^24.36.1",
+    "tough-cookie": "^6.0.0"
   }
 }
