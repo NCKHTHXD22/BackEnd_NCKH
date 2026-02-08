@@ -6,7 +6,21 @@ async function fetchRainData() {
     try {
         const url = "https://vrain.vn/data/32.json";  // bạn đã kiểm tra rồi OK
 
-        const { data } = await axios.get(url);
+        const { data } = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Origin': 'https://vrain.vn',
+                'Referer': 'https://vrain.vn/',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'Connection': 'keep-alive'
+            },
+            timeout: 30000
+        });
 
         if (!Array.isArray(data)) return;
 
