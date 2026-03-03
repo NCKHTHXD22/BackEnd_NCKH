@@ -31,3 +31,7 @@ export async function getRainByDay(from, to) {
 
   return res.data;
 }
+
+export async function getRainDetailByDay(date) {
+  return getRainByDay(date, date);
+}
