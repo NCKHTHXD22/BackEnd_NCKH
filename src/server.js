@@ -40,74 +40,103 @@ app.use("/api/rain-lake", rainlakeRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
 app.use("/api/rain-lake-qlake", rainLake_QLake);
 
-// ⚡ Endpoint tạm: Backfill RainHistory + RainLakeHistory từ API public
+// ⚡ Endpoint tạm: Backfill RainHistory + RainLakeHistory từ API private (dữ liệu thực)
 import axios from 'axios';
 import RainHistory from './core/entities/RainHistory.js';
 import RainStation from './core/entities/RainStation.js';
 import rainLakeHistoryService from './services/rainLakeHistory.service.js';
+import { getRainDetailByDay } from './services/external/vrain.service.js';
+
+const HOUR_REGEX = /^([01]\d|2[0-3]):00$/;
+
+function normalizeIntervals(intervals) {
+    const result = {};
+    for (let h = 0; h < 24; h++) {
+        result[`${String(h).padStart(2, '0')}:00`] = 0;
+    }
+    if (intervals && typeof intervals === 'object') {
+        for (const [h, v] of Object.entries(intervals)) {
+            if (HOUR_REGEX.test(h)) result[h] = Number(v) || 0;
+        }
+    }
+    return result;
+}
 
 app.get("/api/backfill-rain", async (req, res) => {
     try {
         const days = Number(req.query.days) || 7;
-        console.log(`🔄 [BACKFILL] Bắt đầu backfill ${days} ngày...`);
-
-        // 1. Lấy dữ liệu realtime từ vrain.vn
-        const { data: stations } = await axios.get('https://vrain.vn/data/32.json', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 Chrome/121.0.0.0',
-                'Accept': 'application/json',
-                'Origin': 'https://vrain.vn',
-                'Referer': 'https://vrain.vn/'
-            },
-            timeout: 30000
-        });
-
-        if (!Array.isArray(stations)) return res.json({ error: 'Không lấy được dữ liệu' });
+        console.log(`🔄 [BACKFILL-PRIVATE] Bắt đầu backfill ${days} ngày...`);
 
         const now = new Date();
+        let totalInserted = 0;
+        let totalDays = 0;
 
-        // 2. Cập nhật RainStation + Backfill RainHistory
-        let totalOps = 0;
-        const bulkOps = [];
+        for (let d = 0; d < days; d++) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - d);
+            const dateStr = date.toISOString().slice(0, 10);
 
-        for (const item of stations) {
-            const s = item.station;
+            console.log(`📅 [BACKFILL] ${dateStr}...`);
 
-            // Cập nhật RainStation
-            await RainStation.findOneAndUpdate(
-                { uuid: s.uuid },
-                { $set: { uuid: s.uuid, name: s.name || '', location: { lat: Number(s.lat) || 0, lng: Number(s.lng) || 0 }, sumDepth: Number(item.sumDepth) || 0, level: item.level || '', lastUpdate: new Date() } },
-                { upsert: true }
-            );
+            let stations;
+            try {
+                stations = await getRainDetailByDay(dateStr);
+            } catch (e) {
+                console.log(`  ⚠️ Không lấy được dữ liệu ngày ${dateStr}: ${e.message}`);
+                continue;
+            }
 
-            // Tạo records cho mỗi giờ trong N ngày
-            const sumDepth = Number(item.sumDepth) || 0;
-            for (let d = 0; d < days; d++) {
-                for (let h = 0; h < 24; h++) {
-                    const ts = new Date(now);
-                    ts.setDate(ts.getDate() - d);
-                    ts.setHours(h, 0, 0, 0);
-                    if (ts > now) continue;
+            if (!stations?.length) {
+                console.log(`  ⚠️ Không có dữ liệu ngày ${dateStr}`);
+                continue;
+            }
+
+            const isToday = dateStr === now.toISOString().slice(0, 10);
+            const currentHour = now.getUTCHours();
+            const bulkOps = [];
+
+            for (const st of stations) {
+                const intervals = normalizeIntervals(st.intervals);
+
+                for (const [hour, value] of Object.entries(intervals)) {
+                    if (!HOUR_REGEX.test(hour)) continue;
+
+                    const h = Number(hour.slice(0, 2));
+                    if (isToday && h > currentHour) continue;
+
+                    const ts = new Date(`${dateStr}T${hour}:00.000Z`);
+                    if (isNaN(ts.getTime())) continue;
 
                     bulkOps.push({
                         updateOne: {
-                            filter: { uuid: s.uuid, timestamp: ts },
-                            update: { $set: { uuid: s.uuid, name: s.name || '', sumDepth, level: sumDepth > 0 ? item.level : 'Không mưa', color: sumDepth > 0 ? item.color : '#535353', timestamp: ts } },
+                            filter: { uuid: st.sid, timestamp: ts },
+                            update: {
+                                $set: {
+                                    uuid: st.sid,
+                                    name: st.name || '',
+                                    sumDepth: value,
+                                    level: value > 0 ? 'RAIN' : 'Không mưa',
+                                    color: value > 0 ? '#4FC3F7' : '#535353',
+                                    timestamp: ts
+                                }
+                            },
                             upsert: true
                         }
                     });
                 }
             }
+
+            if (bulkOps.length) {
+                const result = await RainHistory.bulkWrite(bulkOps, { ordered: false });
+                totalInserted += result.upsertedCount + result.modifiedCount;
+                console.log(`  ✅ ${dateStr}: ${result.upsertedCount} inserted, ${result.modifiedCount} modified`);
+            }
+            totalDays++;
         }
 
-        // Bulk write
-        for (let i = 0; i < bulkOps.length; i += 5000) {
-            const result = await RainHistory.bulkWrite(bulkOps.slice(i, i + 5000), { ordered: false });
-            totalOps += result.upsertedCount;
-        }
-
-        // 3. Backfill RainLakeHistory (IDW)
-        let lakeHistoryCount = 0;
+        // Backfill RainLakeHistory (IDW) cho các ngày đã xử lý
+        console.log('🔄 [BACKFILL] Tính IDW cho RainLakeHistory...');
+        let lakeCount = 0;
         for (let d = days - 1; d >= 0; d--) {
             for (let h = 0; h < 24; h++) {
                 const ts = new Date(now);
@@ -115,14 +144,14 @@ app.get("/api/backfill-rain", async (req, res) => {
                 ts.setHours(h, 0, 0, 0);
                 if (ts > now) continue;
                 await rainLakeHistoryService.generateAt(ts);
-                lakeHistoryCount++;
+                lakeCount++;
             }
         }
 
-        console.log(`✅ [BACKFILL] Done: ${totalOps} RainHistory, ${lakeHistoryCount} RainLakeHistory`);
-        res.json({ success: true, rainHistoryInserted: totalOps, rainLakeHistoryGenerated: lakeHistoryCount, stations: stations.length });
+        console.log(`✅ [BACKFILL-PRIVATE] Done: ${totalDays} days, ${totalInserted} rain records, ${lakeCount} lake records`);
+        res.json({ success: true, daysProcessed: totalDays, rainHistoryRecords: totalInserted, rainLakeHistoryGenerated: lakeCount });
     } catch (err) {
-        console.error('❌ [BACKFILL] ERROR:', err.message);
+        console.error('❌ [BACKFILL-PRIVATE] ERROR:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
