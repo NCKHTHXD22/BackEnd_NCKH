@@ -7,6 +7,12 @@ import { getRainDetailByDay } from "../services/external/vrain.service.js";
 const HOUR_REGEX = /^([01]\d|2[0-3]):00$/;
 
 // ======== PHẦN 1: CẬP NHẬT REALTIME TỪ API PUBLIC ========
+function toHourlyBucket(date) {
+  const d = new Date(date);
+  d.setMinutes(0, 0, 0);
+  return d;
+}
+
 async function fetchRainStationRealtime() {
   try {
     const url = "https://vrain.vn/data/32.json";
@@ -28,6 +34,7 @@ async function fetchRainStationRealtime() {
     }
 
     const uuidList = [];
+    const bucket = toHourlyBucket(new Date());
 
     for (const item of data) {
       const s = item.station;
@@ -63,13 +70,28 @@ async function fetchRainStationRealtime() {
         },
         { upsert: true, new: true }
       );
+
+      // ✅ Lưu lịch sử mưa theo giờ (đảm bảo RainHistory luôn có dữ liệu từ API public)
+      await RainHistory.updateOne(
+        { uuid: s.uuid, timestamp: bucket },
+        {
+          $set: {
+            name: s.name || "",
+            sumDepth: Number(item.sumDepth) || 0,
+            level: item.level || "Không mưa",
+            color: item.color || "#535353"
+          }
+        },
+        { upsert: true }
+      );
     }
 
-    console.log("✅ [VRAIN REALTIME] Cập nhật", uuidList.length, "trạm");
+    console.log("✅ [VRAIN REALTIME] Cập nhật", uuidList.length, "trạm + lịch sử");
   } catch (err) {
     console.error("❌ [VRAIN REALTIME] ERROR:", err.message);
   }
 }
+
 
 // ======== PHẦN 2: CẬP NHẬT LỊCH SỬ TỪ API PRIVATE ========
 function normalizeIntervals(intervals) {

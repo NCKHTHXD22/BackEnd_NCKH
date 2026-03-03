@@ -1,6 +1,7 @@
 // src/services/rainLakeHistory.service.js
 import RainLake from '../core/entities/RainLake.js';
 import RainHistory from '../core/entities/RainHistory.js';
+import RainStation from '../core/entities/RainStation.js';
 import rainLakeHistoryRepo from '../infrastructure/repositories/rainLakeHistory.repo.js';
 
 /* ===== CẤU HÌNH ===== */
@@ -32,8 +33,8 @@ function distance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
 
   return 2 * R * Math.asin(Math.sqrt(a));
 }
@@ -104,9 +105,11 @@ class RainLakeHistoryService {
         }).sort({ timestamp: -1 });
 
         if (latest) {
+          // Lấy lat/lon từ RainStation (RainHistory không có lat/lon)
+          const station = await RainStation.findOne({ uuid });
           sources.push({
-            lat: latest.lat,
-            lon: latest.lon,
+            lat: station?.location?.lat ?? 0,
+            lon: station?.location?.lng ?? 0,
             sumDepth: latest.sumDepth ?? 0
           });
         }
