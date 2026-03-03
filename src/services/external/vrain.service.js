@@ -1,24 +1,33 @@
 import axios from "axios";
 
-const BASE_URL = "https://vrain.vn/api/vrain/private/v1";
-const GROUP_ID = 29; // Đà Nẵng
+const vrainClient = axios.create({
+  baseURL: "https://vrain.vn",
+  timeout: 30000,
+  withCredentials: true,
+  headers: {
+    Accept: "application/json, text/plain, */*",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+    Referer: "https://vrain.vn/home/29/dashboard",
+    Origin: "https://vrain.vn",
+    "X-Requested-With": "XMLHttpRequest",
 
-export async function getRainDetailByDay(date) {
-  const res = await axios.get(
-    `${BASE_URL}/groups/${GROUP_ID}/stats/details`,
+    // 🔴 BẮT BUỘC
+    "X-Org-Uid": process.env.VRAIN_ORG_UID,
+    "X-Vrain-User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+
+    Cookie: process.env.VRAIN_COOKIE
+  }
+});
+
+export async function getRainByDay(from, to) {
+  const res = await vrainClient.get(
+    "/api/vrain/private/v1/organizations/details",
     {
-      params: { from: date, to: date },
-      headers: {
-        Cookie: process.env.VRAIN_COOKIE,
-        Accept: "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36",
-        Referer: "https://vrain.vn/home/29/dashboard"
-      }
+      params: { from, to }
     }
   );
 
-  // 👉 TOÀN BỘ BẢNG CHI TIẾT
-  return res.data.stats[0].stations;
+  return res.data;
 }

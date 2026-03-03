@@ -2,7 +2,9 @@ export class BaseRepository {
     constructor(model) {
         this.model = model;
     }
-
+    find(filter) {
+    return this.model.find(filter);
+     }
     findAll() {
         return this.model.find({});
     }
@@ -22,7 +24,7 @@ export class BaseRepository {
     delete(id) {
         return this.model.findByIdAndDelete(id);
     }
-
+    
     // ⭐ Thêm hàm này để fix lỗi
     deleteMany(filter) {
         return this.model.deleteMany(filter);

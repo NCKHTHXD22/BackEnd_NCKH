@@ -40,6 +40,8 @@ export default class ForecastService {
     const update = {};
 
     if (data.Value != null) update.value = data.Value;
+    if (data.P10 != null) update.p10 = data.P10;
+    if (data.P90 != null) update.p90 = data.P90;
 
     if (data.Actual != null) {
       update.actual = data.Actual;
@@ -88,6 +90,8 @@ export default class ForecastService {
       reservoirId: item.ReservoirId,
       targetTime: new Date(item.TargetTime),
       value: item.Value,
+      p10: item.P10 ?? null,
+      p90: item.P90 ?? null,
       actual,
       error,
       percentError,
@@ -101,6 +105,8 @@ export default class ForecastService {
     ReservoirId: doc.reservoirId,
     TargetTime: doc.targetTime,
     Value: doc.value,
+    P10: doc.p10 ?? null,
+    P90: doc.p90 ?? null,
     CreatedAt: doc.createdAt,
     Actual: doc.actual ?? null,
     Error: doc.error ?? null,

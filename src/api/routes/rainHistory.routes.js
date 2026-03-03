@@ -1,9 +1,9 @@
 import express from "express";
 import {
-    getHistoryByUUID,
-    getHistory24h,
-    getHistoryByRange,
-    deleteHistoryByDate
+  getHistoryByUUID,
+  getHistory24h,
+  getHistoryByRange,
+  deleteHistoryByDate
 } from "../controller/rainHistory.controller.js";
 
 const router = express.Router();

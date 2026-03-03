@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 const ForecastSchema = new mongoose.Schema({
   reservoirId: { type: Number, required: true },
   targetTime: { type: Date, required: true },
-  value: { type: Number, required: true },
+  value: { type: Number, required: true }, // P50
+  p10: { type: Number, default: null },
+  p90: { type: Number, default: null },
   actual: { type: Number, default: null },
   error: { type: Number, default: null },
   percentError: { type: Number, default: null },

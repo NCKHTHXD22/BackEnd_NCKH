@@ -19,6 +19,7 @@ import { logger } from "./api/middlewares/logger.js";
 import "./jobs/fetchRainData.job.js";
 import "./jobs/rainLake.job.js";
 import "./jobs/rainLakeHistory.job.js";
+import "./jobs/lstmForecast.job.js";
 const app = express();
 
 // Middlewares

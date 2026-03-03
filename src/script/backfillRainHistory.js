@@ -30,26 +30,10 @@ function addDays(d, n) {
   return x;
 }
 
-async function getExistingHours(uuid, dateStr) {
-  const start = new Date(`${dateStr}T00:00:00.000Z`);
-  const end = new Date(`${dateStr}T23:59:59.999Z`);
-
-  const docs = await RainHistory.find(
-    { uuid, timestamp: { $gte: start, $lte: end } },
-    { timestamp: 1 }
-  ).lean();
-
-  return new Set(
-    docs.map(d =>
-      `${String(new Date(d.timestamp).getUTCHours()).padStart(2, "0")}:00`
-    )
-  );
-}
-
 async function backfill() {
   await connectDB();
 
-  let current = new Date("2026-02-02T00:00:00.000Z");
+  let current = new Date("2026-02-03T00:00:00.000Z");
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
@@ -66,42 +50,48 @@ async function backfill() {
     const isToday = dateStr === new Date().toISOString().slice(0, 10);
     const currentHour = new Date().getUTCHours();
 
-    const bulkDocs = [];
+    const ops = [];
 
     for (const st of stations) {
       const intervals = normalizeIntervals(st.intervals);
-      const existingHours = await getExistingHours(st.sid, dateStr);
 
       for (const [hour, value] of Object.entries(intervals)) {
         if (!HOUR_REGEX.test(hour)) continue;
 
         const h = Number(hour.slice(0, 2));
         if (isToday && h > currentHour) continue;
-        if (existingHours.has(hour)) continue;
 
         const ts = new Date(`${dateStr}T${hour}:00.000Z`);
         if (isNaN(ts.getTime())) continue;
 
-        bulkDocs.push({
-          uuid: st.sid,
-          name: st.name,
-          sumDepth: value,
-          level: value > 0 ? "RAIN" : "Không mưa",
-          color: value > 0 ? "#4FC3F7" : "#535353",
-          timestamp: ts
+        ops.push({
+          updateOne: {
+            filter: { uuid: st.sid, timestamp: ts },
+            update: {
+              $set: {
+                uuid: st.sid,
+                name: st.name,
+                sumDepth: value,
+                level: value > 0 ? "RAIN" : "Không mưa",
+                color: value > 0 ? "#4FC3F7" : "#535353",
+                timestamp: ts
+              }
+            },
+            upsert: true
+          }
         });
       }
     }
 
-    if (bulkDocs.length) {
-      await RainHistory.insertMany(bulkDocs, { ordered: false });
-      console.log(`✅ Inserted ${bulkDocs.length} records`);
+    if (ops.length) {
+      await RainHistory.bulkWrite(ops, { ordered: false });
+      console.log(`✅ UPSERT ${ops.length} records`);
     }
 
     current = addDays(current, 1);
   }
 
-  console.log("✅ BACKFILL DONE (SAFE MODE)");
+  console.log("✅ BACKFILL DONE (SMART OVERWRITE)");
   await mongoose.disconnect();
 }
 
