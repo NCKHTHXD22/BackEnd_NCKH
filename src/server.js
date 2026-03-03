@@ -92,7 +92,7 @@ app.get("/api/backfill-rain", async (req, res) => {
                     bulkOps.push({
                         updateOne: {
                             filter: { uuid: s.uuid, timestamp: ts },
-                            update: { $setOnInsert: { uuid: s.uuid, name: s.name || '', sumDepth, level: sumDepth > 0 ? item.level : 'Không mưa', color: sumDepth > 0 ? item.color : '#535353', timestamp: ts } },
+                            update: { $set: { uuid: s.uuid, name: s.name || '', sumDepth, level: sumDepth > 0 ? item.level : 'Không mưa', color: sumDepth > 0 ? item.color : '#535353', timestamp: ts } },
                             upsert: true
                         }
                     });
