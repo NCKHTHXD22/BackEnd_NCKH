@@ -1,10 +1,9 @@
 import cron from "node-cron";
 import axios from "axios";
 import Forecast from "../core/entities/Forecast.js";
-import { RESERVOIRS } from "../LSTM_Py_Backend/lstm_service/config/reservoirs.js"; // Note: this path might need adjustment based on how files are exported
+import { RESERVOIRS } from "../api/config/reservoirs.js";
 
-// We'll use a hardcoded list of reservoir IDs if the import fails
-const RES_IDS = [47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62];
+const RES_IDS = Object.keys(RESERVOIRS).map(Number);
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8000/predict";
 
