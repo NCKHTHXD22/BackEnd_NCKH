@@ -101,8 +101,8 @@ class RainLakeHistoryService {
       for (const uuid of uuids) {
         const latest = await RainHistory.findOne({
           uuid,
-          timestamp: { $lte: bucket }
-        }).sort({ timestamp: -1 });
+          timestamp: bucket
+        });
 
         if (latest) {
           // Lấy lat/lon từ RainStation (RainHistory không có lat/lon)
