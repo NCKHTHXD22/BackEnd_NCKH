@@ -13,7 +13,7 @@ const vrainClient = axios.create({
     "X-Requested-With": "XMLHttpRequest",
 
     // 🔴 BẮT BUỘC
-    "X-Org-Uid": process.env.VRAIN_ORG_UID,
+    "X-Org-Uid": process.env.VRAIN_ORG_UID || '1f3402a7-8c40-4517-bf5e-be1f77330056',
     "X-Vrain-User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
 
