@@ -117,6 +117,78 @@ app.get("/api/reset-rain", async (req, res) => {
     }
 });
 
+// ⚡ Endpoint: Backfill lịch sử mưa từ Vrain Private API
+import { getRainDetailByDay } from './services/external/vrain.service.js';
+
+app.get("/api/backfill-rain", async (req, res) => {
+    try {
+        const days = Math.min(Number(req.query.days) || 7, 30);
+        console.log(`🔄 [BACKFILL] Lấy lịch sử ${days} ngày từ Vrain Private API...`);
+
+        const now = new Date();
+        let totalInserted = 0;
+        let totalDays = 0;
+        const errors = [];
+
+        for (let d = 0; d < days; d++) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - d);
+            const dateStr = date.toISOString().slice(0, 10);
+
+            try {
+                const stations = await getRainDetailByDay(dateStr);
+                if (!stations?.length) { errors.push(`${dateStr}: empty`); continue; }
+
+                console.log(`📅 ${dateStr}: ${stations.length} trạm, sample intervals: ${JSON.stringify(stations[0]?.intervals || {}).slice(0, 200)}`);
+
+                const bulkOps = [];
+                for (const st of stations) {
+                    if (!st.intervals || typeof st.intervals !== 'object') continue;
+                    for (const [hour, value] of Object.entries(st.intervals)) {
+                        if (!/^([01]\d|2[0-3]):00$/.test(hour)) continue;
+                        if (d === 0 && Number(hour.slice(0, 2)) > now.getUTCHours()) continue;
+                        const ts = new Date(`${dateStr}T${hour}:00.000Z`);
+                        if (isNaN(ts.getTime())) continue;
+                        bulkOps.push({
+                            updateOne: {
+                                filter: { uuid: st.sid, timestamp: ts },
+                                update: { $set: { uuid: st.sid, name: st.name || '', sumDepth: Number(value) || 0, level: value > 0 ? 'RAIN' : 'Không mưa', color: value > 0 ? '#4FC3F7' : '#535353', timestamp: ts } },
+                                upsert: true
+                            }
+                        });
+                    }
+                }
+                if (bulkOps.length) {
+                    const result = await RainHistory.bulkWrite(bulkOps, { ordered: false });
+                    totalInserted += (result.upsertedCount || 0) + (result.modifiedCount || 0);
+                    console.log(`  ✅ ${dateStr}: ${result.upsertedCount} new, ${result.modifiedCount} updated`);
+                }
+                totalDays++;
+            } catch (e) { errors.push(`${dateStr}: ${e.message}`); console.log(`  ⚠️ ${dateStr}: ${e.message}`); }
+        }
+
+        // IDW
+        let lakeCount = 0;
+        if (totalInserted > 0) {
+            console.log('🔄 Tính IDW cho RainLakeHistory...');
+            for (let d = days - 1; d >= 0; d--) {
+                for (let h = 0; h < 24; h++) {
+                    const ts = new Date(now); ts.setDate(ts.getDate() - d); ts.setHours(h, 0, 0, 0);
+                    if (ts > now) continue;
+                    await rainLakeHistoryService.generateAt(ts);
+                    lakeCount++;
+                }
+            }
+        }
+
+        console.log(`✅ [BACKFILL] Done: ${totalDays}d, ${totalInserted} rain, ${lakeCount} lake`);
+        res.json({ success: true, daysProcessed: totalDays, rainRecords: totalInserted, lakeRecords: lakeCount, errors });
+    } catch (err) {
+        console.error('❌ [BACKFILL] ERROR:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Start Server
 const PORT = ENV.PORT || 5001;
 
