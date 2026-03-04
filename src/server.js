@@ -189,6 +189,32 @@ app.get("/api/backfill-rain", async (req, res) => {
     }
 });
 
+// 🔍 Debug: Test vrain private API trực tiếp
+app.get("/api/debug-vrain", async (req, res) => {
+    const cookie = '_account_sid=s%3Ax2KdKSjpoOnFpftBpyGF2gbD4ZqdlZyC.QtGGFu3RqPb3NrrekR8iky4PcDndIHSP2NK5Q4YBTEE ;sid=3094d396-3c92-42e7-8954-32ac8675d14a';
+    const orgUid = '1f3402a7-8c40-4517-bf5e-be1f77330056';
+    const date = req.query.date || new Date().toISOString().slice(0, 10);
+
+    try {
+        const r = await axios.get('https://vrain.vn/api/vrain/private/v1/organizations/details', {
+            params: { from: date, to: date },
+            headers: {
+                Cookie: cookie,
+                'X-Org-Uid': orgUid,
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'User-Agent': 'Mozilla/5.0 Chrome/120 Safari/537.36',
+                Referer: 'https://vrain.vn/home/29/dashboard',
+                Origin: 'https://vrain.vn'
+            },
+            timeout: 30000
+        });
+        res.json({ success: true, cookieUsed: cookie.slice(0, 50) + '...', dataKeys: Object.keys(r.data || {}), sample: JSON.stringify(r.data).slice(0, 500) });
+    } catch (err) {
+        res.json({ success: false, status: err.response?.status, error: err.message, cookieUsed: cookie.slice(0, 50) + '...', responseData: err.response?.data });
+    }
+});
+
 // Start Server
 const PORT = ENV.PORT || 5001;
 
