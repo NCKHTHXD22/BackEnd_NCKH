@@ -13,11 +13,11 @@ const vrainClient = axios.create({
     "X-Requested-With": "XMLHttpRequest",
 
     // 🔴 BẮT BUỘC
-    "X-Org-Uid": process.env.VRAIN_ORG_UID || '1f3402a7-8c40-4517-bf5e-be1f77330056',
+    "X-Org-Uid": '1f3402a7-8c40-4517-bf5e-be1f77330056',
     "X-Vrain-User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
 
-    Cookie: process.env.VRAIN_COOKIE || '_account_sid=s%3Ax2KdKSjpoOnFpftBpyGF2gbD4ZqdlZyC.QtGGFu3RqPb3NrrekR8iky4PcDndIHSP2NK5Q4YBTEE ;sid=3094d396-3c92-42e7-8954-32ac8675d14a'
+    Cookie: '_account_sid=s%3Ax2KdKSjpoOnFpftBpyGF2gbD4ZqdlZyC.QtGGFu3RqPb3NrrekR8iky4PcDndIHSP2NK5Q4YBTEE ;sid=3094d396-3c92-42e7-8954-32ac8675d14a'
   }
 });
 
