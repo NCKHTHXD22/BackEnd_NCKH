@@ -189,9 +189,9 @@ app.get("/api/backfill-rain", async (req, res) => {
     }
 });
 
-// 🔍 Debug: Test vrain private API trực tiếp
+// 🔍 Debug + Backfill: Nhận cookie qua query param ?cookie=...
 app.get("/api/debug-vrain", async (req, res) => {
-    const cookie = '_account_sid=s%3Ax2KdKSjpoOnFpftBpyGF2gbD4ZqdlZyC.QtGGFu3RqPb3NrrekR8iky4PcDndIHSP2NK5Q4YBTEE ;sid=3094d396-3c92-42e7-8954-32ac8675d14a';
+    const cookie = req.query.cookie || 'sid=3094d396-3c92-42e7-8954-32ac8675d14a';
     const orgUid = '1f3402a7-8c40-4517-bf5e-be1f77330056';
     const date = req.query.date || new Date().toISOString().slice(0, 10);
 
@@ -209,9 +209,9 @@ app.get("/api/debug-vrain", async (req, res) => {
             },
             timeout: 30000
         });
-        res.json({ success: true, cookieUsed: cookie.slice(0, 50) + '...', dataKeys: Object.keys(r.data || {}), sample: JSON.stringify(r.data).slice(0, 500) });
+        res.json({ success: true, cookieUsed: cookie.slice(0, 30) + '...', dataType: typeof r.data, dataKeys: Object.keys(r.data || {}), sample: JSON.stringify(r.data).slice(0, 1000) });
     } catch (err) {
-        res.json({ success: false, status: err.response?.status, error: err.message, cookieUsed: cookie.slice(0, 50) + '...', responseData: err.response?.data });
+        res.json({ success: false, status: err.response?.status, error: err.message, cookieUsed: cookie.slice(0, 30) + '...', responseData: err.response?.data });
     }
 });
 
