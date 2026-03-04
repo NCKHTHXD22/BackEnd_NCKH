@@ -1,0 +1,122 @@
+/* Reset mặc định để full screen */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Nền gradient full màn hình */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;   /* full chiều cao */
+  width: 100vw;    /* full chiều rộng */
+  background: linear-gradient(135deg, #7f00ff, #3b82f6, #06b6d4);
+}
+
+/* Form login */
+.login-box {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 350px;
+  color: #fff;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 20px 50px rgba(59, 130, 246, 0.4);
+}
+
+/* Title */
+.login-box h2 {
+  margin-bottom: 10px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Input */
+.login-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 14px;
+}
+
+.login-box input::placeholder {
+  color: #ddd;
+}
+
+/* Nút Sign In */
+.login-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background: linear-gradient(to right, #3b82f6, #06b6d4);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.3s ease;
+}
+
+.login-box button:hover {
+  background: linear-gradient(to right, #2563eb, #0891b2);
+}
+
+/* Link phụ */
+.login-box .options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.login-box .options a {
+  color: #eee;
+  text-decoration: none;
+}
+
+.login-box .options a:hover {
+  text-decoration: underline;
+}
+
+/* Đăng nhập bằng mạng xã hội */
+.social-login {
+  margin-top: 20px;
+}
+
+.social-login button {
+  width: 48%;
+  margin: 5px 1%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.google-btn {   
+  background: #fff;
+  color: #333;
+}
+
+.github-btn {
+  background: #333;
+  color: #fff;
+}

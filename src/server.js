@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from "cors";
+import { clerkMiddleware } from "@clerk/express";
 
 import { ENV } from './api/config/env.js';
 import { connectDB } from './api/config/database.js';
@@ -13,6 +14,16 @@ import forecastRoutes from "./api/routes/forecast.routes.js";
 import rainlakeRoutes from "./api/routes/rainLake.routes.js";
 import rainlakeHistory from "./api/routes/rainLakeHistories.routes.js";
 import rainLake_QLake from "./api/routes/rainLakeQLake.routes.js";
+
+// Backend Integration Routes
+import userRoutes from "./api/routes/user.routes.js";
+import adminRoutes from "./api/routes/admin.routes.js";
+import adminAuthRoutes from "./api/routes/adminAuth.routes.js";
+import floodPostRoutes from "./api/routes/floodpost.routes.js";
+import alertRoutes from "./api/routes/alert.routes.js";
+import helpRoutes from "./api/routes/help.routes.js";
+import notificationRoutes from "./api/routes/notification.routes.js";
+
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
@@ -25,6 +36,7 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(clerkMiddleware());
 app.use(logger);
 
 // Database
@@ -40,6 +52,15 @@ app.use("/api/forecast", forecastRoutes);
 app.use("/api/rain-lake", rainlakeRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
 app.use("/api/rain-lake-qlake", rainLake_QLake);
+
+// Backend Integration Endpoints
+app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/posts", floodPostRoutes);
+app.use("/api/alerts", alertRoutes);
+app.use("/api/help", helpRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // ⚡ Endpoint: Xóa dữ liệu cũ + seed dữ liệu mới từ API public (chỉ giờ hiện tại)
 import axios from 'axios';

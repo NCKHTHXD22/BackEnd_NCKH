@@ -1,0 +1,87 @@
+/* Container & Title */
+/* Nền mặc định */
+body {
+  background-color: #f8f9fa; /* nền sáng */
+  color: #111;
+}
+
+/* Khi dark mode */
+.dark body {
+  background-color: #1a202c; /* nền tối */
+  color: #e2e8f0;
+}
+
+/* Container của dashboard cũng theo theme */
+.dashboard-container {
+  background-color: inherit; /* lấy theo body */
+  min-height: 100vh;
+}
+
+.dashboard-container {
+  @apply p-5;
+}
+
+.dashboard-title {
+  @apply text-2xl font-bold mb-5;
+}
+
+/* Grid layout */
+.dashboard-grid {
+  @apply grid gap-5;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Card chung */
+.dashboard-card {
+  @apply flex items-center justify-between rounded-lg p-5 cursor-pointer transition shadow-md;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-card .info {
+  @apply flex flex-col;
+}
+
+.dashboard-card .info h3 {
+  @apply text-2xl font-bold m-0;
+}
+
+.dashboard-card .info p {
+  @apply text-sm m-0;
+}
+
+.dashboard-card .icon {
+  @apply text-4xl opacity-20;
+}
+
+/* Màu riêng cho từng card */
+.bg-blue {
+  background-color: #007bff;
+  color: white;
+}
+.bg-yellow {
+  background-color: #ffc107;
+  color: black;
+}
+.bg-green {
+  background-color: #28a745;
+  color: white;
+}
+.bg-red {
+  background-color: #dc3545;
+  color: white;
+}
+.bg-cyan {
+  background-color: #17a2b8;
+  color: white;
+}
+
+/* Dark mode chỉnh lại màu */
+.dark .dashboard-card.bg-blue { background-color: #1d4ed8; }
+.dark .dashboard-card.bg-yellow { background-color: #d97706; color: white; }
+.dark .dashboard-card.bg-green { background-color: #15803d; }
+.dark .dashboard-card.bg-red { background-color: #b91c1c; }
+.dark .dashboard-card.bg-cyan { background-color: #0e7490; }
