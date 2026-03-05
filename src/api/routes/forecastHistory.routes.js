@@ -3,6 +3,21 @@ import ForecastHistory from '../../core/entities/ForecastHistory.js';
 
 const router = Router();
 
+// [TEMPORARY MIGRATION ROUTE] Drop old collection
+router.get('/utils/drop-old-collection', async (req, res) => {
+    try {
+        const db = ForecastHistory.db.db;
+        await db.collection('forecasthistories').drop();
+        res.json({ success: true, message: "Dropped old collection 'forecasthistories'" });
+    } catch (err) {
+        if (err.codeName === 'NamespaceNotFound') {
+            res.json({ success: true, message: "Collection 'forecasthistories' already dropped or does not exist." });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
+
 // POST /api/forecast-history — Lưu batch dự báo (từ AutoForecaster)
 router.post('/', async (req, res) => {
     try {
