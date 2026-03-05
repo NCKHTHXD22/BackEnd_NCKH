@@ -1,5 +1,7 @@
 /* Reset mặc định để full screen */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   margin: 0;
@@ -12,9 +14,11 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;   /* full chiều cao */
-  width: 100vw;    /* full chiều rộng */
-  background: linear-gradient(135deg, #7f00ff, #3b82f6, #06b6d4);
+  height: 100vh;
+  /* full chiều cao */
+  width: 100vw;
+  /* full chiều rộng */
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6, #06b6d4);
 }
 
 /* Form login */
@@ -111,7 +115,7 @@ html, body, #root {
   cursor: pointer;
 }
 
-.google-btn {   
+.google-btn {
   background: #fff;
   color: #333;
 }

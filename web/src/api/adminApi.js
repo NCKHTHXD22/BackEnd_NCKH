@@ -36,8 +36,8 @@ const adminApi = {
 
   // Sensors (lấy từ API ngoài)
   getSensorsInfo: () =>
-    axios
-      .get("https://flwarning.onrender.com/api/alerts")
+    axiosClient
+      .get("/alerts")
       .then(res => res.data),
 };
 

@@ -20,6 +20,10 @@ class RainLakeHistoryRepository {
     return RainLakeHistory.find({ Id_Lake }).sort({ timestamp: -1 });
   }
 
+  getLatestByLake(Id_Lake) {
+    return RainLakeHistory.findOne({ Id_Lake }).sort({ timestamp: -1 });
+  }
+
   getByLakeAndRange(Id_Lake, from, to) {
     return RainLakeHistory.find({
       Id_Lake,

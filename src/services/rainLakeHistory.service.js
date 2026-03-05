@@ -1,5 +1,5 @@
 // src/services/rainLakeHistory.service.js
-import RainLake from '../core/entities/RainLake.js';
+import InflowLake from '../core/entities/InflowLake.js';
 import RainHistory from '../core/entities/RainHistory.js';
 import RainStation from '../core/entities/RainStation.js';
 import rainLakeHistoryRepo from '../infrastructure/repositories/rainLakeHistory.repo.js';
@@ -70,7 +70,7 @@ const MAP = {
   7: ['ef74db45-c9d6-4469-951c-1c1181244c5b'],// Không có dữ liệu
   8: ['ef74db45-c9d6-4469-951c-1c1181244c5b'],// Không có dữ liệu
   9: [
-    '20ab22bf-a524-426a-8f6e-f925fac50448', 
+    '20ab22bf-a524-426a-8f6e-f925fac50448',
     'afa543d5-2759-11ec-8ef9-06552145a11a' //Không có dữ liệu
   ],
   11: ['ef74db45-c9d6-4469-951c-1c1181244c5b'], // K có dữ liệu
@@ -92,7 +92,7 @@ const MAP = {
 class RainLakeHistoryService {
   async generateAt(rawTime) {
     const bucket = toHourlyBucket(rawTime);
-    const lakes = await RainLake.find();
+    const lakes = await InflowLake.find();
 
     for (const lake of lakes) {
       const uuids = MAP[lake.Id_Lake] || [];

@@ -8,6 +8,7 @@ import Rejected from "./page/admin/Rejected";
 import ManageUsers from "./page/admin/ManageUser";
 import ManageAdmins from "./page/admin/ManageAdmin";
 import ReportsPublic from "./page/Home/Reports";
+import HomePage from "./page/Home/HomePage";
 import SubmitReport from "./page/Home/SubmitReport";
 import MyReports from "./page/Home/MyReport";
 import Footer from "./components/Admin/AdminPage/Footer"; // Thêm dòng này
@@ -29,11 +30,10 @@ function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
 
             {/* Public routes */}
-            <Route path="/" element={<ReportsPublic />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/reports" element={<ReportsPublic />} />
             <Route path="/submit" element={<SubmitReport />} />
             <Route path="/my-report" element={<MyReports />} />
-
-            
 
             {/* Admin protected routes */}
             <Route
@@ -58,7 +58,6 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
-        <Footer /> {/* Thêm Footer ở đây */}
       </div>
     </BrowserRouter>
   );

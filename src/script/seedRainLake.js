@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import RainLake from '../core/entities/RainLake.js';
-import {ENV} from '../api/config/env.js';
+import InflowLake from '../core/entities/InflowLake.js';
+import { ENV } from '../api/config/env.js';
 
 const lakes = [
   {
@@ -130,14 +130,14 @@ const lakes = [
     await mongoose.connect(ENV.MONGODB_URI);
 
     // tránh seed trùng
-    await RainLake.deleteMany({});
+    await InflowLake.deleteMany({});
 
-    await RainLake.insertMany(lakes);
+    await InflowLake.insertMany(lakes);
 
-    console.log(`✅ Seed thành công ${lakes.length} hồ RainLake`);
+    console.log(`✅ Seed thành công ${lakes.length} hồ InflowLake`);
     process.exit();
   } catch (err) {
-    console.error('❌ Seed RainLake lỗi:', err.message);
+    console.error('❌ Seed InflowLake lỗi:', err.message);
     process.exit(1);
   }
 })();
