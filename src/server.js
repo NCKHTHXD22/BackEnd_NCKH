@@ -23,7 +23,7 @@ import floodPostRoutes from "./api/routes/floodpost.routes.js";
 import alertRoutes from "./api/routes/alert.routes.js";
 import helpRoutes from "./api/routes/help.routes.js";
 import notificationRoutes from "./api/routes/notification.routes.js";
-
+import forecastHistoryRoutes from "./api/routes/forecastHistory.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
@@ -35,7 +35,7 @@ const app = express();
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // 10MB cho batch upload forecast
 app.use(clerkMiddleware());
 app.use(logger);
 
@@ -52,6 +52,7 @@ app.use("/api/forecast", forecastRoutes);
 app.use("/api/rain-lake", rainlakeRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
 app.use("/api/rain-lake-qlake", rainLake_QLake);
+app.use("/api/forecast-history", forecastHistoryRoutes);
 
 // Backend Integration Endpoints
 app.use("/api/users", userRoutes);
