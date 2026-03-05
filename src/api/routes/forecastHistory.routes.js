@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import ForecastHistory from '../core/entities/ForecastHistory.js';
+import ForecastHistory from '../../core/entities/ForecastHistory.js';
 
 const router = Router();
 
