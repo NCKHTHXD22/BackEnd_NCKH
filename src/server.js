@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from "cors";
-import { clerkMiddleware } from "@clerk/express";
+
 
 import { ENV } from './api/config/env.js';
 import { connectDB } from './api/config/database.js';
@@ -38,6 +38,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' })); // 10MB cho batch upload forecast
 // Clerk middleware: chỉ bật khi có key (tránh crash trên Render nếu chưa cấu hình)
 if (process.env.CLERK_PUBLISHABLE_KEY) {
+    const { clerkMiddleware } = await import('@clerk/express');
     app.use(clerkMiddleware());
     console.log('✅ Clerk middleware enabled');
 }
