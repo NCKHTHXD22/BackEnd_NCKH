@@ -36,7 +36,11 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // 10MB cho batch upload forecast
-app.use(clerkMiddleware());
+// Clerk middleware: chỉ bật khi có key (tránh crash trên Render nếu chưa cấu hình)
+if (process.env.CLERK_PUBLISHABLE_KEY) {
+    app.use(clerkMiddleware());
+    console.log('✅ Clerk middleware enabled');
+}
 app.use(logger);
 
 // Database
