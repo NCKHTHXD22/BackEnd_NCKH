@@ -9,7 +9,7 @@ const forecastHistorySchema = new mongoose.Schema({
     actual: { type: Number, default: null },
     error: { type: Number, default: null },
     percentError: { type: Number, default: null }
-});
+}, { collection: 'forecasthistories_arimax' });
 
 // Compound index: tránh duplicate + query nhanh
 forecastHistorySchema.index(
