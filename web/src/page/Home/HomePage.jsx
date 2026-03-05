@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import NavbarPublic from '../../components/NavbarPublic';
@@ -151,7 +151,7 @@ export default function HomePage() {
                     {/* Rendering Reservoirs */}
                     {reservoirs.map((res, index) => {
                         let lat = res.location?.lat || res.lat;
-                        let lng = res.location?.lng || res.lng;
+                        let lng = res.location?.lng || res.lng || res.lon;
 
                         // Try to match with RESERVOIRS configuration for static locations
                         const resConfig = RESERVOIRS[res.Id_Lake] || Object.values(RESERVOIRS).find(r => r.name.toLowerCase() === res.Lake_Name?.toLowerCase() || r.name.toLowerCase() === res.name?.toLowerCase());
@@ -161,16 +161,25 @@ export default function HomePage() {
                         }
 
                         if (!lat || !lng) return null;
+                        const lakeName = res.name || res.Lake_Name || 'Không tên';
+
                         return (
                             <Marker key={`res-${index}`} position={[lat, lng]} icon={reservoirIcon}>
                                 <Popup>
-                                    <strong>Hồ chứa: {res.Lake_Name || res.name || 'Không tên'}</strong><br />
-                                    Lưu lượng đến: {res.Q_to_Lake || res.inflow || 0} m³/s<br />
-                                    Lưu lượng xả: {res.Q_discharge || res.outflow || 0} m³/s<br />
-                                    Tổng lưu lượng xả về hạ du: {res.Total_Q_discharge || 0} m³/s<br />
-                                    Mực nước thượng lưu: {res.WaterLevel_Upstream || res.waterLevel || 0} m<br />
-                                    Cập nhật: {res.lastUpdate ? new Date(res.lastUpdate).toLocaleString('vi-VN') : 'N/A'}
+                                    <div className="font-bold border-b pb-1 mb-1 text-blue-800">Hồ chứa: {lakeName}</div>
+                                    <div className="text-sm space-y-1">
+                                        <p><strong>Lưu lượng đến:</strong> <span className="text-blue-600">{res.Q_to_Lake || 0}</span> m³/s</p>
+                                        <p><strong>Lưu lượng xả:</strong> <span className="text-red-600">{res.Q_discharge || 0}</span> m³/s</p>
+                                        <p><strong>Mực nước TL:</strong> <span className="text-green-600">{res.WaterLevel_Upstream || 0}</span> m</p>
+                                        <p className="text-[10px] text-gray-400 pt-1 border-t">Cập nhật: {res.lastUpdate ? new Date(res.lastUpdate).toLocaleString('vi-VN') : 'N/A'}</p>
+                                    </div>
                                 </Popup>
+                                <Tooltip direction="top" offset={[0, -20]} opacity={1}>
+                                    <div className="text-xs font-semibold">
+                                        {lakeName}<br />
+                                        Q: {res.Q_to_Lake || 0} m³/s | H: {res.WaterLevel_Upstream || 0}m
+                                    </div>
+                                </Tooltip>
                             </Marker>
                         )
                     })}
