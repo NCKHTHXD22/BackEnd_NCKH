@@ -5,7 +5,7 @@ import inflowLakeService from '../services/inflowLake.service.js';
  * ⏱️ Cron chạy mỗi 1 giờ (phút 0)
  * 0 * * * *
  */
-cron.schedule('0 * * * *', async () => {
+cron.schedule('3 * * * *', async () => {
     console.log('⏳ [CRON] Bắt đầu đồng bộ InflowLake (History + Hydro)...');
 
     try {
