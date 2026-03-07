@@ -47,11 +47,11 @@ async def startup_event():
         if os.path.exists(model_path):
             model.load_state_dict(torch.load(model_path, map_location=device))
             model.eval()
-            print(f"✅ Model loaded successfully from {model_path}")
+            print(f"Model loaded successfully from {model_path}")
         else:
-            print(f"⚠️ Model file not found at {model_path}. Please download it from Colab.")
+            print(f"Model file not found at {model_path}. Please download it from Colab.")
     except Exception as e:
-        print(f"❌ Error during startup: {str(e)}")
+        print(f"Error during startup: {str(e)}")
 
 class PredictRequest(BaseModel):
     rid: int
