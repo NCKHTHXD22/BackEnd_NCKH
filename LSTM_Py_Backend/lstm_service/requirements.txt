@@ -8,3 +8,4 @@ joblib
 fastapi
 uvicorn
 tqdm
+torch

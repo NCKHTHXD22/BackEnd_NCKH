@@ -28,17 +28,17 @@ def show_menu():
 def predict(rid):
 
     if rid not in RESERVOIRS:
-        print("❌ ID hồ không tồn tại.")
+        print("[!] ID ho khong ton tai.")
         return
 
     info = RESERVOIRS[rid]
-    print(f"\n🔄 Đang tải dữ liệu cho {info['name']}...\n")
+    print(f"\n[*] Dang tai du lieu cho {info['name']}...\n")
 
     hydro = fetch_hydro_data(rid, days=60)
     rain = fetch_rain_data(info["lat"], info["lon"], days=60)
 
     if hydro.empty:
-        print("❌ Không có dữ liệu thủy văn.")
+        print("[!] Khong co du lieu thuy van.")
         return
 
     if rain.empty:
@@ -56,7 +56,7 @@ def predict(rid):
     df = df.dropna()
 
     if len(df) < SEQ_LENGTH:
-        print(f"❌ Không đủ dữ liệu. Có {len(df)} dòng, cần {SEQ_LENGTH}.")
+        print(f"[!] Khong du du lieu. Co {len(df)} dong, can {SEQ_LENGTH}.")
         return
 
     reference_time = df["time"].max()
@@ -72,7 +72,7 @@ def predict(rid):
     if rain_future.empty:
         # Instead of 0, apply an exponential decay to the last known rainfall
         # to simulate a realistic scenario if forecasting fails.
-        print("⚠ Không có API dự báo mưa → Giả định mưa giảm dần (decay) từ hiện tại.")
+        print("[!] Khong co API du bao mua -> Gia dinh mua giam dan tu hien tai.")
         last_rain = df["rain"].iloc[-1] if not df["rain"].empty else 0.0
         
         simulated_rain = []
@@ -132,10 +132,10 @@ def predict(rid):
 
     preds = np.expm1(preds.cpu().numpy()[0])
 
-    print(f"⏱ Thời điểm dữ liệu mới nhất: {reference_time}")
+    print(f"[Time] Thoi diem du lieu moi nhat: {reference_time}")
     print("-"*80)
 
-    print("\n📊 DỮ LIỆU 6 GIỜ GẦN NHẤT")
+    print("\n[Data] DU LIEU 6 GIO GAN NHAT")
     print("-"*80)
 
     for _, row in df.tail(6).iterrows():
@@ -145,13 +145,13 @@ def predict(rid):
             f"Inflow:{np.expm1(row['inflow']):8.1f}"
         )
 
-    print("\n🌧 MƯA DỰ BÁO 12 GIỜ TỚI (Aligned)")
+    print("\n[Rain] MUA DU BAO 12 GIO TOI")
     print("-"*80)
 
     for _, row in rain_future.iterrows():
         print(f"{row['time']} | Rain_forecast:{row['rain_forecast']:6.1f}")
 
-    print("\n🚰 KỊCH BẢN Q ĐẾN 12 GIỜ TỚI")
+    print("\n[Inflow] KICH BAN Q DEN 12 GIO TOI")
     print("-"*80)
 
     for i, (p10, p50, p90) in enumerate(preds):
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     show_menu()
 
     try:
-        rid = int(input("\n👉 Nhập ID hồ muốn dự báo: "))
+        rid = int(input("\n=> Nhap ID ho muon du bao: "))
         predict(rid)
     except ValueError:
-        print("❌ Vui lòng nhập số hợp lệ.")
+        print("[!] Vui long nhap so hop le.")

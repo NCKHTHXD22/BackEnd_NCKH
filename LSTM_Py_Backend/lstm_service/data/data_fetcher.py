@@ -8,10 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Cập nhật: Trỏ về server Render để Proxy Pass qua chặn Geo-blocking của Đà Nẵng
-# NOTE: Nếu sau này tên miền render thay đổi, bạn đổi lại URL này.
-BASE_URL = "https://backend-nckh-lm57.onrender.com/api/proxy/danang/hydro"
-TOKEN_URL = "https://backend-nckh-lm57.onrender.com/api/proxy/danang/token"
+BASE_URL = "https://apiv2.danang.gov.vn/apiPCTT/1.0"
+TOKEN_URL = "https://apiv2.danang.gov.vn/oauth2/token"
 
 CONSUMER_KEY = os.getenv("CONSUMER_KEY")
 CONSUMER_SECRET = os.getenv("CONSUMER_SECRET")
