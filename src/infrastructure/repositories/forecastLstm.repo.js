@@ -6,12 +6,12 @@ export class ForecastLstmRepository extends BaseRepository {
         super(ForecastLSTM);
     }
 
-    async findByLakeId(id_lake) {
-        return this.model.find({ id_lake }).sort({ forecastTime: 1 });
+    async findByLakeId(Id_Lake) {
+        return this.model.find({ Id_Lake }).sort({ forecastTime: 1 });
     }
 
-    async findLatestByLakeId(id_lake) {
-        return this.model.find({ id_lake }).sort({ forecastTime: -1 }).limit(1);
+    async findLatestByLakeId(Id_Lake) {
+        return this.model.find({ Id_Lake }).sort({ forecastTime: -1 }).limit(1);
     }
 }
 

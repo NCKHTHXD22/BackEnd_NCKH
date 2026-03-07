@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const ForecastLSTMSchema = new mongoose.Schema({
-    id_lake: { type: Number, required: true },
+    Id_Lake: { type: Number, required: true },
     qvao_forecast: { type: Number, required: true }, // P50
     p10: { type: Number, default: null },
     p90: { type: Number, default: null },
@@ -12,6 +12,6 @@ const ForecastLSTMSchema = new mongoose.Schema({
     versionKey: false
 });
 
-ForecastLSTMSchema.index({ id_lake: 1, forecastTime: 1 }, { unique: true });
+ForecastLSTMSchema.index({ Id_Lake: 1, forecastTime: 1 }, { unique: true });
 
 export default mongoose.model('ForecastLSTM', ForecastLSTMSchema);
