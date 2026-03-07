@@ -114,8 +114,11 @@ function normalizeIntervals(intervals) {
 async function fetchRainHistory() {
   try {
     const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10);
-    const currentHour = now.getUTCHours();
+    // Lấy giờ Việt Nam (GMT+7) để xác định ngày và giờ hiện tại
+    const offsetMs = 7 * 60 * 60 * 1000;
+    const vnTime = new Date(now.getTime() + offsetMs);
+    const dateStr = vnTime.toISOString().slice(0, 10);
+    const currentHourVn = vnTime.getUTCHours();
 
     console.log(`🌧️ [VRAIN HISTORY] AUTO UPDATE ${dateStr}`);
 
@@ -132,9 +135,10 @@ async function fetchRainHistory() {
         if (!HOUR_REGEX.test(hour)) continue;
 
         const h = Number(hour.slice(0, 2));
-        if (h > currentHour) continue;
+        if (h > currentHourVn) continue;
 
-        const timestamp = new Date(`${dateStr}T${hour}:00.000Z`);
+        // Giờ từ API là giờ Việt Nam, nên dùng +07:00 thay vì Z (UTC)
+        const timestamp = new Date(`${dateStr}T${hour}:00.000+07:00`);
 
         await RainHistory.updateOne(
           { uuid: st.sid, timestamp },
