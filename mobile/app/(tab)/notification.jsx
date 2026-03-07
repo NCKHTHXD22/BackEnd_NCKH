@@ -11,8 +11,8 @@ import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-expo"; // ✅ Lấy token từ Clerk
 import styles from "../../assets/styles/notification.js";
-
-const API_URL = "https://flwarning.onrender.com/api/notifications";
+import { API_URL as BASE_URL } from "@/lib/env";
+const API_URL = `${BASE_URL}/api/notifications`;
 
 export default function Notification() {
   const { getToken } = useAuth(); // ✅ Hook từ Clerk

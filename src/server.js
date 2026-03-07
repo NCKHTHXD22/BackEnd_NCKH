@@ -14,6 +14,7 @@ import forecastRoutes from "./api/routes/forecast.routes.js";
 import inflowlakeRoutes from "./api/routes/inflowLake.routes.js";
 import rainlakeHistory from "./api/routes/rainLakeHistories.routes.js";
 import rainLake_QLake from "./api/routes/rainLakeQLake.routes.js";
+import forecastLstmRoutes from "./api/routes/forecastLstm.routes.js";
 
 // Backend Integration Routes
 import userRoutes from "./api/routes/user.routes.js";
@@ -58,6 +59,7 @@ app.use("/api/inflowLake", inflowlakeRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
 app.use("/api/rain-lake-qlake", rainLake_QLake);
 app.use("/api/forecast-history", forecastHistoryRoutes);
+app.use("/api/forecast-lstm", forecastLstmRoutes);
 
 // Backend Integration Endpoints
 app.use("/api/users", userRoutes);
