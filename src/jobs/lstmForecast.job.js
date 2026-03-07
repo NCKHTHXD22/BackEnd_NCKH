@@ -50,8 +50,8 @@ async function updateLSTMForecast() {
 // Chạy lần đầu khi start server
 // updateLSTMForecast();
 
-// Cron chạy vào đầu mỗi giờ
-cron.schedule("0 * * * *", () => {
+// Cron chạy vào phút thứ 6 của mỗi giờ
+cron.schedule("6 * * * *", () => {
     updateLSTMForecast();
 });
 
