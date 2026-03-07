@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import axios from "axios";
-import Forecast from "../core/entities/Forecast.js";
+import ForecastLSTM from "../core/entities/ForecastLSTM.js";
 import { RESERVOIRS } from "../api/config/reservoirs.js";
 
 const RES_IDS = Object.keys(RESERVOIRS).map(Number);
@@ -25,20 +25,20 @@ async function updateLSTMForecast() {
 
             const operations = predictions.map(p => ({
                 updateOne: {
-                    filter: { reservoirId: rid, targetTime: new Date(p.targetTime) },
+                    filter: { id_lake: rid, forecastTime: new Date(p.targetTime) },
                     update: {
                         $set: {
-                            value: p.p50,
+                            qvao_forecast: p.p50,
                             p10: p.p10,
                             p90: p.p90,
-                            createdAt: new Date()
+                            generatedAt: new Date()
                         }
                     },
                     upsert: true
                 }
             }));
 
-            await Forecast.bulkWrite(operations);
+            await ForecastLSTM.bulkWrite(operations);
             console.log(`✅ Updated ${predictions.length} forecast steps for Reservoir ${rid}`);
 
         } catch (error) {
