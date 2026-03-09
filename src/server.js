@@ -12,6 +12,7 @@ import rainHistoryRoutes from "./api/routes/rainHistory.routes.js";
 import waterLevelRoutes from "./api/routes/waterLevel.routes.js";
 import forecastRoutes from "./api/routes/forecast.routes.js";
 import inflowlakeRoutes from "./api/routes/inflowLake.routes.js";
+import inflowLakeHistoryRoutes from "./api/routes/inflowLakeHistory.routes.js";
 import rainlakeHistory from "./api/routes/rainLakeHistories.routes.js";
 import rainLake_QLake from "./api/routes/rainLakeQLake.routes.js";
 import forecastLstmRoutes from "./api/routes/forecastLstm.routes.js";
@@ -32,6 +33,7 @@ import "./jobs/fetchRainData.job.js";
 import "./jobs/inflowLake.job.js";
 import "./jobs/rainLakeHistory.job.js";
 import "./jobs/lstmForecast.job.js";
+import "./jobs/inflowLakeHistory.job.js";
 const app = express();
 
 // Middlewares
@@ -56,6 +58,7 @@ app.use("/api/rain-history", rainHistoryRoutes);
 app.use("/api/water-level", waterLevelRoutes);
 app.use("/api/forecast", forecastRoutes);
 app.use("/api/inflowLake", inflowlakeRoutes);
+app.use("/api", inflowLakeHistoryRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
 app.use("/api/rain-lake-qlake", rainLake_QLake);
 app.use("/api/forecast-history", forecastHistoryRoutes);
