@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import pandas as pd
+import os
 from datetime import timedelta
 
 from config.reservoirs import RESERVOIRS
@@ -86,17 +87,16 @@ def predict(rid):
             "rain_forecast": simulated_rain
         })
 
+    # --- FEATURES DEFINITION (MUST MATCH training/dataset_builder.py: 31 features) ---
     features = [
-        "rain","rain_3h","rain_6h","rain_12h",
-        "rain_24h",
-        "rain_intensity",
-        "rain_lag_1","rain_lag_3","rain_lag_6",
-        "inflow","inflow_prev","inflow_diff",
-        "inflow_diff_2",
-        "inflow_3h_avg","inflow_6h_avg",
-        "inflow_12h_avg",
-        "hour_sin","hour_cos","doy_sin","doy_cos",
-        "month_sin","month_cos"
+        "rain", "rain_3h", "rain_6h", "rain_12h", "rain_24h",
+        "rain_48h", "rain_72h", "rain_96h",
+        "rain_intensity", "rain_12h_std", "rain_24h_max",
+        "rain_lag_1", "rain_lag_3", "rain_lag_6", "rain_lag_12", "rain_lag_24",
+        "inflow", "inflow_prev", "inflow_diff", "inflow_diff_2",
+        "inflow_3h_avg", "inflow_6h_avg", "inflow_12h_avg", "inflow_24h_avg",
+        "rain_inflow_interaction",
+        "hour_sin", "hour_cos", "doy_sin", "doy_cos", "month_sin", "month_cos"
     ]
 
     past_seq = df[features].iloc[-SEQ_LENGTH:].values
@@ -105,21 +105,30 @@ def predict(rid):
     scaler.load("artifacts/global_scaler.pkl")
     past_seq = scaler.transform(past_seq[np.newaxis])[0]
 
-    future_rain = rain_future["rain_forecast"].values.reshape(-1,1)
+    # Future Rain log-transform (Important: must match training logic)
+    future_rain = np.log1p(rain_future["rain_forecast"].values.reshape(-1,1))
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = InflowForecastModel(
-        input_size=past_seq.shape[1],
+        input_size=len(features),
         hidden_size=HIDDEN_SIZE,
         horizon=HORIZON,
         quantiles=QUANTILES,
         num_reservoirs=NUM_RESERVOIRS
     ).to(device)
 
-    model.load_state_dict(
-        torch.load("artifacts/inflow_model.pt", map_location=device)
-    )
+    # 🔥 DYNAMIC MODEL LOADING: Fine-tuned Version Preferred
+    res_idx = info["idx"]
+    fine_tuned_path = f"artifacts/inflow_model_rid_{res_idx}.pt"
+    global_model_path = "artifacts/inflow_model.pt"
+
+    if os.path.exists(fine_tuned_path):
+        print(f"[Model] Load Fine-tuned Model: {fine_tuned_path}")
+        model.load_state_dict(torch.load(fine_tuned_path, map_location=device))
+    else:
+        print(f"[Model] Load Global Model: {global_model_path}")
+        model.load_state_dict(torch.load(global_model_path, map_location=device))
 
     model.eval()
 
@@ -127,7 +136,7 @@ def predict(rid):
         preds = model(
             torch.tensor(past_seq[None]).float().to(device),
             torch.tensor(future_rain[None]).float().to(device),
-            torch.tensor([info["idx"]]).long().to(device)
+            torch.tensor([res_idx]).long().to(device)
         )
 
     preds = np.expm1(preds.cpu().numpy()[0])

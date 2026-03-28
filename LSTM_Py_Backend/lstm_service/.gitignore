@@ -1,0 +1,59 @@
+# ─── Python cache ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ─── Virtual environment ───────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+
+# ─── Environment / Secrets ────────────────────────────────────────────────────
+# .env is committed for local dev BUT on HuggingFace, use Secrets UI instead
+.env
+
+# ─── Training data (heavy — do NOT push to HuggingFace) ──────────────────────
+dataset_X_past.npy
+dataset_X_future.npy
+dataset_y.npy
+dataset_rid.npy
+LSTM_Project/
+Rain Data/
+RainData/
+
+# ─── Local utility scripts (not needed on server) ─────────────────────────────
+wrap_up_vndms.py
+export_wide_matrix.py
+main_predict.py
+main_build_dataset.py
+main_train.py
+build_dataset_local.py
+run_pipeline.bat
+test_vndms.py
+tmp_update_nb.py
+fix_*.py
+export_*.py
+check_*.py
+pack_*.py
+make_*.py
+README_COLAB.md
+
+# ─── Training modules (not needed for inference) ──────────────────────────────
+training/
+
+# ─── Artifacts: Model weights ARE committed (needed for inference) ─────────────
+# artifacts/ is NOT ignored — models must be in repo
+# Use Git LFS for *.pt files:
+# git lfs track "artifacts/*.pt"
+
+# ─── IDE / OS ─────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/

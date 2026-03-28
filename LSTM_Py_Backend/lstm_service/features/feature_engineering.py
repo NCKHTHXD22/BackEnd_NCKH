@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 
 
@@ -19,12 +20,21 @@ def add_rain_features(df):
     df["rain_6h"] = df["rain"].rolling(6).sum()
     df["rain_12h"] = df["rain"].rolling(12).sum()
     df["rain_24h"] = df["rain"].rolling(24).sum()
+    df["rain_48h"] = df["rain"].rolling(48).sum()
+    df["rain_72h"] = df["rain"].rolling(72).sum()   # NEW: 3 ngày
+    df["rain_96h"] = df["rain"].rolling(96).sum()   # NEW: 4 ngày
 
     df["rain_intensity"] = df["rain_3h"] / 3
+    
+    # Statistical features for rainfall variability
+    df["rain_12h_std"] = df["rain"].rolling(12).std()
+    df["rain_24h_max"] = df["rain"].rolling(24).max()
 
     df["rain_lag_1"] = df["rain"].shift(1)
     df["rain_lag_3"] = df["rain"].shift(3)
     df["rain_lag_6"] = df["rain"].shift(6)
+    df["rain_lag_12"] = df["rain"].shift(12)  # NEW: lag 12h
+    df["rain_lag_24"] = df["rain"].shift(24)  # NEW: lag 24h
 
     return df
 
@@ -39,5 +49,9 @@ def add_inflow_features(df):
     df["inflow_3h_avg"] = df["inflow"].rolling(3).mean()
     df["inflow_6h_avg"] = df["inflow"].rolling(6).mean()
     df["inflow_12h_avg"] = df["inflow"].rolling(12).mean()
+    df["inflow_24h_avg"] = df["inflow"].rolling(24).mean()
+
+    # Interaction: Rain + Soil Moisture proxy
+    df["rain_inflow_interaction"] = df["rain_12h"] * df["inflow_prev"]
 
     return df

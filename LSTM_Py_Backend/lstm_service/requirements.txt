@@ -1,11 +1,24 @@
+# ─── Core framework ───────────────────────────────────────────────────────────
+fastapi
+uvicorn[standard]
+pydantic
+
+# ─── Data processing ──────────────────────────────────────────────────────────
 numpy
 pandas
 scikit-learn
-tensorflow
-pymongo
-python-dotenv
 joblib
-fastapi
-uvicorn
-tqdm
+openpyxl
+
+# ─── HTTP requests ────────────────────────────────────────────────────────────
+requests
+httpx
+
+# ─── PyTorch (CPU-only build — smaller Docker image, HuggingFace free tier) ──
+# Full CUDA build is ~3GB; CPU-only is ~800MB and sufficient for inference
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch
+
+# ─── Utilities ────────────────────────────────────────────────────────────────
+python-dotenv
+tqdm

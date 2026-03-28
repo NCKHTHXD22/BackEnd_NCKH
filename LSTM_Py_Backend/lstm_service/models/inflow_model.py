@@ -25,23 +25,35 @@ class InflowForecastModel(nn.Module):
             hidden_size,
             num_layers=2,
             dropout=0.2,
+            batch_first=True,
+            bidirectional=True
+        )
+
+        # Cần project lại output của Bi-LSTM (2*hidden) về hidden để đưa vào Attention
+        self.enc_repro = nn.Linear(hidden_size * 2, hidden_size)
+
+        # Multi-Head Attention layer (Q: Decoder state, K/V: Encoder outputs)
+        self.attention = nn.MultiheadAttention(
+            embed_dim=hidden_size,
+            num_heads=4,
+            dropout=0.1,
             batch_first=True
         )
 
         self.decoder = nn.LSTM(
-            16 + 16 + self.num_q, # forecast_emb + res_emb + prev_q
+            16 + 16 + hidden_size + self.num_q, # forecast_emb + res_emb + attn_context + prev_q
             hidden_size,
             num_layers=2,
             dropout=0.2,
             batch_first=True
         )
 
-        # 3. State Handoff Network (Refined based on Google architecture)
+        # 3. State Handoff Network
         self.handoff_net = nn.Sequential(
-            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.Linear(hidden_size * 4, hidden_size * 2), # from Bi-LSTM (2*layers*2? No, just last states)
             nn.LayerNorm(hidden_size * 2),
             nn.ReLU(),
-            nn.Dropout(0.2) # Increased from 0.1
+            nn.Dropout(0.2)
         )
         self.handoff_linear = nn.Linear(hidden_size * 2, hidden_size * 2)
         
@@ -50,7 +62,7 @@ class InflowForecastModel(nn.Module):
         nn.init.xavier_uniform_(self.forecast_embedding.weight)
         nn.init.xavier_uniform_(self.handoff_linear.weight)
 
-        # 4. Head Regularization
+        # 4. Output Head
         self.dropout = nn.Dropout(0.2)
         self.fc = nn.Linear(hidden_size, self.num_q)
 
@@ -64,16 +76,25 @@ class InflowForecastModel(nn.Module):
         emb_enc = emb.unsqueeze(1).repeat(1, x_past.size(1), 1)
         enc_input = torch.cat([past_emb, emb_enc], dim=2)
 
-        _, (h_enc, c_enc) = self.encoder(enc_input)
+        enc_out, (h_enc, c_enc) = self.encoder(enc_input)
+
+        # Project Bi-LSTM outputs back to hidden_size for Attention
+        # enc_out is (B, T, 2*hidden_size)
+        enc_out_proj = self.enc_repro(enc_out)
 
         # State Handoff
-        handoff_in = torch.cat([h_enc, c_enc], dim=-1)
+        # We take the last layer states of both directions
+        h_last = torch.cat([h_enc[-2], h_enc[-1]], dim=-1) # (B, 2*hidden)
+        c_last = torch.cat([c_enc[-2], c_enc[-1]], dim=-1) # (B, 2*hidden)
+
+        handoff_in = torch.cat([h_last, c_last], dim=-1) # (B, 4*hidden)
         x = self.handoff_net(handoff_in)
         initial_state = self.handoff_linear(x)
         h_dec, c_dec = initial_state.chunk(2, dim=-1)
         
-        h_dec = h_dec.contiguous()
-        c_dec = c_dec.contiguous()
+        # Lặp state cho số layers của decoder (2 layers)
+        h_dec = h_dec.unsqueeze(0).repeat(2, 1, 1).contiguous()
+        c_dec = c_dec.unsqueeze(0).repeat(2, 1, 1).contiguous()
 
         batch_size = x_past.size(0)
         device = x_past.device
@@ -85,9 +106,13 @@ class InflowForecastModel(nn.Module):
             step_rain = x_future[:, t:t+1, :]
             step_rain_emb = F.relu(self.forecast_embedding(step_rain))
             
+            # Tính Attention Context
+            query = h_dec[-1].unsqueeze(1) # (B, 1, hidden)
+            attn_out, _ = self.attention(query, enc_out_proj, enc_out_proj)
+            
             emb_dec = emb.unsqueeze(1)
             
-            dec_input = torch.cat([step_rain_emb, emb_dec, prev_q], dim=2)
+            dec_input = torch.cat([step_rain_emb, emb_dec, attn_out, prev_q], dim=2)
             
             dec_out, (h_dec, c_dec) = self.decoder(dec_input, (h_dec, c_dec))
             
