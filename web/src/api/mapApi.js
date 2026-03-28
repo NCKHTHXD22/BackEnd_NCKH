@@ -14,7 +14,14 @@ const mapApi = {
     getLiveHydro: (lakeId) => axiosClient.get(`/inflowLake/live-hydro/${lakeId}`).then((res) => res.data),
 
     // Get published (approved) posts for the public view
-    getPublicPosts: () => axiosClient.get("/posts").then((res) => res.data), // Need to ensure backend has a public posts endpoint, otherwise we'll filter them.
+    getPublicPosts: () => axiosClient.get("/posts").then((res) => res.data),
+
+    // Forecast APIs
+    getForecastLstm: (lakeId) => axiosClient.get(`/forecast-lstm/${lakeId}`).then((res) => res.data),
+    getForecastHistory: (reservoirId, rainSource) =>
+        axiosClient.get(`/forecast-history/${reservoirId}`, { params: { rainSource } }).then((res) => res.data),
+    getRainLakeHistory: (lakeId) => axiosClient.get(`/rain-lake-history/${lakeId}`).then((res) => res.data),
+    runForecastModel: (data) => axiosClient.post("/forecast", data).then((res) => res.data),
 };
 
 export default mapApi;

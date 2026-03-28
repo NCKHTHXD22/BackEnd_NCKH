@@ -65,7 +65,14 @@ class LiveHydroController {
             res.json({
                 qvao: latest.qvao || 0,
                 luuluongxa: latest.luuluongxa || 0,
-                htl: latest.htl || 0
+                htl: latest.htl || 0,
+                history: data.map(d => ({
+                    time: d.thoigiando,
+                    qvao: d.qvao || 0,
+                    qvaotht: d.qvaotht || 0,
+                    luuluongxa: d.luuluongxa || 0,
+                    htl: d.htl || 0
+                }))
             });
 
         } catch (error) {

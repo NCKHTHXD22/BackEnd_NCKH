@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaSearch, FaUserCircle, FaBars, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { getAdminToken, removeAdminToken } from '../services/auth';
+import logoImg from '../assets/images/logo.svg';
 
 export default function NavbarPublic() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -21,13 +22,10 @@ export default function NavbarPublic() {
         <div className="absolute top-0 left-0 w-full z-[1000] bg-[#2A4B7C] bg-opacity-95 text-white shadow-md flex items-center justify-between px-4 py-2">
             {/* Left: Logo & Title */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                    {/* Placeholder for Logo */}
-                    <span className="text-red-600 font-bold text-xs p-1 text-center">VN DMS</span>
-                </div>
+                <img src={logoImg} alt="DSS Logo" className="w-10 h-10 object-contain" />
                 <div className="hidden md:flex flex-col">
-                    <h1 className="text-sm font-bold m-0 leading-tight">HỆ THỐNG GIÁM SÁT THIÊN TAI VIỆT NAM</h1>
-                    <p className="text-xs text-gray-300 m-0">VIETNAM DISASTERS MONITORING SYSTEM (VNDMS)</p>
+                    <h1 className="text-sm font-bold m-0 leading-tight">HỆ THỐNG HỖ TRỢ QUYẾT ĐỊNH</h1>
+                    <p className="text-xs text-gray-300 m-0">DECISION SUPPORT SYSTEM (DSS)</p>
                 </div>
             </div>
 

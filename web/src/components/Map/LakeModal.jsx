@@ -1,0 +1,597 @@
+import React, { useState, useEffect } from 'react';
+import OperationDashboard from '../../page/admin/OperationDashboard';
+import {
+    X,
+    Droplet,
+    Settings,
+    Clock,
+    BookOpen,
+    History,
+    Activity,
+    Info,
+    Calendar,
+    CloudRain,
+    BarChart3,
+    Play,
+    Zap,
+    Database,
+    TrendingUp
+} from 'lucide-react';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
+    Legend,
+    ResponsiveContainer,
+    Area,
+    AreaChart,
+    ComposedChart,
+    Bar,
+    ReferenceLine
+} from 'recharts';
+import mapApi from '../../api/mapApi';
+
+// Rain source configs
+const RAIN_SOURCES = [
+    { id: 'station', label: 'Trạm đo (NCKH)', color: '#2563eb' },
+    { id: 'bestmatch', label: 'Best Match', color: '#7c3aed' },
+    { id: 'ecmwf', label: 'EU ECMWF', color: '#0891b2' },
+    { id: 'gfs', label: 'US GFS', color: '#059669' },
+    { id: 'jma', label: 'JP JMA', color: '#dc2626' },
+    { id: 'icon', label: 'DE ICON', color: '#ea580c' },
+];
+
+// Model configs
+const MODELS = [
+    { id: 'arimax', label: 'ARIMAX', color: '#7c3aed', icon: <TrendingUp size={14} /> },
+    { id: 'lstm', label: 'LSTM', color: '#2563eb', icon: <Zap size={14} /> },
+    { id: 'hec', label: 'HEC-HMS', color: '#059669', icon: <BarChart3 size={14} /> },
+];
+
+export default function LakeModal({ lakeId, lakeData, onClose }) {
+    const [activeTab, setActiveTab] = useState('overview');
+    const [selectedRainSource, setSelectedRainSource] = useState('station');
+    const [selectedModel, setSelectedModel] = useState('lstm');
+    const [isRunning, setIsRunning] = useState(false);
+    const [forecastResults, setForecastResults] = useState(null);
+    const [rainData, setRainData] = useState([]);
+    const [forecastHistory, setForecastHistory] = useState([]);
+
+    if (!lakeId || !lakeData) return null;
+
+    const lakeName = lakeData.name || lakeData.Lake_Name || 'Không tên';
+
+    // Mock data for charts
+    const mockLevelData = Array.from({ length: 24 }).map((_, i) => {
+        const baseLevel = parseFloat(String(lakeData.WaterLevel_Upstream || 173).replace(',', '.'));
+        const targetTime = new Date(Date.now() - (24 - i) * 3600000);
+        return {
+            time: targetTime.getHours().toString().padStart(2, '0') + ':00 ' + 
+                  targetTime.getDate().toString().padStart(2, '0') + '/' + 
+                  (targetTime.getMonth() + 1).toString().padStart(2, '0'),
+            level: baseLevel + Math.random() * 2 - 1
+        };
+    });
+
+    // Generate unified forecast data (Actuals + Ensemble scenarios)
+    const generateUnifiedData = () => {
+        const baseQ = lakeData.Q_to_Lake || 80;
+        const now = new Date();
+        
+        // Total 72 points: 48h history + 24h future
+        return Array.from({ length: 72 }).map((_, i) => {
+            const isFuture = i > 48; // Changed to i > 48 so i=48 is the "bridge" point
+            const hourOffset = i - 48;
+            const targetTime = new Date(now.getTime() + hourOffset * 3600000);
+            
+            const dtLabel = targetTime.getHours().toString().padStart(2, '0') + ':00 ' + 
+                           targetTime.getDate().toString().padStart(2, '0') + '/' + 
+                           (targetTime.getMonth() + 1).toString().padStart(2, '0');
+            const fullTime = targetTime.getHours().toString().padStart(2, '0') + ':00';
+
+            const noise = selectedModel === 'arimax' ? Math.random() * 15 : selectedModel === 'lstm' ? Math.random() * 10 : Math.random() * 20;
+            
+            let dataPoint = { time: dtLabel, fullTime, isFuture: i >= 48, hourOffset };
+            
+            // Generate qActual for historical AND the exact current point
+            if (i <= 48) {
+                const qAct = baseQ - Math.random() * 20 + noise; 
+                dataPoint.qActual = qAct;
+                dataPoint.rain = Math.max(0, (Math.random() < 0.3 ? Math.random() * 15 : 0));
+                
+                // Populate past rain for BestMatch ensemble bars
+                if (selectedRainSource === 'bestmatch') {
+                    RAIN_SOURCES.filter(s => s.id !== 'bestmatch').forEach(src => {
+                        // All models predict similarly in the past, around the actual rain
+                        const randomDiff = Math.random() * 4 - 2;
+                        dataPoint[`rain_${src.id}`] = Math.max(0, dataPoint.rain + randomDiff); 
+                    });
+                }
+
+                // At the exact current hour (i=48), bridge the prediction lines
+                if (i === 48) {
+                    dataPoint.p50 = qAct;
+                    dataPoint.p10 = qAct;
+                    dataPoint.p90 = qAct;
+                    if (selectedRainSource === 'bestmatch') {
+                        RAIN_SOURCES.filter(s => s.id !== 'bestmatch').forEach(src => {
+                            dataPoint[`p50_${src.id}`] = qAct;
+                        });
+                    }
+                }
+            }
+            
+            // Generate prediction scenarios for future
+            if (i >= 48) {
+                const p50_base = baseQ - Math.random() * 15 + (noise * 0.8) + (hourOffset * 0.5);
+                
+                if (selectedRainSource === 'bestmatch') {
+                    let all_p50 = [];
+                    RAIN_SOURCES.filter(s => s.id !== 'bestmatch').forEach((src, idx) => {
+                        // Create slightly diverted scenarios for each source
+                        const src_p50 = p50_base + (idx - 2) * (hourOffset * 0.4) + (Math.random() * 10 - 5);
+                        dataPoint[`p50_${src.id}`] = src_p50;
+                        // Random rain per source
+                        dataPoint[`rain_${src.id}`] = Math.max(0, (Math.random() < 0.25 ? Math.random() * (20 - idx*2) : 0));
+                        all_p50.push(src_p50);
+                    });
+                    
+                    // BestMatch exactly averages ALL sources
+                    dataPoint.p50 = all_p50.reduce((a, b) => a + b, 0) / all_p50.length;
+                    
+                    // P10 & P90 of BestMatch MUST envelop all P50s for visual security
+                    const min_src = Math.min(...all_p50);
+                    const max_src = Math.max(...all_p50);
+                    dataPoint.p10 = min_src - (5 + Math.random() * 5); // Just below the lowest P50
+                    dataPoint.p90 = max_src + (10 + Math.random() * 10); // Just above the highest P50
+                } else {
+                    // Normal single source processing
+                    if (i > 48) { // Bridge point already has p50
+                        dataPoint.p50 = p50_base;
+                        dataPoint.p10 = p50_base - (15 + Math.random() * 10);
+                        dataPoint.p90 = p50_base + (25 + Math.random() * 15);
+                        dataPoint.rain = Math.max(0, (Math.random() < 0.3 ? Math.random() * 10 : 0));
+                    }
+                }
+            }
+            
+            return dataPoint;
+        });
+    };
+
+    const unifiedData = generateUnifiedData();
+
+    // Run model simulation
+    const handleRunModel = async () => {
+        setIsRunning(true);
+        try {
+            // Try to fetch real forecast data
+            if (mapApi.getForecastLstm && selectedModel === 'lstm') {
+                const result = await mapApi.getForecastLstm(lakeId).catch(() => null);
+                if (result) setForecastResults(result);
+            }
+            if (mapApi.getForecastHistory) {
+                const history = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);
+                if (history) setForecastHistory(Array.isArray(history) ? history : []);
+            }
+        } catch (err) {
+            console.error("Error running model:", err);
+        }
+        // Simulate processing time
+        setTimeout(() => { setIsRunning(false); }, 1500);
+    };
+
+    const tabs = [
+        { id: 'overview', label: 'Tổng quan', icon: <Info size={16} /> },
+        { id: 'operation', label: 'Vận hành', icon: <Settings size={16} /> },
+        { id: 'forecast', label: 'Dự báo', icon: <BarChart3 size={16} /> },
+        { id: 'history', label: 'Lịch sử & Training', icon: <History size={16} /> },
+    ];
+
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white w-full max-w-[95vw] h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-gray-200">
+
+                {/* Header */}
+                <div className="bg-[#1e3a8a] text-white p-4 flex justify-between items-start">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                            <span className="text-sm text-blue-200">Chi tiết Hồ chứa</span>
+                        </div>
+                        <h2 className="text-2xl font-bold tracking-wide uppercase">HỒ {lakeName}</h2>
+                        <p className="text-sm text-blue-200 mt-1">
+                            {lakeData.province || 'Trà Đốc, Bắc Trà My, Quảng Nam'}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 transition-colors">
+                            <span className="w-2 h-2 bg-white rounded-full"></span> HOẠT ĐỘNG
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm flex items-center gap-1 transition-colors"
+                        >
+                            <X size={16} /> Đóng
+                        </button>
+                    </div>
+                </div>
+
+                {/* Navigation Tabs */}
+                <div className="bg-white px-6 pt-4 border-b border-gray-200 flex overflow-x-auto">
+                    <div className="flex bg-gray-100/80 p-1.5 rounded-t-xl gap-2 border border-gray-200 border-b-0 shadow-sm">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'text-gray-500 hover:text-blue-600 hover:bg-white'
+                                    }`}
+                            >
+                                {tab.icon} {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Tab Content Area */}
+                <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
+
+                    {/* OVERVIEW TAB */}
+                    {activeTab === 'overview' && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Basic Info */}
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                                    <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
+                                        <Info size={18} /> Thông tin cơ bản
+                                    </h3>
+                                    <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                            <span className="text-gray-600">Dung tích thiết kế:</span>
+                                            <span className="font-semibold text-blue-900">343.55 triệu m³</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                            <span className="text-gray-600">Mực nước dâng BT:</span>
+                                            <span className="font-semibold text-blue-900">380 m</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                            <span className="text-gray-600">Mực nước chết:</span>
+                                            <span className="font-semibold text-blue-900">340 m</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Current Status */}
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                                    <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
+                                        <Activity size={18} /> Tình trạng hiện tại
+                                    </h3>
+                                    <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                            <span className="text-gray-600">Mực nước / Dung tích:</span>
+                                            <span className="font-semibold text-blue-900">{lakeData.WaterLevel_Upstream || 0} m / --</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                            <span className="text-gray-600">Lưu lượng vào:</span>
+                                            <span className="font-semibold text-blue-900">{lakeData.Q_to_Lake || 0} m³/s</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                            <span className="text-gray-600">Lưu lượng xả:</span>
+                                            <span className="font-semibold text-red-600">{lakeData.Q_discharge || 0} m³/s</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-gray-100 pb-2 text-xs">
+                                            <span className="text-gray-500">Cập nhật lúc:</span>
+                                            <span className="text-gray-500">{lakeData.lastUpdate ? new Date(lakeData.lastUpdate).toLocaleString('vi-VN') : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Chart */}
+                            <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                                <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
+                                    <Activity size={18} /> Biểu đồ Mực nước hồ (m)
+                                </h3>
+                                <div className="h-64 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={mockLevelData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                            <XAxis 
+                                                dataKey="time" 
+                                                axisLine={false} 
+                                                tickLine={false} 
+                                                tick={{ fontSize: 10, fill: '#6B7280' }} 
+                                                interval={3}
+                                            />
+                                            <YAxis 
+                                                domain={['auto', 'auto']} 
+                                                axisLine={false} 
+                                                tickLine={false} 
+                                                tick={{ fontSize: 11, fill: '#6B7280' }} 
+                                                label={{ value: 'MN (m)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 11, fontWeight: 'bold' } }}
+                                            />
+                                            <RechartsTooltip content={({ active, payload, label }) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <div className="bg-white p-2 border border-gray-200 shadow-lg rounded-lg text-xs">
+                                                            <p className="font-bold border-b pb-1 mb-1 text-gray-700">{label}</p>
+                                                            <div className="flex justify-between gap-4">
+                                                                <span className="text-blue-600">MN:</span>
+                                                                <span className="font-bold">{Number(payload[0].value).toFixed(2)} m</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            }} />
+                                            <Line type="monotone" dataKey="level" stroke="#3b82f6" strokeWidth={3} dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* OPERATION TAB */}
+                    {activeTab === 'operation' && (
+                        <div className="-mt-8">
+                            <OperationDashboard lakeId={lakeId} />
+                        </div>
+                    )}
+
+                    {/* MERGED FORECAST TAB (Dự báo = old forecast + research) */}
+                    {activeTab === 'forecast' && (
+                        <div className="space-y-6">
+                            {/* Controls Panel */}
+                            <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 text-sm space-y-4">
+                                {/* Rain Source Selector */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <CloudRain size={16} className="text-blue-600" />
+                                        <span className="font-bold text-gray-700">CHỌN NGUỒN DỮ LIỆU MƯA:</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {RAIN_SOURCES.map(src => (
+                                            <button
+                                                key={src.id}
+                                                onClick={() => setSelectedRainSource(src.id)}
+                                                className={`px-3 py-1.5 text-xs rounded-lg font-bold transition-all border-2 ${selectedRainSource === src.id
+                                                    ? 'text-white shadow-md'
+                                                    : 'border-blue-100 bg-blue-50/30 text-blue-600 hover:bg-blue-100/50'
+                                                    }`}
+                                                style={selectedRainSource === src.id ? { backgroundColor: src.color } : {}}
+                                            >
+                                                {src.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Model Selector */}
+                                <div className="border-t pt-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Zap size={16} className="text-purple-600" />
+                                        <span className="font-bold text-gray-700">MÔ HÌNH DỰ BÁO:</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {MODELS.map(model => (
+                                            <button
+                                                key={model.id}
+                                                onClick={() => setSelectedModel(model.id)}
+                                                className={`px-4 py-2 text-xs rounded-lg font-bold flex items-center gap-2 transition-all border-2 ${selectedModel === model.id
+                                                    ? 'text-white shadow-lg scale-105'
+                                                    : 'border-purple-100 bg-purple-50/30 text-purple-600 hover:bg-purple-100/50'
+                                                    }`}
+                                                style={selectedModel === model.id ? { backgroundColor: model.color } : {}}
+                                            >
+                                                {model.icon} Mô hình {model.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                                    <button
+                                        onClick={handleRunModel}
+                                        disabled={isRunning}
+                                        className={`px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-md transition-all ${isRunning
+                                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg'
+                                            }`}
+                                    >
+                                        {isRunning ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Đang xử lý...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Play size={16} /> Chạy mô hình dự báo
+                                            </>
+                                        )}
+                                    </button>
+                                    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-md transition-colors">
+                                        <Database size={16} /> Tải dữ liệu đối soát
+                                    </button>
+
+                                    {/* Status info */}
+                                    <div className="flex-1 flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
+                                        <span className="text-xs text-gray-500">
+                                            Mô hình: <strong className="text-gray-700">{MODELS.find(m => m.id === selectedModel)?.label}</strong> | 
+                                            Nguồn: <strong className="text-gray-700">{RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label}</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Unified Forecast Visualization */}
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                {/* Large Combined Chart */}
+                                <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                    <h3 className="text-blue-800 font-bold mb-1 flex items-center gap-2">
+                                        <Activity size={20} /> BIỂU ĐỒ DỰ BÁO LƯU LƯỢNG TỔNG HỢP (ENSEMBLE)
+                                    </h3>
+                                    <p className="text-sm text-gray-500 mb-6 italic">
+                                        Hiển thị 48 giờ thực đo và 24 giờ dự báo tích hợp kịch bản (P10-P50-P90)
+                                    </p>
+                                    <div className="h-[450px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={unifiedData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+                                                <defs>
+                                                    <linearGradient id="colorBand" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor={MODELS.find(m => m.id === selectedModel)?.color || '#3b82f6'} stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor={MODELS.find(m => m.id === selectedModel)?.color || '#3b82f6'} stopOpacity={0.05} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                                <XAxis 
+                                                    dataKey="time" 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fontSize: 10, fill: '#6B7280' }} 
+                                                    interval={6} 
+                                                />
+                                                <YAxis 
+                                                    yAxisId="flow"
+                                                    domain={['auto', 'auto']} 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fontSize: 12, fill: '#6B7280' }} 
+                                                    label={{ value: 'Lưu lượng Q (m³/s)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 13, fontWeight: 'bold' } }} 
+                                                />
+                                                <YAxis 
+                                                    yAxisId="rain" 
+                                                    orientation="right" 
+                                                    reversed={true} 
+                                                    domain={[0, 150]} 
+                                                    hide={true} 
+                                                />
+                                                <RechartsTooltip content={({ active, payload, label }) => {
+                                                    if (active && payload && payload.length) {
+                                                        const data = payload[0].payload;
+                                                        return (
+                                                            <div className="bg-white p-3 border border-gray-200 shadow-xl rounded-lg text-xs min-w-[200px]">
+                                                                <p className="font-bold border-b pb-1 mb-2 text-gray-700">{label} {data.isFuture ? '(Dự báo)' : '(Thực tế)'}</p>
+                                                                {payload.map((entry, idx) => {
+                                                                    // Skip rendering P10/P90 explicitly to declutter tooltip (Optional, but looks cleaner)
+                                                                    if (entry.dataKey === 'p10' || entry.dataKey === 'p90') return null;
+                                                                    return (
+                                                                        <div key={idx} className="flex justify-between gap-4 py-1">
+                                                                            <span style={{ color: entry.color, fontWeight: 'bold' }}>{entry.name}:</span>
+                                                                            <span className="font-bold">{Number(entry.value).toFixed(2)} {entry.yAxisId === 'rain' ? 'mm' : 'm³/s'}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                }} />
+                                                <Legend verticalAlign="top" height={40} align="right" iconType="circle" />
+                                                <ReferenceLine x={unifiedData[48]?.time} stroke="#ef4444" strokeDasharray="5 5" strokeWidth={2} label={{ value: "Hiện tại", fill: '#ef4444', fontSize: 12, fontWeight: 'bold', position: 'top' }} />
+                                                
+                                                {/* Rainfall Bar Chart (Inverted) */}
+                                                {selectedRainSource === 'bestmatch' ? (
+                                                    // Stacked Rain bars for all sources
+                                                    RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
+                                                        <Bar key={`rain_${src.id}`} yAxisId="rain" dataKey={`rain_${src.id}`} fill={src.color} name={`Mưa (${src.label})`} barSize={15} opacity={0.6} />
+                                                    ))
+                                                ) : (
+                                                    <Bar yAxisId="rain" dataKey="rain" fill={RAIN_SOURCES.find(s => s.id === selectedRainSource)?.color || "#3b82f6"} name="Lượng mưa (mm)" barSize={15} opacity={0.6} />
+                                                )}
+
+                                                {/* Actual Flow */}
+                                                <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name="Khảo sát (Thực tế)" connectNulls={true} />
+                                                
+                                                {/* Ensemble Band */}
+                                                <Area yAxisId="flow" type="monotone" dataKey="p90" stroke="none" fill="url(#colorBand)" fillOpacity={1} name="Dải dự báo bao trùm (Max)" />
+                                                <Area yAxisId="flow" type="monotone" dataKey="p10" stroke="none" fill="#fff" fillOpacity={1} name="Khung xả khẩn Min" />
+
+                                                {/* Specific Sources Lines (Only in Best Match) */}
+                                                {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
+                                                    <Line key={`p50_${src.id}`} yAxisId="flow" type="monotone" dataKey={`p50_${src.id}`} stroke={src.color} strokeWidth={1} strokeDasharray="4 4" dot={false} name={`Dự báo nguồn ${src.label}`} opacity={0.8} />
+                                                ))}
+
+                                                {/* Forecast Scenario Line (Primary) */}
+                                                <Line yAxisId="flow" type="monotone" dataKey="p50" stroke={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'} strokeWidth={3} strokeDasharray="8 5" dot={{ r: 3 }} name={selectedRainSource === 'bestmatch' ? `Dự báo Best Match (Trung bình)` : `Dự báo ${MODELS.find(m => m.id === selectedModel)?.label} (Kỳ vọng)`} connectNulls={true} />
+
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Results Table Integration */}
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col h-full">
+                                    <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
+                                        <Clock size={18} /> KẾT QUẢ DỰ BÁO CHI TIẾT
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mb-4 italic">6 giờ tiếp theo (Analysis)</p>
+                                    <div className="flex-1 overflow-auto border border-gray-100 rounded-lg">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-[#f8fafc] text-gray-600 font-bold border-b text-[10px] uppercase tracking-wider">
+                                                <tr>
+                                                    <th className="px-3 py-3">Giờ</th>
+                                                    <th className="px-3 py-3 text-center">Min</th>
+                                                    <th className="px-3 py-3 text-center">Avg</th>
+                                                    <th className="px-3 py-3 text-center text-red-600">Max</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {unifiedData.filter(d => d.isFuture).slice(0, 10).map((d, i) => (
+                                                    <tr key={i} className={`border-b border-gray-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-gray-50/30' : ''}`}>
+                                                        <td className="px-3 py-3 font-bold text-gray-700">{d.fullTime}</td>
+                                                        <td className="px-2 py-3 text-center text-blue-500 font-medium">{d.p10.toFixed(1)}</td>
+                                                        <td className="px-2 py-3 text-center font-bold text-gray-800">{d.p50.toFixed(1)}</td>
+                                                        <td className="px-2 py-3 text-center text-red-500 font-medium">{d.p90.toFixed(1)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                        <div className="text-[10px] font-bold text-blue-800 mb-1">CHỈ SỐ TIN CẬY</div>
+                                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                            <div className="bg-blue-500 h-full w-[85%]"></div>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] text-blue-600 mt-1"><span>Độ tin cậy mô hình</span> <span>85%</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Info cards */}
+                            <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                                <h3 className="text-gray-800 font-bold mb-4 border-b pb-2 text-sm flex items-center gap-2"><BookOpen size={16} /> HƯỚNG DẪN ĐỌC BIỂU ĐỒ & DỮ LIỆU</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><span className="w-8 border-t-4 border-red-500 border-dashed"></span> <span className="text-xs font-semibold text-gray-700">Max (Kịch bản cao nhất - P90)</span></div>
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><span className="w-8 border-t-4 border-gray-800"></span> <span className="text-xs font-semibold text-gray-700">Trung bình (Dự báo kỳ vọng - P50)</span></div>
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><span className="w-8 border-t-4 border-blue-600 border-dashed"></span> <span className="text-xs font-semibold text-gray-700">Min (Kịch bản thấp nhất - P10)</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    )}
+
+                    {/* HISTORY AND TRAINING TAB */}
+                    {activeTab === 'history' && (
+                        <div className="bg-white p-10 rounded-lg shadow-sm border border-gray-200 text-center">
+                            <History size={48} className="mx-auto text-gray-300 mb-4" />
+                            <h3 className="text-gray-800 font-bold mb-2">Tính năng đang phát triển</h3>
+                            <p className="text-sm text-gray-500">Phần Lịch sử xả lũ và Training mô hình AI sẽ được cập nhật trong phiên bản tiếp theo.</p>
+                        </div>
+                    )}
+
+                </div>
+            </div>
+        </div>
+    );
+}

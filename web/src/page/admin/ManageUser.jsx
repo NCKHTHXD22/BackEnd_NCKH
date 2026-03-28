@@ -4,9 +4,22 @@
 
   export default function ManageUsers() {
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const data = await adminApi.getUsers();
+        setUsers(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     useEffect(() => {
-      adminApi.getUsers().then(setUsers).catch(console.error);
+      fetchUsers();
     }, []);
 
     const toggleRole = async (id, role) => {
@@ -33,8 +46,12 @@
     return (
       <div className="w-full flex flex-col px-4 pt-20">
         <div className="flex flex-col items-start mb-4 gap-2">
-        <h2 className="text-xl font-semibold mb-4">Quản lý người dùng</h2>
+      <h2 className="text-xl font-semibold mb-4">Quản lý người dùng</h2>
+      {loading ? (
+        <div className="flex justify-center p-10 text-gray-400">Đang tải danh sách người dùng...</div>
+      ) : (
         <DataTableUser data={users} onToggleRole={toggleRole} onToggleBan={toggleBan} />
+      )}
       </div>
       </div>
     );

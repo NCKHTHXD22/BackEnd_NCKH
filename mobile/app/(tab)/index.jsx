@@ -13,6 +13,7 @@ import MapView, { PROVIDER_GOOGLE, Marker, Circle } from "react-native-maps";
 import * as Location from "expo-location";
 import axios from "axios";
 import styles from "../../assets/styles/home.styles.js";
+import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { API_URL } from "@/lib/env";
@@ -162,6 +163,14 @@ export default function HomeScreen() {
     }
   };
 
+  // Tọa độ trung tâm Việt Nam
+  const vietnamRegion = {
+    latitude: 16.0544,
+    longitude: 108.2022,
+    latitudeDelta: 10.0,
+    longitudeDelta: 10.0,
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <View style={{ position: "absolute", top: 40, left: 10, zIndex: 999 }}>
@@ -188,44 +197,42 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {location && (
-        <MapView
-          ref={mapRef}
-          provider={PROVIDER_GOOGLE}
-          style={{ flex: 1 }}
-          customMapStyle={mapStyle}
-          initialRegion={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
-          showsUserLocation
-          onPress={() => setSelectedMarker(null)}
-        >
-          {viewMode === "flood" && (
-            <Circle center={{ latitude: location.latitude, longitude: location.longitude }} radius={800} strokeColor="rgba(33, 150, 243, 0.8)" fillColor="rgba(33, 150, 243, 0.2)" />
-          )}
+      <MapView
+        ref={mapRef}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1 }}
+        customMapStyle={mapStyle}
+        initialRegion={vietnamRegion}
+        showsUserLocation={!!location}
+        onPress={() => setSelectedMarker(null)}
+      >
+        {viewMode === "flood" && location && (
+          <Circle center={{ latitude: location.latitude, longitude: location.longitude }} radius={800} strokeColor="rgba(33, 150, 243, 0.8)" fillColor="rgba(33, 150, 243, 0.2)" />
+        )}
 
-          {markers.filter(item => {
-            if (viewMode === "flood" && location) {
-              return getDistanceKm(location.latitude, location.longitude, item.coordinates.lat, item.coordinates.lng) <= 0.8;
-            }
-            return true;
-          }).map((item, idx) => (
-            <Marker key={`post-${idx}`} coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }} onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}>
-              <Ionicons name="information-circle" size={28} color="#f9a825" />
-            </Marker>
-          ))}
+        {markers.filter(item => {
+          if (viewMode === "flood" && location) {
+            return getDistanceKm(location.latitude, location.longitude, item.coordinates.lat, item.coordinates.lng) <= 0.8;
+          }
+          return true;
+        }).map((item, idx) => (
+          <Marker key={`post-${idx}`} coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }} onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}>
+            <Ionicons name="information-circle" size={28} color="#f9a825" />
+          </Marker>
+        ))}
 
-          {showReservoirs && reservoirs.map((item, idx) => (
-            <Marker key={`res-${idx}`} coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }} onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}>
-              <Ionicons name="water" size={30} color="#009688" />
-            </Marker>
-          ))}
+        {showReservoirs && reservoirs.map((item, idx) => (
+          <Marker key={`res-${idx}`} coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }} onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}>
+            <Ionicons name="water" size={30} color="#009688" />
+          </Marker>
+        ))}
 
-          {showRainStations && rainStations.map((item, idx) => (
-            <Marker key={`rain-${idx}`} coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }} onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}>
-              <Ionicons name="rainy" size={26} color="#fb8c00" />
-            </Marker>
-          ))}
-        </MapView>
-      )}
+        {showRainStations && rainStations.map((item, idx) => (
+          <Marker key={`rain-${idx}`} coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }} onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}>
+            <Ionicons name="rainy" size={26} color="#fb8c00" />
+          </Marker>
+        ))}
+      </MapView>
 
       {selectedMarker && (
         <View style={styles.infoBox}>
