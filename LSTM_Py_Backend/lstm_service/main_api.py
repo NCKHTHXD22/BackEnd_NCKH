@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from datetime import datetime, timedelta
+from datetime import timedelta
 import pandas as pd
 
 from config.reservoirs import RESERVOIRS
@@ -13,7 +13,6 @@ from utils.scaler_utils import GlobalScaler
 from data.data_fetcher import (
     fetch_hydro_data,
     fetch_rain_data,
-    fetch_rain_forecast
 )
 from features.feature_engineering import (
     add_time_features,
@@ -39,6 +38,7 @@ FEATURES = [
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 scaler = GlobalScaler()
+_model_cache: dict = {}
 
 
 @app.on_event("startup")
@@ -46,13 +46,16 @@ async def startup_event():
     """Load only the scaler on startup. Models are loaded on-demand to save RAM."""
     try:
         scaler.load("artifacts/global_scaler.pkl")
-        print(f"✅ Scaler loaded. Device: {device}. Models will be loaded on-demand.")
+        print(f"[OK] Scaler loaded. Device: {device}. Models will be loaded on-demand.")
     except Exception as e:
-        print(f"❌ Error loading scaler: {e}")
+        print(f"[ERROR] Error loading scaler: {e}")
 
 
 def load_model_for_reservoir(res_idx: int) -> InflowForecastModel:
-    """Load the best available model for a given reservoir index."""
+    """Load the best available model for a given reservoir index (cached after first load)."""
+    if res_idx in _model_cache:
+        return _model_cache[res_idx]
+
     model = InflowForecastModel(
         input_size=INPUT_SIZE,
         hidden_size=HIDDEN_SIZE,
@@ -65,15 +68,16 @@ def load_model_for_reservoir(res_idx: int) -> InflowForecastModel:
     global_path = "artifacts/inflow_model.pt"
 
     if os.path.exists(fine_tuned_path):
-        model.load_state_dict(torch.load(fine_tuned_path, map_location=device))
+        model.load_state_dict(torch.load(fine_tuned_path, map_location=device, weights_only=True))
         print(f"  [Model] Loaded fine-tuned: {fine_tuned_path}")
     elif os.path.exists(global_path):
-        model.load_state_dict(torch.load(global_path, map_location=device))
+        model.load_state_dict(torch.load(global_path, map_location=device, weights_only=True))
         print(f"  [Model] Loaded global: {global_path}")
     else:
         raise FileNotFoundError(f"No model found at {fine_tuned_path} or {global_path}")
 
     model.eval()
+    _model_cache[res_idx] = model
     return model
 
 
@@ -96,70 +100,88 @@ async def get_prediction(req: PredictRequest):
     res_idx = info["idx"]
 
     try:
-        print(f"\n🔄 Predicting for Reservoir {rid} ({info['name']})...")
+        print(f"\n[>>] Predicting for Reservoir {rid} ({info['name']})...")
+        has_warning = False
+        warning_msg = ""
 
         # ── 1. Fetch hydro data (72h lookback for features) ──────────────────
         hydro = fetch_hydro_data(rid, days=5)
         if hydro.empty:
             raise HTTPException(status_code=400, detail=f"No hydro data for reservoir {rid}")
 
-        # ── 2. Fetch archive rain (IDW or lat/lon based) ──────────────────────
-        rain = fetch_rain_data(info["lat"], info["lon"], days=5)
+        # ── 2. Determine reference time (latest hydro point) ──────────────────
+        reference_time = hydro["time"].max()
+        print(f"  Reference time (from hydro): {reference_time}")
 
-        # ── 3. Merge and build feature dataframe ─────────────────────────────
-        if rain.empty:
+        # ── 3. Fetch hybrid rain (Archive Excel + Forecast) ───────────────────
+        # We fetch rain for features (past) and for model input (future)
+        rain_all = fetch_rain_data(rid, info["lat"], info["lon"], reference_time=reference_time, days=5)
+
+        # ── 4. Merge and build feature dataframe ─────────────────────────────
+        if rain_all.empty:
             df = hydro.copy()
             df["rain"] = 0.0
+            rain_future = pd.DataFrame() # Will trigger fallback below
         else:
-            df = pd.merge(hydro, rain, on="time", how="left")
+            # Past rain for features
+            rain_past = rain_all[rain_all["time"] <= reference_time]
+            df = pd.merge(hydro, rain_past, on="time", how="left")
             df["rain"] = df["rain"].fillna(0.0)
+            
+            # Future rain for inference
+            rain_future = rain_all[rain_all["time"] > reference_time].copy()
+            rain_future = rain_future.rename(columns={"rain": "rain_forecast"})
 
         df["inflow"] = np.log1p(df["inflow"].clip(0))
 
         df = add_time_features(df)
         df = add_rain_features(df)
         df = add_inflow_features(df)
-        df = df.dropna()
-
+        # ── 5. Resilience: Pad data if history is insufficient (< 72h) ───────
         if len(df) < SEQ_LENGTH:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Insufficient data: got {len(df)} rows, need {SEQ_LENGTH}"
-            )
+            print(f"  [WARN] Insufficient data: {len(df)} rows. Padding to {SEQ_LENGTH}...")
+            # Pad by repeating the first row
+            needed = SEQ_LENGTH - len(df)
+            padding = pd.concat([df.iloc[[0]]] * needed, ignore_index=True)
+            df = pd.concat([padding, df], ignore_index=True)
+            has_warning = True
+            warning_msg = f"Insufficient history ({len(df)-needed}h). Padded with {needed}h of oldest data."
+        else:
+            has_warning = False
+            warning_msg = ""
 
-        reference_time = df["time"].max()
-        print(f"  Reference time: {reference_time}")
-
-        # ── 4. Fetch future rain forecast ─────────────────────────────────────
-        rain_future = fetch_rain_forecast(info["lat"], info["lon"], reference_time, hours=HORIZON)
+        # ── 5. Prepare future rain forecast ───────────────────────────────────
         if rain_future.empty:
-            # Fallback: exponential rain decay from last observed
-            last_rain = float(df["rain"].iloc[-1]) if not df["rain"].empty else 0.0
-            simulated = []
-            for i in range(HORIZON):
-                last_rain *= 0.7
-                simulated.append(last_rain if last_rain > 0.1 else 0.0)
+            # Fallback: giả định không mưa (0.0) — thực tế hơn exponential decay
+            # vì mưa nhiệt đới thường ngắn và ngừng đột ngột
             rain_future = pd.DataFrame({
                 "time": [reference_time + timedelta(hours=i + 1) for i in range(HORIZON)],
-                "rain_forecast": simulated
+                "rain_forecast": [0.0] * HORIZON
             })
-            print("  ⚠ Used simulated future rain (fallback)")
+            print("  [WARN] Open-Meteo unavailable, fallback to zero rainfall forecast")
 
-        # ── 5. Prepare model inputs ───────────────────────────────────────────
+        # ── 6. Prepare model inputs ───────────────────────────────────────────
         # Filter to only features present in df
         available = [f for f in FEATURES if f in df.columns]
         if len(available) != INPUT_SIZE:
-            print(f"  ⚠ Feature mismatch: expected {INPUT_SIZE}, got {len(available)}")
+            missing = [f for f in FEATURES if f not in df.columns]
+            raise HTTPException(
+                status_code=500,
+                detail=f"Feature mismatch: expected {INPUT_SIZE}, got {len(available)}. Missing: {missing}"
+            )
 
         past_seq = df[available].iloc[-SEQ_LENGTH:].values.astype(np.float32)
+        # Replace NaN/Inf from feature engineering before scaling
+        past_seq = np.nan_to_num(past_seq, nan=0.0, posinf=0.0, neginf=0.0)
         past_seq = scaler.transform(past_seq[np.newaxis])[0]  # shape (SEQ_LENGTH, F)
 
-        # Log-transform future rain to match training preprocessing
-        future_rain = np.log1p(
-            rain_future["rain_forecast"].values.astype(np.float32).reshape(-1, 1)
-        )
+        # Log-transform future rain — pad to exactly HORIZON if forecast is short
+        rain_vals = rain_future["rain_forecast"].values.astype(np.float32)
+        if len(rain_vals) < HORIZON:
+            rain_vals = np.pad(rain_vals, (0, HORIZON - len(rain_vals)), constant_values=0.0)
+        future_rain = np.log1p(rain_vals[:HORIZON].reshape(-1, 1))
 
-        # ── 6. Load model & run inference ─────────────────────────────────────
+        # ── 7. Load model & run inference ─────────────────────────────────────
         model = load_model_for_reservoir(res_idx)
 
         with torch.no_grad():
@@ -169,26 +191,28 @@ async def get_prediction(req: PredictRequest):
                 torch.tensor([res_idx]).long().to(device)
             )
 
-        # Inverse log1p transform
-        preds_np = np.expm1(preds.cpu().numpy()[0])  # shape (HORIZON, 3)
+        # Inverse log1p — clip to prevent Inf from very large raw outputs
+        raw_np = np.clip(preds.cpu().numpy()[0], -20.0, 20.0)
+        preds_np = np.nan_to_num(np.expm1(raw_np), nan=0.0, posinf=0.0, neginf=0.0)
 
-        # ── 7. Format response ────────────────────────────────────────────────
+        # ── 8. Format response ────────────────────────────────────────────────
         results = []
         for i, (p10, p50, p90) in enumerate(preds_np):
             target_time = reference_time + timedelta(hours=i + 1)
             results.append({
                 "targetTime": target_time.isoformat(),
-                "p10": round(float(max(p10, 0)), 2),
-                "p50": round(float(max(p50, 0)), 2),
-                "p90": round(float(max(p90, 0)), 2),
+                "p10": round(max(float(p10), 0.0), 2),
+                "p50": round(max(float(p50), 0.0), 2),
+                "p90": round(max(float(p90), 0.0), 2),
             })
 
-        print(f"  ✅ Generated {len(results)} forecast steps")
+        print(f"  [OK] Generated {len(results)} forecast steps")
 
         return {
             "reservoirId": rid,
             "reservoirName": info["name"],
             "referenceTime": reference_time.isoformat(),
+            "warning": warning_msg if has_warning else None,
             "modelUsed": (
                 f"fine_tuned_rid_{res_idx}"
                 if os.path.exists(f"artifacts/inflow_model_rid_{res_idx}.pt")

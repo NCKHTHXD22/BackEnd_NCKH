@@ -51,13 +51,12 @@ def _parse_vndms_excel(filepath: str) -> pd.DataFrame:
 def load_all_vndms(data_dir: str = ".") -> pd.DataFrame:
     all_dfs = []
     
-    # Tìm đệ quy toàn bộ thư mục Rain Data
-    search_pattern = os.path.join(data_dir, "**", "*.xlsx")
-    files = glob.glob(search_pattern, recursive=True)
+    # CHỈ TÌM CÁC FILE VNDMS MỚI
+    search_pattern = os.path.join(data_dir, "VNDMS_Mua_Theo_Gio_*.xlsx")
+    files = glob.glob(search_pattern)
     
-    # Nếu rỗng thì quét nội bộ thư mục gốc
-    if not files:
-        files = glob.glob(os.path.join(data_dir, "*.xlsx"))
+    # Debug
+    print(f"  🔎 Found {len(files)} VNDMS raw files in {data_dir}")
         
     for path in files:
         if "~$" in path: continue
