@@ -113,66 +113,58 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         };
 
         const result = [];
-        // Points 0 to 48: History
-        for (let i = 0; i <= 48; i++) {
-            const hourOffset = i - 48;
+        // Combined Timeline: Last 24h to Next 12h relative to CURRENT TIME
+        const START_HISTORY = 36; // 36 hours of history
+        const END_FORECAST = 12; // 12 hours of forecast
+
+        for (let i = 0; i <= (START_HISTORY + END_FORECAST); i++) {
+            const hourOffset = i - START_HISTORY;
             const targetTime = new Date(now.getTime() + hourOffset * 3600000);
             const label = formatLabel(targetTime);
-            
-            // Try to find real historical data
-            const realPoint = realHistoryData.find(d => 
-                new Date(d.timestamp).getHours() === targetTime.getHours() && 
-                new Date(d.timestamp).getDate() === targetTime.getDate()
-            );
+            const isFuture = hourOffset > 0;
+            const isNow = hourOffset === 0;
+
+            // 1. Check Historical Data (Optimized lookup)
+            const realPoint = realHistoryData.find(d => {
+                const dt = new Date(d.timestamp);
+                return dt.getHours() === targetTime.getHours() && dt.getDate() === targetTime.getDate();
+            });
+
+            // 2. Check LSTM Forecast Data
+            const realPred = (selectedModel === 'lstm' && Array.isArray(realLstmData)) ? 
+                realLstmData.find(d => {
+                    const dt = new Date(d.forecastTime);
+                    return dt.getHours() === targetTime.getHours() && dt.getDate() === targetTime.getDate();
+                }) : null;
 
             const dataPoint = {
                 time: label,
                 fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
-                isFuture: false,
-                qActual: realPoint ? realPoint.qvao : 0.0,
+                isFuture: isFuture,
+                // Past: Use real data. Future: Set to null (hidden)
+                qActual: !isFuture ? (realPoint ? realPoint.qvao : 0.0) : null,
+                // Past: Set to null (hidden). Future: Use LSTM data.
+                p50: isFuture || isNow ? (realPred ? realPred.p50 : null) : null,
+                p10: isFuture || isNow ? (realPred ? realPred.p10 : null) : null,
+                p90: isFuture || isNow ? (realPred ? realPred.p90 : null) : null,
                 rain: realPoint ? (realPoint.rain || 0) : 0
             };
 
-            // Bridge point (Current hour)
-            if (i === 48) {
-                dataPoint.isFuture = true;
-                dataPoint.p50 = dataPoint.qActual;
-                dataPoint.p10 = dataPoint.qActual;
-                dataPoint.p90 = dataPoint.qActual;
+            // Bridge point: Connectivity at "Now"
+            if (isNow && !isFuture) {
+                // To connect the lines, we can make the "Now" point have both values
+                // if we want the actual line to touch the start of the forecast.
+                if (dataPoint.qActual !== null && dataPoint.p50 === null) {
+                    // If no forecast exactly at 'now', use the actual value as the forecast start
+                    dataPoint.p50 = dataPoint.qActual;
+                    dataPoint.p10 = dataPoint.qActual;
+                    dataPoint.p90 = dataPoint.qActual;
+                }
             }
+            
             result.push(dataPoint);
         }
-
-        // Points 49 to 60: Future Forecast (12 Hours based on HORIZON)
-        for (let i = 1; i <= 12; i++) {
-            const targetTime = new Date(now.getTime() + i * 3600000);
-            const label = formatLabel(targetTime);
-
-            // Try to find real LSTM prediction
-            const realPred = (selectedModel === 'lstm' && Array.isArray(realLstmData)) ? 
-                realLstmData.find(d => 
-                    new Date(d.forecastTime).getHours() === targetTime.getHours() && 
-                    new Date(d.forecastTime).getDate() === targetTime.getDate()
-                ) : null;
-
-            if (realPred || selectedModel === 'lstm') {
-                const dataPoint = {
-                    time: label,
-                    fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
-                    isFuture: true,
-                    p50: realPred ? realPred.qvao_forecast : (baseQ + (Math.random() * 20 - 10)),
-                    p10: realPred ? (realPred.p10 || realPred.qvao_forecast * 0.8) : null,
-                    p90: realPred ? (realPred.p90 || realPred.qvao_forecast * 1.2) : null,
-                };
-                
-                // Fallback for P10/P90 if not available
-                if (dataPoint.p50 && !dataPoint.p10) dataPoint.p10 = dataPoint.p50 * 0.8;
-                if (dataPoint.p50 && !dataPoint.p90) dataPoint.p90 = dataPoint.p50 * 1.3;
-
-                result.push(dataPoint);
-            }
-        }
-
+        
         return result;
     };
 
