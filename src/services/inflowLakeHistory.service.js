@@ -17,7 +17,7 @@ class InflowLakeHistoryService {
             const res = await axios.post(PROXY_URL, {
                 method: "POST",
                 url: "https://apiv2.danang.gov.vn/oauth2/token",
-                data: "grant_type=client_credentials",
+                data: { grant_type: "client_credentials" },
                 headers: {
                     'Authorization': `Basic ${this.AUTH}`,
                     'Content-Type': 'application/x-www-form-urlencoded'

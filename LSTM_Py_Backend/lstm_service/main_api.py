@@ -4,6 +4,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import timedelta
+from typing import Any
 import pandas as pd
 
 from config.reservoirs import RESERVOIRS
@@ -108,7 +109,7 @@ async def health_check():
 class ProxyRequest(BaseModel):
     method: str = "GET"
     url: str
-    data: dict = None
+    data: Any = None
     params: dict = None
     headers: dict = None
 
@@ -127,7 +128,11 @@ async def proxy_danang(req: ProxyRequest):
         headers.pop("Host", None)
 
         if req.method.upper() == "POST":
-            r = requests.post(req.url, data=req.data, json=req.data, params=req.params, headers=headers, timeout=60)
+            # Nếu Content-Type là json, dùng 'json' arg, ngược lại dùng 'data'
+            if "application/json" in headers.get("Content-Type", "").lower():
+                r = requests.post(req.url, json=req.data, params=req.params, headers=headers, timeout=60)
+            else:
+                r = requests.post(req.url, data=req.data, params=req.params, headers=headers, timeout=60)
         else:
             r = requests.get(req.url, params=req.params, headers=headers, timeout=60)
 
