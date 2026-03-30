@@ -76,22 +76,19 @@ class InflowLakeHistoryService {
             const seenHours = new Set();
 
             // Ensure we push data incrementally.
-            // Often, the last entry for a particular hour is best if there are slight duplications.
             for (const record of data) {
-                if (!record.thoigian) continue;
+                // Use thoigianxa (YYYY-MM-DDTHH:mm:ss) which is more reliable than thoigian (DD/MM/YYYY HH:mm)
+                const dateToParse = record.thoigianxa || record.thoigian;
+                if (!dateToParse) continue;
 
-                const roundedTime = this._roundToHour(record.thoigian);
+                const roundedTime = this._roundToHour(dateToParse);
                 const timeKey = roundedTime.toISOString();
-
-                // Use the first record we see for an hour or override. We will override it (keeping the latest).
-                // Since the Danang API returns data sequentially, overwriting gives the latest recorded value inside that hour bucket.
-                seenHours.add(timeKey);
 
                 // find if we already pushed this hour, update it
                 const existingIndex = docsToUpsert.findIndex(d => d.timestamp.toISOString() === timeKey);
                 const doc = {
                     Id_Lake: lake.Id_Lake,
-                    lakeName: lake.name || Object.keys(lake).length ? lake.name : `Hồ ${lake.Id_Lake}`,
+                    lakeName: lake.name || (lake.name ? lake.name : `Hồ ${lake.Id_Lake}`),
                     qvao: record.qvao || 0,
                     luuluongxa: record.luuluongxa || 0,
                     htl: record.htl || 0,

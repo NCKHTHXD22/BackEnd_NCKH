@@ -59,6 +59,29 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const [forecastResults, setForecastResults] = useState(null);
     const [rainData, setRainData] = useState([]);
     const [forecastHistory, setForecastHistory] = useState([]);
+    const [realLstmData, setRealLstmData] = useState([]);
+    const [realHistoryData, setRealHistoryData] = useState([]);
+
+    // Fetch real data on load and when switching to forecast
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!lakeId) return;
+            try {
+                // Fetch 48h history even for overview (useful)
+                const history = await mapApi.getInflowHistory(lakeId).catch(() => []);
+                setRealHistoryData(history);
+
+                // Fetch real LSTM if in forecast tab
+                if (activeTab === 'forecast' && selectedModel === 'lstm') {
+                    const lstm = await mapApi.getForecastLstm(lakeId).catch(() => []);
+                    setRealLstmData(lstm);
+                }
+            } catch (err) {
+                console.error("❌ Error fetching real data:", err);
+            }
+        };
+        fetchData();
+    }, [lakeId, activeTab, selectedModel]);
 
     if (!lakeId || !lakeData) return null;
 
@@ -76,90 +99,81 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         };
     });
 
-    // Generate unified forecast data (Actuals + Ensemble scenarios)
+    // Generate unified forecast data (Actuals + Real LSTM + Fallbacks)
     const generateUnifiedData = () => {
         const baseQ = lakeData.Q_to_Lake || 80;
         const now = new Date();
-        
-        // Total 72 points: 48h history + 24h future
-        return Array.from({ length: 72 }).map((_, i) => {
-            const isFuture = i > 48; // Changed to i > 48 so i=48 is the "bridge" point
+        now.setMinutes(0, 0, 0); // Align to hour start
+
+        // Helper: Format date for labels (GMT+7)
+        const formatLabel = (date) => {
+            return date.getHours().toString().padStart(2, '0') + ':00 ' +
+                date.getDate().toString().padStart(2, '0') + '/' +
+                (date.getMonth() + 1).toString().padStart(2, '0');
+        };
+
+        const result = [];
+        // Points 0 to 48: History
+        for (let i = 0; i <= 48; i++) {
             const hourOffset = i - 48;
             const targetTime = new Date(now.getTime() + hourOffset * 3600000);
+            const label = formatLabel(targetTime);
             
-            const dtLabel = targetTime.getHours().toString().padStart(2, '0') + ':00 ' + 
-                           targetTime.getDate().toString().padStart(2, '0') + '/' + 
-                           (targetTime.getMonth() + 1).toString().padStart(2, '0');
-            const fullTime = targetTime.getHours().toString().padStart(2, '0') + ':00';
+            // Try to find real historical data
+            const realPoint = realHistoryData.find(d => 
+                new Date(d.timestamp).getHours() === targetTime.getHours() && 
+                new Date(d.timestamp).getDate() === targetTime.getDate()
+            );
 
-            const noise = selectedModel === 'arimax' ? Math.random() * 15 : selectedModel === 'lstm' ? Math.random() * 10 : Math.random() * 20;
-            
-            let dataPoint = { time: dtLabel, fullTime, isFuture: i >= 48, hourOffset };
-            
-            // Generate qActual for historical AND the exact current point
-            if (i <= 48) {
-                const qAct = baseQ - Math.random() * 20 + noise; 
-                dataPoint.qActual = qAct;
-                dataPoint.rain = Math.max(0, (Math.random() < 0.3 ? Math.random() * 15 : 0));
-                
-                // Populate past rain for BestMatch ensemble bars
-                if (selectedRainSource === 'bestmatch') {
-                    RAIN_SOURCES.filter(s => s.id !== 'bestmatch').forEach(src => {
-                        // All models predict similarly in the past, around the actual rain
-                        const randomDiff = Math.random() * 4 - 2;
-                        dataPoint[`rain_${src.id}`] = Math.max(0, dataPoint.rain + randomDiff); 
-                    });
-                }
+            const dataPoint = {
+                time: label,
+                fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
+                isFuture: false,
+                qActual: realPoint ? realPoint.qvao : 0.0,
+                rain: realPoint ? (realPoint.rain || 0) : 0
+            };
 
-                // At the exact current hour (i=48), bridge the prediction lines
-                if (i === 48) {
-                    dataPoint.p50 = qAct;
-                    dataPoint.p10 = qAct;
-                    dataPoint.p90 = qAct;
-                    if (selectedRainSource === 'bestmatch') {
-                        RAIN_SOURCES.filter(s => s.id !== 'bestmatch').forEach(src => {
-                            dataPoint[`p50_${src.id}`] = qAct;
-                        });
-                    }
-                }
+            // Bridge point (Current hour)
+            if (i === 48) {
+                dataPoint.isFuture = true;
+                dataPoint.p50 = dataPoint.qActual;
+                dataPoint.p10 = dataPoint.qActual;
+                dataPoint.p90 = dataPoint.qActual;
             }
-            
-            // Generate prediction scenarios for future
-            if (i >= 48) {
-                const p50_base = baseQ - Math.random() * 15 + (noise * 0.8) + (hourOffset * 0.5);
+            result.push(dataPoint);
+        }
+
+        // Points 49 to 60: Future Forecast (12 Hours based on HORIZON)
+        for (let i = 1; i <= 12; i++) {
+            const targetTime = new Date(now.getTime() + i * 3600000);
+            const label = formatLabel(targetTime);
+
+            // Try to find real LSTM prediction
+            const realPred = (selectedModel === 'lstm' && Array.isArray(realLstmData)) ? 
+                realLstmData.find(d => 
+                    new Date(d.forecastTime).getHours() === targetTime.getHours() && 
+                    new Date(d.forecastTime).getDate() === targetTime.getDate()
+                ) : null;
+
+            if (realPred || selectedModel === 'lstm') {
+                const dataPoint = {
+                    time: label,
+                    fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
+                    isFuture: true,
+                    p50: realPred ? realPred.qvao_forecast : (baseQ + (Math.random() * 20 - 10)),
+                    p10: realPred ? (realPred.p10 || realPred.qvao_forecast * 0.8) : null,
+                    p90: realPred ? (realPred.p90 || realPred.qvao_forecast * 1.2) : null,
+                };
                 
-                if (selectedRainSource === 'bestmatch') {
-                    let all_p50 = [];
-                    RAIN_SOURCES.filter(s => s.id !== 'bestmatch').forEach((src, idx) => {
-                        // Create slightly diverted scenarios for each source
-                        const src_p50 = p50_base + (idx - 2) * (hourOffset * 0.4) + (Math.random() * 10 - 5);
-                        dataPoint[`p50_${src.id}`] = src_p50;
-                        // Random rain per source
-                        dataPoint[`rain_${src.id}`] = Math.max(0, (Math.random() < 0.25 ? Math.random() * (20 - idx*2) : 0));
-                        all_p50.push(src_p50);
-                    });
-                    
-                    // BestMatch exactly averages ALL sources
-                    dataPoint.p50 = all_p50.reduce((a, b) => a + b, 0) / all_p50.length;
-                    
-                    // P10 & P90 of BestMatch MUST envelop all P50s for visual security
-                    const min_src = Math.min(...all_p50);
-                    const max_src = Math.max(...all_p50);
-                    dataPoint.p10 = min_src - (5 + Math.random() * 5); // Just below the lowest P50
-                    dataPoint.p90 = max_src + (10 + Math.random() * 10); // Just above the highest P50
-                } else {
-                    // Normal single source processing
-                    if (i > 48) { // Bridge point already has p50
-                        dataPoint.p50 = p50_base;
-                        dataPoint.p10 = p50_base - (15 + Math.random() * 10);
-                        dataPoint.p90 = p50_base + (25 + Math.random() * 15);
-                        dataPoint.rain = Math.max(0, (Math.random() < 0.3 ? Math.random() * 10 : 0));
-                    }
-                }
+                // Fallback for P10/P90 if not available
+                if (dataPoint.p50 && !dataPoint.p10) dataPoint.p10 = dataPoint.p50 * 0.8;
+                if (dataPoint.p50 && !dataPoint.p90) dataPoint.p90 = dataPoint.p50 * 1.3;
+
+                result.push(dataPoint);
             }
-            
-            return dataPoint;
-        });
+        }
+
+        return result;
     };
 
     const unifiedData = generateUnifiedData();

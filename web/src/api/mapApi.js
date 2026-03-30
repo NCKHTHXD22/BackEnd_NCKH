@@ -18,6 +18,7 @@ const mapApi = {
 
     // Forecast APIs
     getForecastLstm: (lakeId) => axiosClient.get(`/forecast-lstm/${lakeId}`).then((res) => res.data),
+    getInflowHistory: (lakeId) => axiosClient.get(`/inflowlake-history/${lakeId}`).then((res) => res.data),
     getForecastHistory: (reservoirId, rainSource) =>
         axiosClient.get(`/forecast-history/${reservoirId}`, { params: { rainSource } }).then((res) => res.data),
     getRainLakeHistory: (lakeId) => axiosClient.get(`/rain-lake-history/${lakeId}`).then((res) => res.data),
