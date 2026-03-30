@@ -19,6 +19,7 @@ from features.feature_engineering import (
     add_rain_features,
     add_inflow_features
 )
+import requests
 
 app = FastAPI(title="LSTM Inflow Prediction API", version="2.0.0")
 
@@ -87,7 +88,52 @@ class PredictRequest(BaseModel):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "device": str(device), "features": INPUT_SIZE}
+    """Enhanced health check to verify Danang API connectivity."""
+    danang_status = "unknown"
+    try:
+        # Tốn ít tài nguyên nhất để check connectivity
+        r = requests.get("https://apiv2.danang.gov.vn/oauth2/token", timeout=5)
+        danang_status = "reachable" if r.status_code in [200, 401, 405] else f"error_{r.status_code}"
+    except Exception as e:
+        danang_status = f"unreachable: {str(e)}"
+
+    return {
+        "status": "ok",
+        "device": str(device),
+        "features": INPUT_SIZE,
+        "danang_api": danang_status
+    }
+
+
+class ProxyRequest(BaseModel):
+    method: str = "GET"
+    url: str
+    data: dict = None
+    params: dict = None
+    headers: dict = None
+
+
+@app.post("/proxy/danang")
+async def proxy_danang(req: ProxyRequest):
+    """Proxy endpoint to allow Render to call Danang API via VPS IP."""
+    try:
+        # Chỉ cho phép gọi đến danang.gov.vn để bảo mật
+        if "danang.gov.vn" not in req.url:
+            raise HTTPException(status_code=400, detail="Only danang.gov.vn URLs are allowed")
+
+        headers = req.headers or {}
+        # Xóa host header để tránh lỗi SSL/CORS
+        headers.pop("host", None)
+        headers.pop("Host", None)
+
+        if req.method.upper() == "POST":
+            r = requests.post(req.url, data=req.data, json=req.data, params=req.params, headers=headers, timeout=60)
+        else:
+            r = requests.get(req.url, params=req.params, headers=headers, timeout=60)
+
+        return r.json() if "application/json" in r.headers.get("Content-Type", "") else r.text
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
 
 
 @app.post("/predict")
@@ -225,8 +271,16 @@ async def get_prediction(req: PredictRequest):
         raise
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = traceback.format_exc()
+        print(f"❌ [CRASH] Reservoir {rid} Error:\n{error_msg}")
+        raise HTTPException(
+            status_code=500, 
+            detail={
+                "error": str(e),
+                "type": type(e).__name__,
+                "reservoirId": rid
+            }
+        )
 
 
 if __name__ == "__main__":

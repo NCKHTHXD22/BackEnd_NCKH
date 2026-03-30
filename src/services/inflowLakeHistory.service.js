@@ -9,17 +9,28 @@ class InflowLakeHistoryService {
     }
 
     async getToken() {
+        const PYTHON_API_URL = process.env.PYTHON_API_URL ? process.env.PYTHON_API_URL.replace("/predict", "") : "http://localhost:8000";
+        const PROXY_URL = `${PYTHON_API_URL}/proxy/danang`;
+
         try {
-            const res = await axios.post("https://apiv2.danang.gov.vn/oauth2/token", "grant_type=client_credentials", {
+            console.log(`🔄 [PROXY] Fetching token via VPS: ${PROXY_URL}`);
+            const res = await axios.post(PROXY_URL, {
+                method: "POST",
+                url: "https://apiv2.danang.gov.vn/oauth2/token",
+                data: "grant_type=client_credentials",
                 headers: {
                     'Authorization': `Basic ${this.AUTH}`,
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-            });
-            return res.data.access_token;
+            }, { timeout: 30000 });
+            
+            // Nếu kết quả trả về là string (do proxy), parse nó
+            const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+            return data.access_token;
         } catch (err) {
-            console.error("❌ Token fetch error:", err.message);
-            throw new Error("Cannot get token from Danang API");
+            console.error("❌ Token fetch error via Proxy:", err.message);
+            // Fallback: Nếu proxy lỗi, thử gọi trực tiếp (có thể fail nếu IP bị chặn)
+            throw new Error("Cannot get token from Danang API via Proxy");
         }
     }
 
@@ -38,17 +49,23 @@ class InflowLakeHistoryService {
      * Fetch data from Danang API for a specific lake and time range
      */
     async fetchAndProcessLakeData(lake, token, start, end) {
+        const PYTHON_API_URL = process.env.PYTHON_API_URL ? process.env.PYTHON_API_URL.replace("/predict", "") : "http://localhost:8000";
+        const PROXY_URL = `${PYTHON_API_URL}/proxy/danang`;
+
         try {
-            const res = await axios.get(this.API_URL, {
+            const res = await axios.post(PROXY_URL, {
+                method: "GET",
+                url: this.API_URL,
                 params: {
                     thuydien_id: lake.Id_Lake,
                     ngaybatdau: this._formatDateISO(start),
                     ngayketthuc: this._formatDateISO(end)
                 },
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
+            }, { timeout: 60000 });
 
-            let data = res.data;
+            // Parse response (proxy returns string or object)
+            let data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
             if (data && data.data) data = data.data;
 
             if (!Array.isArray(data) || data.length === 0) {
