@@ -1,9 +1,14 @@
 import os
 from huggingface_hub import HfApi
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def deploy():
     api = HfApi()
-    token = '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'
+    token = os.getenv("HF_TOKEN")
+    if not token:
+        raise ValueError("HF_TOKEN not set. Add it to your .env file: HF_TOKEN=hf_...")
     repo_id = 'Anvo2004/lstm-inflow-api'
     
     # Files to upload (excluding junk)

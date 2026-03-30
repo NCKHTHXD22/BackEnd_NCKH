@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rn [🔄✅❌⚠🔍📊🔮📂🏔🕒🧠📈📂] 'd:/VoNguyenAn/Demo Code VS/BackEnd_NCKH/LSTM_Py_Backend/lstm_service/data/' 'd:/VoNguyenAn/Demo Code VS/BackEnd_NCKH/LSTM_Py_Backend/lstm_service/features/' 'd:/VoNguyenAn/Demo Code VS/BackEnd_NCKH/LSTM_Py_Backend/lstm_service/models/' 'd:/VoNguyenAn/Demo Code VS/BackEnd_NCKH/LSTM_Py_Backend/lstm_service/utils/')"
+    ]
+  }
+}

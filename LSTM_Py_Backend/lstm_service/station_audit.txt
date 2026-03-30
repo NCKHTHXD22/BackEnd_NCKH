@@ -1,0 +1,46 @@
+============================================================
+Đang quét toàn bộ file Excel để tổng hợp vòng đời các Trạm...
+============================================================
+
+✅ Đã load 1161480 dòng dữ liệu từ VNDMS.
+------------------------------------------------------------
+📍 Chom            | Từ 2025-07-09 đến 2025-12-31 | Tổng:  4224 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 ATieng          | Từ 2025-07-09 đến 2025-12-31 | Tổng:  4152 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 HaTan           | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8760 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 PhuocNinh       | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8664 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 QuePhuoc        | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8760 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 ThangPhuoc      | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8472 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 QueLuu          | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8760 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 SongTra         | Từ 2022-01-01 đến 2025-12-31 | Tổng: 32760 giờ | ✅ Đạt chuẩn
+📍 TienLanh        | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8520 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 TakPat          | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8616 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 TraDon          | Từ 2022-01-01 đến 2025-12-31 | Tổng: 32712 giờ | ✅ Đạt chuẩn
+📍 TraVan          | Từ 2022-01-01 đến 2025-12-31 | Tổng: 17160 giờ | ✅ Đạt chuẩn
+📍 TraGiap         | Từ 2022-01-01 đến 2025-12-31 | Tổng: 34416 giờ | ✅ Đạt chuẩn
+📍 PhuocHiep       | Từ 2025-01-01 đến 2025-12-31 | Tổng:  8736 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 PhuocChanh      | Từ 2022-01-01 đến 2025-12-31 | Tổng: 34872 giờ | ✅ Đạt chuẩn
+📍 PhuocCong       | Từ 2024-08-13 đến 2025-12-31 | Tổng: 12048 giờ | ⚠ THIẾU DỮ LIỆU CŨ
+📍 PhuocNang       | Từ 2022-01-01 đến 2025-12-31 | Tổng: 35016 giờ | ✅ Đạt chuẩn
+
+============================================================
+📌 TỔNG KẾT: Có 11/17 trạm bị thiếu dữ liệu các năm cũ.
+Danh sách trạm bị thiếu (sinh sau đẻ muộn):
+ - Chom
+ - ATieng
+ - HaTan
+ - PhuocNinh
+ - QuePhuoc
+ - ThangPhuoc
+ - QueLuu
+ - TienLanh
+ - TakPat
+ - PhuocHiep
+ - PhuocCong
+
+Danh sách trạm ĐẠT CHUẨN (2022-2025):
+ - SongTra
+ - TraDon
+ - TraVan
+ - TraGiap
+ - PhuocChanh
+ - PhuocNang
