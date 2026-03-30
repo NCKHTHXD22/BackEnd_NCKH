@@ -141,9 +141,13 @@ def fetch_rain_data(rid, lat, lon, reference_time=None, days=180):
             print(f"  [OK] Filled {len(df_gap)} hours from Raw Rain Data (IDW calculated)")
 
     # Gộp Quá khứ (Matrix + Gap)
-    df_past = pd.concat([df_matrix, df_gap]).sort_values("time")
-    df_past = df_past[df_past["time"] <= reference_time]
-    df_past = df_past.drop_duplicates(subset=["time"], keep="last")
+    combined = pd.concat([df_matrix, df_gap])
+    if not combined.empty and "time" in combined.columns:
+        df_past = combined.sort_values("time")
+        df_past = df_past[df_past["time"] <= reference_time]
+        df_past = df_past.drop_duplicates(subset=["time"], keep="last")
+    else:
+        df_past = pd.DataFrame(columns=["time", "rain"])
 
     # Nếu vẫn thiếu trầm trọng (Matrix và Station đều không có), dùng fallback Archive
     if len(df_past) < (days * 24 * 0.3): 
