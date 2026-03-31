@@ -73,8 +73,15 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
                 // Fetch real LSTM if in forecast tab
                 if (activeTab === 'forecast' && selectedModel === 'lstm') {
-                    const lstm = await mapApi.getForecastLstm(lakeId).catch(() => []);
-                    setRealLstmData(lstm);
+                    const lstm = await mapApi.getForecastLstm(lakeId).catch(() => null);
+                    // Handle object with predictions property
+                    if (lstm && lstm.predictions) {
+                        setRealLstmData(lstm.predictions);
+                    } else if (Array.isArray(lstm)) {
+                        setRealLstmData(lstm);
+                    } else {
+                        setRealLstmData([]);
+                    }
                 }
             } catch (err) {
                 console.error("❌ Error fetching real data:", err);
@@ -124,17 +131,29 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             const isFuture = hourOffset > 0;
             const isNow = hourOffset === 0;
 
-            // 1. Check Historical Data (Optimized lookup)
+            // 1. Check Historical Data — match by full ISO hour (YYYY-MM-DDTHH)
+            const targetHourKey = targetTime.getFullYear() + '-' +
+                String(targetTime.getMonth()).padStart(2, '0') + '-' +
+                String(targetTime.getDate()).padStart(2, '0') + 'T' +
+                String(targetTime.getHours()).padStart(2, '0');
             const realPoint = realHistoryData.find(d => {
                 const dt = new Date(d.timestamp);
-                return dt.getHours() === targetTime.getHours() && dt.getDate() === targetTime.getDate();
+                const key = dt.getFullYear() + '-' +
+                    String(dt.getMonth()).padStart(2, '0') + '-' +
+                    String(dt.getDate()).padStart(2, '0') + 'T' +
+                    String(dt.getHours()).padStart(2, '0');
+                return key === targetHourKey;
             });
 
-            // 2. Check LSTM Forecast Data
-            const realPred = (selectedModel === 'lstm' && Array.isArray(realLstmData)) ? 
+            // 2. Check LSTM Forecast Data — same full-hour match
+            const realPred = Array.isArray(realLstmData) ?
                 realLstmData.find(d => {
-                    const dt = new Date(d.forecastTime);
-                    return dt.getHours() === targetTime.getHours() && dt.getDate() === targetTime.getDate();
+                    const dt = new Date(d.targetTime || d.forecastTime);
+                    const key = dt.getFullYear() + '-' +
+                        String(dt.getMonth()).padStart(2, '0') + '-' +
+                        String(dt.getDate()).padStart(2, '0') + 'T' +
+                        String(dt.getHours()).padStart(2, '0');
+                    return key === targetHourKey;
                 }) : null;
 
             const dataPoint = {
@@ -144,21 +163,26 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 // Past: Use real data. Future: Set to null (hidden)
                 qActual: !isFuture ? (realPoint ? realPoint.qvao : 0.0) : null,
                 // Past: Set to null (hidden). Future: Use LSTM data.
-                p50: isFuture || isNow ? (realPred ? realPred.p50 : null) : null,
+                // NOTE: Using qvao_forecast as fallback for p50 to match Backend Schema
+                p50: isFuture || isNow ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null,
                 p10: isFuture || isNow ? (realPred ? realPred.p10 : null) : null,
                 p90: isFuture || isNow ? (realPred ? realPred.p90 : null) : null,
                 rain: realPoint ? (realPoint.rain || 0) : 0
             };
 
             // Bridge point: Connectivity at "Now"
-            if (isNow && !isFuture) {
-                // To connect the lines, we can make the "Now" point have both values
-                // if we want the actual line to touch the start of the forecast.
-                if (dataPoint.qActual !== null && dataPoint.p50 === null) {
-                    // If no forecast exactly at 'now', use the actual value as the forecast start
-                    dataPoint.p50 = dataPoint.qActual;
-                    dataPoint.p10 = dataPoint.qActual;
-                    dataPoint.p90 = dataPoint.qActual;
+            if (isNow || (isFuture && dataPoint.p50 === null)) {
+                // If this is 'now' OR a future point with no LSTM data yet (the "gap")
+                // we use the actual value to keep the line connected for the first 4h
+                const lastActual = realPoint ? realPoint.qvao : (realHistoryData[realHistoryData.length-1]?.qvao || 0);
+                const hoursFromNow = (targetTime - now) / (1000 * 60 * 60);
+
+                if (isNow || (isFuture && hoursFromNow <= 4)) {
+                    if (dataPoint.p50 === null || dataPoint.p50 === 0) {
+                        dataPoint.p50 = lastActual;
+                        dataPoint.p10 = lastActual;
+                        dataPoint.p90 = lastActual;
+                    }
                 }
             }
             
@@ -494,7 +518,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                                     return (
                                                                         <div key={idx} className="flex justify-between gap-4 py-1">
                                                                             <span style={{ color: entry.color, fontWeight: 'bold' }}>{entry.name}:</span>
-                                                                            <span className="font-bold">{Number(entry.value).toFixed(2)} {entry.yAxisId === 'rain' ? 'mm' : 'm³/s'}</span>
+                                                                            <span className="font-bold">
+                                                                                {entry.value !== null && entry.value !== undefined 
+                                                                                    ? Number(entry.value).toFixed(2) 
+                                                                                    : '0.00'} 
+                                                                                {(entry.name && entry.name.toLowerCase().includes('mưa')) || entry.yAxisId === 'rain' ? ' mm' : ' m³/s'}
+                                                                            </span>
                                                                         </div>
                                                                     );
                                                                 })}
@@ -504,7 +533,13 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     return null;
                                                 }} />
                                                 <Legend verticalAlign="top" height={40} align="right" iconType="circle" />
-                                                <ReferenceLine x={unifiedData[48]?.time} stroke="#ef4444" strokeDasharray="5 5" strokeWidth={2} label={{ value: "Hiện tại", fill: '#ef4444', fontSize: 12, fontWeight: 'bold', position: 'top' }} />
+                                                <ReferenceLine 
+                                                    x={unifiedData.find((d, i) => i > 0 && d.isFuture && !unifiedData[i-1].isFuture)?.time || unifiedData[36]?.time} 
+                                                    stroke="#ef4444" 
+                                                    strokeDasharray="5 5" 
+                                                    strokeWidth={2} 
+                                                    label={{ value: "Hiện tại", fill: '#ef4444', fontSize: 10, fontWeight: 'bold', position: 'top' }} 
+                                                />
                                                 
                                                 {/* Rainfall Bar Chart (Inverted) */}
                                                 {selectedRainSource === 'bestmatch' ? (
@@ -556,9 +591,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 {unifiedData.filter(d => d.isFuture).slice(0, 10).map((d, i) => (
                                                     <tr key={i} className={`border-b border-gray-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-gray-50/30' : ''}`}>
                                                         <td className="px-3 py-3 font-bold text-gray-700">{d.fullTime}</td>
-                                                        <td className="px-2 py-3 text-center text-blue-500 font-medium">{d.p10.toFixed(1)}</td>
-                                                        <td className="px-2 py-3 text-center font-bold text-gray-800">{d.p50.toFixed(1)}</td>
-                                                        <td className="px-2 py-3 text-center text-red-500 font-medium">{d.p90.toFixed(1)}</td>
+                                                        <td className="px-2 py-3 text-center text-blue-500 font-medium">{d.p10?.toFixed(1) || '0.0'}</td>
+                                                        <td className="px-2 py-3 text-center font-bold text-gray-800">{d.p50?.toFixed(1) || '0.0'}</td>
+                                                        <td className="px-2 py-3 text-center text-red-500 font-medium">{d.p90?.toFixed(1) || '0.0'}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>

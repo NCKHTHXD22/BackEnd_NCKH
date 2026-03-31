@@ -35,9 +35,13 @@ class InflowLakeHistoryService {
     }
 
     // Parses any date to the exact top of the hour `xx:00:00.000`
+    // API returns VN time (UTC+7) without timezone suffix (e.g. "2026-03-31T10:00:00")
+    // Must append +07:00 so JS parses it as VN time, not UTC
     _roundToHour(dateStr) {
-        const d = new Date(dateStr);
-        d.setMinutes(0, 0, 0); // Sets to xx:00:00.000
+        // If string has no timezone info (no Z, no +, no -offset), treat as VN time (UTC+7)
+        const hasTimezone = /Z$|[+-]\d{2}:\d{2}$/.test(dateStr);
+        const d = hasTimezone ? new Date(dateStr) : new Date(dateStr + '+07:00');
+        d.setMinutes(0, 0, 0);
         return d;
     }
 

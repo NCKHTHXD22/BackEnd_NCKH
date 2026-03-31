@@ -69,10 +69,11 @@ def get_token():
 
 
 # ================= HYDRO =================
-def fetch_hydro_data(rid, days=180):
-
-    end = _vn_now().replace(minute=0, second=0, microsecond=0)
-    start = end - timedelta(days=days)
+def fetch_hydro_data(rid, days=180, end_time=None):
+    if end_time is None:
+        end_time = _vn_now().replace(minute=0, second=0, microsecond=0)
+    
+    start = end_time - timedelta(days=days)
 
     try:
         token = get_token()
@@ -83,7 +84,7 @@ def fetch_hydro_data(rid, days=180):
             params={
                 "thuydien_id": rid,
                 "ngaybatdau": start.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
-                "ngayketthuc": end.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
+                "ngayketthuc": end_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
             },
             timeout=120
         )
