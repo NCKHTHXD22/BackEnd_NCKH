@@ -167,36 +167,29 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     return key === targetHourKey;
                 }) : null;
 
+            // Actual value at this hour (used for past + isNow connection)
+            const actualQvao = realPoint ? realPoint.qvao : null;
+
             const dataPoint = {
                 time: label,
                 fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
                 isFuture: isFuture,
-                // Past: Use real data. Future: Set to null (hidden). No data = null (not 0)
-                qActual: !isFuture ? (realPoint ? realPoint.qvao : null) : null,
-                // Past: Set to null (hidden). Future: Use LSTM data.
-                // NOTE: Using qvao_forecast as fallback for p50 to match Backend Schema
-                p50: isFuture || isNow ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null,
-                p10: isFuture || isNow ? (realPred ? realPred.p10 : null) : null,
-                p90: isFuture || isNow ? (realPred ? realPred.p90 : null) : null,
+                // Past + isNow: use real measurement
+                qActual: !isFuture ? actualQvao : null,
+                // isNow: forecast band starts from actual value → smooth visual connection
+                // Future: LSTM prediction (qvao_forecast = P50 in DB schema)
+                p50: isNow
+                    ? actualQvao
+                    : (isFuture ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null),
+                p10: isNow
+                    ? actualQvao
+                    : (isFuture ? (realPred ? realPred.p10 : null) : null),
+                p90: isNow
+                    ? actualQvao
+                    : (isFuture ? (realPred ? realPred.p90 : null) : null),
                 rain: realPoint ? (realPoint.rain || 0) : 0
             };
 
-            // Bridge point: Connectivity at "Now"
-            if (isNow || (isFuture && dataPoint.p50 === null)) {
-                // If this is 'now' OR a future point with no LSTM data yet (the "gap")
-                // we use the actual value to keep the line connected for the first 4h
-                const lastActual = realPoint ? realPoint.qvao : (realHistoryData[realHistoryData.length-1]?.qvao || 0);
-                const hoursFromNow = (targetTime - now) / (1000 * 60 * 60);
-
-                if (isNow || (isFuture && hoursFromNow <= 4)) {
-                    if (dataPoint.p50 === null || dataPoint.p50 === 0) {
-                        dataPoint.p50 = lastActual;
-                        dataPoint.p10 = lastActual;
-                        dataPoint.p90 = lastActual;
-                    }
-                }
-            }
-            
             result.push(dataPoint);
         }
         
@@ -567,9 +560,18 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 {/* Actual Flow */}
                                                 <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name="Khảo sát (Thực tế)" connectNulls={true} />
                                                 
-                                                {/* Ensemble Band */}
-                                                <Area yAxisId="flow" type="monotone" dataKey="p90" stroke="none" fill="url(#colorBand)" fillOpacity={1} name="Dải dự báo bao trùm (Max)" />
-                                                <Area yAxisId="flow" type="monotone" dataKey="p10" stroke="none" fill="#fff" fillOpacity={1} name="Khung xả khẩn Min" />
+                                                {/* P90 — upper bound line + fill band from top */}
+                                                <Area yAxisId="flow" type="monotone" dataKey="p90"
+                                                    stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3"
+                                                    fill="url(#colorBand)" fillOpacity={1}
+                                                    name="Max (P90 — Kịch bản cao nhất)"
+                                                    dot={false} connectNulls={false} />
+                                                {/* P10 — lower bound line + white fill to erase below */}
+                                                <Area yAxisId="flow" type="monotone" dataKey="p10"
+                                                    stroke="#6366f1" strokeWidth={1.5} strokeDasharray="6 3"
+                                                    fill="#fff" fillOpacity={1}
+                                                    name="Min (P10 — Kịch bản thấp nhất)"
+                                                    dot={false} connectNulls={false} />
 
                                                 {/* Specific Sources Lines (Only in Best Match) */}
                                                 {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
@@ -625,10 +627,23 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             {/* Info cards */}
                             <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                                 <h3 className="text-gray-800 font-bold mb-4 border-b pb-2 text-sm flex items-center gap-2"><BookOpen size={16} /> HƯỚNG DẪN ĐỌC BIỂU ĐỒ & DỮ LIỆU</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><span className="w-8 border-t-4 border-red-500 border-dashed"></span> <span className="text-xs font-semibold text-gray-700">Max (Kịch bản cao nhất - P90)</span></div>
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><span className="w-8 border-t-4 border-gray-800"></span> <span className="text-xs font-semibold text-gray-700">Trung bình (Dự báo kỳ vọng - P50)</span></div>
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"><span className="w-8 border-t-4 border-blue-600 border-dashed"></span> <span className="text-xs font-semibold text-gray-700">Min (Kịch bản thấp nhất - P10)</span></div>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                        <span className="w-8 border-t-2 border-red-500 border-dashed"></span>
+                                        <span className="text-xs font-semibold text-gray-700">P90 — Kịch bản cao nhất</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                        <span className="w-8 border-t-2 border-blue-600 border-dashed"></span>
+                                        <span className="text-xs font-semibold text-gray-700">P50 — Dự báo kỳ vọng (AVG)</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                        <span className="w-8 border-t-2 border-indigo-500 border-dashed"></span>
+                                        <span className="text-xs font-semibold text-gray-700">P10 — Kịch bản thấp nhất</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                        <span className="w-8 border-t-3 border-blue-600"></span>
+                                        <span className="text-xs font-semibold text-gray-700">Khảo sát thực tế (đo được)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
