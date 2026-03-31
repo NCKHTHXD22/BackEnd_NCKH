@@ -179,6 +179,17 @@ class InflowLakeHistoryService {
     }
 
     /**
+     * Clean all wrong-timestamped records then re-backfill from 2026-01-01
+     * Use this once after fixing the +07:00 timezone bug to correct stored timestamps
+     */
+    async cleanAndBackfillData() {
+        console.log('🗑️ [CLEAN] Deleting all inflowlakehistories (wrong UTC timestamps)...');
+        const del = await InflowLakeHistoryRepo.deleteAll();
+        console.log(`✅ [CLEAN] Deleted ${del.deletedCount} records. Starting backfill...`);
+        return await this.backfillData();
+    }
+
+    /**
      * Fetch logic for controllers/frontend
      */
     async getDataset(lakeId, start, end) {

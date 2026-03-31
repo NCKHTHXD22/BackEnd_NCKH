@@ -1,6 +1,10 @@
 import InflowLakeHistory from "../../core/entities/InflowLakeHistory.js";
 
 class InflowLakeHistoryRepo {
+    async deleteAll() {
+        return InflowLakeHistory.deleteMany({});
+    }
+
     async bulkUpsert(docs) {
         if (!docs || docs.length === 0) return;
 

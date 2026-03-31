@@ -32,6 +32,20 @@ class InflowLakeHistoryController {
             next(err);
         }
     }
+
+    async cleanAndBackfill(req, res, next) {
+        try {
+            console.log('🧹 [CLEAN-BACKFILL] Triggered: delete all + re-backfill with correct timestamps');
+            res.json({ message: "Clean + Backfill started in background. All old records deleted, re-importing from 2026-01-01. Check server logs." });
+
+            inflowLakeHistoryService.cleanAndBackfillData().catch(err => {
+                console.error("❌ Clean+Backfill failed:", err.message);
+            });
+
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default new InflowLakeHistoryController();
