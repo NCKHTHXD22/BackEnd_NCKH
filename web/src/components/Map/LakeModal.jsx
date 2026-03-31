@@ -94,17 +94,28 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     const lakeName = lakeData.name || lakeData.Lake_Name || 'Không tên';
 
-    // Mock data for charts
-    const mockLevelData = Array.from({ length: 24 }).map((_, i) => {
-        const baseLevel = parseFloat(String(lakeData.WaterLevel_Upstream || 173).replace(',', '.'));
-        const targetTime = new Date(Date.now() - (24 - i) * 3600000);
-        return {
-            time: targetTime.getHours().toString().padStart(2, '0') + ':00 ' + 
-                  targetTime.getDate().toString().padStart(2, '0') + '/' + 
-                  (targetTime.getMonth() + 1).toString().padStart(2, '0'),
-            level: baseLevel + Math.random() * 2 - 1
-        };
-    });
+    // Latest record from history (more up-to-date than inflowlakes snapshot)
+    const latestRecord = realHistoryData.length > 0
+        ? realHistoryData[realHistoryData.length - 1]
+        : null;
+    const currentQvao = latestRecord?.qvao ?? lakeData.Q_to_Lake ?? 0;
+    const currentLuuluongxa = latestRecord?.luuluongxa ?? lakeData.Q_discharge ?? 0;
+    const currentHtl = latestRecord?.htl ?? lakeData.WaterLevel_Upstream ?? 0;
+    const currentUpdateTime = latestRecord?.timestamp ?? lakeData.lastUpdate ?? null;
+
+    // Real water level chart data from history (htl field)
+    const realLevelData = realHistoryData
+        .filter(d => d.htl && d.htl > 0)
+        .map(d => {
+            const dt = new Date(d.timestamp);
+            return {
+                time: dt.getHours().toString().padStart(2, '0') + ':00 ' +
+                    dt.getDate().toString().padStart(2, '0') + '/' +
+                    (dt.getMonth() + 1).toString().padStart(2, '0'),
+                level: d.htl
+            };
+        })
+        .slice(-48); // Last 48 points
 
     // Generate unified forecast data (Actuals + Real LSTM + Fallbacks)
     const generateUnifiedData = () => {
@@ -160,8 +171,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 time: label,
                 fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
                 isFuture: isFuture,
-                // Past: Use real data. Future: Set to null (hidden)
-                qActual: !isFuture ? (realPoint ? realPoint.qvao : 0.0) : null,
+                // Past: Use real data. Future: Set to null (hidden). No data = null (not 0)
+                qActual: !isFuture ? (realPoint ? realPoint.qvao : null) : null,
                 // Past: Set to null (hidden). Future: Use LSTM data.
                 // NOTE: Using qvao_forecast as fallback for p50 to match Backend Schema
                 p50: isFuture || isNow ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null,
@@ -303,20 +314,22 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     </h3>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Mực nước / Dung tích:</span>
-                                            <span className="font-semibold text-blue-900">{lakeData.WaterLevel_Upstream || 0} m / --</span>
+                                            <span className="text-gray-600">Mực nước thượng lưu:</span>
+                                            <span className="font-semibold text-blue-900">{currentHtl.toFixed(2)} m</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Lưu lượng vào:</span>
-                                            <span className="font-semibold text-blue-900">{lakeData.Q_to_Lake || 0} m³/s</span>
+                                            <span className="text-gray-600">Lưu lượng vào (Qvào):</span>
+                                            <span className="font-semibold text-blue-900">{currentQvao.toFixed(2)} m³/s</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
                                             <span className="text-gray-600">Lưu lượng xả:</span>
-                                            <span className="font-semibold text-red-600">{lakeData.Q_discharge || 0} m³/s</span>
+                                            <span className="font-semibold text-red-600">{currentLuuluongxa.toFixed(2)} m³/s</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2 text-xs">
                                             <span className="text-gray-500">Cập nhật lúc:</span>
-                                            <span className="text-gray-500">{lakeData.lastUpdate ? new Date(lakeData.lastUpdate).toLocaleString('vi-VN') : 'N/A'}</span>
+                                            <span className="text-gray-500">
+                                                {currentUpdateTime ? new Date(currentUpdateTime).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -325,11 +338,11 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             {/* Chart */}
                             <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                                 <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
-                                    <Activity size={18} /> Biểu đồ Mực nước hồ (m)
+                                    <Activity size={18} /> Biểu đồ Mực nước hồ (m) — 48 giờ gần nhất
                                 </h3>
                                 <div className="h-64 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={mockLevelData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                        <LineChart data={realLevelData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                             <XAxis 
                                                 dataKey="time" 
@@ -472,7 +485,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                         <Activity size={20} /> BIỂU ĐỒ DỰ BÁO LƯU LƯỢNG TỔNG HỢP (ENSEMBLE)
                                     </h3>
                                     <p className="text-sm text-gray-500 mb-6 italic">
-                                        Hiển thị 48 giờ thực đo và 24 giờ dự báo tích hợp kịch bản (P10-P50-P90)
+                                        Hiển thị 36 giờ thực đo và 12 giờ dự báo LSTM tích hợp kịch bản (P10-P50-P90)
                                     </p>
                                     <div className="h-[450px] w-full">
                                         <ResponsiveContainer width="100%" height="100%">
@@ -576,7 +589,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
                                         <Clock size={18} /> KẾT QUẢ DỰ BÁO CHI TIẾT
                                     </h3>
-                                    <p className="text-xs text-gray-500 mb-4 italic">6 giờ tiếp theo (Analysis)</p>
+                                    <p className="text-xs text-gray-500 mb-4 italic">12 giờ tiếp theo (LSTM)</p>
                                     <div className="flex-1 overflow-auto border border-gray-100 rounded-lg">
                                         <table className="w-full text-sm text-left">
                                             <thead className="bg-[#f8fafc] text-gray-600 font-bold border-b text-[10px] uppercase tracking-wider">
@@ -588,7 +601,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {unifiedData.filter(d => d.isFuture).slice(0, 10).map((d, i) => (
+                                                {unifiedData.filter(d => d.isFuture).slice(0, 12).map((d, i) => (
                                                     <tr key={i} className={`border-b border-gray-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-gray-50/30' : ''}`}>
                                                         <td className="px-3 py-3 font-bold text-gray-700">{d.fullTime}</td>
                                                         <td className="px-2 py-3 text-center text-blue-500 font-medium">{d.p10?.toFixed(1) || '0.0'}</td>
