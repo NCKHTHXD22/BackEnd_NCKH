@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
     ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid,
-    Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea
+    Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from "recharts";
 import {
     Play, Pause, Square, Zap, BarChart3, TrendingUp, TrendingDown,
-    AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronLeft, ChevronRight,
-    Droplets, Activity, Shield, Info, Waves
+    CheckCircle, Clock, RefreshCw, ChevronLeft, ChevronRight,
+    Activity, Shield, Info, Waves
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -128,7 +128,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const [playIndex, setPlayIndex] = useState(0);
     const [playState, setPlayState] = useState("stopped");
     const [playSpeed, setPlaySpeed] = useState(5);
-    const [simWindow, setSimWindow] = useState(0);
+
     const intervalRef = useRef(null);
 
     // Đánh giá
@@ -172,7 +172,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
 
     const loadSimEvent = useCallback(async (event) => {
         setSelectedEvent(event);
-        setPlayState("stopped"); setPlayIndex(0); setSimWindow(0);
+        setPlayState("stopped"); setPlayIndex(0);
         setSimLoading(true);
         let data = await fetchHistory(event.start, event.end);
         if (!data.length) data = generateMockFlood(event);
@@ -202,11 +202,6 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                 setPlayIndex(prev => {
                     if (prev >= simData.length - 1) { setPlayState("stopped"); return simData.length - 1; }
                     const next = prev + 1;
-                    // Auto-advance window
-                    setSimWindow(w => {
-                        if (next >= w + WINDOW_SIZE - 8) return Math.min(next - WINDOW_SIZE + 8, simData.length - WINDOW_SIZE);
-                        return w;
-                    });
                     return next;
                 });
             }, Math.max(60, 500 / playSpeed));
@@ -223,10 +218,6 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
 
     // Windowed data slices
     const histSlice = histData.slice(histWindow, histWindow + WINDOW_SIZE);
-    const simSlice = simData.slice(
-        simWindow,
-        playState !== "stopped" ? Math.min(playIndex + 1, simWindow + WINDOW_SIZE) : simWindow + WINDOW_SIZE
-    );
     const evalSlice = evalData.slice(evalWindow, evalWindow + WINDOW_SIZE);
 
     // Y-domain helpers
@@ -396,132 +387,114 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
 
                 {/* ══════════ TAB: MÔ PHỎNG LŨ ══════════ */}
                 {subTab === "simulation" && (
-                    <>
-                        {/* Controls */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
-                            <div className="flex flex-wrap items-start gap-4">
-                                <div className="flex-1 min-w-[220px]">
-                                    <p className="text-xs font-black text-slate-400 uppercase mb-1.5">Chọn đợt lũ</p>
-                                    <select value={selectedEvent.id}
-                                        onChange={e => { const ev = FLOOD_EVENTS.find(f => f.id === e.target.value); loadSimEvent(ev); }}
-                                        className="w-full border border-slate-300 bg-slate-50 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-blue-400 outline-none">
-                                        {FLOOD_EVENTS.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
-                                    </select>
-                                </div>
-                                <div className="flex-1 bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm min-w-[220px]">
-                                    <p className="font-black text-blue-800">{selectedEvent.label}</p>
-                                    <p className="text-blue-600 text-xs mt-0.5">{selectedEvent.desc}</p>
-                                    <p className="text-xs text-slate-500 mt-1 font-mono">{selectedEvent.start} → {selectedEvent.end}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-black text-slate-400 uppercase mb-1.5">Tốc độ phát lại</p>
-                                    <div className="flex gap-1.5">
-                                        {[1, 5, 10, 20].map(s => (
-                                            <button key={s} onClick={() => setPlaySpeed(s)}
-                                                className={`px-3 py-1.5 text-xs font-black rounded-xl border transition-all ${playSpeed === s
-                                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                                    : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"}`}>
-                                                {s}×
-                                            </button>
-                                        ))}
+                    <div className="flex gap-4">
+
+                        {/* ── Cột trái: Biểu đồ (7/10) ── */}
+                        <div className="flex-[7] flex flex-col gap-3 min-w-0">
+
+                            {/* Chart card */}
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col">
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-blue-900 font-black text-sm uppercase tracking-wide flex items-center gap-2">
+                                        <Zap size={15} className="text-blue-500" />
+                                        BIỂU ĐỒ THỰC TẾ & DỰ BÁO (P10 / P50 / P90)
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-full border border-amber-200">
+                                            Đỉnh {peakQin} m³/s
+                                        </span>
+                                        <span className="text-xs text-slate-400 font-mono">{simData.length}h tổng</span>
                                     </div>
                                 </div>
+
+                                {simLoading ? (
+                                    <div className="h-80 flex items-center justify-center text-slate-400 gap-2">
+                                        <RefreshCw size={20} className="animate-spin text-blue-400" /> Đang tải...
+                                    </div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height={360}>
+                                        <ComposedChart data={simData} margin={{ top: 8, right: 24, left: 8, bottom: 52 }}>
+                                            <defs>
+                                                <linearGradient id="gradP90sim" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02} />
+                                                </linearGradient>
+                                                <linearGradient id="gradQinSim" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
+                                                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                            <XAxis
+                                                dataKey="shortLabel"
+                                                fontSize={9}
+                                                interval={Math.max(1, Math.floor(simData.length / 14))}
+                                                angle={-35} textAnchor="end" height={58}
+                                                axisLine={false} tickLine={false}
+                                                tick={{ fill: "#64748b", fontWeight: "600" }}
+                                            />
+                                            <YAxis
+                                                domain={yDomain(simData, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90"])}
+                                                fontSize={10} axisLine={false} tickLine={false}
+                                                tick={{ fill: "#64748b" }}
+                                                label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#94a3b8", dx: -2 }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} iconType="circle" />
+
+                                            {/* Uncertainty band P10–P90 */}
+                                            <Area type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd"
+                                                strokeWidth={1.5} strokeDasharray="4 3" fill="url(#gradP90sim)"
+                                                dot={false} legendType="line" isAnimationActive={false} />
+                                            <Area type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa"
+                                                strokeWidth={1.5} strokeDasharray="4 3" fill="#ffffff"
+                                                dot={false} legendType="line" isAnimationActive={false} />
+
+                                            {/* Q vào — filled area */}
+                                            <Area type="monotone" dataKey="qvao" name="Q Thực tế (m³/s)" stroke="#f59e0b"
+                                                strokeWidth={2.5} fill="url(#gradQinSim)" dot={false} isAnimationActive={false} />
+
+                                            {/* Q xả & P50 */}
+                                            <Line type="monotone" dataKey="luuluongxa" name="Q Xả (m³/s)" stroke="#ef4444"
+                                                strokeWidth={1.8} dot={false} strokeDasharray="5 3" isAnimationActive={false} />
+                                            <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (dự báo)" stroke="#2563eb"
+                                                strokeWidth={2} dot={false} strokeDasharray="7 2" isAnimationActive={false} />
+
+                                            {/* Playback marker */}
+                                            {playState !== "stopped" && simData[playIndex] && (
+                                                <ReferenceLine
+                                                    x={simData[playIndex].shortLabel}
+                                                    stroke="#8b5cf6" strokeWidth={2} strokeDasharray="4 3"
+                                                    label={{ value: "▶", fontSize: 11, fill: "#8b5cf6", position: "top" }}
+                                                />
+                                            )}
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                )}
+
+                                {/* Timeline scrubber */}
+                                <div className="flex items-center gap-2 pt-2 mt-1 border-t border-slate-100">
+                                    <span className="text-xs font-mono text-slate-400 shrink-0 w-24">{simData[0]?.shortLabel || ""}</span>
+                                    <input type="range" min={0} max={Math.max(0, simData.length - 1)} value={playIndex}
+                                        onChange={e => { const i = Number(e.target.value); setPlayIndex(i); setPlayState("paused"); }}
+                                        className="flex-1 accent-purple-500" />
+                                    <span className="text-xs font-mono text-slate-400 shrink-0 w-24 text-right">{simData[simData.length - 1]?.shortLabel || ""}</span>
+                                </div>
+                                {playState !== "stopped" && (
+                                    <p className="text-center text-xs font-mono text-purple-600 mt-0.5">
+                                        ▶ {simData[playIndex]?.fullLabel || ""}
+                                    </p>
+                                )}
                             </div>
 
-                            {/* Playback bar */}
-                            <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                                <button onClick={() => { if (playIndex >= simData.length - 1) setPlayIndex(0); setPlayState("playing"); }}
-                                    disabled={simLoading || playState === "playing"}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-40">
-                                    <Play size={14} /> Phát lại
-                                </button>
-                                <button onClick={() => setPlayState("paused")} disabled={playState !== "playing"}
-                                    className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-40">
-                                    <Pause size={14} /> Tạm dừng
-                                </button>
-                                <button onClick={() => { setPlayState("stopped"); setPlayIndex(0); setSimWindow(0); }}
-                                    disabled={playState === "stopped"}
-                                    className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-40">
-                                    <Square size={14} /> Dừng
-                                </button>
-                                <input type="range" min={0} max={Math.max(0, simData.length - 1)} value={playIndex}
-                                    onChange={e => { const i = Number(e.target.value); setPlayIndex(i); setPlayState("paused"); setSimWindow(Math.max(0, Math.min(i - 12, simData.length - WINDOW_SIZE))); }}
-                                    className="flex-1 accent-blue-600 mx-2" />
-                                <span className="text-xs font-mono text-slate-500 w-36 text-right shrink-0">
-                                    {simData[playIndex]?.shortLabel || "–"}
-                                </span>
-                                {simLoading && <RefreshCw size={14} className="animate-spin text-blue-500" />}
-                            </div>
-                        </div>
-
-                        {/* Chart */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                            <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-blue-900 font-black text-sm uppercase tracking-wide flex items-center gap-2">
-                                    <Zap size={16} className="text-blue-500" />
-                                    BIỂU ĐỒ THỰC TẾ & DỰ BÁO LSTM (P10 / P50 / P90)
-                                </h3>
-                                <span className="text-xs bg-amber-50 text-amber-700 font-bold px-3 py-1 rounded-full border border-amber-200">
-                                    Đỉnh Q vào: {peakQin} m³/s
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-400 mb-3">
-                                Hiển thị {simSlice.length}/{simData.length} điểm · cửa sổ {WINDOW_SIZE}h
-                            </p>
-
-                            <ResponsiveContainer width="100%" height={320}>
-                                <ComposedChart data={simSlice} margin={{ top: 10, right: 20, left: 10, bottom: 55 }}>
-                                    <defs>
-                                        <linearGradient id="gradP90" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.12} />
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                    <XAxis dataKey="shortLabel" fontSize={10} interval={Math.max(1, Math.floor(simSlice.length / 10))}
-                                        angle={-30} textAnchor="end" height={60} axisLine={false} tickLine={false}
-                                        tick={{ fill: "#64748b", fontWeight: "600" }} />
-                                    <YAxis domain={yDomain(simSlice, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90"])}
-                                        fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#64748b" }}
-                                        label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#64748b", dx: -5 }} />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-
-                                    {/* P10-P90 fill band */}
-                                    <Area type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd"
-                                        strokeWidth={1.5} strokeDasharray="4 3" fill="url(#gradP90)"
-                                        dot={false} legendType="line" />
-                                    <Area type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa"
-                                        strokeWidth={1.5} strokeDasharray="4 3" fill="#ffffff"
-                                        dot={false} legendType="line" />
-
-                                    {/* Main lines */}
-                                    <Line type="monotone" dataKey="qvao" name="Q Thực tế" stroke="#f59e0b"
-                                        strokeWidth={3} dot={false} activeDot={{ r: 5, fill: "#f59e0b" }} />
-                                    <Line type="monotone" dataKey="luuluongxa" name="Q Xả thực tế" stroke="#ef4444"
-                                        strokeWidth={2} dot={false} strokeDasharray="5 3" />
-                                    <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (dự báo)" stroke="#2563eb"
-                                        strokeWidth={2.5} dot={false} strokeDasharray="7 2" />
-
-                                    {/* Playback marker */}
-                                    {playState !== "stopped" && simData[playIndex] && (
-                                        <ReferenceLine x={simData[playIndex].shortLabel} stroke="#8b5cf6"
-                                            strokeWidth={2} strokeDasharray="4 3"
-                                            label={{ value: "▶", fontSize: 12, fill: "#8b5cf6", position: "top" }} />
-                                    )}
-                                </ComposedChart>
-                            </ResponsiveContainer>
-
-                            <WindowNav total={simData.length} window={simWindow} setWindow={setSimWindow}
-                                label={`${simSlice[0]?.shortLabel || ""} → ${simSlice[simSlice.length - 1]?.shortLabel || ""}`} />
-
-                            {/* Live stats */}
-                            <div className="grid grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-100">
+                            {/* Live stats row */}
+                            <div className="grid grid-cols-4 gap-3">
                                 {[
-                                    ["Q vào hiện tại", simData[playIndex]?.qvao != null ? `${simData[playIndex].qvao} m³/s` : "–", "bg-amber-50 border-amber-200 text-amber-700"],
-                                    ["Q xả thực tế", simData[playIndex]?.luuluongxa != null ? `${simData[playIndex].luuluongxa} m³/s` : "–", "bg-red-50 border-red-200 text-red-600"],
-                                    ["LSTM P50 (dự báo)", simData[playIndex]?.lstm_p50 != null ? `${simData[playIndex].lstm_p50} m³/s` : "–", "bg-blue-50 border-blue-200 text-blue-700"],
-                                    ["Cắt lũ thực tế", `${cutPct}%`, Number(cutPct) >= 20 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-600"],
+                                    ["Q vào", simData[playIndex]?.qvao != null ? `${simData[playIndex].qvao} m³/s` : "–", "bg-amber-50 border-amber-200 text-amber-700"],
+                                    ["Q xả TT", simData[playIndex]?.luuluongxa != null ? `${simData[playIndex].luuluongxa} m³/s` : "–", "bg-red-50 border-red-200 text-red-600"],
+                                    ["LSTM P50", simData[playIndex]?.lstm_p50 != null ? `${simData[playIndex].lstm_p50} m³/s` : "–", "bg-blue-50 border-blue-200 text-blue-700"],
+                                    ["Cắt lũ", `${cutPct}%`, Number(cutPct) >= 20 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-600"],
                                 ].map(([label, val, cls]) => (
                                     <div key={label} className={`rounded-xl border p-3 text-center ${cls}`}>
                                         <p className="text-xs font-black uppercase opacity-70">{label}</p>
@@ -530,7 +503,108 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 ))}
                             </div>
                         </div>
-                    </>
+
+                        {/* ── Cột phải: Điều khiển (3/10) ── */}
+                        <div className="flex-[3] flex flex-col gap-3 min-w-0">
+
+                            {/* Chọn đợt lũ */}
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-wide mb-3">Chọn đợt lũ</p>
+                                <div className="space-y-2">
+                                    {FLOOD_EVENTS.map(ev => (
+                                        <button key={ev.id} onClick={() => loadSimEvent(ev)}
+                                            className={`w-full text-left px-3 py-3 rounded-xl border transition-all ${selectedEvent.id === ev.id
+                                                ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"}`}>
+                                            <p className="font-black text-xs leading-tight">{ev.label}</p>
+                                            <p className={`text-xs mt-0.5 leading-tight ${selectedEvent.id === ev.id ? "text-blue-200" : "text-slate-400"}`}>
+                                                {ev.desc}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Thông tin đợt đang chọn */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                                <p className="font-black text-blue-800 text-sm">{selectedEvent.label}</p>
+                                <p className="text-blue-600 text-xs mt-1 leading-relaxed">{selectedEvent.desc}</p>
+                                <div className="grid grid-cols-2 gap-2 mt-3">
+                                    {[
+                                        ["Bắt đầu", selectedEvent.start],
+                                        ["Kết thúc", selectedEvent.end],
+                                        ["Đỉnh lũ", selectedEvent.peak],
+                                        ["Tổng", `${simData.length}h`],
+                                    ].map(([k, v]) => (
+                                        <div key={k} className="bg-white rounded-lg px-2.5 py-2 text-xs">
+                                            <p className="text-slate-400 font-semibold">{k}</p>
+                                            <p className="font-black text-blue-700 font-mono text-xs mt-0.5">{v}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Điều khiển phát lại */}
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-wide">Phát lại mô phỏng</p>
+
+                                <div className="flex gap-2">
+                                    <button onClick={() => { if (playIndex >= simData.length - 1) setPlayIndex(0); setPlayState("playing"); }}
+                                        disabled={simLoading || playState === "playing"}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-40">
+                                        <Play size={14} /> Phát
+                                    </button>
+                                    <button onClick={() => setPlayState("paused")} disabled={playState !== "playing"}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-40">
+                                        <Pause size={14} /> Tạm dừng
+                                    </button>
+                                    <button onClick={() => { setPlayState("stopped"); setPlayIndex(0); }}
+                                        disabled={playState === "stopped"}
+                                        className="flex items-center justify-center px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-40">
+                                        <Square size={14} />
+                                    </button>
+                                </div>
+
+                                {/* Tốc độ */}
+                                <div>
+                                    <p className="text-xs font-bold text-slate-400 mb-2">Tốc độ phát lại</p>
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                        {[1, 5, 10, 20].map(s => (
+                                            <button key={s} onClick={() => setPlaySpeed(s)}
+                                                className={`py-1.5 text-xs font-black rounded-lg border transition-all ${playSpeed === s
+                                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                                    : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-600"}`}>
+                                                {s}×
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div>
+                                    <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+                                        <span className="font-semibold">Tiến độ</span>
+                                        <span className="font-mono font-bold text-blue-600">
+                                            {simData.length > 0 ? Math.round(playIndex / Math.max(1, simData.length - 1) * 100) : 0}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full transition-all duration-100"
+                                            style={{ width: `${simData.length > 0 ? (playIndex / Math.max(1, simData.length - 1)) * 100 : 0}%` }} />
+                                    </div>
+                                    <p className="text-xs font-mono text-purple-600 mt-1.5 text-center min-h-[1rem]">
+                                        {playIndex > 0 ? simData[playIndex]?.shortLabel : "Chưa phát"}
+                                    </p>
+                                </div>
+
+                                {simLoading && (
+                                    <div className="flex items-center justify-center gap-2 text-blue-500 text-xs">
+                                        <RefreshCw size={12} className="animate-spin" /> Đang tải dữ liệu...
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {/* ══════════ TAB: ĐÁNH GIÁ ══════════ */}
