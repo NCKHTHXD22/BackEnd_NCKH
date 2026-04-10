@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
     ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid,
     Tooltip, Legend, ResponsiveContainer, ReferenceLine
@@ -220,6 +220,16 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const histSlice = histData.slice(histWindow, histWindow + WINDOW_SIZE);
     const evalSlice = evalData.slice(evalWindow, evalWindow + WINDOW_SIZE);
 
+    // Progressive chart: mask values beyond current playIndex with null (keeps X-axis stable)
+    const simChartData = useMemo(() => {
+        if (playState === "stopped" && playIndex === 0) return simData; // show full when not started
+        return simData.map((d, i) =>
+            i <= playIndex
+                ? d
+                : { ...d, qvao: null, luuluongxa: null, lstm_p50: null, lstm_p10: null, lstm_p90: null }
+        );
+    }, [simData, playIndex, playState]);
+
     // Y-domain helpers
     const yDomain = (data, keys) => {
         const vals = data.flatMap(d => keys.map(k => d[k] ?? null).filter(v => v !== null));
@@ -420,12 +430,12 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 </div>
 
                                 {simLoading ? (
-                                    <div className="h-80 flex items-center justify-center text-slate-400 gap-2">
+                                    <div className="h-96 flex items-center justify-center text-slate-400 gap-2">
                                         <RefreshCw size={20} className="animate-spin text-blue-400" /> Đang tải...
                                     </div>
                                 ) : (
-                                    <ResponsiveContainer width="100%" height={360}>
-                                        <ComposedChart data={simData} margin={{ top: 8, right: 24, left: 8, bottom: 52 }}>
+                                    <ResponsiveContainer width="100%" height={430}>
+                                        <ComposedChart data={simChartData} margin={{ top: 8, right: 24, left: 8, bottom: 52 }}>
                                             <defs>
                                                 <linearGradient id="gradP90sim" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
@@ -457,27 +467,27 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                             {/* Uncertainty band P10–P90 */}
                                             <Area type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd"
                                                 strokeWidth={1.5} strokeDasharray="4 3" fill="url(#gradP90sim)"
-                                                dot={false} legendType="line" isAnimationActive={false} />
+                                                dot={false} legendType="line" isAnimationActive={false} connectNulls={false} />
                                             <Area type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa"
                                                 strokeWidth={1.5} strokeDasharray="4 3" fill="#ffffff"
-                                                dot={false} legendType="line" isAnimationActive={false} />
+                                                dot={false} legendType="line" isAnimationActive={false} connectNulls={false} />
 
                                             {/* Q vào — filled area */}
                                             <Area type="monotone" dataKey="qvao" name="Q Thực tế (m³/s)" stroke="#f59e0b"
-                                                strokeWidth={2.5} fill="url(#gradQinSim)" dot={false} isAnimationActive={false} />
+                                                strokeWidth={2.5} fill="url(#gradQinSim)" dot={false} isAnimationActive={false} connectNulls={false} />
 
                                             {/* Q xả & P50 */}
                                             <Line type="monotone" dataKey="luuluongxa" name="Q Xả (m³/s)" stroke="#ef4444"
-                                                strokeWidth={1.8} dot={false} strokeDasharray="5 3" isAnimationActive={false} />
+                                                strokeWidth={1.8} dot={false} strokeDasharray="5 3" isAnimationActive={false} connectNulls={false} />
                                             <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (dự báo)" stroke="#2563eb"
-                                                strokeWidth={2} dot={false} strokeDasharray="7 2" isAnimationActive={false} />
+                                                strokeWidth={2} dot={false} strokeDasharray="7 2" isAnimationActive={false} connectNulls={false} />
 
-                                            {/* Playback marker */}
-                                            {playState !== "stopped" && simData[playIndex] && (
+                                            {/* Playback marker — always show when not at start */}
+                                            {playIndex > 0 && simData[playIndex] && (
                                                 <ReferenceLine
                                                     x={simData[playIndex].shortLabel}
-                                                    stroke="#8b5cf6" strokeWidth={2} strokeDasharray="4 3"
-                                                    label={{ value: "▶", fontSize: 11, fill: "#8b5cf6", position: "top" }}
+                                                    stroke="#8b5cf6" strokeWidth={2.5} strokeDasharray="4 3"
+                                                    label={{ value: "▶", fontSize: 12, fill: "#8b5cf6", position: "top" }}
                                                 />
                                             )}
                                         </ComposedChart>
@@ -499,13 +509,13 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 )}
                             </div>
 
-                            {/* Live stats row */}
+                            {/* Summary stats row */}
                             <div className="grid grid-cols-4 gap-3">
                                 {[
-                                    ["Q vào", simData[playIndex]?.qvao != null ? `${simData[playIndex].qvao} m³/s` : "–", "bg-amber-50 border-amber-200 text-amber-700"],
-                                    ["Q xả TT", simData[playIndex]?.luuluongxa != null ? `${simData[playIndex].luuluongxa} m³/s` : "–", "bg-red-50 border-red-200 text-red-600"],
-                                    ["LSTM P50", simData[playIndex]?.lstm_p50 != null ? `${simData[playIndex].lstm_p50} m³/s` : "–", "bg-blue-50 border-blue-200 text-blue-700"],
-                                    ["Cắt lũ", `${cutPct}%`, Number(cutPct) >= 20 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-600"],
+                                    ["Đỉnh Q vào", `${peakQin} m³/s`, "bg-amber-50 border-amber-200 text-amber-700"],
+                                    ["Đỉnh Q xả TT", `${peakQxa} m³/s`, "bg-red-50 border-red-200 text-red-600"],
+                                    ["Cắt lũ TT", `${cutPct}%`, Number(cutPct) >= 20 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-600"],
+                                    ["Tổng thời gian", `${simData.length}h`, "bg-slate-50 border-slate-200 text-slate-600"],
                                 ].map(([label, val, cls]) => (
                                     <div key={label} className={`rounded-xl border p-3 text-center ${cls}`}>
                                         <p className="text-xs font-black uppercase opacity-70">{label}</p>
@@ -536,24 +546,95 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 </div>
                             </div>
 
-                            {/* Thông tin đợt đang chọn */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                                <p className="font-black text-blue-800 text-sm">{selectedEvent.label}</p>
-                                <p className="text-blue-600 text-xs mt-1 leading-relaxed">{selectedEvent.desc}</p>
-                                <div className="grid grid-cols-2 gap-2 mt-3">
-                                    {[
-                                        ["Bắt đầu", selectedEvent.start],
-                                        ["Kết thúc", selectedEvent.end],
-                                        ["Đỉnh lũ", selectedEvent.peak],
-                                        ["Tổng", `${simData.length}h`],
-                                    ].map(([k, v]) => (
-                                        <div key={k} className="bg-white rounded-lg px-2.5 py-2 text-xs">
-                                            <p className="text-slate-400 font-semibold">{k}</p>
-                                            <p className="font-black text-blue-700 font-mono text-xs mt-0.5">{v}</p>
+                            {/* ── Thông tin thực thời tại mốc đang phát ── */}
+                            {playIndex > 0 ? (
+                                <div className={`rounded-2xl border-2 p-4 transition-all ${
+                                    playState === "playing"
+                                        ? "border-purple-300 bg-purple-50 shadow-purple-100 shadow-md"
+                                        : "border-slate-200 bg-white"
+                                }`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <p className="text-xs font-black text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                                            <Clock size={12} className={playState === "playing" ? "text-purple-500 animate-pulse" : "text-slate-400"} />
+                                            Thông tin tại mốc
+                                        </p>
+                                        {playState === "playing" && (
+                                            <span className="text-xs text-purple-600 font-bold bg-purple-100 px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
+                                        )}
+                                    </div>
+
+                                    {/* Timestamp nổi bật */}
+                                    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl px-3 py-2.5 mb-3 text-center">
+                                        <p className="text-xs opacity-70 mb-0.5">Thời điểm</p>
+                                        <p className="font-black text-base tracking-wide font-mono">
+                                            {simData[playIndex]?.shortLabel || "–"}
+                                        </p>
+                                        <p className="text-xs opacity-60 mt-0.5">
+                                            Giờ {playIndex + 1} / {simData.length}
+                                        </p>
+                                    </div>
+
+                                    {/* Các giá trị */}
+                                    <div className="space-y-2">
+                                        {[
+                                            { label: "Q vào", val: simData[playIndex]?.qvao, unit: "m³/s", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", bar: "bg-amber-400", max: peakQin },
+                                            { label: "Q xả TT", val: simData[playIndex]?.luuluongxa, unit: "m³/s", color: "text-red-600", bg: "bg-red-50 border-red-200", bar: "bg-red-400", max: peakQin },
+                                            { label: "LSTM P50", val: simData[playIndex]?.lstm_p50, unit: "m³/s", color: "text-blue-700", bg: "bg-blue-50 border-blue-200", bar: "bg-blue-400", max: peakQin },
+                                            { label: "LSTM P10", val: simData[playIndex]?.lstm_p10, unit: "m³/s", color: "text-sky-600", bg: "bg-sky-50 border-sky-200", bar: "bg-sky-300", max: peakQin },
+                                            { label: "LSTM P90", val: simData[playIndex]?.lstm_p90, unit: "m³/s", color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-200", bar: "bg-indigo-300", max: peakQin },
+                                        ].map(({ label, val, unit, color, bg, bar, max }) => (
+                                            <div key={label} className={`rounded-xl border px-3 py-2 ${bg}`}>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className={`text-xs font-black ${color}`}>{label}</span>
+                                                    <span className={`text-sm font-black ${color}`}>{val != null ? val : "–"} <span className="text-xs font-normal opacity-60">{unit}</span></span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-white/60 rounded-full overflow-hidden">
+                                                    <div className={`h-full ${bar} rounded-full transition-all duration-300`}
+                                                        style={{ width: `${max > 0 && val != null ? Math.min(100, val / max * 100) : 0}%` }} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* So sánh nhanh */}
+                                    {simData[playIndex]?.qvao != null && simData[playIndex]?.luuluongxa != null && (
+                                        <div className="mt-3 pt-3 border-t border-slate-100">
+                                            <p className="text-xs font-black text-slate-500 mb-1">Cắt lũ tại thời điểm này</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-emerald-400 rounded-full transition-all duration-300"
+                                                        style={{ width: `${simData[playIndex].qvao > 0 ? Math.min(100, Math.max(0, (simData[playIndex].qvao - simData[playIndex].luuluongxa) / simData[playIndex].qvao * 100)) : 0}%` }} />
+                                                </div>
+                                                <span className="text-xs font-black text-emerald-700 w-10 text-right">
+                                                    {simData[playIndex].qvao > 0
+                                                        ? `${((simData[playIndex].qvao - simData[playIndex].luuluongxa) / simData[playIndex].qvao * 100).toFixed(0)}%`
+                                                        : "–"}
+                                                </span>
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-                            </div>
+                            ) : (
+                                /* Hiển thị info đợt lũ khi chưa phát */
+                                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                                    <p className="font-black text-blue-800 text-sm">{selectedEvent.label}</p>
+                                    <p className="text-blue-600 text-xs mt-1 leading-relaxed">{selectedEvent.desc}</p>
+                                    <div className="grid grid-cols-2 gap-2 mt-3">
+                                        {[
+                                            ["Bắt đầu", selectedEvent.start],
+                                            ["Kết thúc", selectedEvent.end],
+                                            ["Đỉnh lũ", selectedEvent.peak],
+                                            ["Tổng", `${simData.length}h`],
+                                        ].map(([k, v]) => (
+                                            <div key={k} className="bg-white rounded-lg px-2.5 py-2 text-xs">
+                                                <p className="text-slate-400 font-semibold">{k}</p>
+                                                <p className="font-black text-blue-700 font-mono text-xs mt-0.5">{v}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-center text-blue-400 mt-3 italic">Nhấn Phát để bắt đầu mô phỏng</p>
+                                </div>
+                            )}
 
                             {/* Điều khiển phát lại */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
