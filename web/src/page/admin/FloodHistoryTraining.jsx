@@ -110,6 +110,48 @@ const CustomTooltip = ({ active, payload, label }) => {
     );
 };
 
+// ── Marker label rendered directly on chart via SVG foreignObject ───────────────
+const MarkerLabel = ({ viewBox, data }) => {
+    if (!data || !viewBox) return null;
+    const { x, y } = viewBox;
+    const W = 162; const H = 118;
+    // Flip to left side when too close to right edge
+    const xCard = x > 460 ? x - W - 8 : x + 8;
+    const yCard = y + 18;
+    return (
+        <g>
+            {/* triangle arrow at top of line */}
+            <polygon
+                points={`${x - 6},${y + 2} ${x + 6},${y + 2} ${x},${y - 8}`}
+                fill="#8b5cf6" opacity={0.9}
+            />
+            {/* info card */}
+            <foreignObject x={xCard} y={yCard} width={W} height={H} style={{ overflow: 'visible' }}>
+                <div style={{
+                    background: 'white',
+                    border: '1.5px solid #a78bfa',
+                    borderRadius: '10px',
+                    padding: '7px 10px',
+                    boxShadow: '0 6px 20px rgba(139,92,246,0.22)',
+                    fontSize: '11px',
+                    lineHeight: '1.55',
+                    pointerEvents: 'none',
+                }}>
+                    <div style={{ fontWeight: 900, color: '#6d28d9', marginBottom: 4, borderBottom: '1px solid #ede9fe', paddingBottom: 3, display: 'flex', justifyContent: 'space-between' }}>
+                        <span>🕐 {data.shortLabel}</span>
+                    </div>
+                    <div style={{ color: '#d97706' }}>Q vào: <b>{data.qvao ?? '–'}</b> m³/s</div>
+                    <div style={{ color: '#dc2626' }}>Q xả: <b>{data.luuluongxa ?? '–'}</b> m³/s</div>
+                    <div style={{ color: '#2563eb' }}>LSTM P50: <b>{data.lstm_p50 ?? '–'}</b> m³/s</div>
+                    <div style={{ color: '#0891b2', fontSize: '10px', marginTop: 2 }}>
+                        P10: {data.lstm_p10 ?? '–'} · P90: {data.lstm_p90 ?? '–'} m³/s
+                    </div>
+                </div>
+            </foreignObject>
+        </g>
+    );
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const [subTab, setSubTab] = useState("history");
@@ -482,12 +524,12 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                             <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (dự báo)" stroke="#2563eb"
                                                 strokeWidth={2} dot={false} strokeDasharray="7 2" isAnimationActive={false} connectNulls={false} />
 
-                                            {/* Playback marker — always show when not at start */}
+                                            {/* Playback marker with auto-displayed info card */}
                                             {playIndex > 0 && simData[playIndex] && (
                                                 <ReferenceLine
                                                     x={simData[playIndex].shortLabel}
-                                                    stroke="#8b5cf6" strokeWidth={2.5} strokeDasharray="4 3"
-                                                    label={{ value: "▶", fontSize: 12, fill: "#8b5cf6", position: "top" }}
+                                                    stroke="#8b5cf6" strokeWidth={2} strokeDasharray="5 3"
+                                                    label={<MarkerLabel data={simData[playIndex]} />}
                                                 />
                                             )}
                                         </ComposedChart>
@@ -502,11 +544,6 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         className="flex-1 accent-purple-500" />
                                     <span className="text-xs font-mono text-slate-400 shrink-0 w-24 text-right">{simData[simData.length - 1]?.shortLabel || ""}</span>
                                 </div>
-                                {playState !== "stopped" && (
-                                    <p className="text-center text-xs font-mono text-purple-600 mt-0.5">
-                                        ▶ {simData[playIndex]?.fullLabel || ""}
-                                    </p>
-                                )}
                             </div>
 
                             {/* Summary stats row */}
