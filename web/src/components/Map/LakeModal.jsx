@@ -220,10 +220,26 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     };
 
     const tabs = [
-        { id: 'overview', label: 'Tổng quan', icon: <Info size={16} /> },
-        { id: 'operation', label: 'Vận hành', icon: <Settings size={16} /> },
-        { id: 'forecast', label: 'Dự báo', icon: <BarChart3 size={16} /> },
-        { id: 'history', label: 'Lịch sử & Training', icon: <History size={16} /> },
+        {
+            id: 'overview', label: 'Tổng quan', icon: <Info size={15} />,
+            active: 'bg-sky-500 text-white shadow-sky-200 shadow-md',
+            inactive: 'bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100',
+        },
+        {
+            id: 'operation', label: 'Vận hành', icon: <Settings size={15} />,
+            active: 'bg-violet-500 text-white shadow-violet-200 shadow-md',
+            inactive: 'bg-violet-50 text-violet-600 border border-violet-200 hover:bg-violet-100',
+        },
+        {
+            id: 'forecast', label: 'Dự báo', icon: <BarChart3 size={15} />,
+            active: 'bg-orange-500 text-white shadow-orange-200 shadow-md',
+            inactive: 'bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100',
+        },
+        {
+            id: 'history', label: 'Lịch sử & Training', icon: <History size={15} />,
+            active: 'bg-teal-500 text-white shadow-teal-200 shadow-md',
+            inactive: 'bg-teal-50 text-teal-600 border border-teal-200 hover:bg-teal-100',
+        },
     ];
 
     return (
@@ -256,21 +272,16 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="bg-white px-6 pt-4 border-b border-gray-200 flex overflow-x-auto">
-                    <div className="flex bg-gray-100/80 p-1.5 rounded-t-xl gap-2 border border-gray-200 border-b-0 shadow-sm">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-gray-500 hover:text-blue-600 hover:bg-white'
-                                    }`}
-                            >
-                                {tab.icon} {tab.label}
-                            </button>
-                        ))}
-                    </div>
+                <div className="bg-white px-6 py-3 border-b border-gray-100 flex items-center gap-2 overflow-x-auto">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? tab.active : tab.inactive}`}
+                        >
+                            {tab.icon} {tab.label}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Tab Content Area */}
