@@ -261,21 +261,32 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
 
     // ── Tabs ───────────────────────────────────────────────────────────────────
     const subTabs = [
-        { id: "history", label: "📈 Lịch sử" },
-        { id: "simulation", label: "🎬 Mô phỏng Lũ" },
-        { id: "evaluation", label: "📊 Đánh giá & Khuyến nghị" },
+        {
+            id: "history", label: "Lịch sử", icon: "📈",
+            active: "bg-blue-500 text-white shadow-blue-200 shadow-md",
+            inactive: "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
+        },
+        {
+            id: "simulation", label: "Mô phỏng Lũ", icon: "🎬",
+            active: "bg-amber-500 text-white shadow-amber-200 shadow-md",
+            inactive: "bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100",
+        },
+        {
+            id: "evaluation", label: "Đánh giá & Khuyến nghị", icon: "📊",
+            active: "bg-emerald-500 text-white shadow-emerald-200 shadow-md",
+            inactive: "bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100",
+        },
     ];
 
     return (
         <div className="flex flex-col h-full bg-slate-50">
             {/* Sub-tab bar */}
-            <div className="flex gap-1 px-4 pt-3 bg-white border-b border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-slate-100">
                 {subTabs.map(t => (
                     <button key={t.id} onClick={() => setSubTab(t.id)}
-                        className={`px-5 py-2.5 text-sm font-bold rounded-t-xl transition-all ${subTab === t.id
-                            ? "bg-blue-600 text-white shadow-md"
-                            : "text-slate-500 hover:text-blue-600 hover:bg-blue-50"}`}>
-                        {t.label}
+                        className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all ${subTab === t.id ? t.active : t.inactive}`}>
+                        <span>{t.icon}</span>
+                        <span>{t.label}</span>
                     </button>
                 ))}
             </div>
