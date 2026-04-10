@@ -67,9 +67,9 @@ class LiveHydroController {
                 return res.json({ qvao: 0, luuluongxa: 0, htl: 0 });
             }
 
-            // Sort descending by thoigianxa (VN time string) to get the truly latest
-            data.sort((a, b) => (b.thoigianxa || '').localeCompare(a.thoigianxa || ''));
-            const latest = data[0];
+            // Sort ascending by thoigianxa for chronological chart display
+            data.sort((a, b) => (a.thoigianxa || '').localeCompare(b.thoigianxa || ''));
+            const latest = data[data.length - 1]; // newest = last after ascending sort
 
             res.json({
                 qvao: latest.qvao || 0,

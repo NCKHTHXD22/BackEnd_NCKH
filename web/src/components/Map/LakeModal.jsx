@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import OperationDashboard from '../../page/admin/OperationDashboard';
+import FloodHistoryTraining from '../../page/admin/FloodHistoryTraining';
 import {
     X,
     Droplet,
@@ -652,10 +653,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
                     {/* HISTORY AND TRAINING TAB */}
                     {activeTab === 'history' && (
-                        <div className="bg-white p-10 rounded-lg shadow-sm border border-gray-200 text-center">
-                            <History size={48} className="mx-auto text-gray-300 mb-4" />
-                            <h3 className="text-gray-800 font-bold mb-2">Tính năng đang phát triển</h3>
-                            <p className="text-sm text-gray-500">Phần Lịch sử xả lũ và Training mô hình AI sẽ được cập nhật trong phiên bản tiếp theo.</p>
+                        <div className="-m-6 h-full">
+                            <FloodHistoryTraining lakeId={lakeId} lakeData={lakeData} />
                         </div>
                     )}
 
