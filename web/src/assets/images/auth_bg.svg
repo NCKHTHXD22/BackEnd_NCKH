@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="60%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#0c1f3d"/>
+    </linearGradient>
+    <linearGradient id="water1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#1e3a8a" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="water2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e40af" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#172554" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#60a5fa" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#93c5fd" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="warn_glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="node_glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft_glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="rain_blur">
+      <feGaussianBlur stdDeviation="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="1440" height="960" fill="url(#sky)"/>
+
+  <!-- Stars -->
+  <circle cx="55"  cy="38"  r="1.2" fill="#e2e8f0" opacity="0.55"/>
+  <circle cx="130" cy="22"  r="0.8" fill="#e2e8f0" opacity="0.4"/>
+  <circle cx="210" cy="55"  r="1.0" fill="#e2e8f0" opacity="0.5"/>
+  <circle cx="290" cy="18"  r="0.7" fill="#e2e8f0" opacity="0.35"/>
+  <circle cx="390" cy="42"  r="1.3" fill="#e2e8f0" opacity="0.6"/>
+  <circle cx="460" cy="12"  r="0.8" fill="#e2e8f0" opacity="0.45"/>
+  <circle cx="540" cy="65"  r="1.0" fill="#e2e8f0" opacity="0.4"/>
+  <circle cx="620" cy="30"  r="1.5" fill="#e2e8f0" opacity="0.65"/>
+  <circle cx="700" cy="10"  r="0.7" fill="#e2e8f0" opacity="0.35"/>
+  <circle cx="780" cy="48"  r="1.1" fill="#e2e8f0" opacity="0.5"/>
+  <circle cx="860" cy="25"  r="0.9" fill="#e2e8f0" opacity="0.42"/>
+  <circle cx="960" cy="60"  r="1.4" fill="#e2e8f0" opacity="0.58"/>
+  <circle cx="1040" cy="20" r="0.8" fill="#e2e8f0" opacity="0.4"/>
+  <circle cx="1120" cy="45" r="1.2" fill="#e2e8f0" opacity="0.52"/>
+  <circle cx="1200" cy="15" r="0.7" fill="#e2e8f0" opacity="0.38"/>
+  <circle cx="1300" cy="50" r="1.0" fill="#e2e8f0" opacity="0.48"/>
+  <circle cx="1380" cy="28" r="1.3" fill="#e2e8f0" opacity="0.6"/>
+  <circle cx="170"  cy="90" r="0.8" fill="#e2e8f0" opacity="0.3"/>
+  <circle cx="480"  cy="105" r="1.0" fill="#e2e8f0" opacity="0.35"/>
+  <circle cx="750"  cy="88"  r="0.7" fill="#e2e8f0" opacity="0.28"/>
+  <circle cx="1060" cy="95"  r="1.1" fill="#e2e8f0" opacity="0.38"/>
+  <circle cx="1350" cy="82"  r="0.8" fill="#e2e8f0" opacity="0.32"/>
+
+  <!-- Storm clouds -->
+  <ellipse cx="200"  cy="85"  rx="220" ry="70" fill="#1e293b" opacity="0.55"/>
+  <ellipse cx="550"  cy="65"  rx="260" ry="75" fill="#1e293b" opacity="0.45"/>
+  <ellipse cx="900"  cy="90"  rx="240" ry="68" fill="#1e293b" opacity="0.5"/>
+  <ellipse cx="1250" cy="70"  rx="200" ry="60" fill="#1e293b" opacity="0.42"/>
+  <ellipse cx="350"  cy="130" rx="180" ry="55" fill="#1e293b" opacity="0.35"/>
+  <ellipse cx="1100" cy="120" rx="210" ry="58" fill="#1e293b" opacity="0.38"/>
+
+  <!-- Rain lines -->
+  <g stroke="#93c5fd" stroke-width="0.9" opacity="0.14" filter="url(#rain_blur)">
+    <line x1="50"   y1="0" x2="26"   y2="320"/>
+    <line x1="110"  y1="0" x2="86"   y2="320"/>
+    <line x1="175"  y1="0" x2="151"  y2="320"/>
+    <line x1="240"  y1="0" x2="216"  y2="320"/>
+    <line x1="310"  y1="0" x2="286"  y2="320"/>
+    <line x1="375"  y1="0" x2="351"  y2="320"/>
+    <line x1="440"  y1="0" x2="416"  y2="320"/>
+    <line x1="510"  y1="0" x2="486"  y2="320"/>
+    <line x1="575"  y1="0" x2="551"  y2="320"/>
+    <line x1="640"  y1="0" x2="616"  y2="320"/>
+    <line x1="710"  y1="0" x2="686"  y2="320"/>
+    <line x1="775"  y1="0" x2="751"  y2="320"/>
+    <line x1="840"  y1="0" x2="816"  y2="320"/>
+    <line x1="910"  y1="0" x2="886"  y2="320"/>
+    <line x1="975"  y1="0" x2="951"  y2="320"/>
+    <line x1="1040" y1="0" x2="1016" y2="320"/>
+    <line x1="1110" y1="0" x2="1086" y2="320"/>
+    <line x1="1175" y1="0" x2="1151" y2="320"/>
+    <line x1="1240" y1="0" x2="1216" y2="320"/>
+    <line x1="1310" y1="0" x2="1286" y2="320"/>
+    <line x1="1375" y1="0" x2="1351" y2="320"/>
+    <line x1="1430" y1="0" x2="1406" y2="320"/>
+    <line x1="80"   y1="200" x2="56"  y2="520"/>
+    <line x1="145"  y1="200" x2="121" y2="520"/>
+    <line x1="210"  y1="200" x2="186" y2="520"/>
+    <line x1="280"  y1="200" x2="256" y2="520"/>
+    <line x1="350"  y1="200" x2="326" y2="520"/>
+    <line x1="420"  y1="200" x2="396" y2="520"/>
+    <line x1="490"  y1="200" x2="466" y2="520"/>
+    <line x1="560"  y1="200" x2="536" y2="520"/>
+    <line x1="630"  y1="200" x2="606" y2="520"/>
+    <line x1="700"  y1="200" x2="676" y2="520"/>
+    <line x1="770"  y1="200" x2="746" y2="520"/>
+    <line x1="840"  y1="200" x2="816" y2="520"/>
+    <line x1="910"  y1="200" x2="886" y2="520"/>
+    <line x1="980"  y1="200" x2="956" y2="520"/>
+    <line x1="1050" y1="200" x2="1026" y2="520"/>
+    <line x1="1120" y1="200" x2="1096" y2="520"/>
+    <line x1="1190" y1="200" x2="1166" y2="520"/>
+    <line x1="1260" y1="200" x2="1236" y2="520"/>
+    <line x1="1330" y1="200" x2="1306" y2="520"/>
+    <line x1="1400" y1="200" x2="1376" y2="520"/>
+  </g>
+
+  <!-- Tech grid (faint) -->
+  <g stroke="#1d4ed8" stroke-width="0.4" opacity="0.1">
+    <line x1="0" y1="240" x2="1440" y2="240"/>
+    <line x1="0" y1="480" x2="1440" y2="480"/>
+    <line x1="0" y1="720" x2="1440" y2="720"/>
+    <line x1="360"  y1="0" x2="360"  y2="960"/>
+    <line x1="720"  y1="0" x2="720"  y2="960"/>
+    <line x1="1080" y1="0" x2="1080" y2="960"/>
+  </g>
+
+  <!-- City buildings submerged -->
+  <!-- Far background buildings (darker) -->
+  <rect x="0"    y="560" width="55"  height="400" fill="#0f172a" opacity="0.55"/>
+  <rect x="65"   y="510" width="70"  height="450" fill="#0f172a" opacity="0.5"/>
+  <rect x="145"  y="540" width="45"  height="420" fill="#0f172a" opacity="0.45"/>
+  <rect x="200"  y="490" width="85"  height="470" fill="#0f172a" opacity="0.55"/>
+  <rect x="295"  y="530" width="60"  height="430" fill="#0f172a" opacity="0.5"/>
+  <rect x="365"  y="480" width="75"  height="480" fill="#0f172a" opacity="0.52"/>
+  <rect x="450"  y="520" width="55"  height="440" fill="#0f172a" opacity="0.48"/>
+  <rect x="515"  y="500" width="90"  height="460" fill="#0f172a" opacity="0.55"/>
+  <rect x="615"  y="545" width="50"  height="415" fill="#0f172a" opacity="0.45"/>
+  <rect x="675"  y="470" width="80"  height="490" fill="#0f172a" opacity="0.58"/>
+  <rect x="765"  y="510" width="65"  height="450" fill="#0f172a" opacity="0.5"/>
+  <rect x="840"  y="535" width="55"  height="425" fill="#0f172a" opacity="0.46"/>
+  <rect x="905"  y="490" width="90"  height="470" fill="#0f172a" opacity="0.54"/>
+  <rect x="1005" y="520" width="70"  height="440" fill="#0f172a" opacity="0.5"/>
+  <rect x="1085" y="500" width="60"  height="460" fill="#0f172a" opacity="0.48"/>
+  <rect x="1155" y="480" width="85"  height="480" fill="#0f172a" opacity="0.55"/>
+  <rect x="1250" y="530" width="65"  height="430" fill="#0f172a" opacity="0.5"/>
+  <rect x="1325" y="505" width="70"  height="455" fill="#0f172a" opacity="0.52"/>
+  <rect x="1405" y="545" width="35"  height="415" fill="#0f172a" opacity="0.45"/>
+
+  <!-- Building antennas/towers -->
+  <rect x="127" y="490" width="5" height="25" fill="#1e3a8a" opacity="0.7"/>
+  <rect x="373" y="462" width="5" height="22" fill="#1e3a8a" opacity="0.7"/>
+  <rect x="683" y="452" width="6" height="22" fill="#1e3a8a" opacity="0.7"/>
+  <rect x="1163" y="462" width="5" height="22" fill="#1e3a8a" opacity="0.7"/>
+  <!-- Signal rings on towers -->
+  <circle cx="130" cy="490" r="8" fill="none" stroke="#22d3ee" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="376" cy="462" r="8" fill="none" stroke="#22d3ee" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="686" cy="452" r="8" fill="none" stroke="#22d3ee" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="1166" cy="462" r="8" fill="none" stroke="#22d3ee" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Building windows (lit up) -->
+  <g fill="#fbbf24" opacity="0.22">
+    <rect x="10"  y="575" width="7" height="6"/> <rect x="22" y="575" width="7" height="6"/>
+    <rect x="10"  y="590" width="7" height="6"/> <rect x="22" y="590" width="7" height="6"/>
+    <rect x="75"  y="528" width="8" height="6"/> <rect x="90" y="528" width="8" height="6"/>
+    <rect x="75"  y="543" width="8" height="6"/> <rect x="90" y="543" width="8" height="6"/>
+    <rect x="215" y="508" width="8" height="6"/> <rect x="230" y="508" width="8" height="6"/> <rect x="245" y="508" width="8" height="6"/>
+    <rect x="215" y="522" width="8" height="6"/> <rect x="230" y="522" width="8" height="6"/>
+    <rect x="380" y="498" width="7" height="6"/> <rect x="394" y="498" width="7" height="6"/>
+    <rect x="530" y="518" width="8" height="6"/> <rect x="545" y="518" width="8" height="6"/> <rect x="560" y="518" width="8" height="6"/>
+    <rect x="530" y="532" width="8" height="6"/> <rect x="560" y="532" width="8" height="6"/>
+    <rect x="690" y="490" width="8" height="6"/> <rect x="705" y="490" width="8" height="6"/> <rect x="720" y="490" width="8" height="6"/>
+    <rect x="690" y="505" width="8" height="6"/> <rect x="720" y="505" width="8" height="6"/>
+    <rect x="915" y="508" width="8" height="6"/> <rect x="930" y="508" width="8" height="6"/>
+    <rect x="1165" y="498" width="8" height="6"/> <rect x="1180" y="498" width="8" height="6"/> <rect x="1195" y="498" width="8" height="6"/>
+    <rect x="1165" y="512" width="8" height="6"/> <rect x="1195" y="512" width="8" height="6"/>
+    <rect x="1265" y="548" width="7" height="6"/> <rect x="1278" y="548" width="7" height="6"/>
+    <rect x="1340" y="522" width="8" height="6"/> <rect x="1355" y="522" width="8" height="6"/>
+  </g>
+
+  <!-- Flood water — deep back layer -->
+  <path d="M0,660 C180,642 360,678 540,662 C720,645 900,678 1080,662 C1260,646 1380,670 1440,660 L1440,960 L0,960 Z" fill="#172554" opacity="0.65"/>
+
+  <!-- Flood water — mid layer -->
+  <path d="M0,700 C120,683 240,717 360,700 C480,683 600,717 720,700 C840,683 960,717 1080,700 C1200,683 1320,715 1440,700 L1440,960 L0,960 Z" fill="url(#water2)" opacity="0.8"/>
+
+  <!-- Flood water — front wave -->
+  <path d="M0,730 C90,715 180,745 270,730 C360,715 450,745 540,730 C630,715 720,745 810,730 C900,715 990,745 1080,730 C1170,715 1260,745 1350,730 C1395,722 1420,738 1440,730 L1440,960 L0,960 Z" fill="url(#water1)"/>
+
+  <!-- Water shimmer line -->
+  <rect x="0" y="729" width="1440" height="3" fill="url(#shimmer)" opacity="0.9"/>
+  <rect x="0" y="735" width="1440" height="2" fill="url(#shimmer)" opacity="0.5"/>
+  <rect x="0" y="699" width="1440" height="2" fill="url(#shimmer)" opacity="0.4"/>
+
+  <!-- Water ripples -->
+  <ellipse cx="200"  cy="750" rx="60" ry="6" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.3"/>
+  <ellipse cx="500"  cy="758" rx="80" ry="8" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.25"/>
+  <ellipse cx="800"  cy="745" rx="70" ry="7" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.3"/>
+  <ellipse cx="1100" cy="752" rx="65" ry="7" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.28"/>
+  <ellipse cx="1350" cy="740" rx="55" ry="6" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.25"/>
+
+  <!-- Radar circles (center area, overlapping form) -->
+  <circle cx="360" cy="440" r="140" fill="none" stroke="#3b82f6" stroke-width="0.6" opacity="0.12"/>
+  <circle cx="360" cy="440" r="240" fill="none" stroke="#3b82f6" stroke-width="0.6" opacity="0.08"/>
+  <circle cx="360" cy="440" r="340" fill="none" stroke="#3b82f6" stroke-width="0.5" opacity="0.06"/>
+
+  <!-- Sensor nodes + connections -->
+  <!-- Node 1 -->
+  <circle cx="420" cy="310" r="30" fill="url(#node_glow)"/>
+  <circle cx="420" cy="310" r="5" fill="#22d3ee" opacity="0.8"/>
+  <circle cx="420" cy="310" r="14" fill="none" stroke="#22d3ee" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- Node 2 -->
+  <circle cx="750" cy="260" r="30" fill="url(#node_glow)"/>
+  <circle cx="750" cy="260" r="5" fill="#22d3ee" opacity="0.8"/>
+  <circle cx="750" cy="260" r="14" fill="none" stroke="#22d3ee" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- Node 3 -->
+  <circle cx="1050" cy="300" r="30" fill="url(#node_glow)"/>
+  <circle cx="1050" cy="300" r="5" fill="#22d3ee" opacity="0.8"/>
+  <circle cx="1050" cy="300" r="14" fill="none" stroke="#22d3ee" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- Node 4 -->
+  <circle cx="900" cy="380" r="25" fill="url(#node_glow)"/>
+  <circle cx="900" cy="380" r="4" fill="#22d3ee" opacity="0.7"/>
+  <circle cx="900" cy="380" r="11" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.45"/>
+
+  <!-- Connection lines between nodes -->
+  <line x1="420" y1="310" x2="750" y2="260" stroke="#22d3ee" stroke-width="1" stroke-dasharray="7,5" opacity="0.28"/>
+  <line x1="750" y1="260" x2="1050" y2="300" stroke="#22d3ee" stroke-width="1" stroke-dasharray="7,5" opacity="0.28"/>
+  <line x1="750" y1="260" x2="900" y2="380" stroke="#22d3ee" stroke-width="0.8" stroke-dasharray="5,4" opacity="0.22"/>
+  <line x1="1050" y1="300" x2="900" y2="380" stroke="#22d3ee" stroke-width="0.8" stroke-dasharray="5,4" opacity="0.22"/>
+
+  <!-- Node labels -->
+  <text x="420" y="296" text-anchor="middle" font-size="8" fill="#67e8f9" opacity="0.7" font-family="monospace">TN_01</text>
+  <text x="750" y="246" text-anchor="middle" font-size="8" fill="#67e8f9" opacity="0.7" font-family="monospace">TN_02</text>
+  <text x="1050" y="286" text-anchor="middle" font-size="8" fill="#67e8f9" opacity="0.7" font-family="monospace">TN_03</text>
+  <text x="900" y="366" text-anchor="middle" font-size="8" fill="#67e8f9" opacity="0.6" font-family="monospace">RS_01</text>
+
+  <!-- Main warning triangle (large, right side) -->
+  <circle cx="1150" cy="380" r="100" fill="url(#warn_glow)"/>
+  <polygon points="1150,255 1250,430 1050,430" fill="none" stroke="#f59e0b" stroke-width="3.5" opacity="0.75" filter="url(#soft_glow)"/>
+  <text x="1150" y="415" text-anchor="middle" font-size="72" font-family="Arial Black" font-weight="900" fill="#f59e0b" opacity="0.75">!</text>
+
+  <!-- Secondary warning triangles -->
+  <g transform="translate(220,195)" opacity="0.45">
+    <polygon points="0,-38 33,19 -33,19" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <text x="0" y="10" text-anchor="middle" font-size="22" font-family="Arial" font-weight="bold" fill="#f59e0b">!</text>
+  </g>
+  <g transform="translate(1300,200)" opacity="0.38">
+    <polygon points="0,-34 29,17 -29,17" fill="none" stroke="#fbbf24" stroke-width="1.8"/>
+    <text x="0" y="9" text-anchor="middle" font-size="19" font-family="Arial" font-weight="bold" fill="#fbbf24">!</text>
+  </g>
+  <g transform="translate(600,400)" opacity="0.28">
+    <polygon points="0,-28 24,14 -24,14" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="0" y="8" text-anchor="middle" font-size="16" font-family="Arial" font-weight="bold" fill="#fbbf24">!</text>
+  </g>
+
+  <!-- Water level gauge (right edge) -->
+  <g transform="translate(1400,340)" opacity="0.65">
+    <rect x="-9" y="-130" width="18" height="280" rx="9" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+    <rect x="-7" y="10" width="14" height="138" rx="7" fill="#1d4ed8" opacity="0.5"/>
+    <rect x="-7" y="-128" width="14" height="136" rx="6" fill="#1e3a8a" opacity="0.3"/>
+    <line x1="-16" y1="-80" x2="-9" y2="-80" stroke="#93c5fd" stroke-width="1"/>
+    <line x1="-16" y1="-40" x2="-9" y2="-40" stroke="#93c5fd" stroke-width="1"/>
+    <line x1="-18" y1="10" x2="-9" y2="10" stroke="#ef4444" stroke-width="2"/>
+    <line x1="-16" y1="50" x2="-9" y2="50" stroke="#93c5fd" stroke-width="1"/>
+    <line x1="-16" y1="90" x2="-9" y2="90" stroke="#93c5fd" stroke-width="1"/>
+    <text x="-24" y="14" text-anchor="end" font-size="8" fill="#ef4444" font-family="monospace">BÁO ĐỘNG</text>
+    <text x="0" y="-145" text-anchor="middle" font-size="8" fill="#93c5fd" font-family="monospace">H(m)</text>
+  </g>
+
+  <!-- Corner tech brackets -->
+  <path d="M18,18 L18,62 M18,18 L62,18" stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M1422,18 L1422,62 M1422,18 L1378,18" stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M18,942 L18,898 M18,942 L62,942" stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M1422,942 L1422,898 M1422,942 L1378,942" stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.4"/>
+
+  <!-- System status bar at top -->
+  <rect x="580" y="14" width="280" height="22" rx="11" fill="#0f172a" opacity="0.7"/>
+  <circle cx="596" cy="25" r="4" fill="#22c55e" opacity="0.8"/>
+  <text x="608" y="30" font-size="9" fill="#94a3b8" font-family="monospace" opacity="0.9">HỆ THỐNG CẢNH BÁO LŨ LỤT ● TRỰC TUYẾN</text>
+
+  <!-- Flood alert label near water -->
+  <rect x="600" y="710" width="240" height="24" rx="4" fill="#1e3a8a" opacity="0.65"/>
+  <text x="720" y="727" text-anchor="middle" font-size="10" fill="#fbbf24" font-family="monospace" font-weight="bold" opacity="0.85">⚠ MỰC NƯỚC ĐANG DÂNG CAO</text>
+</svg>

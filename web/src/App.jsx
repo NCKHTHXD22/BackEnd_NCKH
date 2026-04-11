@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLogin from "./page/admin/Login";
+import AdminRegister from "./page/admin/Register";
+import ForgotPassword from "./page/admin/ForgotPassword";
 import AdminLayout from "./page/admin/Layout";
 import Pending from "./page/admin/Pending";
 import Approved from "./page/admin/Approved";
@@ -26,8 +28,10 @@ function App() {
       <div className="min-h-screen flex flex-col bg-gray-100">
         <div className="flex-1 flex flex-col">
           <Routes>
-            {/* Admin login (riêng, không dùng layout) */}
+            {/* Admin auth pages (riêng, không dùng layout) */}
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
 
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
