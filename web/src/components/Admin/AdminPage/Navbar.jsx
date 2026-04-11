@@ -1,9 +1,8 @@
-import React from "react";
 import { FaBell, FaSignOutAlt, FaSearch } from "react-icons/fa";
 
 export default function Navbar({ title = "Flood Warning Admin", onLogout }) {
   return (
-    <header className="fixed top-0 left-0 w-full bg-gray-900 dark:bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shadow-sm z-20">
+    <header className="sticky top-0 z-20 bg-gray-900 dark:bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center shadow-sm shrink-0">
       {/* Logo / Title */}
       <div className="flex items-center gap-2 px-4">
         <span className="text-base text-gray-200">{title}</span>
