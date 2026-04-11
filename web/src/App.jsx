@@ -22,13 +22,6 @@ function RequireAdmin({ children }) {
   return children;
 }
 
-// Redirect root to admin login if no public content needed
-function RootRedirect() {
-  const token = localStorage.getItem("adminToken");
-  if (token) return <Navigate to="/admin/dashboard" replace />;
-  return <Navigate to="/admin/login" replace />;
-}
-
 function App() {
   return (
     <BrowserRouter>
@@ -40,11 +33,8 @@ function App() {
             <Route path="/admin/register" element={<AdminRegister />} />
             <Route path="/admin/forgot-password" element={<ForgotPassword />} />
 
-            {/* Root: redirect based on auth state */}
-            <Route path="/" element={<RootRedirect />} />
-
-            {/* Public routes */}
-            <Route path="/home" element={<HomePage />} />
+            {/* Public routes — bản đồ tại root */}
+            <Route path="/" element={<HomePage />} />
             <Route path="/reports" element={<ReportsPublic />} />
             <Route path="/submit" element={<SubmitReport />} />
             <Route path="/my-report" element={<MyReports />} />
