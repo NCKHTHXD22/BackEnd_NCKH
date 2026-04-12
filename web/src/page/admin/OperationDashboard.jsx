@@ -106,15 +106,25 @@ function buildStatusNarrative({ htl, qvao, luuluongxa, historyCount }) {
 
 // ─── Reservoir operational constants (per lake) ───────────────────────────────
 // MNC=chết, MNDBT=dâng bình thường, MNGC=gia cường, crest=đỉnh đập
-// ID khớp với InflowLake collection: 1=A Vương, 2=Đắk Mi 4, 3=Sông Bung 4, 4=Sông Tranh 2
+// ID khớp với InflowLake.Id_Lake (15 hồ)
 const LAKE_CONSTANTS = {
     1:  { MNC:100.0, MNDBT:108.0, MNGC:109.5, crest:110.5, totalVol:180, deadVol: 30, floodVol: 50, turbines:2, capacity:210 }, // A Vương
     2:  { MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, totalVol:343, deadVol: 97, floodVol: 80, turbines:3, capacity:210 }, // Đắk Mi 4
     3:  { MNC:160.0, MNDBT:168.0, MNGC:169.5, crest:170.5, totalVol:250, deadVol: 60, floodVol: 70, turbines:2, capacity:156 }, // Sông Bung 4
     4:  { MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:685, deadVol:215, floodVol:190, turbines:2, capacity:190 }, // Sông Tranh 2
+    7:  { MNC:130.0, MNDBT:138.0, MNGC:139.0, crest:140.0, totalVol: 20, deadVol:  5, floodVol:  8, turbines:1, capacity: 16 }, // Sông Bung 4A
+    8:  { MNC:175.0, MNDBT:185.0, MNGC:186.5, crest:187.5, totalVol:100, deadVol: 28, floodVol: 30, turbines:2, capacity: 50 }, // Sông Bung 5
+    9:  { MNC:330.0, MNDBT:340.0, MNGC:342.0, crest:343.0, totalVol:250, deadVol: 70, floodVol: 60, turbines:2, capacity:100 }, // Sông Bung 2
+    11: { MNC: 93.0, MNDBT:100.0, MNGC:101.0, crest:102.0, totalVol: 50, deadVol: 12, floodVol: 15, turbines:1, capacity: 30 }, // Sông Bung 6
+    12: { MNC: 60.0, MNDBT: 65.0, MNGC: 66.0, crest: 67.0, totalVol: 60, deadVol: 15, floodVol: 18, turbines:2, capacity: 60 }, // Sông Tranh 3
+    13: { MNC:150.0, MNDBT:160.0, MNGC:161.5, crest:162.5, totalVol:130, deadVol: 35, floodVol: 40, turbines:2, capacity: 90 }, // Za Hung
+    14: { MNC:340.0, MNDBT:352.0, MNGC:353.5, crest:354.5, totalVol: 70, deadVol: 18, floodVol: 20, turbines:1, capacity: 30 }, // Đắk Mi 3
+    15: { MNC: 18.0, MNDBT: 24.0, MNGC: 25.0, crest: 26.0, totalVol: 35, deadVol:  8, floodVol: 10, turbines:1, capacity: 30 }, // Khe Diên
+    16: { MNC:320.0, MNDBT:334.0, MNGC:335.5, crest:336.5, totalVol: 90, deadVol: 22, floodVol: 25, turbines:2, capacity: 60 }, // Sông Côn 2
+    17: { MNC: 53.0, MNDBT: 58.0, MNGC: 59.0, crest: 60.0, totalVol: 40, deadVol: 10, floodVol: 12, turbines:1, capacity: 40 }, // Sông Tranh 4
+    19: { MNC:153.0, MNDBT:162.0, MNGC:163.0, crest:164.0, totalVol: 45, deadVol: 12, floodVol: 15, turbines:1, capacity: 35 }, // Đắk Mi 4C
 };
-const DEFAULT_CONST = { MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:685, deadVol:215, floodVol:190, turbines:2, capacity:190 }; // default: Sông Tranh 2
-function getLakeConst(id) { return LAKE_CONSTANTS[Number(id)] || DEFAULT_CONST; }
+function getLakeConst(id) { return LAKE_CONSTANTS[Number(id)] || null; }
 
 // ─── Animated Dam Cross-Section (SVG) ─────────────────────────────────────────
 function DamCrossSection({ htl, qvao, luuluongxa, lakeId }) {
@@ -361,7 +371,7 @@ export default function OperationDashboard({ lakeId }) {
     const [showOpLog, setShowOpLog]             = useState(false);
     const [alertChecking, setAlertChecking]     = useState(false);
 
-    // Fallback: dùng LAKE_CONSTANTS nếu chưa fetch được spec
+    // Ưu tiên: LakeSpec từ DB → LAKE_CONSTANTS frontend → null (hiển thị cảnh báo)
     const c = lakeSpec ? {
         MNC:      lakeSpec.MNC,
         MNDBT:    lakeSpec.MNDBT,
@@ -373,6 +383,7 @@ export default function OperationDashboard({ lakeId }) {
         turbines: lakeSpec.turbines,
         capacity: lakeSpec.capacity_mw,
     } : getLakeConst(lakeId || selectedReservoir);
+    // c === null → hồ chưa có thông số, UI sẽ hiện cảnh báo
 
     // NOTE: clock is in <LiveClock /> — no state here to avoid re-rendering
 
@@ -683,6 +694,17 @@ export default function OperationDashboard({ lakeId }) {
                     </div>
                 </div>
             </div>
+
+            {/* ── Cảnh báo thiếu thông số kỹ thuật ── */}
+            {!c && (lakeId || selectedReservoir) && (
+                <div className="mx-5 mt-4 bg-yellow-50 border border-yellow-300 border-l-4 border-l-yellow-500 rounded-xl px-4 py-3 flex items-center gap-3">
+                    <span className="text-xl">⚠️</span>
+                    <div>
+                        <p className="text-sm font-bold text-yellow-800">Chưa có thông số kỹ thuật cho hồ này</p>
+                        <p className="text-xs text-yellow-700">Dữ liệu quan trắc vẫn hiển thị bình thường. Thông số thiết kế (MNC, MNDBT, dung tích...) cần được cập nhật vào hệ thống.</p>
+                    </div>
+                </div>
+            )}
 
             {/* ── Alert Banner (Phase 4) — chỉ hiện alert của hồ đang chọn ── */}
             {reservoirAlerts.filter(a => a.alert_level !== 'normal' && String(a.lake_id) === String(lakeId || selectedReservoir)).length > 0 && (
