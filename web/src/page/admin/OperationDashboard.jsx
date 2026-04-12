@@ -354,6 +354,12 @@ export default function OperationDashboard({ lakeId }) {
     const [powerInfo, setPowerInfo]     = useState(null);   // công suất real-time
     const [recFromDB, setRecFromDB]     = useState(null);   // khuyến nghị từ backend
 
+    // ── Phase 4: Cảnh báo & Nhật ký vận hành ─────────────────────────────────
+    const [reservoirAlerts, setReservoirAlerts] = useState([]);
+    const [opLogs, setOpLogs]                   = useState([]);
+    const [showOpLog, setShowOpLog]             = useState(false);
+    const [alertChecking, setAlertChecking]     = useState(false);
+
     // Fallback: dùng LAKE_CONSTANTS nếu chưa fetch được spec
     const c = lakeSpec ? {
         MNC:      lakeSpec.MNC,
@@ -541,6 +547,24 @@ export default function OperationDashboard({ lakeId }) {
             .catch(() => {});
     }, [latestHydro, forecastPeak, selectedReservoir, lakeId]);
 
+    // ─── Phase 4: Fetch alerts & op-logs — poll mỗi 5 phút ───────────────────
+    useEffect(() => {
+        const id = lakeId || selectedReservoir;
+        const fetchAlerts = async () => {
+            try {
+                const [alerts, logs] = await Promise.all([
+                    mapApi.getReservoirAlerts(),
+                    mapApi.getOperationLogs(id || undefined, 30),
+                ]);
+                setReservoirAlerts(Array.isArray(alerts) ? alerts : []);
+                setOpLogs(Array.isArray(logs) ? logs : []);
+            } catch { /* silent */ }
+        };
+        fetchAlerts();
+        const t = setInterval(fetchAlerts, 5 * 60 * 1000); // 5 phút
+        return () => clearInterval(t);
+    }, [selectedReservoir, lakeId]);
+
     // ─── Merge history + forecast into unified timeline ────────────────────────
     const unifiedData = useMemo(() => {
         // Build a map: fullLabel → point
@@ -650,6 +674,49 @@ export default function OperationDashboard({ lakeId }) {
                     </div>
                 </div>
             </div>
+
+            {/* ── Alert Banner (Phase 4) ── */}
+            {reservoirAlerts.filter(a => a.alert_level !== 'normal').length > 0 && (
+                <div className="mx-5 mt-4 rounded-xl overflow-hidden border shadow-lg">
+                    {reservoirAlerts.filter(a => a.alert_level !== 'normal').map(alert => {
+                        const cfg = {
+                            danger:  { bg: 'bg-red-50',    border: 'border-red-300',   icon: '🔴', text: 'text-red-800',   badge: 'bg-red-600',   label: 'KHẨN CẤP' },
+                            warning: { bg: 'bg-amber-50',  border: 'border-amber-300', icon: '🟡', text: 'text-amber-800', badge: 'bg-amber-500', label: 'CẢNH BÁO' },
+                            watch:   { bg: 'bg-blue-50',   border: 'border-blue-200',  icon: '🔵', text: 'text-blue-800',  badge: 'bg-blue-500',  label: 'THEO DÕI' },
+                        }[alert.alert_level] || {};
+                        return (
+                            <div key={alert.lake_id} className={`${cfg.bg} ${cfg.border} border-l-4 px-4 py-3 flex items-start gap-3`}>
+                                <span className="text-xl mt-0.5">{cfg.icon}</span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full text-white ${cfg.badge}`}>{cfg.label}</span>
+                                        <span className={`text-xs font-black ${cfg.text}`}>{alert.lake_name}</span>
+                                        <span className="text-[10px] text-slate-500 ml-auto">
+                                            {alert.checked_at ? new Date(alert.checked_at).toLocaleTimeString('vi-VN') : ''}
+                                        </span>
+                                    </div>
+                                    <p className={`text-xs font-bold ${cfg.text}`}>{alert.reason}</p>
+                                    <div className="flex flex-wrap gap-3 mt-1 text-[10px] text-slate-600">
+                                        <span>HTL: <b>{alert.htl_current?.toFixed(2)}m</b></span>
+                                        <span>Z_max dự báo: <b className={alert.alert_level==='danger'?'text-red-600':'text-amber-600'}>{alert.htl_forecast_max?.toFixed(2)}m</b></span>
+                                        <span>Đạt đỉnh sau: <b>{alert.hour_to_max}h</b></span>
+                                        <span>Q_xả khuyến nghị: <b>{alert.q_recommended?.toFixed(0)} m³/s</b></span>
+                                    </div>
+                                    {alert.actions?.length > 0 && (
+                                        <ul className="mt-1.5 space-y-0.5">
+                                            {alert.actions.map((a, i) => (
+                                                <li key={i} className={`text-[10px] font-semibold ${cfg.text} flex items-center gap-1`}>
+                                                    <span>›</span> {a}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* ── Dashboard Content ── */}
             <div className="p-6 flex flex-col xl:flex-row gap-6">
@@ -1172,6 +1239,99 @@ export default function OperationDashboard({ lakeId }) {
                                     Vui lòng tham khảo thêm quy trình vận hành hồ chứa theo QĐ 1865/QĐ-TTg trước khi quyết định xả.
                                 </div>
                             </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Nhật ký vận hành (Phase 4) ── */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
+                    <button
+                        onClick={() => setShowOpLog(v => !v)}
+                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100 hover:bg-slate-100 transition-colors"
+                    >
+                        <div className="flex items-center gap-3 font-bold text-slate-800 text-sm">
+                            <div className="p-1.5 bg-slate-700 rounded-lg text-white">
+                                <Database size={15} />
+                            </div>
+                            NHẬT KÝ VẬN HÀNH TỰ ĐỘNG
+                            <span className="ml-1 text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-black">
+                                {opLogs.length} bản ghi
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setAlertChecking(true);
+                                    try { await mapApi.triggerAlertCheck(); }
+                                    catch { /* ignore */ }
+                                    setTimeout(async () => {
+                                        try {
+                                            const id = lakeId || selectedReservoir;
+                                            const [alerts, logs] = await Promise.all([
+                                                mapApi.getReservoirAlerts(),
+                                                mapApi.getOperationLogs(id || undefined, 30),
+                                            ]);
+                                            setReservoirAlerts(Array.isArray(alerts) ? alerts : []);
+                                            setOpLogs(Array.isArray(logs) ? logs : []);
+                                        } catch { /* ignore */ }
+                                        setAlertChecking(false);
+                                    }, 5000);
+                                }}
+                                className="text-[10px] font-black px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1"
+                            >
+                                {alertChecking ? '⟳ Đang kiểm tra...' : '⟳ Kiểm tra ngay'}
+                            </button>
+                            {showOpLog ? <ChevronUp size={18} className="text-slate-500" /> : <ChevronDown size={18} className="text-slate-500" />}
+                        </div>
+                    </button>
+
+                    {showOpLog && (
+                        <div className="overflow-x-auto">
+                            {opLogs.length === 0 ? (
+                                <p className="text-center text-slate-400 text-sm py-8">Chưa có nhật ký vận hành. Nhấn "Kiểm tra ngay" để tạo bản ghi đầu tiên.</p>
+                            ) : (
+                                <table className="w-full text-[11px]">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100">
+                                            {['Thời gian', 'Hồ', 'HTL (m)', 'Q vào', 'Q xả', 'Q đề xuất', 'Công suất', 'Z dự báo', 'Mức', 'Lý do'].map(h => (
+                                                <th key={h} className="px-3 py-2 text-left font-black text-slate-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {opLogs.map((log, i) => {
+                                            const levelCfg = {
+                                                danger:  'bg-red-100 text-red-700',
+                                                warning: 'bg-amber-100 text-amber-700',
+                                                watch:   'bg-blue-100 text-blue-700',
+                                                low:     'bg-slate-100 text-slate-600',
+                                                normal:  'bg-emerald-50 text-emerald-700',
+                                            }[log.alert_level] || 'bg-slate-50 text-slate-500';
+                                            const t = new Date(log.logged_at);
+                                            const timeStr = t.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'}) + ' ' + t.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+                                            return (
+                                                <tr key={i} className={`border-b border-slate-50 hover:bg-slate-50 ${i % 2 === 0 ? '' : 'bg-slate-50/40'}`}>
+                                                    <td className="px-3 py-2 font-mono text-slate-500 whitespace-nowrap">{timeStr}</td>
+                                                    <td className="px-3 py-2 font-bold text-slate-700 whitespace-nowrap">{log.lake_name}</td>
+                                                    <td className="px-3 py-2 font-black text-blue-700">{log.htl?.toFixed(2)}</td>
+                                                    <td className="px-3 py-2 text-amber-600 font-bold">{log.q_in?.toFixed(0)}</td>
+                                                    <td className="px-3 py-2 text-red-600 font-bold">{log.q_out?.toFixed(0)}</td>
+                                                    <td className="px-3 py-2 font-black text-slate-800">{log.q_recommended?.toFixed(0)}</td>
+                                                    <td className="px-3 py-2 text-yellow-600 font-bold">{log.power_mw != null ? `${log.power_mw.toFixed(1)} MW` : '—'}</td>
+                                                    <td className="px-3 py-2 font-bold text-purple-700">{log.htl_forecast_max?.toFixed(2) ?? '—'}</td>
+                                                    <td className="px-3 py-2">
+                                                        <span className={`px-2 py-0.5 rounded-full font-black text-[10px] ${levelCfg}`}>
+                                                            {log.alert_level?.toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-3 py-2 text-slate-500 max-w-[200px] truncate" title={log.reason}>{log.reason}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     )}
                 </div>

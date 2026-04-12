@@ -24,6 +24,12 @@ const mapApi = {
     getRainLakeHistory: (lakeId) => axiosClient.get(`/rain-lake-history/${lakeId}`).then((res) => res.data),
     runForecastModel: (data) => axiosClient.post("/forecast", data).then((res) => res.data),
 
+    // ── Reservoir Alerts & Operation Logs ─────────────────────────────────────
+    getReservoirAlerts: () => axiosClient.get("/reservoir-alerts").then(r => r.data),
+    getOperationLogs:   (lakeId, limit = 50) =>
+        axiosClient.get("/reservoir-alerts/logs", { params: { lakeId, limit } }).then(r => r.data),
+    triggerAlertCheck:  () => axiosClient.post("/reservoir-alerts/check").then(r => r.data),
+
     // ── Lake Specs & Calculations ──────────────────────────────────────────────
     getLakeSpecs:   ()          => axiosClient.get("/lake-specs").then(r => r.data),
     getLakeSpec:    (lakeId)    => axiosClient.get(`/lake-specs/${lakeId}`).then(r => r.data),
