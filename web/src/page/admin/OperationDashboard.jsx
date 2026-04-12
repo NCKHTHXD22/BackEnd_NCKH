@@ -384,14 +384,22 @@ export default function OperationDashboard({ lakeId }) {
     }, [forecastData, latestHydro.qvao]);
 
     // Khuyến nghị: ưu tiên từ DB, fallback tính local
-    const rec = useMemo(() =>
-        recFromDB || computeRecommendation({
+    // Normalize: backend trả q_rec (snake_case), local dùng qRec (camelCase)
+    const rec = useMemo(() => {
+        const raw = recFromDB || computeRecommendation({
             htl: latestHydro.htl,
             qvao: latestHydro.qvao,
             luuluongxa: latestHydro.luuluongxa,
             forecastPeak,
-        }),
-    [recFromDB, latestHydro, forecastPeak]);
+        });
+        return {
+            level:  raw.level  ?? 'ok',
+            reason: raw.reason ?? '—',
+            detail: raw.detail ?? '—',
+            actions: raw.actions ?? [],
+            qRec: raw.qRec ?? raw.q_rec ?? 0,
+        };
+    }, [recFromDB, latestHydro, forecastPeak]);
 
     const statusNarrative = useMemo(() =>
         buildStatusNarrative({
