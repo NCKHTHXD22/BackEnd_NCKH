@@ -19,13 +19,18 @@ console.log('✅ MongoDB connected');
 // ─── THÔNG SỐ KỸ THUẬT ────────────────────────────────────────────────────────
 // lake_id khớp với InflowLake.Id_Lake:
 //   1 = HỒ A VƯƠNG, 2 = HỒ ĐAK MI 4, 3 = HỒ SÔNG BUNG 4, 4 = HỒ SÔNG TRANH 2
+//   7–19 = các hồ trong lưu vực, quy trình vận hành đơn hồ
+//
+// QĐ chính: QĐ 1865/QĐ-TTg (5/11/2021) — Liên hồ Vu Gia – Thu Bồn
+//           (thay thế QĐ 471/QĐ-TTg 2016)
 const LAKE_SPECS = [
     {
         lake_id: 1,
         name: 'A Vương',
         river: 'Sông A Vương',
         province: 'Quảng Nam',
-        regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        address: 'Xã A Rooi, Đông Giang, Quảng Nam',
+        regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 100.0, MNDBT: 108.0, MNGC: 109.5, crest: 110.5,
 
@@ -51,7 +56,8 @@ const LAKE_SPECS = [
         name: 'Đắk Mi 4',
         river: 'Sông Đắk Mi',
         province: 'Quảng Nam',
-        regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        address: 'Xã Phước Hòa, Phước Sơn, Quảng Nam',
+        regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 225.0, MNDBT: 258.0, MNGC: 260.5, crest: 261.5,
 
@@ -77,7 +83,8 @@ const LAKE_SPECS = [
         name: 'Sông Bung 4',
         river: 'Sông Bung',
         province: 'Quảng Nam',
-        regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        address: 'Xã Tà Pơơ, Nam Giang, Quảng Nam',
+        regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 160.0, MNDBT: 168.0, MNGC: 169.5, crest: 170.5,
 
@@ -103,7 +110,8 @@ const LAKE_SPECS = [
         name: 'Sông Tranh 2',
         river: 'Sông Tranh (Thu Bồn)',
         province: 'Quảng Nam',
-        regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        address: 'Xã Trà Đốc, Bắc Trà My, Quảng Nam',
+        regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 158.0, MNDBT: 175.0, MNGC: 176.5, crest: 177.0,
 
@@ -124,11 +132,14 @@ const LAKE_SPECS = [
 
         min_env_flow: 4.0,
     },
-    // ── 11 hồ còn lại (thông số tham khảo — cần cập nhật từ hồ sơ thiết kế) ──
+    // ── 11 hồ còn lại trong lưu vực Vu Gia – Thu Bồn ───────────────────────────
+    // Quy trình: mỗi hồ có quy trình vận hành đơn hồ riêng do Bộ Công Thương phê duyệt
+    // Phải tuân thủ khung liên hồ QĐ 1865/QĐ-TTg (2021) về điều tiết mùa lũ
     {
         lake_id: 7,
         name: 'Sông Bung 4A',
-        river: 'Sông Bung', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Bung', province: 'Quảng Nam', address: 'Nam Giang, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 130.0, MNDBT: 138.0, MNGC: 139.0, crest: 140.0,
         total_volume: 20, dead_volume: 5, flood_volume: 8,
         turbines: 1, capacity_mw: 16, turbine_efficiency: 0.88,
@@ -138,7 +149,8 @@ const LAKE_SPECS = [
     {
         lake_id: 8,
         name: 'Sông Bung 5',
-        river: 'Sông Bung', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Bung', province: 'Quảng Nam', address: 'Đông Giang, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 175.0, MNDBT: 185.0, MNGC: 186.5, crest: 187.5,
         total_volume: 100, dead_volume: 28, flood_volume: 30,
         turbines: 2, capacity_mw: 50, turbine_efficiency: 0.88,
@@ -148,7 +160,8 @@ const LAKE_SPECS = [
     {
         lake_id: 9,
         name: 'Sông Bung 2',
-        river: 'Sông Bung', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Bung', province: 'Quảng Nam', address: 'Nam Giang, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 330.0, MNDBT: 340.0, MNGC: 342.0, crest: 343.0,
         total_volume: 250, dead_volume: 70, flood_volume: 60,
         turbines: 2, capacity_mw: 100, turbine_efficiency: 0.88,
@@ -158,7 +171,8 @@ const LAKE_SPECS = [
     {
         lake_id: 11,
         name: 'Sông Bung 6',
-        river: 'Sông Bung', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Bung', province: 'Quảng Nam', address: 'Nam Giang, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 93.0, MNDBT: 100.0, MNGC: 101.0, crest: 102.0,
         total_volume: 50, dead_volume: 12, flood_volume: 15,
         turbines: 1, capacity_mw: 30, turbine_efficiency: 0.88,
@@ -168,7 +182,8 @@ const LAKE_SPECS = [
     {
         lake_id: 12,
         name: 'Sông Tranh 3',
-        river: 'Sông Tranh (Thu Bồn)', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Tranh (Thu Bồn)', province: 'Quảng Nam', address: 'Tiên Phước, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Tranh)',
         MNC: 60.0, MNDBT: 65.0, MNGC: 66.0, crest: 67.0,
         total_volume: 60, dead_volume: 15, flood_volume: 18,
         turbines: 2, capacity_mw: 60, turbine_efficiency: 0.88,
@@ -178,7 +193,8 @@ const LAKE_SPECS = [
     {
         lake_id: 13,
         name: 'Za Hung',
-        river: 'Sông Za Hung (A Vương)', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Za Hung', province: 'Quảng Nam', address: 'Tây Giang, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (thượng nguồn A Vương)',
         MNC: 150.0, MNDBT: 160.0, MNGC: 161.5, crest: 162.5,
         total_volume: 130, dead_volume: 35, flood_volume: 40,
         turbines: 2, capacity_mw: 90, turbine_efficiency: 0.88,
@@ -188,7 +204,8 @@ const LAKE_SPECS = [
     {
         lake_id: 14,
         name: 'Đắk Mi 3',
-        river: 'Sông Đắk Mi', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Đắk Mi', province: 'Quảng Nam', address: 'Phước Sơn, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Đắk Mi)',
         MNC: 340.0, MNDBT: 352.0, MNGC: 353.5, crest: 354.5,
         total_volume: 70, dead_volume: 18, flood_volume: 20,
         turbines: 1, capacity_mw: 30, turbine_efficiency: 0.88,
@@ -198,7 +215,8 @@ const LAKE_SPECS = [
     {
         lake_id: 15,
         name: 'Khe Diên',
-        river: 'Sông Vu Gia', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Vu Gia', province: 'Quảng Nam', address: 'Nông Sơn, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (hạ lưu Vu Gia)',
         MNC: 18.0, MNDBT: 24.0, MNGC: 25.0, crest: 26.0,
         total_volume: 35, dead_volume: 8, flood_volume: 10,
         turbines: 1, capacity_mw: 30, turbine_efficiency: 0.88,
@@ -208,7 +226,8 @@ const LAKE_SPECS = [
     {
         lake_id: 16,
         name: 'Sông Côn 2',
-        river: 'Sông Côn', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Côn', province: 'Quảng Nam', address: 'Đông Giang, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương',
         MNC: 320.0, MNDBT: 334.0, MNGC: 335.5, crest: 336.5,
         total_volume: 90, dead_volume: 22, flood_volume: 25,
         turbines: 2, capacity_mw: 60, turbine_efficiency: 0.88,
@@ -218,7 +237,8 @@ const LAKE_SPECS = [
     {
         lake_id: 17,
         name: 'Sông Tranh 4',
-        river: 'Sông Tranh (Thu Bồn)', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Tranh (Thu Bồn)', province: 'Quảng Nam', address: 'Hiệp Đức, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Tranh)',
         MNC: 53.0, MNDBT: 58.0, MNGC: 59.0, crest: 60.0,
         total_volume: 40, dead_volume: 10, flood_volume: 12,
         turbines: 1, capacity_mw: 40, turbine_efficiency: 0.88,
@@ -228,7 +248,8 @@ const LAKE_SPECS = [
     {
         lake_id: 19,
         name: 'Đắk Mi 4C',
-        river: 'Sông Đắk Mi', province: 'Quảng Nam', regulation_doc: 'QĐ 471/QĐ-TTg (2016)',
+        river: 'Sông Đắk Mi', province: 'Quảng Nam', address: 'Phước Sơn, Quảng Nam',
+        regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Đắk Mi)',
         MNC: 153.0, MNDBT: 162.0, MNGC: 163.0, crest: 164.0,
         total_volume: 45, dead_volume: 12, flood_volume: 15,
         turbines: 1, capacity_mw: 35, turbine_efficiency: 0.88,
