@@ -1,5 +1,24 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', color: '#ef4444' }}>
+          <h2>Lỗi hiển thị trang</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{String(this.state.error)}</pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 12, padding: '8px 16px', cursor: 'pointer' }}>
+            Thử lại
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import AdminLogin from "./page/admin/Login";
 import AdminRegister from "./page/admin/Register";
 import ForgotPassword from "./page/admin/ForgotPassword";
@@ -13,7 +32,6 @@ import ReportsPublic from "./page/Home/Reports";
 import HomePage from "./page/Home/HomePage";
 import SubmitReport from "./page/Home/SubmitReport";
 import MyReports from "./page/Home/MyReport";
-import Footer from "./components/Admin/AdminPage/Footer"; // Thêm dòng này
 import AdminDashboard from "./page/admin/AdminDashboard";
 
 function RequireAdmin({ children }) {
@@ -25,6 +43,7 @@ function RequireAdmin({ children }) {
 function App() {
   return (
     <BrowserRouter>
+      <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-gray-100">
         <div className="flex-1 flex flex-col">
           <Routes>
@@ -63,6 +82,7 @@ function App() {
           </Routes>
         </div>
       </div>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

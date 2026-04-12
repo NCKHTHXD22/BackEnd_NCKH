@@ -26,6 +26,7 @@ import alertRoutes from "./api/routes/alert.routes.js";
 import helpRoutes from "./api/routes/help.routes.js";
 import notificationRoutes from "./api/routes/notification.routes.js";
 import forecastHistoryRoutes from "./api/routes/forecastHistory.routes.js";
+import lakeSpecRoutes from "./api/routes/lakeSpec.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
@@ -62,6 +63,7 @@ app.use("/api", inflowLakeHistoryRoutes);
 app.use("/api/rain-lake-history", rainlakeHistory);
 app.use("/api/rain-lake-qlake", rainLake_QLake);
 app.use("/api/forecast-history", forecastHistoryRoutes);
+app.use("/api/lake-specs", lakeSpecRoutes);
 app.use("/api/forecast-lstm", forecastLstmRoutes);
 
 // Backend Integration Endpoints

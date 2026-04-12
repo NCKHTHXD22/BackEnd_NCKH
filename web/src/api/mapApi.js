@@ -23,6 +23,19 @@ const mapApi = {
         axiosClient.get(`/forecast-history/${reservoirId}`, { params: { rainSource } }).then((res) => res.data),
     getRainLakeHistory: (lakeId) => axiosClient.get(`/rain-lake-history/${lakeId}`).then((res) => res.data),
     runForecastModel: (data) => axiosClient.post("/forecast", data).then((res) => res.data),
+
+    // ── Lake Specs & Calculations ──────────────────────────────────────────────
+    getLakeSpecs:   ()          => axiosClient.get("/lake-specs").then(r => r.data),
+    getLakeSpec:    (lakeId)    => axiosClient.get(`/lake-specs/${lakeId}`).then(r => r.data),
+    getZVCurve:     (lakeId)    => axiosClient.get(`/lake-specs/${lakeId}/zv-curve`).then(r => r.data),
+    getVolume:      (lakeId, htl) =>
+        axiosClient.get(`/lake-specs/${lakeId}/volume`, { params: { htl } }).then(r => r.data),
+    getPower:       (lakeId, htl, q_turbine) =>
+        axiosClient.get(`/lake-specs/${lakeId}/power`, { params: { htl, q_turbine } }).then(r => r.data),
+    waterBalance:   (lakeId, body) =>
+        axiosClient.post(`/lake-specs/${lakeId}/water-balance`, body).then(r => r.data),
+    operationRec:   (lakeId, body) =>
+        axiosClient.post(`/lake-specs/${lakeId}/operation-rec`, body).then(r => r.data),
 };
 
 export default mapApi;

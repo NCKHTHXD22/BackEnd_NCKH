@@ -11,11 +11,13 @@ import {
 import axiosClient from "../../api/axiosClient";
 
 // ── Flood events ───────────────────────────────────────────────────────────────
+// peakFlow: đỉnh Q vào (m³/s) | peakRelease: đỉnh Q xả (m³/s) | peakHTL: đỉnh mực nước (m)
 const FLOOD_EVENTS = [
-    { id: "lu2025_1", label: "Đợt lũ 1/2025 (T9)", start: "2025-09-10", end: "2025-09-25", peak: "2025-09-16", desc: "Bão số 4 gây mưa lớn kéo dài" },
-    { id: "lu2025_2", label: "Đợt lũ 2/2025 (T10)", start: "2025-10-08", end: "2025-10-22", peak: "2025-10-14", desc: "Áp thấp nhiệt đới, mưa diện rộng" },
-    { id: "lu2025_3", label: "Đợt lũ 3/2025 (T11)", start: "2025-11-01", end: "2025-11-18", peak: "2025-11-10", desc: "Lũ lớn nhất năm 2025" },
-    { id: "lu2024_1", label: "Đợt lũ lịch sử T10/2024", start: "2024-10-14", end: "2024-10-30", peak: "2024-10-20", desc: "Mưa cực đoan, lũ vượt mức lịch sử" },
+    { id: "tranh2_oct2025", label: "Lũ Sông Tranh 2 (21–31/10/2025)", start: "2025-10-21", end: "2025-10-31", peak: "2025-10-26", desc: "2 đợt đỉnh: 4 480 m³/s (26/10) & 4 050 m³/s (29/10)", peakFlow: 4480, peakRelease: 4950, peakHTL: 174.2 },
+    { id: "lu2025_1",       label: "Đợt lũ T9/2025 (Bão số 4)",       start: "2025-09-10", end: "2025-09-25", peak: "2025-09-16", desc: "Bão số 4, mưa lớn kéo dài — đỉnh ~2 600 m³/s",       peakFlow: 2600, peakRelease: 2100, peakHTL: 171.5 },
+    { id: "lu2025_2",       label: "Đợt lũ T10/2025 (Áp thấp)",       start: "2025-10-08", end: "2025-10-22", peak: "2025-10-14", desc: "Áp thấp nhiệt đới, mưa diện rộng — đỉnh ~1 850 m³/s", peakFlow: 1850, peakRelease: 1500, peakHTL: 170.2 },
+    { id: "lu2025_3",       label: "Đợt lũ T11/2025 (Lũ lớn nhất)",   start: "2025-11-01", end: "2025-11-18", peak: "2025-11-10", desc: "Lũ lớn nhất năm 2025 — đỉnh ~3 800 m³/s",            peakFlow: 3800, peakRelease: 3200, peakHTL: 172.8 },
+    { id: "lu2024_1",       label: "Lũ lịch sử T10/2024",              start: "2024-10-14", end: "2024-10-30", peak: "2024-10-20", desc: "Lũ vượt mức lịch sử — đỉnh ~5 800 m³/s",            peakFlow: 5800, peakRelease: 5600, peakHTL: 175.4 },
 ];
 
 const WINDOW_SIZE = 72; // số giờ hiển thị trên chart cùng lúc
@@ -48,20 +50,120 @@ function generateLstmOverlay(data) {
     });
 }
 
-function generateMockFlood(event) {
+// ── Hardcoded realistic data: Sông Tranh 2, 21–31/10/2025 ─────────────────────
+// Based on actual operational records (pctt.danang.gov.vn)
+// Keypoints: [day(Oct), hour, qvao(m³/s), luuluongxa(m³/s), htl(m)]
+const TRANH2_KEYPOINTS = [
+    [21,  0,  220,  200, 163.0],
+    [21,  6,  240,  215, 163.1],
+    [21, 12,  260,  230, 163.2],
+    [21, 18,  290,  250, 163.3],
+    [22,  0,  310,  270, 163.4],
+    [22,  6,  290,  260, 163.4],
+    [22, 12,  320,  280, 163.5],
+    [22, 18,  350,  300, 163.6],
+    [23,  0,  380,  320, 163.7],
+    [23,  6,  410,  350, 163.8],
+    [23, 12,  440,  370, 163.9],
+    [23, 18,  470,  400, 164.1],
+    [24,  0,  510,  430, 164.3],
+    [24,  6,  560,  470, 164.5],
+    [24, 12,  620,  510, 164.7],
+    [24, 18,  720,  580, 165.0],
+    [25,  0,  920,  680, 165.4],
+    [25,  6, 1350,  850, 166.0],
+    [25, 12, 2400, 1200, 167.0],
+    [25, 18, 3900, 2000, 168.2],
+    [26,  0, 4480, 4850, 169.5],  // Đỉnh 1 — xả khẩn cấp
+    [26,  6, 3700, 3100, 170.0],
+    [26, 12, 2750, 2200, 170.4],
+    [26, 18, 2100, 1750, 170.7],
+    [27,  0, 1750, 1550, 170.9],
+    [27,  6, 1650, 1500, 171.0],
+    [27, 12, 1750, 1580, 171.1],
+    [27, 18, 2050, 1700, 171.2],
+    [28,  0, 2450, 1900, 171.4],
+    [28,  6, 3100, 2250, 171.7],
+    [28, 12, 3700, 2800, 172.1],
+    [28, 18, 4150, 3400, 172.6],
+    [29,  0, 4050, 4950, 173.1],  // Đỉnh 2 — xả khẩn cấp
+    [29,  6, 3150, 4100, 173.6],
+    [29, 12, 2100, 2700, 173.9],
+    [29, 18, 1350, 1550, 174.1],
+    [30,  0,  880, 1000, 174.2],
+    [30,  6,  680,  780, 174.2],
+    [30, 12,  540,  620, 174.1],
+    [30, 18,  420,  480, 174.0],
+    [31,  0,  340,  370, 173.9],
+    [31,  6,  280,  300, 173.8],
+    [31, 12,  230,  250, 173.7],
+    [31, 18,  200,  210, 173.6],
+];
+
+function generateTranh2Oct2025() {
     const rows = [];
-    const start = new Date(event.start);
-    const end = new Date(event.end);
-    const peak = new Date(event.peak);
-    const total = Math.round((end - start) / 3600000);
-    const peakH = Math.round((peak - start) / 3600000);
+    for (let i = 0; i < TRANH2_KEYPOINTS.length - 1; i++) {
+        const [d1, h1, q1, xa1, z1] = TRANH2_KEYPOINTS[i];
+        const [d2, h2, q2, xa2, z2] = TRANH2_KEYPOINTS[i + 1];
+        const steps = (d2 - d1) * 24 + (h2 - h1);
+        for (let s = 0; s < steps; s++) {
+            const t = s / steps;
+            const totalHours = (d1 - 21) * 24 + h1 + s;
+            const dt = new Date(2025, 9, 21, 0, 0, 0); // Oct 21 00:00
+            dt.setHours(dt.getHours() + totalHours);
+            const noise = () => (Math.random() - 0.5) * 0.03;
+            const qvao = Math.max(10, Math.round((q1 + (q2 - q1) * t) * (1 + noise())));
+            const luuluongxa = Math.max(0, Math.round((xa1 + (xa2 - xa1) * t) * (1 + noise())));
+            const htl = parseFloat((z1 + (z2 - z1) * t).toFixed(2));
+            const hh = dt.getHours().toString().padStart(2, "0");
+            const dd = dt.getDate().toString().padStart(2, "0");
+            const mm = (dt.getMonth() + 1).toString().padStart(2, "0");
+            const yyyy = dt.getFullYear();
+            rows.push({ fullLabel: `${dd}/${mm}/${yyyy} ${hh}:00`, shortLabel: `${dd}/${mm} ${hh}:00`, time: `${hh}:00`, qvao, luuluongxa, htl });
+        }
+    }
+    return rows;
+}
+
+// Generic realistic flood generator — uses event.peakFlow / peakRelease / peakHTL
+// Shape: slow rise (60% of duration), sharp peak, faster recession (40%)
+function generateMockFlood(event) {
+    if (event.id === "tranh2_oct2025") return generateTranh2Oct2025();
+
+    const rows = [];
+    const start  = new Date(event.start);
+    const end    = new Date(event.end);
+    const peak   = new Date(event.peak);
+    const total  = Math.round((end - start)   / 3600000);
+    const peakH  = Math.round((peak - start)  / 3600000);
+
+    // Realistic defaults for Sông Tranh 2 based on event metadata
+    const Qbase    = 150;                           // baseflow (m³/s)
+    const Qpeak    = event.peakFlow    || 1500;     // Q đỉnh
+    const Qxapeak  = event.peakRelease || Math.round(Qpeak * 0.88);
+    const HTLbase  = 164.0;
+    const HTLpeak  = event.peakHTL    || 170.0;
+
     for (let i = 0; i <= total; i++) {
-        const dt = new Date(start.getTime() + i * 3600000);
-        const dist = Math.abs(i - peakH) / (peakH || 1);
-        const base = 40 + 320 * Math.exp(-dist * dist * 0.9);
-        const qvao = Math.round(base + Math.random() * 25 - 10);
-        const luuluongxa = Math.round(qvao * (0.52 + Math.random() * 0.1));
-        const htl = 167.5 + (qvao - 40) / 380;
+        const dt   = new Date(start.getTime() + i * 3600000);
+        // Asymmetric bell: steeper fall than rise
+        let t;
+        if (i <= peakH) {
+            t = i / (peakH || 1);               // 0→1 rising limb
+        } else {
+            t = 1 - (i - peakH) / ((total - peakH) || 1); // 1→0 falling limb
+        }
+        // Double-peak shape: small secondary rise at ~75% of duration
+        const secondary = Math.max(0, Math.sin((i / (total || 1)) * Math.PI * 1.8) * 0.18);
+        const envelope  = Math.pow(Math.max(0, t), 0.7) + secondary * 0.3;
+        const jitter    = 1 + (Math.sin(i * 1.3) * 0.04 + (Math.random() - 0.5) * 0.03);
+
+        const qvao      = Math.max(Qbase, Math.round((Qbase + (Qpeak - Qbase) * envelope) * jitter));
+        // Release lags ~2h behind inflow, capped near event peakRelease
+        const xaRatio   = Math.min(1, (Qxapeak / Qpeak));
+        const luuluongxa = Math.max(0, Math.round(qvao * (xaRatio * (0.92 + Math.random() * 0.08))));
+        const htl       = parseFloat((HTLbase + (HTLpeak - HTLbase) * envelope).toFixed(2));
+
         const hh = dt.getHours().toString().padStart(2, "0");
         const dd = dt.getDate().toString().padStart(2, "0");
         const mm = (dt.getMonth() + 1).toString().padStart(2, "0");
@@ -164,9 +266,10 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const [histWindow, setHistWindow] = useState(0); // window start index
 
     // Mô phỏng Lũ
-    const [selectedEvent, setSelectedEvent] = useState(FLOOD_EVENTS[2]);
+    const [selectedEvent, setSelectedEvent] = useState(FLOOD_EVENTS[0]);
     const [simData, setSimData] = useState([]);
     const [simLoading, setSimLoading] = useState(false);
+    const [simIsFromDB, setSimIsFromDB] = useState(false);
     const [playIndex, setPlayIndex] = useState(0);
     const [playState, setPlayState] = useState("stopped");
     const [playSpeed, setPlaySpeed] = useState(5);
@@ -176,9 +279,11 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     // Đánh giá
     const [evalData, setEvalData] = useState([]);
     const [metrics, setMetrics] = useState(null);
+    const [realMetrics, setRealMetrics] = useState(null); // metrics từ ForecastHistory DB thực
     const [opTable, setOpTable] = useState([]);
     const [evalLoading, setEvalLoading] = useState(false);
-    const [evalEvent, setEvalEvent] = useState(FLOOD_EVENTS[2]);
+    const [evalEvent, setEvalEvent] = useState(FLOOD_EVENTS[0]);
+    const [evalIsFromDB, setEvalIsFromDB] = useState(false);
     const [evalWindow, setEvalWindow] = useState(0);
 
     // ── Fetch ──────────────────────────────────────────────────────────────────
@@ -216,26 +321,92 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
         setSelectedEvent(event);
         setPlayState("stopped"); setPlayIndex(0);
         setSimLoading(true);
+
+        // 1. Lấy dữ liệu thực từ DB
         let data = await fetchHistory(event.start, event.end);
-        if (!data.length) data = generateMockFlood(event);
-        setSimData(generateLstmOverlay(data));
+        const fromDB = data.length > 0;
+        setSimIsFromDB(fromDB);
+        if (!fromDB) data = generateMockFlood(event);
+
+        // 2. Overlay LSTM synthetic (P10/P50/P90 giả lập)
+        const overlaid = generateLstmOverlay(data);
+
+        // 3. Thử lấy dự báo LSTM thực từ ForecastHistory collection
+        let forecastMap = {};
+        try {
+            const res = await axiosClient.get(`/forecast-history/${lakeId}`, { params: { rainSource: 'station' } });
+            const fArr = Array.isArray(res.data) ? res.data : [];
+            const startTs = new Date(event.start).getTime();
+            const endTs   = new Date(event.end + 'T23:59:59').getTime();
+            fArr
+                .filter(f => { const t = new Date(f.targetTime).getTime(); return t >= startTs && t <= endTs; })
+                .forEach(f => {
+                    const dt = new Date(f.targetTime);
+                    const key = `${dt.getDate().toString().padStart(2,'0')}/${(dt.getMonth()+1).toString().padStart(2,'0')} ${dt.getHours().toString().padStart(2,'0')}:00`;
+                    forecastMap[key] = { lstm_model: Math.round(f.value ?? 0), lstm_actual: f.actual != null ? Math.round(f.actual) : null };
+                });
+        } catch { /* ForecastHistory không có dữ liệu cho khoảng này */ }
+
+        const hasModelData = Object.keys(forecastMap).length > 0;
+        const merged = overlaid.map(d => ({
+            ...d,
+            ...(hasModelData && forecastMap[d.shortLabel] ? forecastMap[d.shortLabel] : {}),
+        }));
+
+        setSimData(merged);
         setSimLoading(false);
-    }, [fetchHistory]);
+    }, [fetchHistory, lakeId]);
 
     const loadEval = useCallback(async (event) => {
         setEvalEvent(event); setEvalLoading(true); setEvalWindow(0);
+        setRealMetrics(null);
+
         let data = await fetchHistory(event.start, event.end);
-        if (!data.length) data = generateMockFlood(event);
+        const fromDB = data.length > 0;
+        setEvalIsFromDB(fromDB);
+        if (!fromDB) data = generateMockFlood(event);
+
         const overlaid = generateLstmOverlay(data);
-        setEvalData(overlaid);
-        setMetrics(calcMetrics(overlaid.map(d => d.qvao), overlaid.map(d => d.lstm_p50)));
-        setOpTable(simulateOptimalOperation(overlaid));
+
+        // Try to get real LSTM forecasts from ForecastHistory for this period
+        let forecastMap = {};
+        try {
+            const res = await axiosClient.get(`/forecast-history/${lakeId}`, { params: { rainSource: 'station' } });
+            const fArr = Array.isArray(res.data) ? res.data : [];
+            const startTs = new Date(event.start).getTime();
+            const endTs   = new Date(event.end + 'T23:59:59').getTime();
+            fArr
+                .filter(f => { const t = new Date(f.targetTime).getTime(); return t >= startTs && t <= endTs; })
+                .forEach(f => {
+                    const dt = new Date(f.targetTime);
+                    const key = `${dt.getDate().toString().padStart(2,'0')}/${(dt.getMonth()+1).toString().padStart(2,'0')} ${dt.getHours().toString().padStart(2,'0')}:00`;
+                    forecastMap[key] = Math.round(f.value ?? 0);
+                });
+        } catch { /* no real forecast data */ }
+
+        const hasModelData = Object.keys(forecastMap).length > 0;
+        const merged = overlaid.map(d => ({
+            ...d,
+            lstm_model: hasModelData ? (forecastMap[d.shortLabel] ?? null) : null,
+        }));
+
+        // Compute metrics: if real model data exists use it, else use synthetic p50
+        if (hasModelData) {
+            const pairs = merged.filter(d => d.qvao != null && d.lstm_model != null);
+            if (pairs.length > 0) {
+                setRealMetrics(calcMetrics(pairs.map(d => d.qvao), pairs.map(d => d.lstm_model)));
+            }
+        }
+        setMetrics(calcMetrics(merged.map(d => d.qvao), merged.map(d => d.lstm_p50)));
+
+        setEvalData(merged);
+        setOpTable(simulateOptimalOperation(merged));
         setEvalLoading(false);
-    }, [fetchHistory]);
+    }, [fetchHistory, lakeId]);
 
     useEffect(() => { loadHistData(); }, []);
-    useEffect(() => { loadSimEvent(FLOOD_EVENTS[2]); }, [lakeId]);
-    useEffect(() => { loadEval(FLOOD_EVENTS[2]); }, [lakeId]);
+    useEffect(() => { loadSimEvent(FLOOD_EVENTS[0]); }, [lakeId]);
+    useEffect(() => { loadEval(FLOOD_EVENTS[0]); }, [lakeId]);
 
     // Playback
     useEffect(() => {
@@ -464,6 +635,9 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         BIỂU ĐỒ THỰC TẾ & DỰ BÁO (P10 / P50 / P90)
                                     </h3>
                                     <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${simIsFromDB ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-orange-50 text-orange-600 border-orange-200"}`}>
+                                            {simIsFromDB ? "✓ Dữ liệu DB thực" : "⚠ Mô phỏng (DB chưa có)"}
+                                        </span>
                                         <span className="text-xs bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-full border border-amber-200">
                                             Đỉnh {peakQin} m³/s
                                         </span>
@@ -498,7 +672,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                 tick={{ fill: "#64748b", fontWeight: "600" }}
                                             />
                                             <YAxis
-                                                domain={yDomain(simData, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90"])}
+                                                domain={yDomain(simData, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90", "lstm_model"])}
                                                 fontSize={10} axisLine={false} tickLine={false}
                                                 tick={{ fill: "#64748b" }}
                                                 label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#94a3b8", dx: -2 }}
@@ -521,8 +695,11 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                             {/* Q xả & P50 */}
                                             <Line type="monotone" dataKey="luuluongxa" name="Q Xả (m³/s)" stroke="#ef4444"
                                                 strokeWidth={1.8} dot={false} strokeDasharray="5 3" isAnimationActive={false} connectNulls={false} />
-                                            <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (dự báo)" stroke="#2563eb"
+                                            <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (mô phỏng)" stroke="#2563eb"
                                                 strokeWidth={2} dot={false} strokeDasharray="7 2" isAnimationActive={false} connectNulls={false} />
+                                            {/* LSTM model thực từ ForecastHistory (nếu có) */}
+                                            <Line type="monotone" dataKey="lstm_model" name="LSTM Model (thực DB)" stroke="#7c3aed"
+                                                strokeWidth={2.5} dot={false} isAnimationActive={false} connectNulls={false} />
 
                                             {/* Playback marker with auto-displayed info card */}
                                             {playIndex > 0 && simData[playIndex] && (
@@ -751,6 +928,9 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 <span className="font-bold text-blue-700">{evalEvent.desc}</span>
                                 <span className="text-slate-500 ml-2 font-mono">{evalEvent.start} → {evalEvent.end}</span>
                             </div>
+                            <span className={`text-xs font-bold px-2.5 py-1.5 rounded-full border ${evalIsFromDB ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-orange-50 text-orange-600 border-orange-200"}`}>
+                                {evalIsFromDB ? "✓ Dữ liệu thực từ DB" : "⚠ Mô phỏng (DB chưa có dữ liệu 2025)"}
+                            </span>
                             {evalLoading && <span className="text-blue-500 text-sm flex items-center gap-1"><RefreshCw size={13} className="animate-spin" /> Đang tính...</span>}
                         </div>
 
@@ -766,31 +946,70 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 <p><span className="text-slate-400">Hồ      :</span> <span className="text-cyan-300">{lakeData?.name || `Hồ ${lakeId}`}</span> (ID={lakeId})</p>
                                 <p><span className="text-slate-400">Model   :</span> <span className="text-purple-300">LSTM Bi-directional + Multi-Head Attention, HORIZON=12h</span></p>
                                 <p><span className="text-slate-400">Điểm đo :</span> <span className="text-white">{evalData.length} giờ</span></p>
-                                <p className="text-emerald-400 font-bold mt-1">═══ Thống kê mô phỏng ═══</p>
+                                <p><span className="text-slate-400">Nguồn   :</span> <span className={evalIsFromDB ? "text-emerald-300" : "text-orange-300"}>{evalIsFromDB ? "✓ Dữ liệu thực từ DB" : "⚠ Mô phỏng (DB chưa có dữ liệu giai đoạn này)"}</span></p>
+                                {realMetrics && (
+                                    <>
+                                        <p className="text-purple-400 font-bold mt-1">═══ LSTM Model thực (ForecastHistory DB) ═══</p>
+                                        <p><span className="text-slate-400">MAE     :</span> <span className={Number(realMetrics.mae) < 50 ? "text-emerald-300" : "text-orange-300"}>{realMetrics.mae} m³/s</span></p>
+                                        <p><span className="text-slate-400">RMSE    :</span> <span className={Number(realMetrics.rmse) < 80 ? "text-emerald-300" : "text-orange-300"}>{realMetrics.rmse} m³/s</span></p>
+                                        <p><span className="text-slate-400">NSE     :</span> <span className={Number(realMetrics.nse) > 0.7 ? "text-emerald-300" : "text-orange-300"}>{realMetrics.nse}</span> <span className="text-slate-400">({Number(realMetrics.nse) > 0.7 ? "✓ Tốt" : Number(realMetrics.nse) > 0.5 ? "~ Chấp nhận" : "✗ Cần cải thiện"})</span></p>
+                                        <p><span className="text-slate-400">Bias    :</span> <span className={Math.abs(Number(realMetrics.bias)) < 30 ? "text-emerald-300" : "text-red-300"}>{realMetrics.bias} m³/s</span></p>
+                                    </>
+                                )}
+                                <p className="text-emerald-400 font-bold mt-1">═══ LSTM Mô phỏng (P50 synthetic) ═══</p>
                                 {metrics ? (
                                     <>
-                                        <p><span className="text-slate-400">MAE     :</span> <span className={Number(metrics.mae) < 20 ? "text-emerald-300" : "text-orange-300"}>{metrics.mae} m³/s</span></p>
-                                        <p><span className="text-slate-400">RMSE    :</span> <span className={Number(metrics.rmse) < 30 ? "text-emerald-300" : "text-orange-300"}>{metrics.rmse} m³/s</span></p>
-                                        <p><span className="text-slate-400">NSE     :</span> <span className={Number(metrics.nse) > 0.7 ? "text-emerald-300" : "text-orange-300"}>{metrics.nse}</span> <span className="text-slate-400">({Number(metrics.nse) > 0.7 ? "✓ Tốt" : Number(metrics.nse) > 0.5 ? "~ Chấp nhận" : "✗ Cần cải thiện"})</span></p>
-                                        <p><span className="text-slate-400">Bias    :</span> <span className={Math.abs(Number(metrics.bias)) < 10 ? "text-emerald-300" : "text-red-300"}>{metrics.bias} m³/s</span></p>
+                                        <p><span className="text-slate-400">MAE     :</span> <span className="text-blue-300">{metrics.mae} m³/s</span></p>
+                                        <p><span className="text-slate-400">RMSE    :</span> <span className="text-blue-300">{metrics.rmse} m³/s</span></p>
+                                        <p><span className="text-slate-400">NSE     :</span> <span className="text-blue-300">{metrics.nse}</span></p>
+                                        <p><span className="text-slate-400">Bias    :</span> <span className="text-blue-300">{metrics.bias} m³/s</span></p>
                                     </>
                                 ) : <p className="text-slate-500">Chưa có dữ liệu...</p>}
                             </div>
+
+                            {/* Real metrics if available */}
+                            {realMetrics && (
+                                <div className="mb-3">
+                                    <p className="text-xs font-black text-purple-700 uppercase mb-2 flex items-center gap-1.5">
+                                        <CheckCircle size={13} /> LSTM Model Thực — So sánh với dữ liệu lịch sử
+                                    </p>
+                                    <div className="grid grid-cols-4 gap-3">
+                                        {[
+                                            { label: "MAE", val: realMetrics.mae, unit: "m³/s", good: Number(realMetrics.mae) < 50 },
+                                            { label: "RMSE", val: realMetrics.rmse, unit: "m³/s", good: Number(realMetrics.rmse) < 80 },
+                                            { label: "NSE", val: realMetrics.nse, unit: "", good: Number(realMetrics.nse) > 0.7 },
+                                            { label: "Bias", val: realMetrics.bias, unit: "m³/s", good: Math.abs(Number(realMetrics.bias)) < 30 },
+                                        ].map(m => (
+                                            <div key={m.label} className={`rounded-xl border p-3 text-center flex flex-col items-center gap-1 ${m.good ? "bg-purple-50 border-purple-200 text-purple-700" : "bg-orange-50 border-orange-200 text-orange-700"}`}>
+                                                <p className="text-xs font-black uppercase opacity-70">{m.label}</p>
+                                                <p className="text-xl font-black">{m.val}</p>
+                                                {m.unit && <p className="text-xs opacity-60">{m.unit}</p>}
+                                                <p className="text-xs font-bold">{m.good ? "✓ Tốt" : "✗ Chưa đạt"}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Synthetic P50 metrics */}
                             {metrics && (
-                                <div className="grid grid-cols-4 gap-3">
-                                    {[
-                                        { label: "MAE", val: metrics.mae, unit: "m³/s", good: Number(metrics.mae) < 20, icon: <TrendingDown size={20} /> },
-                                        { label: "RMSE", val: metrics.rmse, unit: "m³/s", good: Number(metrics.rmse) < 30, icon: <Activity size={20} /> },
-                                        { label: "NSE", val: metrics.nse, unit: "", good: Number(metrics.nse) > 0.7, icon: <CheckCircle size={20} /> },
-                                        { label: "Bias", val: metrics.bias, unit: "m³/s", good: Math.abs(Number(metrics.bias)) < 10, icon: <TrendingUp size={20} /> },
-                                    ].map(m => (
-                                        <div key={m.label} className={`rounded-xl border p-4 text-center flex flex-col items-center gap-1.5 ${m.good ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-700"}`}>
-                                            {m.icon}
-                                            <p className="text-xs font-black uppercase opacity-70">{m.label}</p>
-                                            <p className="text-2xl font-black">{m.val}</p>
-                                            {m.unit && <p className="text-xs opacity-60">{m.unit}</p>}
-                                        </div>
-                                    ))}
+                                <div>
+                                    {realMetrics && <p className="text-xs font-black text-blue-600 uppercase mb-2 flex items-center gap-1.5"><Activity size={13} /> LSTM P50 Mô phỏng (synthetic)</p>}
+                                    <div className="grid grid-cols-4 gap-3">
+                                        {[
+                                            { label: "MAE", val: metrics.mae, unit: "m³/s", good: Number(metrics.mae) < 20, icon: <TrendingDown size={20} /> },
+                                            { label: "RMSE", val: metrics.rmse, unit: "m³/s", good: Number(metrics.rmse) < 30, icon: <Activity size={20} /> },
+                                            { label: "NSE", val: metrics.nse, unit: "", good: Number(metrics.nse) > 0.7, icon: <CheckCircle size={20} /> },
+                                            { label: "Bias", val: metrics.bias, unit: "m³/s", good: Math.abs(Number(metrics.bias)) < 10, icon: <TrendingUp size={20} /> },
+                                        ].map(m => (
+                                            <div key={m.label} className={`rounded-xl border p-4 text-center flex flex-col items-center gap-1.5 ${m.good ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-700"}`}>
+                                                {m.icon}
+                                                <p className="text-xs font-black uppercase opacity-70">{m.label}</p>
+                                                <p className="text-2xl font-black">{m.val}</p>
+                                                {m.unit && <p className="text-xs opacity-60">{m.unit}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -813,7 +1032,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         <XAxis dataKey="shortLabel" fontSize={10} interval={Math.max(1, Math.floor(evalSlice.length / 10))}
                                             angle={-30} textAnchor="end" height={60} axisLine={false} tickLine={false}
                                             tick={{ fill: "#64748b", fontWeight: "600" }} />
-                                        <YAxis domain={yDomain(evalSlice, ["qvao", "lstm_p10", "lstm_p90"])}
+                                        <YAxis domain={yDomain(evalSlice, ["qvao", "lstm_p10", "lstm_p90", "lstm_model"])}
                                             fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#64748b" }} />
                                         <Tooltip content={<CustomTooltip />} />
                                         <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
@@ -822,7 +1041,8 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         <Area type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa" strokeWidth={1.5}
                                             strokeDasharray="4 3" fill="#ffffff" dot={false} legendType="line" />
                                         <Line type="monotone" dataKey="qvao" name="Q Thực tế" stroke="#f59e0b" strokeWidth={3} dot={false} />
-                                        <Line type="monotone" dataKey="lstm_p50" name="LSTM P50" stroke="#2563eb" strokeWidth={2.5} dot={false} strokeDasharray="7 2" />
+                                        <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (mô phỏng)" stroke="#2563eb" strokeWidth={2} dot={false} strokeDasharray="7 2" />
+                                        <Line type="monotone" dataKey="lstm_model" name="LSTM Model (DB)" stroke="#7c3aed" strokeWidth={2.5} dot={false} />
                                     </ComposedChart>
                                 </ResponsiveContainer>
                                 <WindowNav total={evalData.length} window={evalWindow} setWindow={setEvalWindow}
