@@ -684,10 +684,10 @@ export default function OperationDashboard({ lakeId }) {
                 </div>
             </div>
 
-            {/* ── Alert Banner (Phase 4) ── */}
-            {reservoirAlerts.filter(a => a.alert_level !== 'normal').length > 0 && (
+            {/* ── Alert Banner (Phase 4) — chỉ hiện alert của hồ đang chọn ── */}
+            {reservoirAlerts.filter(a => a.alert_level !== 'normal' && String(a.lake_id) === String(lakeId || selectedReservoir)).length > 0 && (
                 <div className="mx-5 mt-4 rounded-xl overflow-hidden border shadow-lg">
-                    {reservoirAlerts.filter(a => a.alert_level !== 'normal').map(alert => {
+                    {reservoirAlerts.filter(a => a.alert_level !== 'normal' && String(a.lake_id) === String(lakeId || selectedReservoir)).map(alert => {
                         const cfg = {
                             danger:  { bg: 'bg-red-50',    border: 'border-red-300',   icon: '🔴', text: 'text-red-800',   badge: 'bg-red-600',   label: 'KHẨN CẤP' },
                             warning: { bg: 'bg-amber-50',  border: 'border-amber-300', icon: '🟡', text: 'text-amber-800', badge: 'bg-amber-500', label: 'CẢNH BÁO' },
