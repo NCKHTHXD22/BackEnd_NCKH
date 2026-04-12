@@ -28,6 +28,12 @@ class FloodAlertService {
 
             const { htl, qvao: q_in, luuluongxa: q_out } = latest;
 
+            // Sanity check: HTL phải nằm trong khoảng hợp lý [MNC-10, crest+2]
+            if (htl < spec.MNC - 10 || htl > spec.crest + 2) {
+                console.warn(`  ⚠ [FloodAlert] lake_id=${lakeId}: HTL=${htl}m nằm ngoài phạm vi hợp lệ [${spec.MNC-10}, ${spec.crest+2}]. Bỏ qua.`);
+                return null;
+            }
+
             // 3. Dung tích & % đầy từ Z-V nội suy
             let fill_pct = 0;
             try {
