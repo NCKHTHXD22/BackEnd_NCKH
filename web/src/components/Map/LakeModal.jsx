@@ -93,7 +93,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     if (!lakeId || !lakeData) return null;
 
-    const lakeName = lakeData.name || lakeData.Lake_Name || 'Không tên';
+    // Bỏ tiền tố "HỒ " nếu tên đã có sẵn (VD: "HỒ A VƯƠNG" → "A VƯƠNG")
+    const rawName = lakeData.name || lakeData.Lake_Name || 'Không tên';
+    const lakeName = rawName.replace(/^HỒ\s+/i, '');
 
     // Latest record from history (more up-to-date than inflowlakes snapshot)
     const latestRecord = realHistoryData.length > 0
@@ -255,7 +257,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                         </div>
                         <h2 className="text-2xl font-bold tracking-wide uppercase">HỒ {lakeName}</h2>
                         <p className="text-sm text-blue-200 mt-1">
-                            {lakeData.province || 'Trà Đốc, Bắc Trà My, Quảng Nam'}
+                            {lakeData.address || lakeData.province || ''}
                         </p>
                     </div>
                     <div className="flex gap-2">
