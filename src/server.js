@@ -252,6 +252,42 @@ app.get("/api/debug-vrain", async (req, res) => {
     }
 });
 
+// ⚡ Endpoint: Re-seed LakeSpec + ZVCurve với ID đúng
+import LakeSpec from './core/entities/LakeSpec.js';
+import ZVCurve from './core/entities/ZVCurve.js';
+
+const LAKE_SPECS_SEED = [
+    { lake_id:1, name:'A Vương',      river:'Sông A Vương',        province:'Quảng Nam', regulation_doc:'QĐ 471/QĐ-TTg (2016)', MNC:100.0, MNDBT:108.0, MNGC:109.5, crest:110.5, total_volume:180, dead_volume:30,  flood_volume:50,  turbines:2, capacity_mw:210, turbine_efficiency:0.88, tailwater_elev:28.0,  design_head:74.0, max_turbine_flow:320, spillway_crest_elev:103.0, spillway_width:26, spillway_coef:0.42, min_env_flow:3.0 },
+    { lake_id:2, name:'Đắk Mi 4',     river:'Sông Đắk Mi',         province:'Quảng Nam', regulation_doc:'QĐ 471/QĐ-TTg (2016)', MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, total_volume:343, dead_volume:97,  flood_volume:80,  turbines:3, capacity_mw:210, turbine_efficiency:0.88, tailwater_elev:165.0, design_head:87.0, max_turbine_flow:280, spillway_crest_elev:252.0, spillway_width:36, spillway_coef:0.42, min_env_flow:3.5 },
+    { lake_id:3, name:'Sông Bung 4',  river:'Sông Bung',           province:'Quảng Nam', regulation_doc:'QĐ 471/QĐ-TTg (2016)', MNC:160.0, MNDBT:168.0, MNGC:169.5, crest:170.5, total_volume:250, dead_volume:60,  flood_volume:70,  turbines:2, capacity_mw:156, turbine_efficiency:0.88, tailwater_elev:105.0, design_head:57.0, max_turbine_flow:330, spillway_crest_elev:162.5, spillway_width:24, spillway_coef:0.42, min_env_flow:3.0 },
+    { lake_id:4, name:'Sông Tranh 2', river:'Sông Tranh (Thu Bồn)', province:'Quảng Nam', regulation_doc:'QĐ 471/QĐ-TTg (2016)', MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, total_volume:685, dead_volume:215, flood_volume:190, turbines:2, capacity_mw:190, turbine_efficiency:0.88, tailwater_elev:106.0, design_head:63.0, max_turbine_flow:380, spillway_crest_elev:168.0, spillway_width:22, spillway_coef:0.42, min_env_flow:4.0 },
+];
+const ZV_CURVES_SEED = [
+    { lake_id:1, name:'A Vương',      points:[{z:97,volume:22,area:2.5},{z:100,volume:30,area:3.2},{z:102,volume:40,area:3.8},{z:104,volume:55,area:4.5},{z:106,volume:75,area:5.5},{z:108,volume:100,area:6.7},{z:109,volume:118,area:7.4},{z:109.5,volume:128,area:7.8},{z:110.5,volume:180,area:8.8}] },
+    { lake_id:2, name:'Đắk Mi 4',     points:[{z:222,volume:82,area:4},{z:225,volume:97,area:4.8},{z:230,volume:120,area:5.8},{z:235,volume:148,area:6.9},{z:240,volume:180,area:8.1},{z:245,volume:215,area:9.4},{z:250,volume:255,area:10.8},{z:252,volume:270,area:11.3},{z:255,volume:300,area:12.4},{z:258,volume:343,area:13.8},{z:260,volume:370,area:14.7},{z:260.5,volume:380,area:15},{z:261.5,volume:400,area:15.5}] },
+    { lake_id:3, name:'Sông Bung 4',  points:[{z:157,volume:50,area:3.5},{z:160,volume:60,area:4.1},{z:162,volume:75,area:4.9},{z:162.5,volume:80,area:5.1},{z:164,volume:98,area:5.8},{z:166,volume:125,area:6.8},{z:168,volume:165,area:8},{z:169,volume:195,area:8.8},{z:169.5,volume:215,area:9.2},{z:170.5,volume:250,area:9.8}] },
+    { lake_id:4, name:'Sông Tranh 2', points:[{z:155,volume:195,area:7.5},{z:158,volume:215,area:8.2},{z:160,volume:228,area:9.1},{z:163,volume:250,area:10.5},{z:165,volume:270,area:11.5},{z:167,volume:295,area:12.8},{z:168,volume:310,area:13.5},{z:170,volume:340,area:14.8},{z:172,volume:375,area:16.2},{z:173,volume:395,area:17},{z:174,volume:420,area:17.9},{z:175,volume:470,area:19.2},{z:176,volume:510,area:20.1},{z:176.5,volume:540,area:21},{z:177,volume:685,area:22.5}] },
+];
+
+app.get('/api/seed-lake-specs', async (req, res) => {
+    try {
+        const results = [];
+        for (const spec of LAKE_SPECS_SEED) {
+            await LakeSpec.findOneAndUpdate({ lake_id: spec.lake_id }, { $set: { ...spec, updated_at: new Date() } }, { upsert: true });
+            results.push(`LakeSpec: ${spec.name} (id=${spec.lake_id})`);
+        }
+        for (const curve of ZV_CURVES_SEED) {
+            await ZVCurve.findOneAndUpdate({ lake_id: curve.lake_id }, { $set: { ...curve, updated_at: new Date() } }, { upsert: true });
+            results.push(`ZVCurve: ${curve.name} (id=${curve.lake_id})`);
+        }
+        console.log('✅ [SEED] LakeSpec + ZVCurve seeded:', results);
+        res.json({ success: true, seeded: results });
+    } catch (err) {
+        console.error('❌ [SEED]', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Start Server
 const PORT = ENV.PORT || 5001;
 
