@@ -30,7 +30,13 @@ class FloodAlertService {
 
             // Sanity check: HTL phải nằm trong khoảng hợp lý [MNC-10, crest+2]
             if (htl < spec.MNC - 10 || htl > spec.crest + 2) {
-                console.warn(`  ⚠ [FloodAlert] lake_id=${lakeId}: HTL=${htl}m nằm ngoài phạm vi hợp lệ [${spec.MNC-10}, ${spec.crest+2}]. Bỏ qua.`);
+                console.warn(`  ⚠ [FloodAlert] lake_id=${lakeId}: HTL=${htl}m nằm ngoài phạm vi [${spec.MNC-10}, ${spec.crest+2}]. Đánh dấu data_error.`);
+                // Xóa alert cũ (nếu có) để không hiển thị false alert
+                await ReservoirAlert.findOneAndUpdate(
+                    { lake_id: lakeId },
+                    { $set: { alert_level: 'normal', is_active: false, reason: 'Dữ liệu cảm biến bất thường', detail: `HTL=${htl}m ngoài phạm vi hợp lệ`, checked_at: new Date() } },
+                    { upsert: true }
+                );
                 return null;
             }
 
