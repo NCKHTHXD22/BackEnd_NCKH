@@ -33,65 +33,60 @@ import {
     ArrowRight,
 } from "lucide-react";
 
-// ─── Heuristic: recommend discharge ───────────────────────────────────────────
-function computeRecommendation({ htl, qvao, luuluongxa, forecastPeak }) {
-    const DESIGN_LEVEL = 380;   // mực nước dâng bình thường (m) – tuỳ hồ
-    const FLOOD_LEVEL  = 385;   // mực nước lũ kiểm tra
-    const DEAD_LEVEL   = 340;   // mực nước chết
+// ─── Heuristic: recommend discharge (per-lake thresholds) ─────────────────────
+// Nhận lakeConst để dùng đúng MNC/MNDBT/MNGC/crest theo từng hồ
+function computeRecommendation({ htl, qvao, luuluongxa, forecastPeak, lakeConst }) {
+    // Dùng thông số từng hồ, fallback về giá trị generic nếu không có
+    const MNC    = lakeConst?.MNC   ?? 0;
+    const MNDBT  = lakeConst?.MNDBT ?? htl * 1.05;
+    const MNGC   = lakeConst?.MNGC  ?? MNDBT * 1.01;
 
-    const safeCapacity = 0.85 * DESIGN_LEVEL; // 85 % mực thiết kế ≈ safe ceiling
-    const fill = (htl - DEAD_LEVEL) / (DESIGN_LEVEL - DEAD_LEVEL); // 0→1
+    const fill = MNC < MNDBT
+        ? Math.max(0, Math.min(1, (htl - MNC) / (MNDBT - MNC)))
+        : 0;
 
-    // Dự báo đỉnh 12 giờ tới (P50)
     const qPeak = forecastPeak || qvao;
 
-    let level = "ok";      // ok | warning | danger
-    let qRec  = luuluongxa; // m³/s hiện tại
+    let level = "ok";
+    let qRec  = luuluongxa;
     let reason = "";
     let detail = "";
 
-    if (htl >= FLOOD_LEVEL) {
+    if (htl >= MNGC) {
         level  = "danger";
-        qRec   = Math.max(qvao * 1.5, luuluongxa * 1.3);
-        reason = "Mực nước vượt ngưỡng lũ kiểm tra";
-        detail = `Mực nước hồ (${htl.toFixed(2)} m) đã vượt ngưỡng lũ kiểm tra (${FLOOD_LEVEL} m). ` +
-                 `Cần tăng lưu lượng xả khẩn cấp lên khoảng ${qRec.toFixed(0)} m³/s để hạ mực nước nhanh, ` +
-                 `tránh nguy cơ vỡ đập.`;
-    } else if (htl >= DESIGN_LEVEL) {
+        qRec   = Math.max(qvao * 1.5, luuluongxa * 1.3, 1);
+        reason = "Mực nước vượt MNGC — cần xả khẩn cấp";
+        detail = `HTL=${htl.toFixed(2)}m ≥ MNGC=${MNGC}m. Mở toàn bộ cửa xả, Q_xả ≥ ${qRec.toFixed(0)} m³/s.`;
+    } else if (htl >= MNDBT) {
         level  = "warning";
-        qRec   = Math.max(qvao * 1.2, luuluongxa * 1.1);
-        reason = "Mực nước đạt ngưỡng dâng bình thường";
-        detail = `Mực nước hồ (${htl.toFixed(2)} m) đang ở mức dâng bình thường (${DESIGN_LEVEL} m). ` +
-                 `Nên tăng xả nhẹ lên ${qRec.toFixed(0)} m³/s để duy trì dung tích phòng lũ, ` +
-                 `đặc biệt khi dự báo lưu lượng đến sẽ đạt ~${qPeak.toFixed(0)} m³/s.`;
-    } else if (htl >= safeCapacity) {
+        qRec   = Math.max(qvao * 1.2, luuluongxa * 1.1, 1);
+        reason = "Mực nước đạt MNDBT — tăng xả để giữ dung tích phòng lũ";
+        detail = `HTL=${htl.toFixed(2)}m ≥ MNDBT=${MNDBT}m. Duy trì ${qRec.toFixed(0)} m³/s để phòng lũ.` +
+                 ` Dự báo Q_đến: ~${qPeak.toFixed(0)} m³/s.`;
+    } else if (fill > 0.85) {
         level  = "warning";
         qRec   = qvao > luuluongxa ? qvao * 1.05 : luuluongxa;
-        reason = "Hồ đạt >85% dung tích an toàn";
-        detail = `Hồ đã tích đến ${(fill * 100).toFixed(1)}% dung tích. ` +
-                 `Với dự báo lưu lượng đến ~${qPeak.toFixed(0)} m³/s, ` +
-                 `khuyến nghị duy trì xả ở mức ${qRec.toFixed(0)} m³/s để tránh tràn bất ngờ.`;
+        reason = "Hồ đạt >85% dung tích — theo dõi chặt";
+        detail = `Hồ đã tích ${(fill * 100).toFixed(1)}% dung tích. Duy trì xả ${qRec.toFixed(0)} m³/s.`;
     } else if (fill < 0.3 && qvao < 20) {
         level  = "ok";
         qRec   = Math.max(luuluongxa * 0.8, 0);
-        reason = "Hồ đang ở mức thấp, lưu lượng vào nhỏ";
-        detail = `Hồ chỉ tích ${(fill * 100).toFixed(1)}% dung tích, lưu lượng vào rất thấp (${qvao.toFixed(1)} m³/s). ` +
-                 `Có thể giảm xả xuống ${qRec.toFixed(0)} m³/s để tích nước dự phòng mùa khô.`;
+        reason = "Hồ ở mức thấp, lưu lượng vào nhỏ";
+        detail = `Hồ chỉ tích ${(fill * 100).toFixed(1)}% (H=${htl.toFixed(2)}m). ` +
+                 `Giảm xả xuống ${qRec.toFixed(0)} m³/s để tích nước mùa khô.`;
     } else {
         level  = "ok";
         qRec   = luuluongxa;
-        reason = "Tình trạng vận hành bình thường";
-        detail = `Hồ đang vận hành ổn định (đầy ${(fill * 100).toFixed(1)}%, H=${htl.toFixed(2)} m). ` +
-                 `Duy trì lưu lượng xả hiện tại ${qRec.toFixed(0)} m³/s là phù hợp. ` +
-                 `Theo dõi sát dự báo lưu lượng đến 12 giờ tới (~${qPeak.toFixed(0)} m³/s).`;
+        reason = "Vận hành bình thường";
+        detail = `Hồ đang vận hành ổn định (đầy ${(fill * 100).toFixed(1)}%, H=${htl.toFixed(2)}m). ` +
+                 `Duy trì Q_xả=${qRec.toFixed(0)} m³/s. Dự báo 12h: ~${qPeak.toFixed(0)} m³/s.`;
     }
 
     return { level, qRec, reason, detail };
 }
 
 // ─── Reservoir status narrative ────────────────────────────────────────────────
-function buildStatusNarrative({ htl, qvao, luuluongxa, historyCount }) {
-    const trend = historyCount >= 2 ? "" : "";
+function buildStatusNarrative({ htl, qvao, luuluongxa }) {
     return (
         `Mực nước hồ hiện tại là ${htl.toFixed(2)} m. ` +
         `Lưu lượng nước vào hồ đạt ${qvao.toFixed(1)} m³/s, ` +
@@ -111,7 +106,7 @@ const LAKE_CONSTANTS = {
     1:  { MNC:340.0, MNDBT:380.0, MNGC:381.0, crest:382.0, totalVol:343.5, deadVol: 77.5, floodVol: 80, turbines:2, capacity:210 }, // A Vương
     2:  { MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, totalVol:312.3, deadVol: 97, floodVol: 80, turbines:3, capacity:208 }, // Đắk Mi 4
     3:  { MNC:205.0, MNDBT:222.5, MNGC:224.0, crest:225.0, totalVol:510.8, deadVol: 276.8, floodVol: 70, turbines:2, capacity:156 }, // Sông Bung 4
-    4:  { MNC:140.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:730.0, deadVol:215, floodVol:190, turbines:2, capacity:190 }, // Sông Tranh 2
+    4:  { MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:730.0, deadVol:215, floodVol:190, turbines:2, capacity:190 }, // Sông Tranh 2
     7:  { MNC:130.0, MNDBT:138.0, MNGC:139.0, crest:140.0, totalVol: 20, deadVol:  5, floodVol:  8, turbines:1, capacity: 16 }, // Sông Bung 4A
     8:  { MNC:175.0, MNDBT:185.0, MNGC:186.5, crest:187.5, totalVol:100, deadVol: 28, floodVol: 30, turbines:2, capacity: 50 }, // Sông Bung 5
     9:  { MNC:330.0, MNDBT:340.0, MNGC:342.0, crest:343.0, totalVol:250, deadVol: 70, floodVol: 60, turbines:2, capacity:100 }, // Sông Bung 2
@@ -403,6 +398,7 @@ export default function OperationDashboard({ lakeId }) {
             qvao: latestHydro.qvao,
             luuluongxa: latestHydro.luuluongxa,
             forecastPeak,
+            lakeConst: getLakeConst(selectedReservoir),
         });
         return {
             level:  raw.level  ?? 'ok',
@@ -418,9 +414,40 @@ export default function OperationDashboard({ lakeId }) {
             htl: latestHydro.htl,
             qvao: latestHydro.qvao,
             luuluongxa: latestHydro.luuluongxa,
-            historyCount: chartData.length,
         }),
-    [latestHydro, chartData.length]);
+    [latestHydro]);
+
+    // ─── Thời gian đến ngưỡng (ước tính tuyến tính dùng tỷ lệ dung tích) ────────
+    // deltaQ > 0 = đang tích nước, < 0 = đang xả
+    const timeToThreshold = useMemo(() => {
+        if (!c) return null;
+        const { htl, qvao, luuluongxa } = latestHydro;
+        const deltaQ = qvao - luuluongxa; // m³/s, dương = tích
+        if (Math.abs(deltaQ) < 0.1) return null; // cân bằng → không tính
+
+        // Thể tích cần thay đổi để đến ngưỡng (Mm³ → m³ × 1e6)
+        // Dùng tỷ lệ tuyến tính: ΔV = (Δhtl / (crest - MNC)) × totalVol
+        const zRange = c.crest - c.MNC;
+        const totalM3 = (c.totalVol ?? 0) * 1e6;
+
+        const hoursTo = (targetZ) => {
+            if (deltaQ > 0 && targetZ <= htl) return null; // đã vượt
+            if (deltaQ < 0 && targetZ >= htl) return null;
+            const volNeeded = Math.abs(targetZ - htl) / zRange * totalM3; // m³
+            return (volNeeded / Math.abs(deltaQ) / 3600).toFixed(1);      // giờ
+        };
+
+        return {
+            filling: deltaQ > 0,
+            deltaQ,
+            hToMNDBT: hoursTo(c.MNDBT),
+            hToMNGC:  hoursTo(c.MNGC),
+            hToMNC:   hoursTo(c.MNC),
+        };
+    }, [c, latestHydro]);
+
+    // Lưu lượng môi trường tối thiểu (từ LakeSpec hoặc mặc định 0)
+    const minEnvFlow = lakeSpec?.min_env_flow ?? 0;
 
     // ─── Fetch all reservoirs (if no lakeId locked) ───────────────────────────
     useEffect(() => {
@@ -846,22 +873,180 @@ export default function OperationDashboard({ lakeId }) {
                                     <Shield size={14} className="text-slate-600" />
                                     <span className="text-xs font-black text-slate-600 uppercase tracking-wide">Ngưỡng vận hành</span>
                                 </div>
-                                <div className="px-4 py-3 space-y-2 text-[10px]">
-                                    {[
-                                        { label: "Đỉnh đập (Crest)", val: c.crest,  color: "text-slate-700 bg-slate-100",  active: false },
-                                        { label: "MNGC (Gia cường)", val: c.MNGC,   color: "text-red-700 bg-red-50 border border-red-200", active: htl >= c.MNGC },
-                                        { label: "MNDBT (Bình thường)", val: c.MNDBT, color: "text-amber-700 bg-amber-50 border border-amber-200", active: htl >= c.MNDBT && htl < c.MNGC },
-                                        { label: "Hiện tại (HTL)",   val: htl.toFixed(2), color: "text-blue-700 bg-blue-50 border border-blue-300 font-black", active: true, pulse: true },
-                                        { label: "MNC (Chết)",       val: c.MNC,   color: "text-slate-500 bg-slate-50 border border-slate-200", active: false },
-                                    ].map(({ label, val, color, active, pulse }) => (
-                                        <div key={label} className={`flex justify-between items-center px-2.5 py-1.5 rounded-lg ${color} ${active ? "shadow-sm" : ""}`}>
-                                            <div className="flex items-center gap-1.5">
-                                                {pulse && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
-                                                <span className={active ? "font-black" : "font-semibold"}>{label}</span>
+                                {/* Body: gauge dọc + bảng ngưỡng */}
+                                <div className="px-3 py-3 flex gap-3">
+                                    {/* ── Gauge mực nước dọc ── */}
+                                    {(() => {
+                                        const GH = 168;
+                                        const zMin = c.MNC, zMax = c.crest, zRange = zMax - zMin;
+                                        const toY = z => GH - Math.max(0, Math.min(GH, ((z - zMin) / zRange) * GH));
+                                        const yC   = toY(c.crest);
+                                        const yMNGC  = toY(c.MNGC);
+                                        const yMNDBT = toY(c.MNDBT);
+                                        const yMNC   = toY(c.MNC);
+                                        const yHTL   = toY(htl);
+                                        const waterColor = htl >= c.MNGC ? '#ef4444' : htl >= c.MNDBT ? '#f59e0b' : '#3b82f6';
+                                        return (
+                                            <svg width="34" height={GH + 4} className="shrink-0 mt-1">
+                                                {/* Dead zone: MNC→MNDBT */}
+                                                <rect x="10" y={yMNDBT} width="14" height={yMNC - yMNDBT} fill="#bfdbfe" rx="2" />
+                                                {/* Warn zone: MNDBT→MNGC */}
+                                                <rect x="10" y={yMNGC} width="14" height={yMNDBT - yMNGC} fill="#fde68a" rx="2" />
+                                                {/* Flood zone: MNGC→crest */}
+                                                <rect x="10" y={yC} width="14" height={yMNGC - yC} fill="#fecaca" rx="2" />
+                                                {/* Outer border */}
+                                                <rect x="10" y={yC} width="14" height={yMNC - yC} fill="none" stroke="#cbd5e1" strokeWidth="1" rx="2" />
+                                                {/* Water fill */}
+                                                <rect x="12" y={yHTL} width="10" height={Math.max(0, yMNC - yHTL)} fill={waterColor} opacity="0.55" rx="1" />
+                                                {/* Threshold dash lines */}
+                                                <line x1="7" y1={yMNGC}  x2="10" y2={yMNGC}  stroke="#ef4444" strokeWidth="1.2" />
+                                                <line x1="7" y1={yMNDBT} x2="10" y2={yMNDBT} stroke="#f59e0b" strokeWidth="1.2" />
+                                                {/* Current level arrow */}
+                                                <polygon points={`4,${yHTL} 10,${yHTL - 4} 10,${yHTL + 4}`} fill={waterColor} />
+                                                <line x1="10" y1={yHTL} x2="24" y2={yHTL} stroke={waterColor} strokeWidth="1.5" strokeDasharray="2,1" />
+                                            </svg>
+                                        );
+                                    })()}
+
+                                    {/* ── Bảng ngưỡng ── */}
+                                    <div className="flex-1 space-y-1.5 text-[10px]">
+                                        {[
+                                            { label: "Đỉnh đập",  sub: "Crest",  val: c.crest,        color: "text-slate-600 bg-slate-100" },
+                                            { label: "Gia cường", sub: "MNGC",   val: c.MNGC,         color: "text-red-700 bg-red-50 border border-red-200",   eta: timeToThreshold?.hToMNGC, active: htl >= c.MNGC },
+                                            { label: "Dâng bình thường", sub: "MNDBT", val: c.MNDBT,  color: "text-amber-700 bg-amber-50 border border-amber-200", eta: timeToThreshold?.hToMNDBT, active: htl >= c.MNDBT && htl < c.MNGC },
+                                            { label: "Hiện tại",  sub: "HTL",    val: htl.toFixed(2), color: "text-blue-700 bg-blue-50 border border-blue-300", active: true, pulse: true },
+                                            { label: "Mực chết",  sub: "MNC",    val: c.MNC,          color: "text-slate-500 bg-slate-50 border border-slate-200", eta: timeToThreshold?.filling === false ? timeToThreshold?.hToMNC : null },
+                                        ].map(({ label, sub, val, color, active, pulse, eta }) => (
+                                            <div key={sub} className={`flex justify-between items-center px-2 py-1.5 rounded-lg ${color} ${active ? 'shadow-sm' : ''}`}>
+                                                <div className="flex flex-col leading-tight">
+                                                    <span className={`font-semibold ${active ? 'font-black' : ''}`}>{label}</span>
+                                                    <span className="text-[8px] opacity-60 font-bold">{sub}{eta ? ` · ~${eta}h` : ''}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {pulse && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0" />}
+                                                    <span className="font-black whitespace-nowrap">{val} m</span>
+                                                </div>
                                             </div>
-                                            <span className="font-black">{val} m</span>
+                                        ))}
+
+                                        {/* Q min môi trường */}
+                                        {minEnvFlow > 0 && (
+                                            <div className={`flex justify-between items-center px-2 py-1.5 rounded-lg border mt-0.5
+                                                ${latestHydro.luuluongxa < minEnvFlow ? 'bg-red-50 border-red-300 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                                                <div className="flex flex-col leading-tight">
+                                                    <span className="font-semibold">Q min môi trường</span>
+                                                    <span className="text-[8px] opacity-60 font-bold">
+                                                        {latestHydro.luuluongxa < minEnvFlow ? '⚠ VI PHẠM QĐ' : '✓ Đảm bảo'}
+                                                    </span>
+                                                </div>
+                                                <span className="font-black">{minEnvFlow} m³/s</span>
+                                            </div>
+                                        )}
+
+                                        {/* ΔQ cân bằng nước */}
+                                        {timeToThreshold && (
+                                            <div className={`flex justify-between items-center px-2 py-1.5 rounded-lg border
+                                                ${timeToThreshold.filling ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-orange-50 border-orange-200 text-orange-700'}`}>
+                                                <div className="flex flex-col leading-tight">
+                                                    <span className="font-semibold">{timeToThreshold.filling ? '▲ Tích nước' : '▼ Xả nước'}</span>
+                                                    <span className="text-[8px] opacity-60 font-bold">Cân bằng nước</span>
+                                                </div>
+                                                <span className="font-black">{timeToThreshold.filling ? '+' : ''}{timeToThreshold.deltaQ.toFixed(0)} m³/s</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* ── Thông số kỹ thuật (từ LakeSpec DB) ── */}
+                    {lakeSpec && (() => {
+                        const isMainLake = [1, 2, 3, 4].includes(Number(lakeSpec.lake_id));
+                        return (
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Info size={14} className="text-indigo-600" />
+                                        <span className="text-xs font-black text-indigo-800 uppercase tracking-wide">Thông số thiết kế</span>
+                                    </div>
+                                    {isMainLake && (
+                                        <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-indigo-600 text-white">QĐ LIÊN HỒ</span>
+                                    )}
+                                </div>
+                                <div className="px-4 py-3 space-y-2.5">
+                                    {/* Regulation doc badge */}
+                                    <div className="px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                        <p className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Quy trình vận hành</p>
+                                        <p className="text-[10px] font-bold text-indigo-800 leading-snug">{lakeSpec.regulation_doc}</p>
+                                    </div>
+
+                                    {/* Dung tích */}
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Dung tích hồ (Mm³)</p>
+                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                            {[
+                                                { label: "Toàn bộ", val: lakeSpec.total_volume, color: "text-slate-700", bg: "bg-slate-50" },
+                                                { label: "Hữu ích", val: (lakeSpec.total_volume - lakeSpec.dead_volume).toFixed(1), color: "text-blue-700", bg: "bg-blue-50" },
+                                                { label: "Phòng lũ", val: lakeSpec.flood_volume, color: "text-amber-700", bg: "bg-amber-50" },
+                                            ].map(({ label, val, color, bg }) => (
+                                                <div key={label} className={`${bg} rounded-lg px-2 py-1.5 border border-slate-100 text-center`}>
+                                                    <p className="text-slate-400 font-semibold text-[9px]">{label}</p>
+                                                    <p className={`font-black ${color} text-xs mt-0.5`}>{val}</p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    {/* Cao trình */}
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Cao trình thiết kế (m ASL)</p>
+                                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                                            {[
+                                                { label: "MNDBT", val: lakeSpec.MNDBT, color: "text-amber-700", bg: "bg-amber-50" },
+                                                { label: "MNGC",  val: lakeSpec.MNGC,  color: "text-red-700",   bg: "bg-red-50" },
+                                                { label: "MNC",   val: lakeSpec.MNC,   color: "text-slate-600", bg: "bg-slate-50" },
+                                                { label: "Crest", val: lakeSpec.crest, color: "text-slate-500", bg: "bg-slate-50" },
+                                            ].map(({ label, val, color, bg }) => (
+                                                <div key={label} className={`${bg} rounded-lg px-2 py-1.5 border border-slate-100 flex justify-between items-center`}>
+                                                    <span className="font-bold text-slate-500">{label}</span>
+                                                    <span className={`font-black ${color}`}>{val} m</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Phát điện */}
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Phát điện</p>
+                                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                                            {[
+                                                { label: "Công suất TK", val: `${lakeSpec.capacity_mw} MW`, color: "text-yellow-700", bg: "bg-yellow-50" },
+                                                { label: "Số tổ máy",    val: `${lakeSpec.turbines} tổ`,   color: "text-blue-700",   bg: "bg-blue-50" },
+                                                { label: "Cột nước TK",  val: `${lakeSpec.design_head} m`, color: "text-cyan-700",   bg: "bg-cyan-50" },
+                                                { label: "Q max TBQ",    val: `${lakeSpec.max_turbine_flow} m³/s`, color: "text-indigo-700", bg: "bg-indigo-50" },
+                                            ].map(({ label, val, color, bg }) => (
+                                                <div key={label} className={`${bg} rounded-lg px-2 py-1.5 border border-slate-100`}>
+                                                    <p className="text-slate-400 font-semibold text-[9px]">{label}</p>
+                                                    <p className={`font-black ${color} mt-0.5`}>{val}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Môi trường */}
+                                    <div className={`flex justify-between items-center px-3 py-2 rounded-xl border
+                                        ${latestHydro.luuluongxa < minEnvFlow ? 'bg-red-50 border-red-300' : 'bg-emerald-50 border-emerald-200'}`}>
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Q min môi trường (QĐ)</p>
+                                            <p className={`text-[10px] font-black mt-0.5 ${latestHydro.luuluongxa < minEnvFlow ? 'text-red-700' : 'text-emerald-700'}`}>
+                                                {latestHydro.luuluongxa < minEnvFlow ? '⚠ Vi phạm — Q xả thấp hơn quy định' : '✓ Đang đảm bảo lưu lượng môi trường'}
+                                            </p>
+                                        </div>
+                                        <span className={`text-sm font-black ${latestHydro.luuluongxa < minEnvFlow ? 'text-red-700' : 'text-emerald-700'}`}>
+                                            {lakeSpec.min_env_flow} m³/s
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -1052,56 +1237,62 @@ export default function OperationDashboard({ lakeId }) {
                 {/* Right Column — Controls (25%) */}
                 <div className="w-full xl:w-1/4 flex flex-col gap-4">
                     <div className="bg-white rounded-xl flex-1 border border-gray-100 shadow-xl flex flex-col p-2">
-                        <div className="p-5 border-b border-gray-50 group">
+                        <div className="p-5 border-b border-gray-50">
                             <div className="mb-4 text-blue-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Mực nước thiết kế (m)
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Mực nước (m)
                             </div>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Thượng lưu</span>
-                                    <input type="text" defaultValue="0" readOnly className="w-24 bg-gray-50 border border-transparent text-gray-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
+                                    <span className="text-sm text-gray-400 font-bold">MNDBT</span>
+                                    <input type="text" value={c ? c.MNDBT.toFixed(2) : '—'} readOnly className="w-24 bg-gray-50 border border-transparent text-gray-500 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Trong hồ</span>
+                                    <span className="text-sm text-gray-400 font-bold">HTL hiện tại</span>
                                     <input type="text" value={latestHydro.htl.toFixed(2) || 0} readOnly className="w-24 bg-blue-50 border border-blue-100 text-blue-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-5 border-b border-gray-50">
-                            <div className="mb-4 text-yellow-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div> Công suất tổ máy (MW)
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Tổ máy H1</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                        <input type="text" defaultValue="17.2" readOnly className="w-24 bg-gray-50 border border-transparent text-gray-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
+                        {(() => {
+                            const turbineCount = c?.turbines || 2;
+                            const powerTotal   = powerInfo?.power_mw ??
+                                Math.round((latestHydro.luuluongxa *
+                                    Math.max(0, latestHydro.htl - (lakeSpec?.tailwater_elev ?? 120)) *
+                                    9.81 * (lakeSpec?.turbine_efficiency ?? 0.88)) / 1000);
+                            const powerPerUnit = turbineCount > 0 ? (powerTotal / turbineCount).toFixed(1) : '—';
+                            return (
+                                <div className="p-5 border-b border-gray-50">
+                                    <div className="mb-4 text-yellow-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div> Công suất tổ máy (MW)
+                                    </div>
+                                    <div className="space-y-4">
+                                        {Array.from({ length: turbineCount }, (_, i) => (
+                                            <div key={i} className="flex items-center justify-between">
+                                                <span className="text-sm text-gray-400 font-bold">Tổ máy H{i + 1}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                                    <input type="text" value={powerPerUnit} readOnly className="w-24 bg-gray-50 border border-transparent text-gray-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Tổ máy H2</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                        <input type="text" defaultValue="17.3" readOnly className="w-24 bg-gray-50 border border-transparent text-gray-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                         <div className="p-5 border-b border-gray-50">
                             <div className="mb-4 text-red-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div> Điều tiết cửa van (cm)
+                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div> Lưu lượng xả (m³/s)
                             </div>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Cửa xả số 01</span>
-                                    <input type="text" defaultValue="0" readOnly className="w-24 bg-red-50 border border-red-100 text-red-700 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
+                                    <span className="text-sm text-gray-400 font-bold">Q xả thực tế</span>
+                                    <input type="text" value={latestHydro.luuluongxa.toFixed(1)} readOnly className="w-24 bg-red-50 border border-red-100 text-red-700 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Cửa xả số 02</span>
-                                    <input type="text" defaultValue="0" readOnly className="w-24 bg-red-50 border border-red-100 text-red-700 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
+                                    <span className="text-sm text-gray-400 font-bold">Q đề xuất</span>
+                                    <input type="text" value={rec.qRec.toFixed(0)} readOnly className={`w-24 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none border
+                                        ${rec.level === 'danger' ? 'bg-red-100 border-red-300 text-red-800' : rec.level === 'warning' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`} />
                                 </div>
                             </div>
                         </div>
@@ -1267,7 +1458,7 @@ export default function OperationDashboard({ lakeId }) {
                                 <div className="mt-3 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center gap-2">
                                     <Shield size={12} className="text-blue-500" />
                                     Khuyến nghị được tính toán dựa trên mực nước hồ hiện tại, cân bằng nước và dự báo lưu lượng LSTM 12 giờ tới.
-                                    Vui lòng tham khảo thêm quy trình vận hành hồ chứa theo QĐ 1865/QĐ-TTg trước khi quyết định xả.
+                                    Vui lòng tham khảo thêm quy trình vận hành hồ chứa theo {lakeSpec?.regulation_doc || 'QĐ 1865/QĐ-TTg'} trước khi quyết định xả.
                                 </div>
                             </div>
                         </div>

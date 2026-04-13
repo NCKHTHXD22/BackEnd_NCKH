@@ -113,7 +113,7 @@ const LAKE_SPECS = [
         address: 'Xã Trà Đốc, Bắc Trà My, Quảng Nam',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
-        MNC: 140.0, MNDBT: 175.0, MNGC: 176.5, crest: 177.0,
+        MNC: 158.0, MNDBT: 175.0, MNGC: 176.5, crest: 177.0,
 
         total_volume: 730,
         dead_volume:  215,
@@ -313,17 +313,19 @@ const ZV_CURVES = [
         lake_id: 4,
         name: 'Sông Tranh 2',
         points: [
-            { z: 135.0, volume:  180, area:  7.5 },
-            { z: 140.0, volume:  215, area:  8.2 }, // MNC
-            { z: 145.0, volume:  280, area:  10.5 },
-            { z: 150.0, volume:  360, area:  11.5 },
-            { z: 155.0, volume:  430, area:  12.8 },
-            { z: 160.0, volume:  500, area:  14.8 },
-            { z: 165.0, volume:  580, area:  16.2 },
-            { z: 170.0, volume:  650, area:  17.9 },
-            { z: 175.0, volume:  730, area:  19.2 }, // MNDBT
-            { z: 176.5, volume:  755, area:  21.0 }, // MNGC
-            { z: 177.0, volume:  765, area:  22.5 }, // Crest
+            { z: 155.0, volume:  195, area:  7.5 },
+            { z: 158.0, volume:  215, area:  8.2 }, // MNC
+            { z: 160.0, volume:  228, area:  9.1 },
+            { z: 163.0, volume:  250, area:  10.5 },
+            { z: 165.0, volume:  270, area:  11.5 },
+            { z: 167.0, volume:  295, area:  12.8 },
+            { z: 168.0, volume:  310, area:  13.5 },
+            { z: 170.0, volume:  340, area:  14.8 },
+            { z: 172.0, volume:  375, area:  16.2 },
+            { z: 174.0, volume:  420, area:  17.9 },
+            { z: 175.0, volume:  470, area:  19.2 }, // MNDBT
+            { z: 176.5, volume:  540, area:  21.0 }, // MNGC
+            { z: 177.0, volume:  685, area:  22.5 }, // Crest
         ],
     },
 ];
