@@ -108,10 +108,10 @@ function buildStatusNarrative({ htl, qvao, luuluongxa, historyCount }) {
 // MNC=chết, MNDBT=dâng bình thường, MNGC=gia cường, crest=đỉnh đập
 // ID khớp với InflowLake.Id_Lake (15 hồ)
 const LAKE_CONSTANTS = {
-    1:  { MNC:100.0, MNDBT:108.0, MNGC:109.5, crest:110.5, totalVol:180, deadVol: 30, floodVol: 50, turbines:2, capacity:210 }, // A Vương
-    2:  { MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, totalVol:343, deadVol: 97, floodVol: 80, turbines:3, capacity:210 }, // Đắk Mi 4
-    3:  { MNC:160.0, MNDBT:168.0, MNGC:169.5, crest:170.5, totalVol:250, deadVol: 60, floodVol: 70, turbines:2, capacity:156 }, // Sông Bung 4
-    4:  { MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:685, deadVol:215, floodVol:190, turbines:2, capacity:190 }, // Sông Tranh 2
+    1:  { MNC:340.0, MNDBT:380.0, MNGC:381.0, crest:382.0, totalVol:343.5, deadVol: 77.5, floodVol: 80, turbines:2, capacity:210 }, // A Vương
+    2:  { MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, totalVol:312.3, deadVol: 97, floodVol: 80, turbines:3, capacity:208 }, // Đắk Mi 4
+    3:  { MNC:205.0, MNDBT:222.5, MNGC:224.0, crest:225.0, totalVol:510.8, deadVol: 276.8, floodVol: 70, turbines:2, capacity:156 }, // Sông Bung 4
+    4:  { MNC:140.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:730.0, deadVol:215, floodVol:190, turbines:2, capacity:190 }, // Sông Tranh 2
     7:  { MNC:130.0, MNDBT:138.0, MNGC:139.0, crest:140.0, totalVol: 20, deadVol:  5, floodVol:  8, turbines:1, capacity: 16 }, // Sông Bung 4A
     8:  { MNC:175.0, MNDBT:185.0, MNGC:186.5, crest:187.5, totalVol:100, deadVol: 28, floodVol: 30, turbines:2, capacity: 50 }, // Sông Bung 5
     9:  { MNC:330.0, MNDBT:340.0, MNGC:342.0, crest:343.0, totalVol:250, deadVol: 70, floodVol: 60, turbines:2, capacity:100 }, // Sông Bung 2

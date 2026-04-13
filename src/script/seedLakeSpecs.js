@@ -32,20 +32,20 @@ const LAKE_SPECS = [
         address: 'Xã A Rooi, Đông Giang, Quảng Nam',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
-        MNC: 100.0, MNDBT: 108.0, MNGC: 109.5, crest: 110.5,
+        MNC: 340.0, MNDBT: 380.0, MNGC: 381.0, crest: 382.0,
 
-        total_volume: 180,    // Mm³
-        dead_volume:   30,    // Mm³
-        flood_volume:  50,    // Mm³
+        total_volume: 343.5,    // Mm³
+        dead_volume:   77.5,    // Mm³
+        flood_volume:  80,    // Mm³
 
         turbines: 2,
         capacity_mw: 210,
         turbine_efficiency: 0.88,
-        tailwater_elev: 28.0,
-        design_head: 74.0,
+        tailwater_elev: 100.0,
+        design_head: 280.0,
         max_turbine_flow: 320,   // m³/s (2 tổ)
 
-        spillway_crest_elev: 103.0,
+        spillway_crest_elev: 375.0,
         spillway_width: 2 * 13,  // 2 khoang × 13m
         spillway_coef: 0.42,
 
@@ -61,12 +61,12 @@ const LAKE_SPECS = [
 
         MNC: 225.0, MNDBT: 258.0, MNGC: 260.5, crest: 261.5,
 
-        total_volume: 343,
+        total_volume: 312.3,
         dead_volume:   97,
         flood_volume:  80,
 
         turbines: 3,
-        capacity_mw: 210,
+        capacity_mw: 208,
         turbine_efficiency: 0.88,
         tailwater_elev: 165.0,
         design_head: 87.0,
@@ -86,20 +86,20 @@ const LAKE_SPECS = [
         address: 'Xã Tà Pơơ, Nam Giang, Quảng Nam',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
-        MNC: 160.0, MNDBT: 168.0, MNGC: 169.5, crest: 170.5,
+        MNC: 205.0, MNDBT: 222.5, MNGC: 224.0, crest: 225.0,
 
-        total_volume: 250,
-        dead_volume:   60,
+        total_volume: 510.8,
+        dead_volume:   276.8,
         flood_volume:  70,
 
         turbines: 2,
         capacity_mw: 156,
         turbine_efficiency: 0.88,
         tailwater_elev: 105.0,
-        design_head: 57.0,
+        design_head: 110.0,
         max_turbine_flow: 330,
 
-        spillway_crest_elev: 162.5,
+        spillway_crest_elev: 217.0,
         spillway_width: 2 * 12,
         spillway_coef: 0.42,
 
@@ -113,9 +113,9 @@ const LAKE_SPECS = [
         address: 'Xã Trà Đốc, Bắc Trà My, Quảng Nam',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
-        MNC: 158.0, MNDBT: 175.0, MNGC: 176.5, crest: 177.0,
+        MNC: 140.0, MNDBT: 175.0, MNGC: 176.5, crest: 177.0,
 
-        total_volume: 685,
+        total_volume: 730,
         dead_volume:  215,
         flood_volume: 190,
 
@@ -266,15 +266,14 @@ const ZV_CURVES = [
         lake_id: 1,
         name: 'A Vương',
         points: [
-            { z:  97.0, volume:  22, area: 2.5 },
-            { z: 100.0, volume:  30, area: 3.2 },   // MNC
-            { z: 102.0, volume:  40, area: 3.8 },
-            { z: 104.0, volume:  55, area: 4.5 },
-            { z: 106.0, volume:  75, area: 5.5 },
-            { z: 108.0, volume: 100, area: 6.7 },   // MNDBT
-            { z: 109.0, volume: 118, area: 7.4 },
-            { z: 109.5, volume: 128, area: 7.8 },   // MNGC
-            { z: 110.5, volume: 180, area: 8.8 },   // Crest
+            { z: 330.0, volume:  50, area: 2.5 },
+            { z: 340.0, volume:  77.5, area: 3.2 }, // MNC
+            { z: 350.0, volume: 140, area: 4.5 },
+            { z: 360.0, volume: 200, area: 5.5 },
+            { z: 370.0, volume: 270, area: 6.7 },
+            { z: 380.0, volume: 343.5, area: 8.8 }, // MNDBT
+            { z: 381.0, volume: 350, area: 9.0 },   // MNGC
+            { z: 382.0, volume: 360, area: 9.2 },   // Crest
         ],
     },
     {
@@ -290,47 +289,41 @@ const ZV_CURVES = [
             { z: 250.0, volume: 255, area: 10.8 },
             { z: 252.0, volume: 270, area: 11.3 },
             { z: 255.0, volume: 300, area: 12.4 },
-            { z: 258.0, volume: 343, area: 13.8 },  // MNDBT
-            { z: 260.0, volume: 370, area: 14.7 },
-            { z: 260.5, volume: 380, area: 15.0 },  // MNGC
-            { z: 261.5, volume: 400, area: 15.5 },  // Crest
+            { z: 258.0, volume: 312.3, area: 13.8 },// MNDBT
+            { z: 260.0, volume: 330, area: 14.7 },
+            { z: 260.5, volume: 340, area: 15.0 },  // MNGC
+            { z: 261.5, volume: 350, area: 15.5 },  // Crest
         ],
     },
     {
         lake_id: 3,
         name: 'Sông Bung 4',
         points: [
-            { z: 157.0, volume:  50, area: 3.5 },
-            { z: 160.0, volume:  60, area: 4.1 },   // MNC
-            { z: 162.0, volume:  75, area: 4.9 },
-            { z: 162.5, volume:  80, area: 5.1 },
-            { z: 164.0, volume:  98, area: 5.8 },
-            { z: 166.0, volume: 125, area: 6.8 },
-            { z: 168.0, volume: 165, area: 8.0 },   // MNDBT
-            { z: 169.0, volume: 195, area: 8.8 },
-            { z: 169.5, volume: 215, area: 9.2 },   // MNGC
-            { z: 170.5, volume: 250, area: 9.8 },   // Crest
+            { z: 200.0, volume: 220, area: 3.5 },
+            { z: 205.0, volume: 276.8, area: 4.1 }, // MNC
+            { z: 210.0, volume: 340, area: 4.9 },
+            { z: 215.0, volume: 400, area: 5.8 },
+            { z: 220.0, volume: 460, area: 6.8 },
+            { z: 222.5, volume: 510.8, area: 8.0 }, // MNDBT
+            { z: 224.0, volume: 530, area: 8.8 },   // MNGC
+            { z: 225.0, volume: 540, area: 9.8 },   // Crest
         ],
     },
     {
         lake_id: 4,
         name: 'Sông Tranh 2',
         points: [
-            { z: 155.0, volume:  195, area:  7.5 },
-            { z: 158.0, volume:  215, area:  8.2 },   // MNC
-            { z: 160.0, volume:  228, area:  9.1 },
-            { z: 163.0, volume:  250, area: 10.5 },
-            { z: 165.0, volume:  270, area: 11.5 },
-            { z: 167.0, volume:  295, area: 12.8 },
-            { z: 168.0, volume:  310, area: 13.5 },
-            { z: 170.0, volume:  340, area: 14.8 },
-            { z: 172.0, volume:  375, area: 16.2 },
-            { z: 173.0, volume:  395, area: 17.0 },
-            { z: 174.0, volume:  420, area: 17.9 },
-            { z: 175.0, volume:  470, area: 19.2 },   // MNDBT
-            { z: 176.0, volume:  510, area: 20.1 },
-            { z: 176.5, volume:  540, area: 21.0 },   // MNGC
-            { z: 177.0, volume:  685, area: 22.5 },   // Crest
+            { z: 135.0, volume:  180, area:  7.5 },
+            { z: 140.0, volume:  215, area:  8.2 }, // MNC
+            { z: 145.0, volume:  280, area:  10.5 },
+            { z: 150.0, volume:  360, area:  11.5 },
+            { z: 155.0, volume:  430, area:  12.8 },
+            { z: 160.0, volume:  500, area:  14.8 },
+            { z: 165.0, volume:  580, area:  16.2 },
+            { z: 170.0, volume:  650, area:  17.9 },
+            { z: 175.0, volume:  730, area:  19.2 }, // MNDBT
+            { z: 176.5, volume:  755, area:  21.0 }, // MNGC
+            { z: 177.0, volume:  765, area:  22.5 }, // Crest
         ],
     },
 ];
