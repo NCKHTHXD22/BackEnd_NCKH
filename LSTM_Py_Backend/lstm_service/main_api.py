@@ -4,7 +4,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import timedelta
-from typing import Any
+from typing import Any, Optional, List
 import pandas as pd
 
 from config.reservoirs import RESERVOIRS
@@ -14,29 +14,41 @@ from utils.scaler_utils import GlobalScaler
 from data.data_fetcher import (
     fetch_hydro_data,
     fetch_rain_data,
+    fetch_meteo_history,
+    fetch_rain_forecast_idw,
 )
 from features.feature_engineering import (
     add_time_features,
     add_rain_features,
-    add_inflow_features
+    add_inflow_features,
+    add_reservoir_features,
+    add_meteo_features,
 )
+from operation import get_operation_calculator
 import requests
 
 app = FastAPI(title="LSTM Inflow Prediction API", version="2.0.0")
 
 # ─── CONSTANTS ────────────────────────────────────────────────────────────────
-# Must match dataset_builder.py exactly (31 features)
-INPUT_SIZE = 31
-FEATURES = [
+# INPUT_SIZE được xác định động từ scaler sau startup.
+# 36 features (cũ) hoặc 38 features (mới, sau khi rebuild dataset với Z+Q_out).
+# Thứ tự phải khớp chính xác với dataset_builder.py
+_FEATURES_BASE = [
     "rain", "rain_3h", "rain_6h", "rain_12h", "rain_24h",
-    "rain_48h", "rain_72h", "rain_96h",
+    "rain_48h", "rain_72h", "rain_96h", "rain_120h", "rain_168h",
     "rain_intensity", "rain_12h_std", "rain_24h_max",
     "rain_lag_1", "rain_lag_3", "rain_lag_6", "rain_lag_12", "rain_lag_24",
     "inflow", "inflow_prev", "inflow_diff", "inflow_diff_2",
-    "inflow_3h_avg", "inflow_6h_avg", "inflow_12h_avg", "inflow_24h_avg",
-    "rain_inflow_interaction",
-    "hour_sin", "hour_cos", "doy_sin", "doy_cos", "month_sin", "month_cos"
+    "inflow_3h_avg", "inflow_6h_avg", "inflow_12h_avg",
+    "inflow_24h_avg", "inflow_48h_avg", "inflow_rising",
+    "rain_inflow_interaction", "soil_moisture_x_inflow",
+    "water_level", "outflow", "Z_diff", "Z_24h_avg", "outflow_diff", "Q_ratio",
+    "et0", "wind_speed",
+    "hour_sin", "hour_cos", "doy_sin", "doy_cos", "month_sin", "month_cos",
 ]
+
+INPUT_SIZE: int = 36  # placeholder, sẽ được cập nhật sau startup
+FEATURES: list  = _FEATURES_BASE[:36]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 scaler = GlobalScaler()
@@ -46,9 +58,12 @@ _model_cache: dict = {}
 @app.on_event("startup")
 async def startup_event():
     """Load only the scaler on startup. Models are loaded on-demand to save RAM."""
+    global INPUT_SIZE, FEATURES
     try:
         scaler.load("artifacts/global_scaler.pkl")
-        print(f"[OK] Scaler loaded. Device: {device}. Models will be loaded on-demand.")
+        INPUT_SIZE = int(scaler.scaler.n_features_in_)
+        FEATURES   = _FEATURES_BASE[:INPUT_SIZE]
+        print(f"[OK] Scaler loaded. INPUT_SIZE={INPUT_SIZE}. Device: {device}. Models will be loaded on-demand.")
     except Exception as e:
         print(f"[ERROR] Error loading scaler: {e}")
 
@@ -85,6 +100,7 @@ def load_model_for_reservoir(res_idx: int) -> InflowForecastModel:
 
 class PredictRequest(BaseModel):
     rid: int
+    reference_time: str = None
 
 
 @app.get("/health")
@@ -155,8 +171,22 @@ async def get_prediction(req: PredictRequest):
         has_warning = False
         warning_msg = ""
 
-        # ── 1. Fetch hydro data (72h lookback for features) ──────────────────
-        hydro = fetch_hydro_data(rid, days=5)
+        # Parse reference_time if provided, otherwise use current UTC hour
+        if req.reference_time:
+            try:
+                # Handle ISO format from Node.js (2026-03-30T17:00:00.000Z)
+                ref_dt = pd.to_datetime(req.reference_time).tz_convert("Asia/Ho_Chi_Minh").tz_localize(None).floor("h")
+                reference_time = ref_dt.to_pydatetime()
+                print(f"  [Ref] Using provided reference time: {reference_time}")
+            except Exception as e:
+                print(f"  [Ref] Error parsing reference_time '{req.reference_time}': {e}. Using current time.")
+                reference_time = _vn_now().replace(minute=0, second=0, microsecond=0)
+        else:
+            reference_time = _vn_now().replace(minute=0, second=0, microsecond=0)
+            print(f"  [Ref] Using current Vietnamese time: {reference_time}")
+
+        # ── 1. Fetch hydro data (5-day lookback) ───────────────────────────
+        hydro = fetch_hydro_data(rid, days=11, end_time=reference_time)
         if hydro.empty:
             raise HTTPException(status_code=400, detail=f"No hydro data for reservoir {rid}")
 
@@ -164,35 +194,38 @@ async def get_prediction(req: PredictRequest):
         reference_time = hydro["time"].max()
         print(f"  Reference time (from hydro): {reference_time}")
 
-        # ── 3. Fetch hybrid rain (Archive Excel + Forecast) ───────────────────
-        # We fetch rain for features (past) and for model input (future)
-        rain_all = fetch_rain_data(rid, info["lat"], info["lon"], reference_time=reference_time, days=5)
+        # ── 3. Fetch rain + meteo history + rain forecast IDW ───────────────
+        rain_all   = fetch_rain_data(rid, info["lat"], info["lon"],
+                                     reference_time=reference_time, days=11)
+        meteo_hist = fetch_meteo_history(info["lat"], info["lon"], days=11)
+        rain_fc_df = fetch_rain_forecast_idw(res_idx, reference_time, hours=HORIZON)
 
         # ── 4. Merge and build feature dataframe ─────────────────────────────
         if rain_all.empty:
             df = hydro.copy()
             df["rain"] = 0.0
-            rain_future = pd.DataFrame() # Will trigger fallback below
         else:
-            # Past rain for features
             rain_past = rain_all[rain_all["time"] <= reference_time]
             df = pd.merge(hydro, rain_past, on="time", how="left")
             df["rain"] = df["rain"].fillna(0.0)
-            
-            # Future rain for inference
-            rain_future = rain_all[rain_all["time"] > reference_time].copy()
-            rain_future = rain_future.rename(columns={"rain": "rain_forecast"})
 
-        df["inflow"] = np.log1p(df["inflow"].clip(0))
+        if not meteo_hist.empty:
+            df = pd.merge(df, meteo_hist, on="time", how="left")
 
+        df["inflow"] = np.sqrt(df["inflow"].clip(0))
+        for col in ("water_level", "outflow"):
+            if col not in df.columns:
+                df[col] = np.nan
         df = add_time_features(df)
         df = add_rain_features(df)
         df = add_inflow_features(df)
-        # ── 5. Resilience: Pad data if history is insufficient (< 72h) ───────
+        df = add_reservoir_features(df)
+        df = add_meteo_features(df)
+
+        # ── 5. Pad neu lich su ngan ───────────────────────────────────────────
         if len(df) < SEQ_LENGTH:
-            print(f"  [WARN] Insufficient data: {len(df)} rows. Padding to {SEQ_LENGTH}...")
-            # Pad by repeating the first row
             needed = SEQ_LENGTH - len(df)
+            print(f"  [WARN] Insufficient data: {len(df)} rows. Padding {needed}h...")
             padding = pd.concat([df.iloc[[0]]] * needed, ignore_index=True)
             df = pd.concat([padding, df], ignore_index=True)
             has_warning = True
@@ -201,18 +234,7 @@ async def get_prediction(req: PredictRequest):
             has_warning = False
             warning_msg = ""
 
-        # ── 5. Prepare future rain forecast ───────────────────────────────────
-        if rain_future.empty:
-            # Fallback: giả định không mưa (0.0) — thực tế hơn exponential decay
-            # vì mưa nhiệt đới thường ngắn và ngừng đột ngột
-            rain_future = pd.DataFrame({
-                "time": [reference_time + timedelta(hours=i + 1) for i in range(HORIZON)],
-                "rain_forecast": [0.0] * HORIZON
-            })
-            print("  [WARN] Open-Meteo unavailable, fallback to zero rainfall forecast")
-
         # ── 6. Prepare model inputs ───────────────────────────────────────────
-        # Filter to only features present in df
         available = [f for f in FEATURES if f in df.columns]
         if len(available) != INPUT_SIZE:
             missing = [f for f in FEATURES if f not in df.columns]
@@ -222,29 +244,34 @@ async def get_prediction(req: PredictRequest):
             )
 
         past_seq = df[available].iloc[-SEQ_LENGTH:].values.astype(np.float32)
-        # Replace NaN/Inf from feature engineering before scaling
         past_seq = np.nan_to_num(past_seq, nan=0.0, posinf=0.0, neginf=0.0)
-        past_seq = scaler.transform(past_seq[np.newaxis])[0]  # shape (SEQ_LENGTH, F)
+        past_seq = scaler.transform(past_seq[np.newaxis])[0]
 
-        # Log-transform future rain — pad to exactly HORIZON if forecast is short
-        rain_vals = rain_future["rain_forecast"].values.astype(np.float32)
-        if len(rain_vals) < HORIZON:
-            rain_vals = np.pad(rain_vals, (0, HORIZON - len(rain_vals)), constant_values=0.0)
-        future_rain = np.log1p(rain_vals[:HORIZON].reshape(-1, 1))
+        # ── 7. Build X_future từ mưa dự báo IDW ────────────────────────────
+        x_future_tensor = None
+        if N_FUTURE_FEATURES > 0:
+            if not rain_fc_df.empty and len(rain_fc_df) >= HORIZON:
+                rain_fc     = rain_fc_df["rain_fc"].values[:HORIZON].astype(np.float32)
+                rain_fc_6h  = rain_fc_df["rain_fc_6h"].values[:HORIZON].astype(np.float32)
+                rain_fc_24h = rain_fc_df["rain_fc_24h"].values[:HORIZON].astype(np.float32)
+                x_fut = np.stack([rain_fc, rain_fc_6h, rain_fc_24h], axis=1)
+            else:
+                x_fut = np.zeros((HORIZON, N_FUTURE_FEATURES), dtype=np.float32)
+            x_future_tensor = torch.tensor(x_fut[None]).float().to(device)
 
-        # ── 7. Load model & run inference ─────────────────────────────────────
+        # ── 8. Load model & run inference ────────────────────────────────────
         model = load_model_for_reservoir(res_idx)
 
         with torch.no_grad():
             preds = model(
                 torch.tensor(past_seq[None]).float().to(device),
-                torch.tensor(future_rain[None]).float().to(device),
-                torch.tensor([res_idx]).long().to(device)
+                torch.tensor([res_idx]).long().to(device),
+                x_future=x_future_tensor,
             )
 
-        # Inverse log1p — clip to prevent Inf from very large raw outputs
-        raw_np = np.clip(preds.cpu().numpy()[0], -20.0, 20.0)
-        preds_np = np.nan_to_num(np.expm1(raw_np), nan=0.0, posinf=0.0, neginf=0.0)
+        raw_np = np.clip(preds.cpu().numpy()[0], 0.0, 500.0)
+        preds_np = raw_np ** 2
+        preds_np = np.sort(preds_np, axis=1)
 
         # ── 8. Format response ────────────────────────────────────────────────
         results = []
@@ -286,6 +313,133 @@ async def get_prediction(req: PredictRequest):
                 "reservoirId": rid
             }
         )
+
+
+# ─── OPERATION ENDPOINTS ─────────────────────────────────────────────────────
+
+class OperationRequest(BaseModel):
+    """Request body cho tính toán vận hành hồ theo QĐ 1865."""
+    rid: int                              # Reservoir ID (1=A Vuong, 2=DakMi4, 3=SBung4, 4=STranh2, 9=SBung2)
+    Z_current: float                      # Mực nước hiện tại (m)
+    Q_inflow: float                       # Lưu lượng đến hồ (m³/s)
+    timestamp: Optional[str] = None       # ISO datetime, mặc định = now
+    Q_inflow_forecast_24h: Optional[float] = None  # Dự báo Q trung bình 24h tới
+
+
+class OperationForecastRequest(BaseModel):
+    """Request body cho tính toán vận hành theo chuỗi dự báo."""
+    rid: int                              # Reservoir ID
+    Z_initial: float                      # Mực nước ban đầu (m)
+    Q_inflow_series: List[float]          # Chuỗi lưu lượng dự báo (m³/s), mỗi phần tử = 1 bước 24h
+    start_time: Optional[str] = None      # ISO datetime bắt đầu, mặc định = now
+    delta_t_hours: float = 24.0           # Bước thời gian (giờ)
+
+
+@app.post("/operation/calculate")
+async def operation_calculate(req: OperationRequest):
+    """
+    Tính toán lưu lượng xả khuyến nghị và dự báo mực nước cho một hồ chứa.
+    Dựa trên QĐ 1865/QĐ-TTg về quy trình vận hành liên hồ chứa Vu Gia - Thu Bồn.
+    """
+    try:
+        # Parse timestamp
+        if req.timestamp:
+            ts = pd.to_datetime(req.timestamp)
+            if ts.tzinfo is not None:
+                ts = ts.tz_convert("Asia/Ho_Chi_Minh").tz_localize(None)
+            ts = ts.to_pydatetime()
+        else:
+            ts = _vn_now()
+
+        calc = get_operation_calculator()
+        result = calc.calculate_for_rid(
+            rid=req.rid,
+            Z_current=req.Z_current,
+            Q_inflow=req.Q_inflow,
+            timestamp=ts,
+            Q_inflow_forecast_24h=req.Q_inflow_forecast_24h
+        )
+
+        # Lấy tên hồ từ config
+        reservoir_name = RESERVOIRS.get(req.rid, {}).get("name", f"Reservoir {req.rid}")
+
+        return {
+            "status": "ok",
+            "reservoirId": req.rid,
+            "reservoirName": reservoir_name,
+            "legalBasis": "QĐ 1865/QĐ-TTg ngày 23/12/2019",
+            **result.to_dict()
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=500, detail={
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        })
+
+
+@app.post("/operation/forecast")
+async def operation_forecast(req: OperationForecastRequest):
+    """
+    Tính toán vận hành theo chuỗi dự báo lưu lượng đến hồ.
+    Mô phỏng mực nước hồ theo phương trình cân bằng nước qua nhiều bước thời gian.
+    """
+    try:
+        if len(req.Q_inflow_series) == 0:
+            raise ValueError("Q_inflow_series không được rỗng")
+        if len(req.Q_inflow_series) > 72:
+            raise ValueError("Q_inflow_series tối đa 72 bước (72 ngày)")
+
+        # Parse start_time
+        if req.start_time:
+            ts = pd.to_datetime(req.start_time)
+            if ts.tzinfo is not None:
+                ts = ts.tz_convert("Asia/Ho_Chi_Minh").tz_localize(None)
+            ts = ts.to_pydatetime()
+        else:
+            ts = _vn_now()
+
+        calc = get_operation_calculator()
+        results = calc.calculate_forecast_series(
+            rid=req.rid,
+            Z_initial=req.Z_initial,
+            Q_inflow_series=req.Q_inflow_series,
+            start_time=ts,
+            delta_t_hours=req.delta_t_hours
+        )
+
+        reservoir_name = RESERVOIRS.get(req.rid, {}).get("name", f"Reservoir {req.rid}")
+
+        return {
+            "status": "ok",
+            "reservoirId": req.rid,
+            "reservoirName": reservoir_name,
+            "legalBasis": "QĐ 1865/QĐ-TTg ngày 23/12/2019",
+            "totalSteps": len(results),
+            "deltaT_hours": req.delta_t_hours,
+            "steps": [r.to_dict() for r in results],
+            "summary": {
+                "Z_initial": req.Z_initial,
+                "Z_final": round(results[-1].Z_predicted, 2) if results else None,
+                "Q_avg_inflow": round(float(np.mean(req.Q_inflow_series)), 2),
+                "Q_avg_discharge": round(float(np.mean([r.Q_discharge for r in results])), 2),
+                "isAllCompliant": all(r.is_compliant for r in results),
+                "totalViolations": sum(len(r.violations) for r in results),
+                "totalWarnings": sum(len(r.warnings) for r in results)
+            }
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=500, detail={
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        })
 
 
 if __name__ == "__main__":

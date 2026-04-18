@@ -42,8 +42,12 @@ export default function PhoneAlertScreen() {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    router.replace("/(auth)/sign-in");
+    try {
+      await signOut();
+      router.replace("/(auth)/sign-in");
+    } catch (error) {
+      console.error("Lỗi đăng xuất:", error);
+    }
   };
 
   return (

@@ -32,7 +32,7 @@ const SignInScreen = () => {
     if (isSignedIn) {
       router.replace("/(tab)");
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, router]);
 
   const handleSignIn = async () => {
     if (!email || !password) {

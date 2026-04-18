@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 
 
 def quantile_loss(preds, target, qs):
@@ -24,8 +23,9 @@ def quantile_loss(preds, target, qs):
     median_preds = preds[:, :, 1]
     
     # Weight favors high inflow values (peaks)
-    # Using exp weighting to really emphasize the floods
-    peak_weights = torch.exp(target) / torch.exp(target).mean()
+    # Dùng bình phương thay exp để tránh overflow (target có thể = 113 → exp(113)=NaN)
+    peak_weights = (target ** 2) / ((target ** 2).mean() + 1e-8)
+    peak_weights = peak_weights.clamp(max=10.0)
     
     mse_loss = (peak_weights * (median_preds - target)**2).mean()
 

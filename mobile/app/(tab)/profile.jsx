@@ -71,8 +71,8 @@ const ProfileScreen = () => {
         style={styles.logoutButton}
         onPress={async () => {
           try {
-            await signOut(); // ✅ Đăng xuất an toàn
-            router.replace('../../(auth)/sign-in'); // Điều hướng về màn hình đăng nhập
+            await signOut();
+            router.replace('/(auth)/sign-in');
           } catch (error) {
             console.error('Logout failed:', error);
           }

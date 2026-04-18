@@ -2,11 +2,14 @@
 import requests
 import base64
 import os
+import math
+import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from data.rain_matrix_loader import load_rain_matrix, load_rain_from_stations
+from config.rain_stations import RAIN_STATIONS, RESERVOIR_TO_STATIONS
 
 VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 
@@ -203,7 +206,7 @@ def fetch_rain_forecast(lat, lon, reference_time, hours=12):
         # Convert về naive datetime VN (UTC+7) — nhất quán với _vn_now()
         df["time"] = df["time"].dt.tz_convert("Asia/Ho_Chi_Minh").dt.tz_localize(None).dt.floor("h")
 
-        # 🔥 ALIGN TIME
+        # ALIGN TIME
         start_time = reference_time + timedelta(hours=1)
         end_time = start_time + timedelta(hours=hours)
 
@@ -216,4 +219,244 @@ def fetch_rain_forecast(lat, lon, reference_time, hours=12):
 
     except Exception as e:
         print("Forecast error:", e)
+        return pd.DataFrame()
+
+
+# ================= METEO FORECAST (Open-Meteo — 1 điểm) =================
+def fetch_meteo_forecast(lat, lon, reference_time, hours=24) -> pd.DataFrame:
+    """
+    Lấy dự báo mưa + ET0 tại 1 điểm lat/lon từ Open-Meteo.
+      time | rain_fc | rain_fc_6h | rain_fc_24h | et0_fc
+
+    rain_fc_6h  = tích lũy mưa 6h  (convolve giống dataset_builder)
+    rain_fc_24h = tích lũy mưa 24h
+
+    Dùng để build X_future khi inference (3 features khớp với training).
+    """
+    try:
+        r = _get_with_retry(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": "precipitation,et0_fao_evapotranspiration",
+                "forecast_days": 3,
+                "timezone": "UTC",
+            },
+            timeout=40,
+        )
+        if r is None:
+            return pd.DataFrame()
+
+        data = r.json()["hourly"]
+        rain = np.array(data["precipitation"], dtype=np.float32)
+
+        df = pd.DataFrame({
+            "time":        pd.to_datetime(data["time"], utc=True),
+            "rain_fc":     rain,
+            "rain_fc_6h":  np.convolve(rain, np.ones(6,  dtype=np.float32), mode="full")[:len(rain)],
+            "rain_fc_24h": np.convolve(rain, np.ones(24, dtype=np.float32), mode="full")[:len(rain)],
+            "et0_fc":      data["et0_fao_evapotranspiration"],
+        })
+        df["time"] = (
+            df["time"]
+            .dt.tz_convert("Asia/Ho_Chi_Minh")
+            .dt.tz_localize(None)
+            .dt.floor("h")
+        )
+
+        start_time = reference_time + timedelta(hours=1)
+        end_time   = start_time + timedelta(hours=hours)
+        df = df[(df["time"] >= start_time) & (df["time"] < end_time)]
+        return df.reset_index(drop=True)
+
+    except Exception as e:
+        print(f"  [WARN] fetch_meteo_forecast: {e}")
+        return pd.DataFrame()
+
+
+# ================= RAIN FORECAST IDW — Multi-Point (Open-Meteo) =================
+def _haversine_km(lat1, lon1, lat2, lon2) -> float:
+    """Khoảng cách Haversine giữa 2 điểm (km)."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _fetch_precipitation_at(lat, lon, reference_time, hours=24) -> np.ndarray | None:
+    """
+    Lấy mảng precipitation hourly tại 1 điểm từ Open-Meteo.
+    Trả về np.ndarray shape (hours,) hoặc None nếu lỗi.
+    """
+    try:
+        r = _get_with_retry(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": "precipitation",
+                "forecast_days": 3,
+                "timezone": "UTC",
+            },
+            timeout=30,
+        )
+        if r is None:
+            return None
+
+        data = r.json()["hourly"]
+        times = pd.to_datetime(data["time"], utc=True)
+        rain  = np.array(data["precipitation"], dtype=np.float32)
+
+        times_vn = (
+            pd.Series(times)
+            .dt.tz_convert("Asia/Ho_Chi_Minh")
+            .dt.tz_localize(None)
+            .dt.floor("h")
+        )
+        start_time = reference_time + timedelta(hours=1)
+        end_time   = start_time + timedelta(hours=hours)
+        mask = (times_vn >= start_time) & (times_vn < end_time)
+        arr  = rain[mask.values]
+        return arr if len(arr) == hours else None
+
+    except Exception:
+        return None
+
+
+def fetch_rain_forecast_idw(res_id: int, reference_time: datetime, hours: int = 24) -> pd.DataFrame:
+    """
+    Tính mưa dự báo IDW cho hồ `res_id` từ Open-Meteo (multi-point).
+
+    Quy trình:
+      1. Lấy precipitation tại tọa độ từng trạm VNDMS của lưu vực
+      2. Tính tâm lưu vực = trung bình tọa độ các trạm
+      3. IDW weight = 1 / d² (khoảng cách từ trạm đến tâm)
+      4. rain_idw = Σ(w_i * rain_i) / Σ(w_i)
+      5. Tính rain_fc_6h, rain_fc_24h bằng convolve
+
+    Trả về DataFrame:
+      time | station_<tên> (mm/h per trạm) | rain_fc | rain_fc_6h | rain_fc_24h
+
+    Hiển thị 00h–23h của ngày forecast (24 hàng).
+    """
+    station_names = RESERVOIR_TO_STATIONS.get(res_id, [])
+    if not station_names:
+        print(f"  [WARN] fetch_rain_forecast_idw: res_id={res_id} không có trong RESERVOIR_TO_STATIONS")
+        return pd.DataFrame()
+
+    # ── 1. Lấy precipitation tại từng trạm ──────────────────────────────
+    station_rains = {}   # name → np.ndarray(hours,)
+    for name in station_names:
+        info = RAIN_STATIONS.get(name)
+        if info is None:
+            continue
+        arr = _fetch_precipitation_at(info["lat"], info["lon"], reference_time, hours)
+        if arr is not None:
+            station_rains[name] = arr
+        else:
+            print(f"  [WARN] IDW: không lấy được mưa tại trạm {name} ({info['lat']},{info['lon']})")
+
+    if not station_rains:
+        print(f"  [WARN] fetch_rain_forecast_idw: không có trạm nào trả dữ liệu cho res_id={res_id}")
+        return pd.DataFrame()
+
+    # ── 2. Tính tâm lưu vực (centroid của các trạm có dữ liệu) ─────────
+    valid_names = list(station_rains.keys())
+    lats = [RAIN_STATIONS[n]["lat"] for n in valid_names]
+    lons = [RAIN_STATIONS[n]["lon"] for n in valid_names]
+    centroid_lat = float(np.mean(lats))
+    centroid_lon = float(np.mean(lons))
+
+    # ── 3. IDW weights = 1/d² ────────────────────────────────────────────
+    weights = []
+    for n in valid_names:
+        d = _haversine_km(centroid_lat, centroid_lon, RAIN_STATIONS[n]["lat"], RAIN_STATIONS[n]["lon"])
+        d = max(d, 0.1)          # tránh chia 0 khi trạm trùng tâm
+        weights.append(1.0 / (d ** 2))
+    weights = np.array(weights, dtype=np.float64)
+    weights /= weights.sum()    # normalize
+
+    # ── 4. rain_idw theo giờ ─────────────────────────────────────────────
+    rain_matrix = np.stack([station_rains[n] for n in valid_names], axis=0)  # (N, hours)
+    rain_idw    = (weights[:, None] * rain_matrix).sum(axis=0)               # (hours,)
+
+    # ── 5. rain_fc_6h, rain_fc_24h ────────────────────────────────────────
+    rain_fc_6h  = np.convolve(rain_idw, np.ones(6,  dtype=np.float32), mode="full")[:hours]
+    rain_fc_24h = np.convolve(rain_idw, np.ones(24, dtype=np.float32), mode="full")[:hours]
+
+    # ── 6. Build time index ──────────────────────────────────────────────
+    start_time = reference_time + timedelta(hours=1)
+    time_index = [start_time + timedelta(hours=i) for i in range(hours)]
+
+    # ── 7. Tạo DataFrame kết quả ─────────────────────────────────────────
+    df = pd.DataFrame({"time": time_index})
+    for name in valid_names:
+        df[f"station_{name}"] = station_rains[name].round(2)
+
+    df["rain_fc"]     = rain_idw.round(3).astype(np.float32)
+    df["rain_fc_6h"]  = rain_fc_6h.round(3).astype(np.float32)
+    df["rain_fc_24h"] = rain_fc_24h.round(3).astype(np.float32)
+
+    # Metadata
+    df.attrs["res_id"]       = res_id
+    df.attrs["stations"]     = valid_names
+    df.attrs["weights"]      = {n: round(float(w), 4) for n, w in zip(valid_names, weights)}
+    df.attrs["centroid"]     = (round(centroid_lat, 4), round(centroid_lon, 4))
+
+    return df
+
+
+# ================= METEO HISTORY (Open-Meteo Archive) =================
+def fetch_meteo_history(lat, lon, days=11) -> pd.DataFrame:
+    """
+    Lấy lịch sử khí tượng (past days) từ Open-Meteo ERA5 archive:
+      time | temperature | relative_humidity | et0 | wind_speed
+
+    Dùng để bổ sung X_past khi inference.
+    """
+    end_vn  = _vn_now().replace(minute=0, second=0, microsecond=0)
+    start_vn = end_vn - timedelta(days=days)
+
+    try:
+        r = _get_with_retry(
+            "https://archive-api.open-meteo.com/v1/archive",
+            params={
+                "latitude":  lat,
+                "longitude": lon,
+                "start_date": start_vn.strftime("%Y-%m-%d"),
+                "end_date":   end_vn.strftime("%Y-%m-%d"),
+                "hourly": ",".join([
+                    "temperature_2m",
+                    "relativehumidity_2m",
+                    "et0_fao_evapotranspiration",
+                    "windspeed_10m",
+                ]),
+                "timezone": "UTC",
+            },
+            timeout=60,
+        )
+        if r is None:
+            return pd.DataFrame()
+
+        data = r.json()["hourly"]
+        df = pd.DataFrame({
+            "time":              pd.to_datetime(data["time"], utc=True),
+            "temperature":       data["temperature_2m"],
+            "relative_humidity": data["relativehumidity_2m"],
+            "et0":               data["et0_fao_evapotranspiration"],
+            "wind_speed":        data["windspeed_10m"],
+        })
+        df["time"] = (
+            df["time"]
+            .dt.tz_convert("Asia/Ho_Chi_Minh")
+            .dt.tz_localize(None)
+            .dt.floor("h")
+        )
+        df = df[df["time"] <= end_vn]
+        return df.sort_values("time").drop_duplicates("time").reset_index(drop=True)
+
+    except Exception as e:
+        print(f"  [WARN] fetch_meteo_history: {e}")
         return pd.DataFrame()

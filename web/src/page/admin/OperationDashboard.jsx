@@ -1114,8 +1114,8 @@ export default function OperationDashboard({ lakeId }) {
                     })()}
                 </div>
 
-                {/* Middle Column — Main Chart (50%) */}
-                <div className="w-full xl:w-1/2 bg-white rounded-xl border border-gray-100 flex flex-col shadow-2xl min-h-[550px] overflow-hidden">
+                {/* Middle Column — Main Chart (Expanded to fill space) */}
+                <div className="w-full flex-1 bg-white rounded-xl border border-gray-100 flex flex-col shadow-2xl min-h-[550px] overflow-hidden">
                     <div className="flex justify-between items-center p-5 bg-gray-50/50 border-b border-gray-100">
                         <div className="flex items-center gap-3 text-sm text-gray-600 font-bold uppercase tracking-wider">
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
@@ -1146,19 +1146,19 @@ export default function OperationDashboard({ lakeId }) {
                                     <XAxis
                                         dataKey="fullLabel"
                                         stroke="#94a3b8"
-                                        fontSize={9}
+                                        fontSize={12}
                                         fontWeight="bold"
                                         axisLine={false}
                                         tickLine={false}
                                         interval={Math.max(1, Math.floor(unifiedData.length / 10))}
                                         angle={-35}
                                         textAnchor="end"
-                                        height={55}
+                                        height={65}
                                     />
                                     <YAxis
                                         yAxisId="left"
                                         stroke="#94a3b8"
-                                        fontSize={10}
+                                        fontSize={12}
                                         fontWeight="bold"
                                         tickCount={6}
                                         domain={['auto', 'auto']}
@@ -1171,7 +1171,7 @@ export default function OperationDashboard({ lakeId }) {
                                             if (!active || !payload?.length) return null;
                                             const pt = payload[0]?.payload;
                                             return (
-                                                <div style={{ background: '#fff', borderRadius: 12, border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0/0.1)', padding: 12, fontSize: 12, fontWeight: 'bold', color: '#1e293b', minWidth: 180 }}>
+                                                <div style={{ background: '#fff', borderRadius: 12, border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0/0.1)', padding: 12, fontSize: 14, fontWeight: 'bold', color: '#1e293b', minWidth: 180 }}>
                                                     <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 6, marginBottom: 6, color: '#64748b' }}>
                                                         🕐 {label} {pt?.isForecast ? '· Dự báo' : '· Thực tế'}
                                                     </div>
@@ -1189,7 +1189,7 @@ export default function OperationDashboard({ lakeId }) {
                                         verticalAlign="bottom"
                                         height={40}
                                         iconType="circle"
-                                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '16px' }}
+                                        wrapperStyle={{ fontSize: '13px', fontWeight: 'bold', paddingTop: '16px' }}
                                     />
 
                                     {/* Reference line = current time boundary */}
@@ -1200,7 +1200,7 @@ export default function OperationDashboard({ lakeId }) {
                                             stroke="#ef4444"
                                             strokeDasharray="5 5"
                                             strokeWidth={2}
-                                            label={{ value: "Hiện tại", fill: "#ef4444", fontSize: 10, fontWeight: "bold", position: "top" }}
+                                            label={{ value: "Hiện tại", fill: "#ef4444", fontSize: 12, fontWeight: "bold", position: "top" }}
                                         />
                                     )}
 
@@ -1234,80 +1234,7 @@ export default function OperationDashboard({ lakeId }) {
                     </div>
                 </div>
 
-                {/* Right Column — Controls (25%) */}
-                <div className="w-full xl:w-1/4 flex flex-col gap-4">
-                    <div className="bg-white rounded-xl flex-1 border border-gray-100 shadow-xl flex flex-col p-2">
-                        <div className="p-5 border-b border-gray-50">
-                            <div className="mb-4 text-blue-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Mực nước (m)
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">MNDBT</span>
-                                    <input type="text" value={c ? c.MNDBT.toFixed(2) : '—'} readOnly className="w-24 bg-gray-50 border border-transparent text-gray-500 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">HTL hiện tại</span>
-                                    <input type="text" value={latestHydro.htl.toFixed(2) || 0} readOnly className="w-24 bg-blue-50 border border-blue-100 text-blue-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
-                                </div>
-                            </div>
-                        </div>
 
-                        {(() => {
-                            const turbineCount = c?.turbines || 2;
-                            const powerTotal   = powerInfo?.power_mw ??
-                                Math.round((latestHydro.luuluongxa *
-                                    Math.max(0, latestHydro.htl - (lakeSpec?.tailwater_elev ?? 120)) *
-                                    9.81 * (lakeSpec?.turbine_efficiency ?? 0.88)) / 1000);
-                            const powerPerUnit = turbineCount > 0 ? (powerTotal / turbineCount).toFixed(1) : '—';
-                            return (
-                                <div className="p-5 border-b border-gray-50">
-                                    <div className="mb-4 text-yellow-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div> Công suất tổ máy (MW)
-                                    </div>
-                                    <div className="space-y-4">
-                                        {Array.from({ length: turbineCount }, (_, i) => (
-                                            <div key={i} className="flex items-center justify-between">
-                                                <span className="text-sm text-gray-400 font-bold">Tổ máy H{i + 1}</span>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                                    <input type="text" value={powerPerUnit} readOnly className="w-24 bg-gray-50 border border-transparent text-gray-800 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-
-                        <div className="p-5 border-b border-gray-50">
-                            <div className="mb-4 text-red-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div> Lưu lượng xả (m³/s)
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Q xả thực tế</span>
-                                    <input type="text" value={latestHydro.luuluongxa.toFixed(1)} readOnly className="w-24 bg-red-50 border border-red-100 text-red-700 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none" />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-400 font-bold">Q đề xuất</span>
-                                    <input type="text" value={rec.qRec.toFixed(0)} readOnly className={`w-24 px-3 py-2 rounded-lg text-right font-black shadow-inner outline-none border
-                                        ${rec.level === 'danger' ? 'bg-red-100 border-red-300 text-red-800' : rec.level === 'warning' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer actions */}
-                        <div className="p-6 mt-auto flex justify-between gap-3">
-                            <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-200 transition-all hover:translate-y-[-2px] active:translate-y-[0px]">
-                                <Database size={18} /> Lưu dữ liệu vận hành
-                            </button>
-                            <button className="w-14 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-red-500 py-3 rounded-xl flex items-center justify-center transition-all border border-gray-100">
-                                <LogOut size={20} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* ── Explanation + Recommendation Section ── */}

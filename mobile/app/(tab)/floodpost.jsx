@@ -207,8 +207,9 @@ export default function FloodPost() {
 
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Chia sẻ điểm ngập bạn đang thấy</Text>
 
@@ -323,7 +324,7 @@ export default function FloodPost() {
             <View style={styles.imageGrid}>
               {images.map((img, index) => (
                 <View key={index} style={styles.imageWrapper}>
-                  <Image source={{ uri: img.uri }} style={styles.image} />
+                  <Image source={{ uri: img.uri }} style={styles.image} contentFit="cover" />
                   <TouchableOpacity
                     onPress={() => handleRemoveImage(index)}
                     style={styles.removeIcon}
@@ -349,12 +350,14 @@ export default function FloodPost() {
           </TouchableOpacity>
         </ScrollView>
       </TouchableWithoutFeedback>
-            {isSubmitting && (
-        <View style={styles.overlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Đang gửi thông tin...</Text>
-        </View>
-      )}
     </KeyboardAvoidingView>
+
+    {isSubmitting && (
+      <View style={styles.overlay}>
+        <ActivityIndicator size="large" color="#fff" />
+        <Text style={styles.loadingText}>Đang gửi thông tin...</Text>
+      </View>
+    )}
+    </>
   );
 }
