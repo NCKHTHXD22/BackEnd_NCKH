@@ -1,5 +1,5 @@
 import { notificationRepo } from "../../infrastructure/repositories/notification.repo.js";
-import ReservoirAlert from "../entities/ReservoirAlert.js";
+import ReservoirAlert from "../../core/entities/ReservoirAlert.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const isExpired = (n) => n.expires_at && new Date(n.expires_at) < new Date();
