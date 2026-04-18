@@ -23,12 +23,14 @@ class InflowLakeRepository {
     }
 
     // update hydro data (inflow, outflow, waterlevel)
-    updateHydroData(Id_Lake, qvao, luuluongxa, htl, timestamp) {
+    updateHydroData(Id_Lake, qvao, luuluongxa, htl, timestamp, q_turbine = 0, q_spillway = 0) {
         return InflowLake.findOneAndUpdate(
             { Id_Lake },
             {
                 qvao,
                 luuluongxa,
+                q_turbine,
+                q_spillway,
                 htl,
                 lastUpdate: timestamp || new Date()
             },

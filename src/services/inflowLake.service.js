@@ -112,7 +112,9 @@ class InflowLakeService {
                         latest.qvao || 0,
                         latest.luuluongxa || 0,
                         latest.htl || 0,
-                        recordTime
+                        recordTime,
+                        latest.luuluongchayMay ?? latest.q_turbine ?? latest.q_may ?? 0,
+                        latest.luuluongquatran ?? latest.q_spillway ?? latest.q_tran ?? 0,
                     );
                     const logMsg = `✔ Hồ ${lake.Id_Lake} (${lake.name}) ← Inflow: ${latest.qvao || 0} | Outflow: ${latest.luuluongxa || 0} | Level: ${latest.htl || 0}`;
                     console.log(logMsg);

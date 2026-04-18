@@ -7,6 +7,8 @@ const InflowLakeHistorySchema = new mongoose.Schema(
 
         qvao: { type: Number, default: 0 },
         luuluongxa: { type: Number, default: 0 },
+        q_turbine: { type: Number, default: 0 },
+        q_spillway: { type: Number, default: 0 },
         htl: { type: Number, default: 0 },
 
         timestamp: { type: Date, required: true }

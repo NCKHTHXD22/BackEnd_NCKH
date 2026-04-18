@@ -122,7 +122,7 @@ const LAKE_CONSTANTS = {
 function getLakeConst(id) { return LAKE_CONSTANTS[Number(id)] || null; }
 
 // ─── Animated Dam Cross-Section (SVG) ─────────────────────────────────────────
-function DamCrossSection({ htl, qvao, luuluongxa, lakeId, maxTurbineFlow: maxTurbFlowProp }) {
+function DamCrossSection({ htl, qvao, luuluongxa, q_turbine, q_spillway, lakeId, maxTurbineFlow: maxTurbFlowProp }) {
     const c = getLakeConst(lakeId);
     if (!c) return (
         <div className="flex items-center justify-center h-full text-slate-400 text-xs text-center p-4">
@@ -145,11 +145,9 @@ function DamCrossSection({ htl, qvao, luuluongxa, lakeId, maxTurbineFlow: maxTur
     const waterColor = isFlood ? "#ef4444" : isWarn ? "#f59e0b" : "#3b82f6";
     const waterAlpha = isFlood ? 0.75 : 0.6;
 
-    // luuluongxa từ API Danang = lưu lượng xả qua cửa/tràn (spillway discharge)
-    // qmay = turbine flow = min(luuluongxa, maxTurbineFlow) — hiển thị riêng ở turbine
-    const maxTurb = maxTurbFlowProp ?? c?.maxTurbineFlow ?? luuluongxa;
-    const qtran = luuluongxa;                          // toàn bộ xả là qua tràn/cửa van
-    const qmay  = Math.min(luuluongxa, maxTurb);       // phần qua tuabin
+    // Dùng giá trị thực từ API; fallback nếu chưa có dữ liệu phân tách
+    const qtran = q_spillway ?? luuluongxa;
+    const qmay  = q_turbine  ?? 0;
 
     // Gate opening proportional to discharge flow
     const gateOpen  = luuluongxa > 0 ? Math.min(28, Math.max(6, (luuluongxa / Math.max(maxTurb * 0.5, luuluongxa, 1)) * 28)) : 0;
@@ -874,6 +872,8 @@ export default function OperationDashboard({ lakeId }) {
                                         htl={latestHydro.htl}
                                         qvao={latestHydro.qvao}
                                         luuluongxa={latestHydro.luuluongxa}
+                                        q_turbine={latestHydro.q_turbine}
+                                        q_spillway={latestHydro.q_spillway}
                                         lakeId={lakeId || selectedReservoir}
                                         maxTurbineFlow={c?.max_turbine_flow ?? c?.maxTurbineFlow}
                                     />

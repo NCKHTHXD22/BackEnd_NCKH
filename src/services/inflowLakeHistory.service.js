@@ -95,6 +95,8 @@ class InflowLakeHistoryService {
                     lakeName: lake.name || (lake.name ? lake.name : `Hồ ${lake.Id_Lake}`),
                     qvao: record.qvao || 0,
                     luuluongxa: record.luuluongxa || 0,
+                    q_turbine: record.luuluongchayMay ?? record.q_turbine ?? record.q_may ?? 0,
+                    q_spillway: record.luuluongquatran ?? record.q_spillway ?? record.q_tran ?? 0,
                     htl: record.htl || 0,
                     timestamp: roundedTime
                 };
