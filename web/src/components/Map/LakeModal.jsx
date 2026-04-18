@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import OperationDashboard from '../../page/admin/OperationDashboard';
+import { getAdminToken } from '../../services/auth';
 import FloodHistoryTraining from '../../page/admin/FloodHistoryTraining';
 import {
     X,
@@ -221,17 +222,19 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         setTimeout(() => { setIsRunning(false); }, 1500);
     };
 
+    const isAdmin = !!getAdminToken();
+
     const tabs = [
         {
             id: 'overview', label: 'Tổng quan', icon: <Info size={15} />,
             active: 'bg-sky-500 text-white shadow-sky-200 shadow-md',
             inactive: 'bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100',
         },
-        {
+        ...(isAdmin ? [{
             id: 'operation', label: 'Vận hành', icon: <Settings size={15} />,
             active: 'bg-violet-500 text-white shadow-violet-200 shadow-md',
             inactive: 'bg-violet-50 text-violet-600 border border-violet-200 hover:bg-violet-100',
-        },
+        }] : []),
         {
             id: 'forecast', label: 'Dự báo', icon: <BarChart3 size={15} />,
             active: 'bg-orange-500 text-white shadow-orange-200 shadow-md',
@@ -325,7 +328,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             <span className="font-semibold text-blue-900">{currentHtl.toFixed(2)} m</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Lưu lượng vào (Qvào):</span>
+                                            <span className="text-gray-600">Lưu lượng đến (Qđến):</span>
                                             <span className="font-semibold text-blue-900">{currentQvao.toFixed(2)} m³/s</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">

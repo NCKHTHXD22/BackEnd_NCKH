@@ -89,13 +89,13 @@ function computeRecommendation({ htl, qvao, luuluongxa, forecastPeak, lakeConst 
 function buildStatusNarrative({ htl, qvao, luuluongxa }) {
     return (
         `Mực nước hồ hiện tại là ${htl.toFixed(2)} m. ` +
-        `Lưu lượng nước vào hồ đạt ${qvao.toFixed(1)} m³/s, ` +
+        `Lưu lượng nước đến hồ đạt ${qvao.toFixed(1)} m³/s, ` +
         `lưu lượng xả qua tràn/tuabin là ${luuluongxa.toFixed(1)} m³/s. ` +
         (qvao > luuluongxa
-            ? `Hồ đang ở trạng thái tích nước (Q vào > Q xả), mực nước có xu hướng tăng.`
+            ? `Hồ đang ở trạng thái tích nước (Q đến > Q xả), mực nước có xu hướng tăng.`
             : qvao < luuluongxa
-            ? `Hồ đang ở trạng thái xả nước (Q xả > Q vào), mực nước có xu hướng giảm.`
-            : `Hồ đang ở trạng thái cân bằng (Q vào ≈ Q xả).`)
+            ? `Hồ đang ở trạng thái xả nước (Q xả > Q đến), mực nước có xu hướng giảm.`
+            : `Hồ đang ở trạng thái cân bằng (Q đến ≈ Q xả).`)
     );
 }
 
@@ -103,27 +103,32 @@ function buildStatusNarrative({ htl, qvao, luuluongxa }) {
 // MNC=chết, MNDBT=dâng bình thường, MNGC=gia cường, crest=đỉnh đập
 // ID khớp với InflowLake.Id_Lake (15 hồ)
 const LAKE_CONSTANTS = {
-    1:  { MNC:340.0, MNDBT:380.0, MNGC:381.0, crest:382.0, totalVol:343.5, deadVol: 77.5, floodVol: 80, turbines:2, capacity:210 }, // A Vương
-    2:  { MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, totalVol:312.3, deadVol: 97, floodVol: 80, turbines:3, capacity:208 }, // Đắk Mi 4
-    3:  { MNC:205.0, MNDBT:222.5, MNGC:224.0, crest:225.0, totalVol:510.8, deadVol: 276.8, floodVol: 70, turbines:2, capacity:156 }, // Sông Bung 4
-    4:  { MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:730.0, deadVol:215, floodVol:190, turbines:2, capacity:190 }, // Sông Tranh 2
-    7:  { MNC:130.0, MNDBT:138.0, MNGC:139.0, crest:140.0, totalVol: 20, deadVol:  5, floodVol:  8, turbines:1, capacity: 16 }, // Sông Bung 4A
-    8:  { MNC:175.0, MNDBT:185.0, MNGC:186.5, crest:187.5, totalVol:100, deadVol: 28, floodVol: 30, turbines:2, capacity: 50 }, // Sông Bung 5
-    9:  { MNC:330.0, MNDBT:340.0, MNGC:342.0, crest:343.0, totalVol:250, deadVol: 70, floodVol: 60, turbines:2, capacity:100 }, // Sông Bung 2
-    11: { MNC: 93.0, MNDBT:100.0, MNGC:101.0, crest:102.0, totalVol: 50, deadVol: 12, floodVol: 15, turbines:1, capacity: 30 }, // Sông Bung 6
-    12: { MNC: 60.0, MNDBT: 65.0, MNGC: 66.0, crest: 67.0, totalVol: 60, deadVol: 15, floodVol: 18, turbines:2, capacity: 60 }, // Sông Tranh 3
-    13: { MNC:150.0, MNDBT:160.0, MNGC:161.5, crest:162.5, totalVol:130, deadVol: 35, floodVol: 40, turbines:2, capacity: 90 }, // Za Hung
-    14: { MNC:340.0, MNDBT:352.0, MNGC:353.5, crest:354.5, totalVol: 70, deadVol: 18, floodVol: 20, turbines:1, capacity: 30 }, // Đắk Mi 3
-    15: { MNC: 18.0, MNDBT: 24.0, MNGC: 25.0, crest: 26.0, totalVol: 35, deadVol:  8, floodVol: 10, turbines:1, capacity: 30 }, // Khe Diên
-    16: { MNC:320.0, MNDBT:334.0, MNGC:335.5, crest:336.5, totalVol: 90, deadVol: 22, floodVol: 25, turbines:2, capacity: 60 }, // Sông Côn 2
-    17: { MNC: 53.0, MNDBT: 58.0, MNGC: 59.0, crest: 60.0, totalVol: 40, deadVol: 10, floodVol: 12, turbines:1, capacity: 40 }, // Sông Tranh 4
-    19: { MNC:153.0, MNDBT:162.0, MNGC:163.0, crest:164.0, totalVol: 45, deadVol: 12, floodVol: 15, turbines:1, capacity: 35 }, // Đắk Mi 4C
+    1:  { MNC:340.0, MNDBT:380.0, MNGC:381.0, crest:382.0, totalVol:343.5, deadVol: 77.5, floodVol: 80, turbines:2, capacity:210, maxTurbineFlow:320 }, // A Vương
+    2:  { MNC:225.0, MNDBT:258.0, MNGC:260.5, crest:261.5, totalVol:312.3, deadVol: 97, floodVol: 80, turbines:3, capacity:208, maxTurbineFlow:280 }, // Đắk Mi 4
+    3:  { MNC:205.0, MNDBT:222.5, MNGC:224.0, crest:225.0, totalVol:510.8, deadVol: 276.8, floodVol: 70, turbines:2, capacity:156, maxTurbineFlow:330 }, // Sông Bung 4
+    4:  { MNC:158.0, MNDBT:175.0, MNGC:176.5, crest:177.0, totalVol:730.0, deadVol:215, floodVol:190, turbines:2, capacity:190, maxTurbineFlow:380 }, // Sông Tranh 2
+    7:  { MNC:130.0, MNDBT:138.0, MNGC:139.0, crest:140.0, totalVol: 20, deadVol:  5, floodVol:  8, turbines:1, capacity: 16, maxTurbineFlow: 40 }, // Sông Bung 4A
+    8:  { MNC:175.0, MNDBT:185.0, MNGC:186.5, crest:187.5, totalVol:100, deadVol: 28, floodVol: 30, turbines:2, capacity: 50, maxTurbineFlow:130 }, // Sông Bung 5
+    9:  { MNC:330.0, MNDBT:340.0, MNGC:342.0, crest:343.0, totalVol:250, deadVol: 70, floodVol: 60, turbines:2, capacity:100, maxTurbineFlow:185 }, // Sông Bung 2
+    11: { MNC: 93.0, MNDBT:100.0, MNGC:101.0, crest:102.0, totalVol: 50, deadVol: 12, floodVol: 15, turbines:1, capacity: 30, maxTurbineFlow: 95 }, // Sông Bung 6
+    12: { MNC: 60.0, MNDBT: 65.0, MNGC: 66.0, crest: 67.0, totalVol: 60, deadVol: 15, floodVol: 18, turbines:2, capacity: 60, maxTurbineFlow:215 }, // Sông Tranh 3
+    13: { MNC:150.0, MNDBT:160.0, MNGC:161.5, crest:162.5, totalVol:130, deadVol: 35, floodVol: 40, turbines:2, capacity: 90, maxTurbineFlow:175 }, // Za Hung
+    14: { MNC:340.0, MNDBT:352.0, MNGC:353.5, crest:354.5, totalVol: 70, deadVol: 18, floodVol: 20, turbines:1, capacity: 30, maxTurbineFlow: 50 }, // Đắk Mi 3
+    15: { MNC: 18.0, MNDBT: 24.0, MNGC: 25.0, crest: 26.0, totalVol: 35, deadVol:  8, floodVol: 10, turbines:1, capacity: 30, maxTurbineFlow:225 }, // Khe Diên
+    16: { MNC:320.0, MNDBT:334.0, MNGC:335.5, crest:336.5, totalVol: 90, deadVol: 22, floodVol: 25, turbines:2, capacity: 60, maxTurbineFlow:100 }, // Sông Côn 2
+    17: { MNC: 53.0, MNDBT: 58.0, MNGC: 59.0, crest: 60.0, totalVol: 40, deadVol: 10, floodVol: 12, turbines:1, capacity: 40, maxTurbineFlow:150 }, // Sông Tranh 4
+    19: { MNC:153.0, MNDBT:162.0, MNGC:163.0, crest:164.0, totalVol: 45, deadVol: 12, floodVol: 15, turbines:1, capacity: 35, maxTurbineFlow: 75 }, // Đắk Mi 4C
 };
 function getLakeConst(id) { return LAKE_CONSTANTS[Number(id)] || null; }
 
 // ─── Animated Dam Cross-Section (SVG) ─────────────────────────────────────────
-function DamCrossSection({ htl, qvao, luuluongxa, lakeId }) {
+function DamCrossSection({ htl, qvao, luuluongxa, lakeId, maxTurbineFlow: maxTurbFlowProp }) {
     const c = getLakeConst(lakeId);
+    if (!c) return (
+        <div className="flex items-center justify-center h-full text-slate-400 text-xs text-center p-4">
+            Chưa có thông số kỹ thuật cho hồ này
+        </div>
+    );
     const SVG_W = 380, SVG_H = 270;
     // Vertical mapping: MNC → y=235, crest → y=38
     const yRange = 235 - 38;
@@ -140,8 +145,14 @@ function DamCrossSection({ htl, qvao, luuluongxa, lakeId }) {
     const waterColor = isFlood ? "#ef4444" : isWarn ? "#f59e0b" : "#3b82f6";
     const waterAlpha = isFlood ? 0.75 : 0.6;
 
-    // Gate opening: proportional to release flow
-    const gateOpen  = qvao > 0 ? Math.min(28, (luuluongxa / Math.max(qvao, 1)) * 28) : 0;
+    // luuluongxa từ API Danang = lưu lượng xả qua cửa/tràn (spillway discharge)
+    // qmay = turbine flow = min(luuluongxa, maxTurbineFlow) — hiển thị riêng ở turbine
+    const maxTurb = maxTurbFlowProp ?? c?.maxTurbineFlow ?? luuluongxa;
+    const qtran = luuluongxa;                          // toàn bộ xả là qua tràn/cửa van
+    const qmay  = Math.min(luuluongxa, maxTurb);       // phần qua tuabin
+
+    // Gate opening proportional to discharge flow
+    const gateOpen  = luuluongxa > 0 ? Math.min(28, Math.max(6, (luuluongxa / Math.max(maxTurb * 0.5, luuluongxa, 1)) * 28)) : 0;
 
     // All y-coordinates: ground=245, crest=40, yRange=205
     // Upstream: x=0..214  |  Dam: trapezoid  |  Downstream: x=258..380
@@ -219,17 +230,66 @@ function DamCrossSection({ htl, qvao, luuluongxa, lakeId }) {
             <rect x="150" y="28" width="66" height="13" rx="3" fill="#f1f5f9" opacity="0.85" />
             <text x="183" y="38" fontSize="8.5" fill="#475569" textAnchor="middle" fontWeight="bold">Đỉnh đập {c.crest}m</text>
 
-            {/* ── Spillway gate + animated jet ── */}
-            {gateOpen > 0 && (
-                <g>
-                    <rect x={DAM_BR} y={GROUND - gateOpen} width="7" height={gateOpen}
-                        fill="#ef4444" opacity="0.85" rx="1" />
-                    <path d={`M${DAM_BR+7},${GROUND - gateOpen*0.6} Q${DAM_BR+30},${GROUND - gateOpen*0.3} ${DAM_BR+70},${GROUND-2}`}
-                        fill="none" stroke="#7dd3fc" strokeWidth="3.5" strokeDasharray="7 4" opacity="0.85">
-                        <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="0.7s" repeatCount="indefinite" />
-                    </path>
-                </g>
-            )}
+            {/* ── Spillway gate (cửa xả tràn) — hiển thị khi có xả ── */}
+            {luuluongxa > 0 && (() => {
+                // Vị trí cửa xả: trên mặt đập phía hạ lưu, gần đỉnh
+                const gateH = Math.min(22, Math.max(8, gateOpen));
+                const gateY = 50;   // y-start của cửa (gần đỉnh đập)
+                const gateX = DAM_TR - 3; // bên mặt hạ lưu đập
+                return (
+                    <g>
+                        {/* Khung cửa van */}
+                        <rect x={gateX} y={gateY} width="9" height={gateH + 4}
+                            fill="#94a3b8" opacity="0.9" rx="1" />
+                        {/* Cửa van (màu đỏ = đang mở) */}
+                        <rect x={gateX + 1} y={gateY + 2} width="7" height={gateH}
+                            fill="#ef4444" opacity="0.92" rx="1" />
+                        {/* Highlight cửa */}
+                        <rect x={gateX + 2} y={gateY + 3} width="2" height={gateH - 2}
+                            fill="white" opacity="0.3" rx="0.5" />
+                    </g>
+                );
+            })()}
+
+            {/* ── Đường nước cong chảy qua tràn — luôn hiển thị khi luuluongxa > 0 ── */}
+            {luuluongxa > 0 && (() => {
+                // Điểm bắt đầu: đỉnh đập phía hạ lưu (DAM_TR, 40)
+                // Đường cong: từ mặt đập → xuống hạ lưu theo đường cong tự nhiên
+                const sx = DAM_TR;
+                const sy = 42;
+                const ex = DAM_BR + 22;
+                const ey = GROUND - 18;
+                // Control points tạo đường cong mượt mà
+                const cx1 = DAM_TR + 6;
+                const cy1 = 85;
+                const cx2 = DAM_TR + 20;
+                const cy2 = 165;
+                const w1 = Math.min(6, 2.5 + luuluongxa / 40);
+                const w2 = Math.min(4, 1.5 + luuluongxa / 60);
+                return (
+                    <g>
+                        {/* Đường nước chính */}
+                        <path d={`M${sx},${sy} C${cx1},${cy1} ${cx2},${cy2} ${ex},${ey}`}
+                            fill="none" stroke="#7dd3fc" strokeWidth={w1} opacity="0.9" strokeLinecap="round">
+                            <animate attributeName="stroke-dasharray"
+                                values={`0 300;${w1*20} ${w1*8};0 300`}
+                                dur="1s" repeatCount="indefinite" />
+                        </path>
+                        {/* Đường nước phụ (offset nhỏ để tạo chiều rộng) */}
+                        <path d={`M${sx+3},${sy+2} C${cx1+4},${cy1+8} ${cx2+5},${cy2+5} ${ex+6},${ey+2}`}
+                            fill="none" stroke="#38bdf8" strokeWidth={w2} opacity="0.6" strokeLinecap="round">
+                            <animate attributeName="stroke-dasharray"
+                                values={`0 300;${w2*18} ${w2*6};0 300`}
+                                dur="1.3s" repeatCount="indefinite" />
+                        </path>
+                        {/* Label Vận xả tràn */}
+                        <rect x={DAM_TR + 12} y={90} width="72" height="18" rx="4" fill="#0284c7" opacity="0.92" />
+                        <text x={DAM_TR + 48} y={103} fontSize="7.5" fill="white" textAnchor="middle" fontWeight="bold">
+                            Vận xả tràn: {qtran.toFixed(0)} m³/s
+                        </text>
+                    </g>
+                );
+            })()}
 
             {/* ── Downstream water (tail water) ── */}
             <rect x={DOWN_X} y={GROUND - 22} width={SVG_W - DOWN_X} height="22" fill="url(#downGrad)" rx="0" />
@@ -242,12 +302,12 @@ function DamCrossSection({ htl, qvao, luuluongxa, lakeId }) {
             <circle cx={DOWN_X + 20} cy={GROUND - 11} r="10" fill="#1e3a8a" opacity="0.9" />
             <text x={DOWN_X + 20} y={GROUND - 7} fontSize="11" fill="white" textAnchor="middle" fontWeight="bold">⚙</text>
 
-            {/* ── Q xả label ── */}
-            {luuluongxa > 0 && (
+            {/* ── Q chạy máy label ── */}
+            {qmay > 0 && (
                 <g>
-                    <rect x={DOWN_X + 34} y={GROUND - 42} width="76" height="17" rx="4" fill="#ef4444" opacity="0.9" />
-                    <text x={DOWN_X + 72} y={GROUND - 30} fontSize="8.5" fill="white" textAnchor="middle" fontWeight="bold">
-                        Xả: {luuluongxa.toFixed(0)} m³/s
+                    <rect x={DOWN_X + 34} y={GROUND - 42} width="82" height="17" rx="4" fill="#1e3a8a" opacity="0.9" />
+                    <text x={DOWN_X + 75} y={GROUND - 30} fontSize="8" fill="white" textAnchor="middle" fontWeight="bold">
+                        Chạy máy: {qmay.toFixed(0)} m³/s
                     </text>
                 </g>
             )}
@@ -265,7 +325,7 @@ function DamCrossSection({ htl, qvao, luuluongxa, lakeId }) {
                     </path>
                     <rect x="2" y="154" width="58" height="15" rx="3" fill="#f59e0b" opacity="0.9" />
                     <text x="31" y="165" fontSize="8" fill="white" textAnchor="middle" fontWeight="bold">
-                        Q: {qvao.toFixed(0)} m³/s
+                        Q đến: {qvao.toFixed(0)} m³/s
                     </text>
                 </g>
             )}
@@ -783,7 +843,7 @@ export default function OperationDashboard({ lakeId }) {
                 <div className="w-full xl:w-[30%] flex flex-col gap-3">
 
                     {/* ── Dam cross-section card ── */}
-                    {(() => {
+                    {c && (() => {
                         // Dùng c từ component scope (lakeSpec từ DB, fallback LAKE_CONSTANTS)
                         const fillPct = volumeInfo?.fill_pct ??
                             Math.max(0, Math.min(100, ((latestHydro.htl - c.MNC) / (c.crest - c.MNC)) * 100));
@@ -815,6 +875,7 @@ export default function OperationDashboard({ lakeId }) {
                                         qvao={latestHydro.qvao}
                                         luuluongxa={latestHydro.luuluongxa}
                                         lakeId={lakeId || selectedReservoir}
+                                        maxTurbineFlow={c?.max_turbine_flow ?? c?.maxTurbineFlow}
                                     />
                                 </div>
 
@@ -822,7 +883,7 @@ export default function OperationDashboard({ lakeId }) {
                                 <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
                                     {[
                                         { label: "Mực nước", val: `${latestHydro.htl.toFixed(2)} m`, color: "text-blue-700", bg: "bg-blue-50" },
-                                        { label: "Q vào",   val: `${latestHydro.qvao.toFixed(1)} m³/s`, color: "text-amber-600", bg: "bg-amber-50" },
+                                        { label: "Q đến",   val: `${latestHydro.qvao.toFixed(1)} m³/s`, color: "text-amber-600", bg: "bg-amber-50" },
                                         { label: "Q xả",    val: `${latestHydro.luuluongxa.toFixed(1)} m³/s`, color: "text-red-600", bg: "bg-red-50" },
                                     ].map(({ label, val, color, bg }) => (
                                         <div key={label} className={`${bg} px-2 py-2 text-center`}>
@@ -865,7 +926,7 @@ export default function OperationDashboard({ lakeId }) {
                     })()}
 
                     {/* ── Operational thresholds card ── */}
-                    {(() => {
+                    {c && (() => {
                         const htl = latestHydro.htl;
                         return (
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -1053,7 +1114,7 @@ export default function OperationDashboard({ lakeId }) {
                     })()}
 
                     {/* ── Generator / Power card ── */}
-                    {(() => {
+                    {c && (() => {
                         // Ưu tiên powerInfo từ API (tính chính xác), fallback tính local
                         const powerEst = powerInfo?.power_mw ??
                             Math.round((latestHydro.luuluongxa *
@@ -1207,7 +1268,7 @@ export default function OperationDashboard({ lakeId }) {
                                     {/* Actual water level — no animation to prevent chart thrashing */}
                                     <Line yAxisId="left" type="monotone" dataKey="waterLevel" name="Mực nước hồ (m)" stroke="#0ea5e9" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
                                     {/* Actual inflow */}
-                                    <Line yAxisId="left" type="monotone" dataKey="qIn" name="Lưu lượng vào (m³/s)" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3, fill: '#f59e0b' }} connectNulls isAnimationActive={false} />
+                                    <Line yAxisId="left" type="monotone" dataKey="qIn" name="Lưu lượng đến (m³/s)" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3, fill: '#f59e0b' }} connectNulls isAnimationActive={false} />
                                     {/* Actual outflow */}
                                     <Line yAxisId="left" type="monotone" dataKey="qOut" name="Lưu lượng xả (m³/s)" stroke="#ef4444" strokeWidth={2} dot={false} strokeDasharray="5 5" connectNulls isAnimationActive={false} />
 
@@ -1272,7 +1333,7 @@ export default function OperationDashboard({ lakeId }) {
                                     </div>
                                     <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
                                         <div className="text-amber-600 font-black text-base">{latestHydro.qvao.toFixed(1)}<span className="text-xs font-normal"> m³/s</span></div>
-                                        <div className="text-[10px] text-gray-500 mt-0.5">Q vào</div>
+                                        <div className="text-[10px] text-gray-500 mt-0.5">Q đến</div>
                                     </div>
                                     <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
                                         <div className="text-red-600 font-black text-base">{latestHydro.luuluongxa.toFixed(1)}<span className="text-xs font-normal"> m³/s</span></div>
@@ -1443,7 +1504,7 @@ export default function OperationDashboard({ lakeId }) {
                                 <table className="w-full text-[11px]">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-100">
-                                            {['Thời gian', 'Hồ', 'HTL (m)', 'Q vào', 'Q xả', 'Q đề xuất', 'Công suất', 'Z dự báo', 'Mức', 'Lý do'].map(h => (
+                                            {['Thời gian', 'Hồ', 'HTL (m)', 'Q đến', 'Q xả', 'Q đề xuất', 'Công suất', 'Z dự báo', 'Mức', 'Lý do'].map(h => (
                                                 <th key={h} className="px-3 py-2 text-left font-black text-slate-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                                             ))}
                                         </tr>

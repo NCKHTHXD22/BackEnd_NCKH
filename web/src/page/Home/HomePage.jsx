@@ -169,7 +169,7 @@ export default function HomePage() {
                     type: 'inflow',
                     level: res.Q_to_Lake > 200 ? 'danger' : 'warning',
                     title: `Lưu lượng đến hồ ${lakeName} cao`,
-                    detail: `Q vào: ${res.Q_to_Lake} m³/s`,
+                    detail: `Q đến: ${res.Q_to_Lake} m³/s`,
                     time: res.lastUpdate,
                 });
             }

@@ -11,7 +11,7 @@ import {
 import axiosClient from "../../api/axiosClient";
 
 // ── Flood events ───────────────────────────────────────────────────────────────
-// peakFlow: đỉnh Q vào (m³/s) | peakRelease: đỉnh Q xả (m³/s) | peakHTL: đỉnh mực nước (m)
+// peakFlow: đỉnh Q đến (m³/s) | peakRelease: đỉnh Q xả (m³/s) | peakHTL: đỉnh mực nước (m)
 const FLOOD_EVENTS = [
     { id: "tranh2_oct2025", label: "Lũ Sông Tranh 2 (21–31/10/2025)", start: "2025-10-21", end: "2025-10-31", peak: "2025-10-26", desc: "2 đợt đỉnh: 4 480 m³/s (26/10) & 4 050 m³/s (29/10)", peakFlow: 4480, peakRelease: 4950, peakHTL: 174.2 },
     { id: "lu2025_1",       label: "Đợt lũ T9/2025 (Bão số 4)",       start: "2025-09-10", end: "2025-09-25", peak: "2025-09-16", desc: "Bão số 4, mưa lớn kéo dài — đỉnh ~2 600 m³/s",       peakFlow: 2600, peakRelease: 2100, peakHTL: 171.5 },
@@ -242,7 +242,7 @@ const MarkerLabel = ({ viewBox, data }) => {
                     <div style={{ fontWeight: 900, color: '#6d28d9', marginBottom: 4, borderBottom: '1px solid #ede9fe', paddingBottom: 3, display: 'flex', justifyContent: 'space-between' }}>
                         <span>🕐 {data.shortLabel}</span>
                     </div>
-                    <div style={{ color: '#d97706' }}>Q vào: <b>{data.qvao ?? '–'}</b> m³/s</div>
+                    <div style={{ color: '#d97706' }}>Q đến: <b>{data.qvao ?? '–'}</b> m³/s</div>
                     <div style={{ color: '#dc2626' }}>Q xả: <b>{data.luuluongxa ?? '–'}</b> m³/s</div>
                     <div style={{ color: '#2563eb' }}>LSTM P50: <b>{data.lstm_p50 ?? '–'}</b> m³/s</div>
                     <div style={{ color: '#0891b2', fontSize: '10px', marginTop: 2 }}>
@@ -587,7 +587,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                 label={{ value: "Z (m)", angle: 90, position: "insideRight", fontSize: 10, fill: "#0ea5e9", dx: 8 }} />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} iconType="circle" />
-                                            <Area yAxisId="q" type="monotone" dataKey="qvao" name="Q vào (m³/s)" stroke="#f59e0b" strokeWidth={2.5}
+                                            <Area yAxisId="q" type="monotone" dataKey="qvao" name="Q đến (m³/s)" stroke="#f59e0b" strokeWidth={2.5}
                                                 fill="url(#gradQ)" dot={false} />
                                             <Line yAxisId="q" type="monotone" dataKey="luuluongxa" name="Q xả (m³/s)" stroke="#ef4444"
                                                 strokeWidth={2} dot={false} strokeDasharray="5 3" />
@@ -603,7 +603,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                             {histData.length > 0 && (
                                 <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100">
                                     {[
-                                        ["Q vào max", `${Math.max(...histData.map(d => d.qvao)).toFixed(0)} m³/s`, "text-amber-600 bg-amber-50 border-amber-200"],
+                                        ["Q đến max", `${Math.max(...histData.map(d => d.qvao)).toFixed(0)} m³/s`, "text-amber-600 bg-amber-50 border-amber-200"],
                                         ["Q xả max", `${Math.max(...histData.map(d => d.luuluongxa)).toFixed(0)} m³/s`, "text-red-600 bg-red-50 border-red-200"],
                                         ["Mực nước max", `${Math.max(...histData.map(d => d.htl)).toFixed(2)} m`, "text-blue-600 bg-blue-50 border-blue-200"],
                                         ["Tổng số điểm", `${histData.length} giờ`, "text-slate-600 bg-slate-50 border-slate-200"],
@@ -688,7 +688,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                 strokeWidth={1.5} strokeDasharray="4 3" fill="#ffffff"
                                                 dot={false} legendType="line" isAnimationActive={false} connectNulls={false} />
 
-                                            {/* Q vào — filled area */}
+                                            {/* Q đến — filled area */}
                                             <Area type="monotone" dataKey="qvao" name="Q Thực tế (m³/s)" stroke="#f59e0b"
                                                 strokeWidth={2.5} fill="url(#gradQinSim)" dot={false} isAnimationActive={false} connectNulls={false} />
 
@@ -726,7 +726,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                             {/* Summary stats row */}
                             <div className="grid grid-cols-4 gap-3">
                                 {[
-                                    ["Đỉnh Q vào", `${peakQin} m³/s`, "bg-amber-50 border-amber-200 text-amber-700"],
+                                    ["Đỉnh Q đến", `${peakQin} m³/s`, "bg-amber-50 border-amber-200 text-amber-700"],
                                     ["Đỉnh Q xả TT", `${peakQxa} m³/s`, "bg-red-50 border-red-200 text-red-600"],
                                     ["Cắt lũ TT", `${cutPct}%`, Number(cutPct) >= 20 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-600"],
                                     ["Tổng thời gian", `${simData.length}h`, "bg-slate-50 border-slate-200 text-slate-600"],
@@ -791,7 +791,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                     {/* Các giá trị */}
                                     <div className="space-y-2">
                                         {[
-                                            { label: "Q vào", val: simData[playIndex]?.qvao, unit: "m³/s", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", bar: "bg-amber-400", max: peakQin },
+                                            { label: "Q đến", val: simData[playIndex]?.qvao, unit: "m³/s", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", bar: "bg-amber-400", max: peakQin },
                                             { label: "Q xả TT", val: simData[playIndex]?.luuluongxa, unit: "m³/s", color: "text-red-600", bg: "bg-red-50 border-red-200", bar: "bg-red-400", max: peakQin },
                                             { label: "LSTM P50", val: simData[playIndex]?.lstm_p50, unit: "m³/s", color: "text-blue-700", bg: "bg-blue-50 border-blue-200", bar: "bg-blue-400", max: peakQin },
                                             { label: "LSTM P10", val: simData[playIndex]?.lstm_p10, unit: "m³/s", color: "text-sky-600", bg: "bg-sky-50 border-sky-200", bar: "bg-sky-300", max: peakQin },
@@ -1058,7 +1058,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                                 {[
-                                    ["Đỉnh Q vào", `${peakQin} m³/s`, "bg-amber-50 border-amber-200 text-amber-700"],
+                                    ["Đỉnh Q đến", `${peakQin} m³/s`, "bg-amber-50 border-amber-200 text-amber-700"],
                                     ["Cắt lũ thực tế", `${cutPct}%`, Number(cutPct) >= 20 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-orange-50 border-orange-200 text-orange-600"],
                                     ["Cắt lũ tối ưu đề xuất", `${optCutPct}%`, "bg-blue-50 border-blue-200 text-blue-700"],
                                     ["Cải thiện thêm", `${(Number(optCutPct) - Number(cutPct)).toFixed(1)}%`, "bg-purple-50 border-purple-200 text-purple-700"],
@@ -1075,7 +1075,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                 <p className="font-black text-amber-300 mb-2 flex items-center gap-2 text-base">
                                     <Info size={16} /> KẾT LUẬN — {evalEvent.label}
                                 </p>
-                                <p>• Đỉnh lũ Q vào: <strong className="text-amber-300">{peakQin} m³/s</strong> — {evalEvent.desc}</p>
+                                <p>• Đỉnh lũ Q đến: <strong className="text-amber-300">{peakQin} m³/s</strong> — {evalEvent.desc}</p>
                                 <p>• Vận hành thực tế cắt lũ: <strong className="text-emerald-300">{cutPct}%</strong> (Q xả max = {peakQxa} m³/s)</p>
                                 <p>• LSTM sai số: <strong className="text-cyan-300">MAE = {metrics?.mae ?? "–"} m³/s</strong> — {Number(metrics?.nse) > 0.7 ? "✅ Đủ tin cậy hỗ trợ vận hành" : "⚠️ Cần thêm dữ liệu cải thiện độ chính xác"}</p>
                                 <p>• Vận hành tối ưu theo đề xuất: cắt lũ thêm <strong className="text-yellow-300">~{(Number(optCutPct) - Number(cutPct)).toFixed(1)}%</strong></p>
@@ -1092,7 +1092,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         <table className="w-full text-xs">
                                             <thead>
                                                 <tr className="bg-slate-700 text-white">
-                                                    {["Thời gian", "Q vào", "Q xả TT", "Q xả TƯ", "Cắt lũ TT", "Cắt lũ TƯ", "Z dự báo (m)"].map(h => (
+                                                    {["Thời gian", "Q đến", "Q xả TT", "Q xả TƯ", "Cắt lũ TT", "Cắt lũ TƯ", "Z dự báo (m)"].map(h => (
                                                         <th key={h} className="px-3 py-2.5 text-left font-bold whitespace-nowrap">{h}</th>
                                                     ))}
                                                 </tr>
