@@ -54,12 +54,15 @@ const SignInScreen = () => {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace("/(tab)"); // ✅ chuyển sang màn hình chính
       } else {
-        Alert.alert("Error", "Sign in failed. Please try again.");
-        console.error(JSON.stringify(signInAttempt, null, 2));
+        Alert.alert("Lỗi đăng nhập", "Không thể đăng nhập. Vui lòng thử lại.");
       }
     } catch (err) {
-      Alert.alert("Error", err.errors?.[0]?.message || "Sign in failed");
-      console.error(JSON.stringify(err, null, 2));
+      const errorCode = err.errors?.[0]?.code;
+      if (errorCode === "form_identifier_not_found" || errorCode === "form_password_incorrect") {
+        Alert.alert("Thất bại", "Tài khoản hoặc mật khẩu không chính xác.");
+      } else {
+        Alert.alert("Lỗi", "Đã xảy ra lỗi mạng hoặc hệ thống. Vui lòng thử lại.");
+      }
     } finally {
       setLoading(false);
     }
