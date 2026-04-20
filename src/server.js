@@ -42,12 +42,13 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // 10MB cho batch upload forecast
-// Clerk middleware: chỉ bật khi có key (tránh crash trên Render nếu chưa cấu hình)
-if (process.env.CLERK_PUBLISHABLE_KEY) {
-    const { clerkMiddleware } = await import('@clerk/express');
-    app.use(clerkMiddleware());
-    console.log('✅ Clerk middleware enabled');
-}
+// Clerk middleware: Bắt buộc cấu hình fallback key nếu Render chưa set Environment Variable
+const { clerkMiddleware } = await import('@clerk/express');
+app.use(clerkMiddleware({
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY || 'pk_test_YmFsYW5jZWQtY2hpY2tlbi0zLmNsZXJrLmFjY291bnRzLmRldiQ',
+    secretKey: process.env.CLERK_SECRET_KEY || 'sk_test_5Hjv2P8a90Wv9HQjsAt85MWIEcrpszKWrJzX44xV2z'
+}));
+console.log('✅ Clerk middleware enabled');
 app.use(logger);
 
 // Database
