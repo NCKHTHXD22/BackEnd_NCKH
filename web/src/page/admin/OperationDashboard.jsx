@@ -150,7 +150,8 @@ function DamCrossSection({ htl, qvao, luuluongxa, q_turbine, q_spillway, lakeId,
     const qmay  = q_turbine  ?? 0;
 
     // Gate opening proportional to discharge flow
-    const gateOpen  = luuluongxa > 0 ? Math.min(28, Math.max(6, (luuluongxa / Math.max(maxTurb * 0.5, luuluongxa, 1)) * 28)) : 0;
+    const maxTurb  = maxTurbFlowProp ?? c?.maxTurbineFlow ?? luuluongxa;
+    const gateOpen = luuluongxa > 0 ? Math.min(28, Math.max(6, (luuluongxa / Math.max(maxTurb * 0.5, luuluongxa, 1)) * 28)) : 0;
 
     // All y-coordinates: ground=245, crest=40, yRange=205
     // Upstream: x=0..214  |  Dam: trapezoid  |  Downstream: x=258..380
