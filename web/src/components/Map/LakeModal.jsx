@@ -63,20 +63,22 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const [forecastHistory, setForecastHistory] = useState([]);
     const [realLstmData, setRealLstmData] = useState([]);
     const [realHistoryData, setRealHistoryData] = useState([]);
+    const [rainLakeHistory, setRainLakeHistory] = useState([]);
 
     // Fetch real data on load and when switching to forecast
     useEffect(() => {
         const fetchData = async () => {
             if (!lakeId) return;
             try {
-                // Fetch 48h history even for overview (useful)
-                const history = await mapApi.getInflowHistory(lakeId).catch(() => []);
+                const [history, rainHistory] = await Promise.all([
+                    mapApi.getInflowHistory(lakeId).catch(() => []),
+                    mapApi.getRainLakeHistory(lakeId).catch(() => []),
+                ]);
                 setRealHistoryData(history);
+                setRainLakeHistory(Array.isArray(rainHistory) ? rainHistory : []);
 
-                // Fetch real LSTM if in forecast tab
                 if (activeTab === 'forecast' && selectedModel === 'lstm') {
                     const lstm = await mapApi.getForecastLstm(lakeId).catch(() => null);
-                    // Handle object with predictions property
                     if (lstm && lstm.predictions) {
                         setRealLstmData(lstm.predictions);
                     } else if (Array.isArray(lstm)) {
@@ -171,17 +173,31 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     return key === targetHourKey;
                 }) : null;
 
-            // Actual value at this hour (used for past + isNow connection)
             const actualQvao = realPoint ? realPoint.qvao : null;
+
+            // Match rain from rainLakeHistory by hour
+            const rainPoint = rainLakeHistory.find(d => {
+                const dt = new Date(d.timestamp);
+                const key = dt.getFullYear() + '-' +
+                    String(dt.getMonth()).padStart(2, '0') + '-' +
+                    String(dt.getDate()).padStart(2, '0') + 'T' +
+                    String(dt.getHours()).padStart(2, '0');
+                return key === targetHourKey;
+            });
+            const stationRain = rainPoint ? (rainPoint.sumDepth || 0) : 0;
+
+            // Forecast rain: use rain from LSTM prediction if available
+            const forecastRain = realPred ? (realPred.rain_forecast || realPred.rain || 0) : 0;
+            const rainVal = isFuture ? forecastRain : stationRain;
+
+            // BestMatch = average of all sources (currently only station; extend later)
+            const bestMatchRain = rainVal;
 
             const dataPoint = {
                 time: label,
                 fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
-                isFuture: isFuture,
-                // Past + isNow: use real measurement
+                isFuture,
                 qActual: !isFuture ? actualQvao : null,
-                // isNow: forecast band starts from actual value → smooth visual connection
-                // Future: LSTM prediction (qvao_forecast = P50 in DB schema)
                 p50: isNow
                     ? actualQvao
                     : (isFuture ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null),
@@ -191,7 +207,14 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 p90: isNow
                     ? actualQvao
                     : (isFuture ? (realPred ? realPred.p90 : null) : null),
-                rain: realPoint ? (realPoint.rain || 0) : 0
+                rain: rainVal,
+                rain_station: stationRain,
+                rain_bestmatch: bestMatchRain,
+                // Placeholder slots for future NWP sources
+                rain_ecmwf: null,
+                rain_gfs: null,
+                rain_jma: null,
+                rain_icon: null,
             };
 
             result.push(dataPoint);
@@ -522,12 +545,15 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     tick={{ fontSize: 12, fill: '#6B7280' }} 
                                                     label={{ value: 'Lưu lượng Q (m³/s)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 13, fontWeight: 'bold' } }} 
                                                 />
-                                                <YAxis 
-                                                    yAxisId="rain" 
-                                                    orientation="right" 
-                                                    reversed={true} 
-                                                    domain={[0, 150]} 
-                                                    hide={true} 
+                                                <YAxis
+                                                    yAxisId="rain"
+                                                    orientation="right"
+                                                    reversed={true}
+                                                    domain={[0, 80]}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fontSize: 10, fill: '#0891b2' }}
+                                                    label={{ value: 'Mưa (mm)', angle: 90, position: 'insideRight', offset: 12, style: { textAnchor: 'middle', fill: '#0891b2', fontSize: 11, fontWeight: 'bold' } }}
                                                 />
                                                 <RechartsTooltip content={({ active, payload, label }) => {
                                                     if (active && payload && payload.length) {
@@ -564,14 +590,27 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     label={{ value: "Hiện tại", fill: '#ef4444', fontSize: 10, fontWeight: 'bold', position: 'top' }} 
                                                 />
                                                 
-                                                {/* Rainfall Bar Chart (Inverted) */}
+                                                {/* Rainfall bars — inverted (reversed axis → bars go down from top) */}
                                                 {selectedRainSource === 'bestmatch' ? (
-                                                    // Stacked Rain bars for all sources
-                                                    RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
-                                                        <Bar key={`rain_${src.id}`} yAxisId="rain" dataKey={`rain_${src.id}`} fill={src.color} name={`Mưa (${src.label})`} barSize={15} opacity={0.6} />
-                                                    ))
+                                                    <>
+                                                        {/* Individual sources (có data hiện màu, không có data thì không vẽ) */}
+                                                        {RAIN_SOURCES.filter(s => s.id !== 'bestmatch' && s.id !== 'station').map(src => (
+                                                            <Bar key={`rain_${src.id}`} yAxisId="rain" dataKey={`rain_${src.id}`} fill={src.color} name={`Mưa ${src.label}`} barSize={6} opacity={0.5} />
+                                                        ))}
+                                                        {/* Station — luôn có data */}
+                                                        <Bar yAxisId="rain" dataKey="rain_station" fill="#2563eb" name="Mưa Trạm đo" barSize={8} opacity={0.55} />
+                                                        {/* BestMatch = trung bình — thanh đậm hơn */}
+                                                        <Bar yAxisId="rain" dataKey="rain_bestmatch" fill="#7c3aed" name="Mưa BestMatch (TB)" barSize={10} opacity={0.85} />
+                                                    </>
                                                 ) : (
-                                                    <Bar yAxisId="rain" dataKey="rain" fill={RAIN_SOURCES.find(s => s.id === selectedRainSource)?.color || "#3b82f6"} name="Lượng mưa (mm)" barSize={15} opacity={0.6} />
+                                                    <Bar
+                                                        yAxisId="rain"
+                                                        dataKey={`rain_${selectedRainSource}`}
+                                                        fill={RAIN_SOURCES.find(s => s.id === selectedRainSource)?.color || '#2563eb'}
+                                                        name={`Mưa (${RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label || selectedRainSource}) (mm)`}
+                                                        barSize={12}
+                                                        opacity={0.7}
+                                                    />
                                                 )}
 
                                                 {/* Actual Flow */}
@@ -614,6 +653,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             <thead className="bg-[#f8fafc] text-gray-600 font-bold border-b text-[10px] uppercase tracking-wider">
                                                 <tr>
                                                     <th className="px-3 py-3">Giờ</th>
+                                                    <th className="px-2 py-3 text-center text-cyan-600">Mưa</th>
                                                     <th className="px-3 py-3 text-center">Min</th>
                                                     <th className="px-3 py-3 text-center">Avg</th>
                                                     <th className="px-3 py-3 text-center text-red-600">Max</th>
@@ -623,6 +663,11 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 {unifiedData.filter(d => d.isFuture).slice(0, 12).map((d, i) => (
                                                     <tr key={i} className={`border-b border-gray-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-gray-50/30' : ''}`}>
                                                         <td className="px-3 py-3 font-bold text-gray-700">{d.fullTime}</td>
+                                                        <td className="px-2 py-3 text-center text-cyan-600 font-medium">
+                                                            {(d.rain_bestmatch || d.rain || 0) > 0
+                                                                ? `${(d.rain_bestmatch || d.rain || 0).toFixed(1)}`
+                                                                : <span className="text-gray-300">—</span>}
+                                                        </td>
                                                         <td className="px-2 py-3 text-center text-blue-500 font-medium">{d.p10?.toFixed(1) || '0.0'}</td>
                                                         <td className="px-2 py-3 text-center font-bold text-gray-800">{d.p50?.toFixed(1) || '0.0'}</td>
                                                         <td className="px-2 py-3 text-center text-red-500 font-medium">{d.p90?.toFixed(1) || '0.0'}</td>
@@ -660,6 +705,10 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                         <span className="w-8 border-t-3 border-blue-600"></span>
                                         <span className="text-xs font-semibold text-gray-700">Khảo sát thực tế (đo được)</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-cyan-50 p-3 rounded-lg border border-cyan-100">
+                                        <span className="w-8 h-3 bg-violet-500 rounded opacity-80 inline-block"></span>
+                                        <span className="text-xs font-semibold text-cyan-700">Cột mưa (mm) — hướng xuống, trục phải</span>
                                     </div>
                                 </div>
                             </div>
