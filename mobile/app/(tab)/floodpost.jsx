@@ -128,7 +128,7 @@ export default function FloodPost() {
     const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const matches = WARDS_DA_NANG.filter(w =>
       w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalized)
-    ).slice(0, 5);
+    ).slice(0, 4);
     setFilteredWards(matches);
     setShowSuggestions(true);
   };
@@ -226,7 +226,7 @@ export default function FloodPost() {
                 value={ward}
                 onChangeText={handleWardChange}
                 onFocus={() => {
-                  setFilteredWards(WARDS_DA_NANG.slice(0, 5));
+                  setFilteredWards(WARDS_DA_NANG.slice(0, 4));
                   setShowSuggestions(true);
                 }}
                 style={[

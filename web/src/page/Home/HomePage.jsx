@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatLakeName } from '../../utils/lakeName';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, GeoJSON, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -108,6 +110,7 @@ function SidebarIcon({ icon, label, active, onClick, color }) {
 }
 
 export default function HomePage() {
+    const { t, i18n } = useTranslation();
     const position = [16.0544, 108.2022];
 
     const [rainStations, setRainStations] = useState([]);
@@ -237,7 +240,7 @@ export default function HomePage() {
                     {/* Default Center Marker */}
                     <Marker position={position}>
                         <Popup>
-                            Hệ thống hỗ trợ đưa ra quyết định (DSS) <br /> Trung tâm.
+                            {t('map.dssCenter')}
                         </Popup>
                     </Marker>
 
@@ -249,9 +252,9 @@ export default function HomePage() {
                         return (
                             <Marker key={`rain-${index}`} position={[lat, lng]} icon={rainIcon}>
                                 <Popup>
-                                    <strong>Trạm đo mưa: {station.name || 'Không tên'}</strong><br />
-                                    Lượng mưa: {station.sumDepth || 0} mm<br />
-                                    Tình trạng: {station.level || 'Bình thường'}
+                                    <strong>{t('map.rainStation')} {station.name || t('map.noName')}</strong><br />
+                                    {t('map.rainfall')} {station.sumDepth || 0} mm<br />
+                                    {t('map.status')} {station.level || t('map.normal')}
                                 </Popup>
                             </Marker>
                         )
@@ -265,8 +268,8 @@ export default function HomePage() {
                         return (
                             <Marker key={`wl-${index}`} position={[lat, lng]}>
                                 <Popup>
-                                    <strong>Trạm mực nước: {station.name || 'Không tên'}</strong><br />
-                                    Mực nước: {station.waterLevel || 0} m
+                                    <strong>{t('map.waterLevelStation')} {station.name || t('map.noName')}</strong><br />
+                                    {t('map.waterLevel')} {station.waterLevel || 0} m
                                 </Popup>
                             </Marker>
                         )
@@ -282,23 +285,23 @@ export default function HomePage() {
                             lng = resConfig.lon;
                         }
                         if (!lat || !lng) return null;
-                        const lakeName = res.name || res.Lake_Name || 'Không tên';
+                        const lakeName = formatLakeName(res.name || res.Lake_Name || 'Không tên', i18n.language);
 
                         return (
                             <Marker key={`res-${index}`} position={[lat, lng]} icon={reservoirIcon}>
                                 <Popup>
-                                    <div className="font-bold border-b pb-1 mb-1 text-blue-800">Hồ chứa: {lakeName}</div>
+                                    <div className="font-bold border-b pb-1 mb-1 text-blue-800">{t('map.reservoir')} {lakeName}</div>
                                     <div className="text-sm space-y-1">
-                                        <p><strong>Lưu lượng đến:</strong> <span className="text-blue-600">{res.Q_to_Lake || 0}</span> m³/s</p>
-                                        <p><strong>Lưu lượng xả:</strong> <span className="text-red-600">{res.Q_discharge || 0}</span> m³/s</p>
-                                        <p><strong>Mực nước TL:</strong> <span className="text-green-600">{res.WaterLevel_Upstream || 0}</span> m</p>
-                                        <p className="text-[10px] text-gray-400 pt-1 border-t">Cập nhật: {res.lastUpdate ? new Date(res.lastUpdate).toLocaleString('vi-VN') : 'N/A'}</p>
+                                        <p><strong>{t('map.inflow')}</strong> <span className="text-blue-600">{res.Q_to_Lake || 0}</span> m³/s</p>
+                                        <p><strong>{t('map.discharge')}</strong> <span className="text-red-600">{res.Q_discharge || 0}</span> m³/s</p>
+                                        <p><strong>{t('map.upstreamLevel')}</strong> <span className="text-green-600">{res.WaterLevel_Upstream || 0}</span> m</p>
+                                        <p className="text-[10px] text-gray-400 pt-1 border-t">{t('map.updatedAt')} {res.lastUpdate ? new Date(res.lastUpdate).toLocaleString('vi-VN') : 'N/A'}</p>
                                     </div>
                                     <button
                                         className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded text-sm transition-colors shadow-sm"
                                         onClick={() => setActiveLake({ id: res.Id_Lake, data: res })}
                                     >
-                                        Vận hành hồ
+                                        {t('map.manageReservoir')}
                                     </button>
                                 </Popup>
                                 <Tooltip direction="top" offset={[0, -20]} opacity={1}>

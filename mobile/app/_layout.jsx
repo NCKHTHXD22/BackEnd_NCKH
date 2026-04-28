@@ -6,6 +6,7 @@ import SafeScreen from "@/components/SafeScreen";
 import AnimatedSplash from "@/components/AnimatedSplash";
 import { useState, useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
+import { usePushNotifications } from "../lib/pushNotifications";
 
 // Giữ native splash cho đến khi sẵn sàng
 SplashScreen.preventAutoHideAsync();
@@ -14,6 +15,9 @@ const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function RootLayout() {
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+  
+  // Khởi tạo và xin quyền Push Notifications
+  const { expoPushToken } = usePushNotifications();
 
   useEffect(() => {
     // Ẩn native splash ngay khi RootLayout mount → chuyển sang animated splash

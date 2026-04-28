@@ -32,7 +32,7 @@ export default StyleSheet.create({
   },
   submitText: { color: "white", fontWeight: "bold" },
   suggestionsList: {
-    position: "absolute", top: 38, backgroundColor: "#fff",
+    position: "absolute", top: "100%", marginTop: 2, backgroundColor: "#fff",
     borderColor: "#ccc", borderWidth: 1,
     zIndex: 10, elevation: 10, width: "100%", maxHeight: 160,
   },

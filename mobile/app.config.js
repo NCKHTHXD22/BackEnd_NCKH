@@ -2,7 +2,7 @@ import "dotenv/config";
 
 export default {
   expo: {
-    name: "C-Life",
+    name: "AKTA-FLT",
     slug: "mobile",
     version: "1.0.0",
     orientation: "portrait",
@@ -19,7 +19,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/Logo.png",
+        foregroundImage: "./assets/images/AdaptiveIcon.png",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,

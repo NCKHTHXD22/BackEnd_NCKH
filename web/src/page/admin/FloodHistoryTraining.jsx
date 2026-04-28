@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { formatLakeName } from "../../utils/lakeName";
 import {
-    ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid,
+    ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from "recharts";
+import { fetchRainForecast, buildRainLabelMap, RAIN_SOURCES } from "../../api/openMeteoApi";
 import {
     Play, Pause, Square, Zap, BarChart3, TrendingUp, TrendingDown,
     CheckCircle, Clock, RefreshCw, ChevronLeft, ChevronRight,
@@ -12,12 +15,11 @@ import axiosClient from "../../api/axiosClient";
 
 // ── Flood events ───────────────────────────────────────────────────────────────
 // peakFlow: đỉnh Q đến (m³/s) | peakRelease: đỉnh Q xả (m³/s) | peakHTL: đỉnh mực nước (m)
-const FLOOD_EVENTS = [
-    { id: "tranh2_oct2025", label: "Lũ Sông Tranh 2 (21–31/10/2025)", start: "2025-10-21", end: "2025-10-31", peak: "2025-10-26", desc: "2 đợt đỉnh: 4 480 m³/s (26/10) & 4 050 m³/s (29/10)", peakFlow: 4480, peakRelease: 4950, peakHTL: 174.2 },
-    { id: "lu2025_1",       label: "Đợt lũ T9/2025 (Bão số 4)",       start: "2025-09-10", end: "2025-09-25", peak: "2025-09-16", desc: "Bão số 4, mưa lớn kéo dài — đỉnh ~2 600 m³/s",       peakFlow: 2600, peakRelease: 2100, peakHTL: 171.5 },
-    { id: "lu2025_2",       label: "Đợt lũ T10/2025 (Áp thấp)",       start: "2025-10-08", end: "2025-10-22", peak: "2025-10-14", desc: "Áp thấp nhiệt đới, mưa diện rộng — đỉnh ~1 850 m³/s", peakFlow: 1850, peakRelease: 1500, peakHTL: 170.2 },
-    { id: "lu2025_3",       label: "Đợt lũ T11/2025 (Lũ lớn nhất)",   start: "2025-11-01", end: "2025-11-18", peak: "2025-11-10", desc: "Lũ lớn nhất năm 2025 — đỉnh ~3 800 m³/s",            peakFlow: 3800, peakRelease: 3200, peakHTL: 172.8 },
-    { id: "lu2024_1",       label: "Lũ lịch sử T10/2024",              start: "2024-10-14", end: "2024-10-30", peak: "2024-10-20", desc: "Lũ vượt mức lịch sử — đỉnh ~5 800 m³/s",            peakFlow: 5800, peakRelease: 5600, peakHTL: 175.4 },
+const BASE_EVENTS = [
+    { id: "lu2024_10", label: "Lũ Tháng 10/2024", start: "2024-10-01", end: "2024-10-31", desc: "Đang tải dữ liệu...", peakFlow: 0, peakRelease: 0, peakHTL: 0, peak: "" },
+    { id: "lu2025_09", label: "Lũ Tháng 09/2025", start: "2025-09-01", end: "2025-09-30", desc: "Đang tải dữ liệu...", peakFlow: 0, peakRelease: 0, peakHTL: 0, peak: "" },
+    { id: "lu2025_10", label: "Lũ Tháng 10/2025", start: "2025-10-01", end: "2025-10-31", desc: "Đang tải dữ liệu...", peakFlow: 0, peakRelease: 0, peakHTL: 0, peak: "" },
+    { id: "lu2025_11", label: "Lũ Tháng 11/2025", start: "2025-11-01", end: "2025-11-30", desc: "Đang tải dữ liệu...", peakFlow: 0, peakRelease: 0, peakHTL: 0, peak: "" },
 ];
 
 const WINDOW_SIZE = 72; // số giờ hiển thị trên chart cùng lúc
@@ -111,9 +113,9 @@ function generateTranh2Oct2025() {
             const totalHours = (d1 - 21) * 24 + h1 + s;
             const dt = new Date(2025, 9, 21, 0, 0, 0); // Oct 21 00:00
             dt.setHours(dt.getHours() + totalHours);
-            const noise = () => (Math.random() - 0.5) * 0.03;
-            const qvao = Math.max(10, Math.round((q1 + (q2 - q1) * t) * (1 + noise())));
-            const luuluongxa = Math.max(0, Math.round((xa1 + (xa2 - xa1) * t) * (1 + noise())));
+            const noise = (s === 0) ? 0 : (Math.random() - 0.5) * 0.03; // No noise at keypoints
+            const qvao = Math.max(10, Math.round((q1 + (q2 - q1) * t) * (1 + noise)));
+            const luuluongxa = Math.max(0, Math.round((xa1 + (xa2 - xa1) * t) * (1 + noise)));
             const htl = parseFloat((z1 + (z2 - z1) * t).toFixed(2));
             const hh = dt.getHours().toString().padStart(2, "0");
             const dd = dt.getDate().toString().padStart(2, "0");
@@ -153,15 +155,20 @@ function generateMockFlood(event) {
         } else {
             t = 1 - (i - peakH) / ((total - peakH) || 1); // 1→0 falling limb
         }
-        // Double-peak shape: small secondary rise at ~75% of duration
-        const secondary = Math.max(0, Math.sin((i / (total || 1)) * Math.PI * 1.8) * 0.18);
-        const envelope  = Math.pow(Math.max(0, t), 0.7) + secondary * 0.3;
-        const jitter    = 1 + (Math.sin(i * 1.3) * 0.04 + (Math.random() - 0.5) * 0.03);
+        // Fix overshooting by limiting envelope to 1.0 and tapering noise at peak
+        const envelope  = Math.pow(Math.max(0, t), 0.75);
+        
+        const isNearPeak = Math.abs(i - peakH) < 2;
+        const noiseAllowed = isNearPeak ? 0 : 1;
+        const jitter    = 1 + (Math.sin(i * 1.3) * 0.04 + (Math.random() - 0.5) * 0.03) * noiseAllowed;
 
-        const qvao      = Math.max(Qbase, Math.round((Qbase + (Qpeak - Qbase) * envelope) * jitter));
-        // Release lags ~2h behind inflow, capped near event peakRelease
+        let qvao = Math.max(Qbase, Math.round((Qbase + (Qpeak - Qbase) * envelope) * jitter));
+        if (i === peakH) qvao = Qpeak;
+
         const xaRatio   = Math.min(1, (Qxapeak / Qpeak));
-        const luuluongxa = Math.max(0, Math.round(qvao * (xaRatio * (0.92 + Math.random() * 0.08))));
+        let luuluongxa = Math.max(0, Math.round(qvao * (xaRatio * (0.96 + Math.random() * 0.04 * noiseAllowed))));
+        if (i === peakH) luuluongxa = Qxapeak;
+
         const htl       = parseFloat((HTLbase + (HTLpeak - HTLbase) * envelope).toFixed(2));
 
         const hh = dt.getHours().toString().padStart(2, "0");
@@ -256,6 +263,7 @@ const MarkerLabel = ({ viewBox, data }) => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function FloodHistoryTraining({ lakeId, lakeData }) {
+    const { t, i18n } = useTranslation();
     const [subTab, setSubTab] = useState("history");
 
     // Lịch sử
@@ -266,7 +274,8 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const [histWindow, setHistWindow] = useState(0); // window start index
 
     // Mô phỏng Lũ
-    const [selectedEvent, setSelectedEvent] = useState(FLOOD_EVENTS[0]);
+    const [floodEvents, setFloodEvents] = useState(BASE_EVENTS);
+    const [selectedEvent, setSelectedEvent] = useState(BASE_EVENTS[0]);
     const [simData, setSimData] = useState([]);
     const [simLoading, setSimLoading] = useState(false);
     const [simIsFromDB, setSimIsFromDB] = useState(false);
@@ -282,9 +291,13 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const [realMetrics, setRealMetrics] = useState(null); // metrics từ ForecastHistory DB thực
     const [opTable, setOpTable] = useState([]);
     const [evalLoading, setEvalLoading] = useState(false);
-    const [evalEvent, setEvalEvent] = useState(FLOOD_EVENTS[0]);
+    const [evalEvent, setEvalEvent] = useState(BASE_EVENTS[0]);
     const [evalIsFromDB, setEvalIsFromDB] = useState(false);
     const [evalWindow, setEvalWindow] = useState(0);
+
+    // ── Mưa dự báo Open-Meteo multi-source (cho tab Dự báo) ───────────────────
+    const [rainLabelMap, setRainLabelMap] = useState(new Map()); // fullLabel → { bestMatch, bySource }
+    const [showRainSources, setShowRainSources] = useState(true); // bật/tắt hiển thị từng nguồn
 
     // ── Fetch ──────────────────────────────────────────────────────────────────
     const fetchHistory = useCallback(async (start, end) => {
@@ -405,8 +418,49 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     }, [fetchHistory, lakeId]);
 
     useEffect(() => { loadHistData(); }, []);
-    useEffect(() => { loadSimEvent(FLOOD_EVENTS[0]); }, [lakeId]);
-    useEffect(() => { loadEval(FLOOD_EVENTS[0]); }, [lakeId]);
+
+    // ── Fetch mưa dự báo Open-Meteo khi lakeId thay đổi ──────────────────────
+    useEffect(() => {
+        if (!lakeId) return;
+        let cancelled = false;
+        (async () => {
+            // Lấy tất cả nguồn: best_match (bestMatch = trung bình), ECMWF, GFS, JMA
+            const rainData = await fetchRainForecast(
+                lakeId,
+                ["best_match", "ecmwf_ifs025", "gfs025", "jma_seamless"],
+                3  // 3 ngày dự báo
+            );
+            if (!cancelled) setRainLabelMap(buildRainLabelMap(rainData));
+        })();
+        return () => { cancelled = true; };
+    }, [lakeId]);
+
+    useEffect(() => {
+        const fetchAllEvents = async () => {
+            if (!lakeId) return;
+            const updatedEvents = await Promise.all(BASE_EVENTS.map(async (ev) => {
+                const data = await fetchHistory(ev.start, ev.end);
+                if (data.length > 0) {
+                    const peakPt = data.reduce((prev, curr) => (curr.qvao || 0) > (prev.qvao || 0) ? curr : prev, data[0]);
+                    const peakRelease = Math.max(...data.map(d => d.luuluongxa || 0));
+                    const peakHTL = Math.max(...data.map(d => d.htl || 0));
+                    return {
+                        ...ev,
+                        desc: `Đỉnh: ${Math.round(peakPt.qvao || 0)} m³/s lúc ${peakPt.shortLabel}`,
+                        peakFlow: Math.round(peakPt.qvao || 0),
+                        peakRelease: Math.round(peakRelease),
+                        peakHTL: Number(peakHTL.toFixed(2)),
+                        peak: peakPt.shortLabel
+                    };
+                }
+                return { ...ev, desc: "Chưa có dữ liệu" };
+            }));
+            setFloodEvents(updatedEvents);
+            loadSimEvent(updatedEvents[0]);
+            loadEval(updatedEvents[0]);
+        };
+        fetchAllEvents();
+    }, [lakeId, fetchHistory, loadSimEvent, loadEval]);
 
     // Playback
     useEffect(() => {
@@ -485,17 +539,17 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     // ── Tabs ───────────────────────────────────────────────────────────────────
     const subTabs = [
         {
-            id: "history", label: "Lịch sử", icon: "📈",
+            id: "history", label: t('history.historyTab'), icon: "📈",
             active: "bg-blue-500 text-white shadow-blue-200 shadow-md",
             inactive: "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100",
         },
         {
-            id: "simulation", label: "Mô phỏng Lũ", icon: "🎬",
+            id: "simulation", label: t('history.floodSim'), icon: "🎬",
             active: "bg-amber-500 text-white shadow-amber-200 shadow-md",
             inactive: "bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100",
         },
         {
-            id: "evaluation", label: "Đánh giá & Khuyến nghị", icon: "📊",
+            id: "evaluation", label: t('history.evaluation'), icon: "📊",
             active: "bg-emerald-500 text-white shadow-emerald-200 shadow-md",
             inactive: "bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100",
         },
@@ -521,18 +575,18 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                     <>
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
                             <div className="flex flex-wrap items-center gap-3">
-                                <span className="text-sm font-bold text-slate-600">Từ:</span>
+                                <span className="text-sm font-bold text-slate-600">{t('history.from')}</span>
                                 <input type="date" value={histStart} onChange={e => setHistStart(e.target.value)}
                                     className="border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-mono bg-slate-50 focus:border-blue-400 outline-none" />
-                                <span className="text-sm font-bold text-slate-600">Đến:</span>
+                                <span className="text-sm font-bold text-slate-600">{t('history.to')}</span>
                                 <input type="date" value={histEnd} onChange={e => setHistEnd(e.target.value)}
                                     className="border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-mono bg-slate-50 focus:border-blue-400 outline-none" />
                                 <button onClick={loadHistData} disabled={histLoading}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50 shadow-sm">
                                     <RefreshCw size={13} className={histLoading ? "animate-spin" : ""} />
-                                    {histLoading ? "Đang tải..." : "Tải dữ liệu"}
+                                    {histLoading ? t('history.loading') : t('history.loadData')}
                                 </button>
-                                {[["30 ngày", 30], ["90 ngày", 90], ["180 ngày", 180]].map(([lbl, d]) => (
+                                {[[t('history.30days'), 30], [t('history.90days'), 90], [t('history.180days'), 180]].map(([lbl, d]) => (
                                     <button key={lbl} onClick={() => {
                                         const e = new Date(); const s = new Date(+e - d * 86400000);
                                         setHistStart(s.toISOString().slice(0, 10));
@@ -546,7 +600,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-blue-900 font-black text-sm uppercase tracking-wide flex items-center gap-2">
                                     <Activity size={16} className="text-blue-500" />
-                                    BIỂU ĐỒ LỊCH SỬ THỦY VĂN — {lakeData?.name || `Hồ ${lakeId}`}
+                                    {t('history.chartTitle', { lakeName: formatLakeName(lakeData?.name || `Hồ ${lakeId}`, i18n.language) })}
                                 </h3>
                                 {histData.length > 0 && (
                                     <span className="text-xs bg-blue-50 text-blue-600 font-bold px-3 py-1 rounded-full border border-blue-100">
@@ -557,44 +611,74 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
 
                             {histLoading ? (
                                 <div className="h-72 flex items-center justify-center text-slate-400 gap-2">
-                                    <RefreshCw size={20} className="animate-spin text-blue-400" /> Đang tải dữ liệu...
+                                    <RefreshCw size={20} className="animate-spin text-blue-400" /> {t('history.loadingData')}
                                 </div>
                             ) : histData.length === 0 ? (
                                 <div className="h-72 flex flex-col items-center justify-center text-slate-400 gap-3 bg-slate-50 rounded-xl">
                                     <Waves size={40} className="opacity-30 text-blue-300" />
-                                    <p className="text-sm font-semibold">Không có dữ liệu trong khoảng thời gian này</p>
-                                    <p className="text-xs text-slate-400">Dữ liệu DB từ 01/01/2026. Backfill để thêm dữ liệu 2025.</p>
+                                    <p className="text-sm font-semibold">{t('history.noData')}</p>
+                                    <p className="text-xs text-slate-400">{t('history.dbNote')}</p>
                                 </div>
                             ) : (
                                 <>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <ComposedChart data={histSlice} margin={{ top: 10, right: 50, left: 10, bottom: 50 }}>
-                                            <defs>
-                                                <linearGradient id="gradQ" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
-                                                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                            <XAxis dataKey="shortLabel" fontSize={10} interval={Math.max(1, Math.floor(histSlice.length / 10))}
-                                                angle={-30} textAnchor="end" height={55} axisLine={false} tickLine={false}
-                                                tick={{ fill: "#64748b", fontWeight: "600" }} />
-                                            <YAxis yAxisId="q" domain={yDomain(histSlice, ["qvao", "luuluongxa"])}
-                                                fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#64748b" }}
-                                                label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#64748b", dx: -5 }} />
-                                            <YAxis yAxisId="z" orientation="right" domain={yDomain(histSlice, ["htl"])}
-                                                fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#0ea5e9" }}
-                                                label={{ value: "Z (m)", angle: 90, position: "insideRight", fontSize: 10, fill: "#0ea5e9", dx: 8 }} />
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} iconType="circle" />
-                                            <Area yAxisId="q" type="monotone" dataKey="qvao" name="Q đến (m³/s)" stroke="#f59e0b" strokeWidth={2.5}
-                                                fill="url(#gradQ)" dot={false} />
-                                            <Line yAxisId="q" type="monotone" dataKey="luuluongxa" name="Q xả (m³/s)" stroke="#ef4444"
-                                                strokeWidth={2} dot={false} strokeDasharray="5 3" />
-                                            <Line yAxisId="z" type="monotone" dataKey="htl" name="Mực nước Z (m)" stroke="#0ea5e9"
-                                                strokeWidth={2.5} dot={false} />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
+                                    {(() => {
+                                        // Merge rain vào histSlice (nếu có từ rainLabelMap)
+                                        const sliceWithRain = histSlice.map(d => ({
+                                            ...d,
+                                            rainBest: rainLabelMap.get(d.fullLabel)?.bestMatch ?? null,
+                                            rainECMWF: rainLabelMap.get(d.fullLabel)?.bySource?.ecmwf_ifs025 ?? null,
+                                            rainGFS:   rainLabelMap.get(d.fullLabel)?.bySource?.gfs025      ?? null,
+                                            rainJMA:   rainLabelMap.get(d.fullLabel)?.bySource?.jma_seamless ?? null,
+                                        }));
+                                        const rainMax = Math.max(...sliceWithRain.map(d => d.rainBest ?? 0), 0);
+                                        const hasRain = rainMax > 0;
+                                        return (
+                                            <ResponsiveContainer width="100%" height={240}>
+                                                <ComposedChart data={sliceWithRain} margin={{ top: 6, right: hasRain ? 50 : 50, left: 10, bottom: 48 }}>
+                                                    <defs>
+                                                        <linearGradient id="gradQHist" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
+                                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                                        </linearGradient>
+                                                        <linearGradient id="rainHistGrad" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.85} />
+                                                            <stop offset="100%" stopColor="#0284c7" stopOpacity={0.4} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                                    <XAxis dataKey="shortLabel" fontSize={10} interval={Math.max(1, Math.floor(histSlice.length / 10))}
+                                                        angle={-30} textAnchor="end" height={52} axisLine={false} tickLine={false}
+                                                        tick={{ fill: "#64748b", fontWeight: "600" }} />
+                                                    <YAxis yAxisId="q" domain={yDomain(histSlice, ["qvao", "luuluongxa"])}
+                                                        fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#64748b" }} width={40}
+                                                        label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#64748b", dx: -2 }} />
+                                                    <YAxis yAxisId="z" orientation="right" domain={yDomain(histSlice, ["htl"])}
+                                                        fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#0ea5e9" }} width={36}
+                                                        label={{ value: "Z (m)", angle: 90, position: "insideRight", fontSize: 10, fill: "#0ea5e9", dx: 6 }} />
+                                                    {hasRain && (
+                                                        <YAxis
+                                                            yAxisId="rain" orientation="right"
+                                                            stroke="#38bdf8" fontSize={9} tickCount={3}
+                                                            domain={([, dMax]) => [Math.max(dMax * 4, 10), 0]}
+                                                            axisLine={false} tickLine={false} width={0}
+                                                            tick={false}
+                                                        />
+                                                    )}
+                                                    {/* Mưa Best Match (bar hướng xuống) */}
+                                                    {hasRain && (
+                                                        <Bar yAxisId="rain" dataKey="rainBest" name={t('history.rainAxis')}
+                                                            fill="url(#rainHistGrad)" radius={[0,0,3,3]} maxBarSize={8} isAnimationActive={false} />
+                                                    )}
+                                                    <Area yAxisId="q" type="monotone" dataKey="qvao" name={t('history.qInAxis')} stroke="#f59e0b" strokeWidth={3}
+                                                        fill="url(#gradQHist)" dot={false} />
+                                                    <Line yAxisId="q" type="monotone" dataKey="luuluongxa" name={t('history.qOutAxis')} stroke="#ef4444"
+                                                        strokeWidth={2.5} dot={false} strokeDasharray="5 3" />
+                                                    <Line yAxisId="z" type="monotone" dataKey="htl" name="Mực nước Z (m)" stroke="#0ea5e9"
+                                                        strokeWidth={3} dot={false} />
+                                                </ComposedChart>
+                                            </ResponsiveContainer>
+                                        );
+                                    })()}
                                     <WindowNav total={histData.length} window={histWindow} setWindow={setHistWindow}
                                         label={`${histSlice[0]?.shortLabel || ""} → ${histSlice[histSlice.length - 1]?.shortLabel || ""}`} />
                                 </>
@@ -603,10 +687,10 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                             {histData.length > 0 && (
                                 <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100">
                                     {[
-                                        ["Q đến max", `${Math.max(...histData.map(d => d.qvao)).toFixed(0)} m³/s`, "text-amber-600 bg-amber-50 border-amber-200"],
-                                        ["Q xả max", `${Math.max(...histData.map(d => d.luuluongxa)).toFixed(0)} m³/s`, "text-red-600 bg-red-50 border-red-200"],
-                                        ["Mực nước max", `${Math.max(...histData.map(d => d.htl)).toFixed(2)} m`, "text-blue-600 bg-blue-50 border-blue-200"],
-                                        ["Tổng số điểm", `${histData.length} giờ`, "text-slate-600 bg-slate-50 border-slate-200"],
+                                        [t('history.maxQin'), `${Math.max(...histData.map(d => d.qvao)).toFixed(0)} m³/s`, "text-amber-600 bg-amber-50 border-amber-200"],
+                                        [t('history.maxQout'), `${Math.max(...histData.map(d => d.luuluongxa)).toFixed(0)} m³/s`, "text-red-600 bg-red-50 border-red-200"],
+                                        [t('history.maxLevel'), `${Math.max(...histData.map(d => d.htl)).toFixed(2)} m`, "text-blue-600 bg-blue-50 border-blue-200"],
+                                        [t('history.totalPoints'), `${histData.length}h`, "text-slate-600 bg-slate-50 border-slate-200"],
                                     ].map(([label, val, cls]) => (
                                         <div key={label} className={`rounded-xl border p-3 text-center ${cls}`}>
                                             <p className="text-xs font-black uppercase opacity-70">{label}</p>
@@ -634,13 +718,26 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         <Zap size={15} className="text-blue-500" />
                                         BIỂU ĐỒ THỰC TẾ & DỰ BÁO (P10 / P50 / P90)
                                     </h3>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${simIsFromDB ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-orange-50 text-orange-600 border-orange-200"}`}>
                                             {simIsFromDB ? "✓ Dữ liệu DB thực" : "⚠ Mô phỏng (DB chưa có)"}
                                         </span>
                                         <span className="text-xs bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-full border border-amber-200">
                                             Đỉnh {peakQin} m³/s
                                         </span>
+                                        {/* Toggle hiện/ẩn từng nguồn mưa */}
+                                        {rainLabelMap.size > 0 && (
+                                            <button
+                                                onClick={() => setShowRainSources(v => !v)}
+                                                className={`text-xs font-bold px-2.5 py-1 rounded-full border transition-colors ${
+                                                    showRainSources
+                                                        ? "bg-sky-100 text-sky-700 border-sky-300 hover:bg-sky-200"
+                                                        : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
+                                                }`}
+                                            >
+                                                🌧 {showRainSources ? "Ẩn nguồn mưa" : "Hiện nguồn mưa"}
+                                            </button>
+                                        )}
                                         <span className="text-xs text-slate-400 font-mono">{simData.length}h tổng</span>
                                     </div>
                                 </div>
@@ -650,8 +747,8 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         <RefreshCw size={20} className="animate-spin text-blue-400" /> Đang tải...
                                     </div>
                                 ) : (
-                                    <ResponsiveContainer width="100%" height={430}>
-                                        <ComposedChart data={simChartData} margin={{ top: 8, right: 24, left: 8, bottom: 52 }}>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <ComposedChart data={simChartData} margin={{ top: 6, right: 28, left: 8, bottom: 50 }}>
                                             <defs>
                                                 <linearGradient id="gradP90sim" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
@@ -661,49 +758,103 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                     <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
                                                     <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
                                                 </linearGradient>
+                                                <linearGradient id="rainSimGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.85} />
+                                                    <stop offset="100%" stopColor="#0284c7" stopOpacity={0.4} />
+                                                </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                             <XAxis
                                                 dataKey="shortLabel"
                                                 fontSize={9}
-                                                interval={Math.max(1, Math.floor(simData.length / 14))}
-                                                angle={-35} textAnchor="end" height={58}
+                                                interval={Math.max(1, Math.floor(simData.length / 12))}
+                                                angle={-35} textAnchor="end" height={55}
                                                 axisLine={false} tickLine={false}
                                                 tick={{ fill: "#64748b", fontWeight: "600" }}
                                             />
                                             <YAxis
+                                                yAxisId="q"
                                                 domain={yDomain(simData, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90", "lstm_model"])}
                                                 fontSize={10} axisLine={false} tickLine={false}
-                                                tick={{ fill: "#64748b" }}
+                                                tick={{ fill: "#64748b" }} width={42}
                                                 label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#94a3b8", dx: -2 }}
                                             />
+                                            {/* Trục mưa reversed: các nguồn dự báo hiển thị từ trên xuống */}
+                                            <YAxis
+                                                yAxisId="rain" orientation="right"
+                                                stroke="#38bdf8" fontSize={9} tickCount={3}
+                                                domain={([, dMax]) => [Math.max(dMax * 4, 12), 0]}
+                                                axisLine={false} tickLine={false} width={30}
+                                                tickFormatter={v => `${v}mm`}
+                                            />
                                             <Tooltip content={<CustomTooltip />} />
-                                            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} iconType="circle" />
+                                            <Legend wrapperStyle={{ fontSize: 10, paddingTop: 4 }} iconType="circle" />
+
+                                            {/* ── Mưa dự báo từng nguồn (bar hướng xuống) ── */}
+                                            {rainLabelMap.size > 0 && showRainSources && RAIN_SOURCES.filter(s => !s.isBest).map(src => (
+                                                <Bar
+                                                    key={src.key}
+                                                    yAxisId="rain"
+                                                    dataKey={d => rainLabelMap.get(d.shortLabel.replace(
+                                                        /^(\d{2}\/(\d{2})) (\d{2}):00$/,
+                                                        (_, dm, mo, hh) => {
+                                                            const now = new Date();
+                                                            const yr = now.getFullYear();
+                                                            const [dd] = dm.split('/');
+                                                            return `${dd}/${mo}/${yr} ${hh}:00`;
+                                                        }
+                                                    ))?.bySource?.[src.key] ?? null}
+                                                    name={`Mưa ${src.label}`}
+                                                    fill={src.color} opacity={0.4}
+                                                    radius={[0,0,2,2]}
+                                                    maxBarSize={5} isAnimationActive={false}
+                                                />
+                                            ))}
+                                            {/* Best Match */}
+                                            {rainLabelMap.size > 0 && (
+                                                <Bar
+                                                    yAxisId="rain"
+                                                    dataKey={d => rainLabelMap.get(d.fullLabel)?.bestMatch ??
+                                                        rainLabelMap.get(d.shortLabel.replace(
+                                                            /^(\d{2}\/(\d{2})) (\d{2}):00$/,
+                                                            (_, dm, mo, hh) => {
+                                                                const now = new Date();
+                                                                const yr = now.getFullYear();
+                                                                const [dd] = dm.split('/');
+                                                                return `${dd}/${mo}/${yr} ${hh}:00`;
+                                                            }
+                                                        ))?.bestMatch ?? null
+                                                    }
+                                                    name="Mưa (BestMatch)"
+                                                    fill="url(#rainSimGrad)" radius={[0,0,4,4]}
+                                                    maxBarSize={8} isAnimationActive={false}
+                                                />
+                                            )}
 
                                             {/* Uncertainty band P10–P90 */}
-                                            <Area type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd"
-                                                strokeWidth={1.5} strokeDasharray="4 3" fill="url(#gradP90sim)"
+                                            <Area yAxisId="q" type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd"
+                                                strokeWidth={3} strokeDasharray="8 4" fill="url(#gradP90sim)"
                                                 dot={false} legendType="line" isAnimationActive={false} connectNulls={false} />
-                                            <Area type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa"
-                                                strokeWidth={1.5} strokeDasharray="4 3" fill="#ffffff"
+                                            <Area yAxisId="q" type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa"
+                                                strokeWidth={3} strokeDasharray="8 4" fill="#ffffff"
                                                 dot={false} legendType="line" isAnimationActive={false} connectNulls={false} />
 
-                                            {/* Q đến — filled area */}
-                                            <Area type="monotone" dataKey="qvao" name="Q Thực tế (m³/s)" stroke="#f59e0b"
-                                                strokeWidth={2.5} fill="url(#gradQinSim)" dot={false} isAnimationActive={false} connectNulls={false} />
+                                            {/* Q đến */}
+                                            <Area yAxisId="q" type="monotone" dataKey="qvao" name="Q Thực tế" stroke="#f59e0b"
+                                                strokeWidth={3.5} fill="url(#gradQinSim)" dot={false} isAnimationActive={false} connectNulls={false} />
 
                                             {/* Q xả & P50 */}
-                                            <Line type="monotone" dataKey="luuluongxa" name="Q Xả (m³/s)" stroke="#ef4444"
-                                                strokeWidth={1.8} dot={false} strokeDasharray="5 3" isAnimationActive={false} connectNulls={false} />
-                                            <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (mô phỏng)" stroke="#2563eb"
-                                                strokeWidth={2} dot={false} strokeDasharray="7 2" isAnimationActive={false} connectNulls={false} />
-                                            {/* LSTM model thực từ ForecastHistory (nếu có) */}
-                                            <Line type="monotone" dataKey="lstm_model" name="LSTM Model (thực DB)" stroke="#7c3aed"
-                                                strokeWidth={2.5} dot={false} isAnimationActive={false} connectNulls={false} />
+                                            <Line yAxisId="q" type="monotone" dataKey="luuluongxa" name="Q Xả" stroke="#ef4444"
+                                                strokeWidth={2.5} dot={false} strokeDasharray="5 3" isAnimationActive={false} connectNulls={false} />
+                                            <Line yAxisId="q" type="monotone" dataKey="lstm_p50" name="LSTM P50" stroke="#2563eb"
+                                                strokeWidth={4} dot={false} strokeDasharray="10 5" isAnimationActive={false} connectNulls={false} />
+                                            <Line yAxisId="q" type="monotone" dataKey="lstm_model" name="LSTM Model (DB)" stroke="#7c3aed"
+                                                strokeWidth={4} dot={false} isAnimationActive={false} connectNulls={false} />
 
-                                            {/* Playback marker with auto-displayed info card */}
+                                            {/* Playback marker */}
                                             {playIndex > 0 && simData[playIndex] && (
                                                 <ReferenceLine
+                                                    yAxisId="q"
                                                     x={simData[playIndex].shortLabel}
                                                     stroke="#8b5cf6" strokeWidth={2} strokeDasharray="5 3"
                                                     label={<MarkerLabel data={simData[playIndex]} />}
@@ -746,7 +897,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
                                 <p className="text-xs font-black text-slate-400 uppercase tracking-wide mb-3">Chọn đợt lũ</p>
                                 <div className="space-y-2">
-                                    {FLOOD_EVENTS.map(ev => (
+                                    {floodEvents.map(ev => (
                                         <button key={ev.id} onClick={() => loadSimEvent(ev)}
                                             className={`w-full text-left px-3 py-3 rounded-xl border transition-all ${selectedEvent.id === ev.id
                                                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
@@ -920,9 +1071,9 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-wrap items-center gap-3">
                             <span className="text-sm font-bold text-slate-600">Đợt lũ đánh giá:</span>
                             <select value={evalEvent.id}
-                                onChange={e => { const ev = FLOOD_EVENTS.find(f => f.id === e.target.value); loadEval(ev); }}
+                                onChange={e => { const ev = floodEvents.find(f => f.id === e.target.value); loadEval(ev); }}
                                 className="border border-slate-300 bg-slate-50 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-blue-400 outline-none">
-                                {FLOOD_EVENTS.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
+                                {floodEvents.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
                             </select>
                             <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-xs">
                                 <span className="font-bold text-blue-700">{evalEvent.desc}</span>
@@ -943,7 +1094,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                             <div className="bg-slate-800 rounded-xl p-4 font-mono text-xs leading-6 mb-4 text-slate-200">
                                 <p className="text-emerald-400 font-bold">═══ MODEL BACKTEST ═══</p>
                                 <p><span className="text-slate-400">Period  :</span> <span className="text-amber-300">{evalEvent.start}</span> → <span className="text-amber-300">{evalEvent.end}</span></p>
-                                <p><span className="text-slate-400">Hồ      :</span> <span className="text-cyan-300">{lakeData?.name || `Hồ ${lakeId}`}</span> (ID={lakeId})</p>
+                                <p><span className="text-slate-400">{i18n.language === 'en' ? 'Lake     :' : 'Hồ      :'}</span> <span className="text-cyan-300">{formatLakeName(lakeData?.name || `Hồ ${lakeId}`, i18n.language)}</span> (ID={lakeId})</p>
                                 <p><span className="text-slate-400">Model   :</span> <span className="text-purple-300">LSTM Bi-directional + Multi-Head Attention, HORIZON=12h</span></p>
                                 <p><span className="text-slate-400">Điểm đo :</span> <span className="text-white">{evalData.length} giờ</span></p>
                                 <p><span className="text-slate-400">Nguồn   :</span> <span className={evalIsFromDB ? "text-emerald-300" : "text-orange-300"}>{evalIsFromDB ? "✓ Dữ liệu thực từ DB" : "⚠ Mô phỏng (DB chưa có dữ liệu giai đoạn này)"}</span></p>

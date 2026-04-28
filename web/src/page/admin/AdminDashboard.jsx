@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import adminApi from "../../api/adminApi";
 import "../../styles/AdminDashboard.css";
 import {
@@ -28,14 +29,14 @@ import L from "leaflet";
 import OperationDashboard from "./OperationDashboard";
 
 
-// Tạo custom icon (để marker đẹp hơn)
 const sensorIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854866.png", // icon giọt nước
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854866.png",
   iconSize: [30, 30],
 });
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     users: 0,
     sensors: 0,
@@ -77,14 +78,12 @@ function AdminDashboard() {
       const pending = pendingRes.status === 'fulfilled' ? pendingRes.value : [];
       const userStatsValue = userStatsRes.status === 'fulfilled' ? userStatsRes.value : { week: 0, month: 0, year: 0 };
 
-      // Log failures for debugging
       results.forEach((res, i) => {
         if (res.status === 'rejected') {
           console.warn(`API call ${i} failed:`, res.reason);
         }
       });
 
-      // ánh xạ dữ liệu cảm biến an toàn
       const mappedSensors = Array.isArray(sensors) ? sensors.map((item) => ({
         id: item.deviceId,
         location: item.locationName,
@@ -120,16 +119,12 @@ function AdminDashboard() {
     fetchStats();
   }, [fetchStats]);
 
-  // Hook for selected reservoir if used elsewhere
-  useEffect(() => {
-    // If AdminDashboard ever needs to react to external lakeId changes
-  }, []);
-
+  useEffect(() => {}, []);
 
   const postData = [
-    { name: "Đã duyệt", value: stats.approved },
-    { name: "Đang chờ", value: stats.pending },
-    { name: "Bị từ chối", value: stats.rejected },
+    { name: t('adminDashboard.approved'), value: stats.approved },
+    { name: t('adminDashboard.pendingChart'), value: stats.pending },
+    { name: t('adminDashboard.rejectedChart'), value: stats.rejected },
   ];
 
   const COLORS = ["#28a745", "#ffc107", "#dc3545"];
@@ -138,7 +133,7 @@ function AdminDashboard() {
     <div className="w-full flex flex-col px-4 pt-20">
       <div className="flex flex-col items-start mb-4 gap-2"></div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="dashboard-title m-0">📊 Trang chủ quản trị</h2>
+        <h2 className="dashboard-title m-0">📊 {t('adminDashboard.title')}</h2>
         <div className="flex items-center gap-3">
           <button
             onClick={() => fetchStats()}
@@ -146,7 +141,7 @@ function AdminDashboard() {
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
             <FaSync className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Đang cập nhật...' : 'Tải lại dữ liệu'}
+            {loading ? t('adminDashboard.refreshing') : t('adminDashboard.refresh')}
           </button>
           <button
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -158,91 +153,83 @@ function AdminDashboard() {
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Đang tải dữ liệu...</p>
+        <p className="text-gray-500">{t('adminDashboard.loading')}</p>
       ) : (
         <>
-          {/* Cards thống kê */}
           <div className="dashboard-grid">
-            {/* Người dùng */}
             <div className="dashboard-card bg-blue">
               <div className="info">
                 <h3>{stats.users}</h3>
-                <p>Người dùng</p>
+                <p>{t('adminDashboard.users')}</p>
                 <button
                   onClick={() => navigate("/admin/users")}
                   className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
                 >
-                  Quản lý
+                  {t('adminDashboard.manage')}
                 </button>
               </div>
               <FaUsers className="icon" />
             </div>
 
-            {/* Cảm biến */}
             <div className="dashboard-card bg-cyan">
               <div className="info">
                 <h3>{stats.sensors}</h3>
-                <p>Cảm biến</p>
-
+                <p>{t('adminDashboard.sensors')}</p>
               </div>
               <FaWater className="icon" />
             </div>
 
-            {/* Bài đã duyệt */}
             <div className="dashboard-card bg-green">
               <div className="info">
                 <h3>{stats.approved}</h3>
-                <p>Bài đã duyệt</p>
+                <p>{t('adminDashboard.approvedPosts')}</p>
                 <button
                   onClick={() => navigate("/admin/approved")}
                   className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
                 >
-                  Quản lý bài đã duyệt
+                  {t('adminDashboard.manageApproved')}
                 </button>
               </div>
               <FaCheckCircle className="icon" />
             </div>
 
-            {/* Bài chờ */}
             <div className="dashboard-card bg-yellow">
               <div className="info">
                 <h3>{stats.pending}</h3>
-                <p>Bài chờ</p>
+                <p>{t('adminDashboard.pendingPosts')}</p>
                 <button
                   onClick={() => navigate("/admin/pending")}
                   className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
                 >
-                  Quản lý bài chờ
+                  {t('adminDashboard.managePending')}
                 </button>
               </div>
               <FaHourglassHalf className="icon" />
             </div>
 
-            {/* Bài từ chối */}
             <div className="dashboard-card bg-red">
               <div className="info">
                 <h3>{stats.rejected}</h3>
-                <p>Bài từ chối</p>
+                <p>{t('adminDashboard.rejectedPosts')}</p>
                 <button
                   onClick={() => navigate("/admin/rejected")}
                   className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
                 >
-                  Quản lý bài từ chối
+                  {t('adminDashboard.manageRejected')}
                 </button>
               </div>
               <FaTimesCircle className="icon" />
             </div>
           </div>
 
-          {/* Biểu đồ người dùng */}
           <div className="mt-8">
-            <h3 className="font-semibold mb-4">📈 Thống kê người dùng</h3>
+            <h3 className="font-semibold mb-4">📈 {t('adminDashboard.userStats')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={[
-                  { name: "Tuần", value: userStats.week },
-                  { name: "Tháng", value: userStats.month },
-                  { name: "Năm", value: userStats.year },
+                  { name: t('adminDashboard.week'), value: userStats.week },
+                  { name: t('adminDashboard.month'), value: userStats.month },
+                  { name: t('adminDashboard.year'), value: userStats.year },
                 ]}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -254,9 +241,8 @@ function AdminDashboard() {
             </ResponsiveContainer>
           </div>
 
-          {/* Biểu đồ bài đăng */}
           <div className="mt-8">
-            <h3 className="font-semibold mb-4">📰 Thống kê bài đăng</h3>
+            <h3 className="font-semibold mb-4">📰 {t('adminDashboard.postStats')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={postData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -272,7 +258,6 @@ function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-
 
           <OperationDashboard />
         </>

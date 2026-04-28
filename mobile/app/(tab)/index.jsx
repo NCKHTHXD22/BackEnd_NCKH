@@ -650,10 +650,11 @@ export default function HomeScreen() {
   // Tắt tracksViewChanges sau 800ms để Ionicons có đủ thời gian render trước
   useEffect(() => {
     if (markers.length > 0 || rainStations.length > 0 || reservoirs.length > 0) {
+      setMarkerTracking(true);
       const t = setTimeout(() => setMarkerTracking(false), 800);
       return () => clearTimeout(t);
     }
-  }, [markers, rainStations, reservoirs]);
+  }, [markers, rainStations, reservoirs, showReservoirs, showRainStations]);
 
   // Khi buildings load xong (thường sau 5-15s do Overpass timeout), bật lại
   // tracksViewChanges 1.2s để Ionicons có thời gian render, rồi tắt lại
@@ -935,6 +936,7 @@ export default function HomeScreen() {
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
+        mapPadding={{ top: 80, right: 0, bottom: 0, left: 0 }}
         customMapStyle={mapStyle}
         initialRegion={vietnamRegion}
         showsUserLocation={!!location}
@@ -1545,7 +1547,7 @@ const searchStyles = StyleSheet.create({
 });
 
 const uiStyles = StyleSheet.create({
-  layerButtons: { position: "absolute", top: 44, right: 10, zIndex: 999, gap: 6 },
+  layerButtons: { position: "absolute", top: 140, right: 10, zIndex: 999, gap: 6 },
   layerBtn: { padding: 10, borderRadius: 10, elevation: 2 },
 });
 

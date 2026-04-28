@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatLakeName } from '../../utils/lakeName';
 import OperationDashboard from '../../page/admin/OperationDashboard';
 import { getAdminToken } from '../../services/auth';
 import FloodHistoryTraining from '../../page/admin/FloodHistoryTraining';
@@ -54,6 +56,7 @@ const MODELS = [
 ];
 
 export default function LakeModal({ lakeId, lakeData, onClose }) {
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedRainSource, setSelectedRainSource] = useState('station');
     const [selectedModel, setSelectedModel] = useState('lstm');
@@ -96,9 +99,10 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     if (!lakeId || !lakeData) return null;
 
-    // Bỏ tiền tố "HỒ " nếu tên đã có sẵn (VD: "HỒ A VƯƠNG" → "A VƯƠNG")
     const rawName = lakeData.name || lakeData.Lake_Name || 'Không tên';
-    const lakeName = rawName.replace(/^HỒ\s+/i, '');
+    const lakeName = i18n.language === 'en'
+        ? formatLakeName(rawName, 'en')
+        : rawName.replace(/^HỒ\s+/i, '');
 
     // Latest record from history (more up-to-date than inflowlakes snapshot)
     const latestRecord = realHistoryData.length > 0
@@ -249,22 +253,22 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     const tabs = [
         {
-            id: 'overview', label: 'Tổng quan', icon: <Info size={15} />,
+            id: 'overview', label: t('lakeModal.tabs.overview'), icon: <Info size={15} />,
             active: 'bg-sky-500 text-white shadow-sky-200 shadow-md',
             inactive: 'bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100',
         },
         ...(isAdmin ? [{
-            id: 'operation', label: 'Vận hành', icon: <Settings size={15} />,
+            id: 'operation', label: t('lakeModal.tabs.operation'), icon: <Settings size={15} />,
             active: 'bg-violet-500 text-white shadow-violet-200 shadow-md',
             inactive: 'bg-violet-50 text-violet-600 border border-violet-200 hover:bg-violet-100',
         }] : []),
         {
-            id: 'forecast', label: 'Dự báo', icon: <BarChart3 size={15} />,
+            id: 'forecast', label: t('lakeModal.tabs.forecast'), icon: <BarChart3 size={15} />,
             active: 'bg-orange-500 text-white shadow-orange-200 shadow-md',
             inactive: 'bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100',
         },
         {
-            id: 'history', label: 'Lịch sử & Training', icon: <History size={15} />,
+            id: 'history', label: t('lakeModal.tabs.history'), icon: <History size={15} />,
             active: 'bg-teal-500 text-white shadow-teal-200 shadow-md',
             inactive: 'bg-teal-50 text-teal-600 border border-teal-200 hover:bg-teal-100',
         },
@@ -279,22 +283,24 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                            <span className="text-sm text-blue-200">Chi tiết Hồ chứa</span>
+                            <span className="text-sm text-blue-200">{t('lakeModal.reservoirDetails')}</span>
                         </div>
-                        <h2 className="text-2xl font-bold tracking-wide uppercase">HỒ {lakeName}</h2>
+                        <h2 className="text-2xl font-bold tracking-wide uppercase">
+                            {i18n.language === 'en' ? lakeName : `HỒ ${lakeName}`}
+                        </h2>
                         <p className="text-sm text-blue-200 mt-1">
                             {lakeData.address || lakeData.province || ''}
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <div className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 transition-colors">
-                            <span className="w-2 h-2 bg-white rounded-full"></span> HOẠT ĐỘNG
+                            <span className="w-2 h-2 bg-white rounded-full"></span> {t('lakeModal.operating')}
                         </div>
                         <button
                             onClick={onClose}
                             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm flex items-center gap-1 transition-colors"
                         >
-                            <X size={16} /> Đóng
+                            <X size={16} /> {t('lakeModal.close')}
                         </button>
                     </div>
                 </div>
@@ -322,19 +328,19 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 {/* Basic Info */}
                                 <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                                     <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
-                                        <Info size={18} /> Thông tin cơ bản
+                                        <Info size={18} /> {t('lakeModal.overview.basicInfo')}
                                     </h3>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Dung tích thiết kế:</span>
-                                            <span className="font-semibold text-blue-900">343.55 triệu m³</span>
+                                            <span className="text-gray-600">{t('lakeModal.overview.designCapacity')}</span>
+                                            <span className="font-semibold text-blue-900">343.55 {t('lakeModal.overview.million_m3')}</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Mực nước dâng BT:</span>
+                                            <span className="text-gray-600">{t('lakeModal.overview.normalPool')}</span>
                                             <span className="font-semibold text-blue-900">380 m</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Mực nước chết:</span>
+                                            <span className="text-gray-600">{t('lakeModal.overview.deadLevel')}</span>
                                             <span className="font-semibold text-blue-900">340 m</span>
                                         </div>
                                     </div>
@@ -343,23 +349,23 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 {/* Current Status */}
                                 <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                                     <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
-                                        <Activity size={18} /> Tình trạng hiện tại
+                                        <Activity size={18} /> {t('lakeModal.overview.currentStatus')}
                                     </h3>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Mực nước thượng lưu:</span>
+                                            <span className="text-gray-600">{t('lakeModal.overview.upstreamLevel')}</span>
                                             <span className="font-semibold text-blue-900">{currentHtl.toFixed(2)} m</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Lưu lượng đến (Qđến):</span>
+                                            <span className="text-gray-600">{t('lakeModal.overview.inflow')}</span>
                                             <span className="font-semibold text-blue-900">{currentQvao.toFixed(2)} m³/s</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">Lưu lượng xả:</span>
+                                            <span className="text-gray-600">{t('lakeModal.overview.discharge')}</span>
                                             <span className="font-semibold text-red-600">{currentLuuluongxa.toFixed(2)} m³/s</span>
                                         </div>
                                         <div className="flex justify-between border-b border-gray-100 pb-2 text-xs">
-                                            <span className="text-gray-500">Cập nhật lúc:</span>
+                                            <span className="text-gray-500">{t('lakeModal.overview.updatedAt')}</span>
                                             <span className="text-gray-500">
                                                 {currentUpdateTime ? new Date(currentUpdateTime).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : 'N/A'}
                                             </span>
@@ -371,7 +377,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             {/* Chart */}
                             <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                                 <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
-                                    <Activity size={18} /> Biểu đồ Mực nước hồ (m) — 48 giờ gần nhất
+                                    <Activity size={18} /> {t('lakeModal.overview.waterLevelChart')}
                                 </h3>
                                 <div className="h-64 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -429,7 +435,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 <div>
                                     <div className="flex items-center gap-2 mb-3">
                                         <CloudRain size={16} className="text-blue-600" />
-                                        <span className="font-bold text-gray-700">CHỌN NGUỒN DỮ LIỆU MƯA:</span>
+                                        <span className="font-bold text-gray-700">{t('lakeModal.forecast.rainSourceLabel')}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {RAIN_SOURCES.map(src => (
@@ -452,7 +458,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 <div className="border-t pt-4">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Zap size={16} className="text-purple-600" />
-                                        <span className="font-bold text-gray-700">MÔ HÌNH DỰ BÁO:</span>
+                                        <span className="font-bold text-gray-700">{t('lakeModal.forecast.modelLabel')}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {MODELS.map(model => (
@@ -465,7 +471,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     }`}
                                                 style={selectedModel === model.id ? { backgroundColor: model.color } : {}}
                                             >
-                                                {model.icon} Mô hình {model.label}
+                                                {model.icon} {t('lakeModal.forecast.modelPrefix')} {model.label}
                                             </button>
                                         ))}
                                     </div>
@@ -487,16 +493,16 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                Đang xử lý...
+                                                {t('lakeModal.forecast.processing')}
                                             </>
                                         ) : (
                                             <>
-                                                <Play size={16} /> Chạy mô hình dự báo
+                                                <Play size={16} /> {t('lakeModal.forecast.runModel')}
                                             </>
                                         )}
                                     </button>
                                     <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-md transition-colors">
-                                        <Database size={16} /> Tải dữ liệu đối soát
+                                        <Database size={16} /> {t('lakeModal.forecast.loadData')}
                                     </button>
 
                                     {/* Status info */}
@@ -515,10 +521,10 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 {/* Large Combined Chart */}
                                 <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                                     <h3 className="text-blue-800 font-bold mb-1 flex items-center gap-2">
-                                        <Activity size={20} /> BIỂU ĐỒ DỰ BÁO LƯU LƯỢNG TỔNG HỢP (ENSEMBLE)
+                                        <Activity size={20} /> {t('lakeModal.forecast.chartTitle')}
                                     </h3>
                                     <p className="text-sm text-gray-500 mb-6 italic">
-                                        Hiển thị 36 giờ thực đo và 12 giờ dự báo LSTM tích hợp kịch bản (P10-P50-P90)
+                                        {t('lakeModal.forecast.chartSubtitle')}
                                     </p>
                                     <div className="h-[450px] w-full">
                                         <ResponsiveContainer width="100%" height="100%">
@@ -543,7 +549,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     axisLine={false} 
                                                     tickLine={false} 
                                                     tick={{ fontSize: 12, fill: '#6B7280' }} 
-                                                    label={{ value: 'Lưu lượng Q (m³/s)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 13, fontWeight: 'bold' } }} 
+                                                    label={{ value: t('lakeModal.forecast.flowAxis'), angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 13, fontWeight: 'bold' } }}
                                                 />
                                                 <YAxis
                                                     yAxisId="rain"
@@ -553,14 +559,14 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     axisLine={false}
                                                     tickLine={false}
                                                     tick={{ fontSize: 10, fill: '#0891b2' }}
-                                                    label={{ value: 'Mưa (mm)', angle: 90, position: 'insideRight', offset: 12, style: { textAnchor: 'middle', fill: '#0891b2', fontSize: 11, fontWeight: 'bold' } }}
+                                                    label={{ value: t('lakeModal.forecast.rainAxis'), angle: 90, position: 'insideRight', offset: 12, style: { textAnchor: 'middle', fill: '#0891b2', fontSize: 11, fontWeight: 'bold' } }}
                                                 />
                                                 <RechartsTooltip content={({ active, payload, label }) => {
                                                     if (active && payload && payload.length) {
                                                         const data = payload[0].payload;
                                                         return (
                                                             <div className="bg-white p-3 border border-gray-200 shadow-xl rounded-lg text-xs min-w-[200px]">
-                                                                <p className="font-bold border-b pb-1 mb-2 text-gray-700">{label} {data.isFuture ? '(Dự báo)' : '(Thực tế)'}</p>
+                                                                <p className="font-bold border-b pb-1 mb-2 text-gray-700">{label} {data.isFuture ? t('lakeModal.forecast.forecastLabel') : t('lakeModal.forecast.actualLabel')}</p>
                                                                 {payload.map((entry, idx) => {
                                                                     // Skip rendering P10/P90 explicitly to declutter tooltip (Optional, but looks cleaner)
                                                                     if (entry.dataKey === 'p10' || entry.dataKey === 'p90') return null;
@@ -587,7 +593,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     stroke="#ef4444" 
                                                     strokeDasharray="5 5" 
                                                     strokeWidth={2} 
-                                                    label={{ value: "Hiện tại", fill: '#ef4444', fontSize: 10, fontWeight: 'bold', position: 'top' }} 
+                                                    label={{ value: t('lakeModal.forecast.current'), fill: '#ef4444', fontSize: 10, fontWeight: 'bold', position: 'top' }} 
                                                 />
                                                 
                                                 {/* Rainfall bars — inverted (reversed axis → bars go down from top) */}
@@ -595,47 +601,47 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     <>
                                                         {/* Individual sources (có data hiện màu, không có data thì không vẽ) */}
                                                         {RAIN_SOURCES.filter(s => s.id !== 'bestmatch' && s.id !== 'station').map(src => (
-                                                            <Bar key={`rain_${src.id}`} yAxisId="rain" dataKey={`rain_${src.id}`} fill={src.color} name={`Mưa ${src.label}`} barSize={6} opacity={0.5} />
+                                                            <Bar key={`rain_${src.id}`} yAxisId="rain" dataKey={`rain_${src.id}`} fill={src.color} name={`${t('lakeModal.forecast.rainPrefix')} ${src.label}`} barSize={6} opacity={0.5} />
                                                         ))}
                                                         {/* Station — luôn có data */}
-                                                        <Bar yAxisId="rain" dataKey="rain_station" fill="#2563eb" name="Mưa Trạm đo" barSize={8} opacity={0.55} />
+                                                        <Bar yAxisId="rain" dataKey="rain_station" fill="#2563eb" name={t('lakeModal.forecast.stationRain')} barSize={8} opacity={0.55} />
                                                         {/* BestMatch = trung bình — thanh đậm hơn */}
-                                                        <Bar yAxisId="rain" dataKey="rain_bestmatch" fill="#7c3aed" name="Mưa BestMatch (TB)" barSize={10} opacity={0.85} />
+                                                        <Bar yAxisId="rain" dataKey="rain_bestmatch" fill="#7c3aed" name={t('lakeModal.forecast.bestMatchRain')} barSize={10} opacity={0.85} />
                                                     </>
                                                 ) : (
                                                     <Bar
                                                         yAxisId="rain"
                                                         dataKey={`rain_${selectedRainSource}`}
                                                         fill={RAIN_SOURCES.find(s => s.id === selectedRainSource)?.color || '#2563eb'}
-                                                        name={`Mưa (${RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label || selectedRainSource}) (mm)`}
+                                                        name={`${t('lakeModal.forecast.rainPrefix')} (${RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label || selectedRainSource}) (mm)`}
                                                         barSize={12}
                                                         opacity={0.7}
                                                     />
                                                 )}
 
                                                 {/* Actual Flow */}
-                                                <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name="Khảo sát (Thực tế)" connectNulls={true} />
+                                                <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
                                                 
                                                 {/* P90 — upper bound line + fill band from top */}
                                                 <Area yAxisId="flow" type="monotone" dataKey="p90"
                                                     stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3"
                                                     fill="url(#colorBand)" fillOpacity={1}
-                                                    name="Max (P90 — Kịch bản cao nhất)"
+                                                    name={t('lakeModal.forecast.p90Label')}
                                                     dot={false} connectNulls={false} />
                                                 {/* P10 — lower bound line + white fill to erase below */}
                                                 <Area yAxisId="flow" type="monotone" dataKey="p10"
                                                     stroke="#6366f1" strokeWidth={1.5} strokeDasharray="6 3"
                                                     fill="#fff" fillOpacity={1}
-                                                    name="Min (P10 — Kịch bản thấp nhất)"
+                                                    name={t('lakeModal.forecast.p10Label')}
                                                     dot={false} connectNulls={false} />
 
                                                 {/* Specific Sources Lines (Only in Best Match) */}
                                                 {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
-                                                    <Line key={`p50_${src.id}`} yAxisId="flow" type="monotone" dataKey={`p50_${src.id}`} stroke={src.color} strokeWidth={1} strokeDasharray="4 4" dot={false} name={`Dự báo nguồn ${src.label}`} opacity={0.8} />
+                                                    <Line key={`p50_${src.id}`} yAxisId="flow" type="monotone" dataKey={`p50_${src.id}`} stroke={src.color} strokeWidth={1} strokeDasharray="4 4" dot={false} name={`${t('lakeModal.forecast.forecastSource')} ${src.label}`} opacity={0.8} />
                                                 ))}
 
                                                 {/* Forecast Scenario Line (Primary) */}
-                                                <Line yAxisId="flow" type="monotone" dataKey="p50" stroke={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'} strokeWidth={3} strokeDasharray="8 5" dot={{ r: 3 }} name={selectedRainSource === 'bestmatch' ? `Dự báo Best Match (Trung bình)` : `Dự báo ${MODELS.find(m => m.id === selectedModel)?.label} (Kỳ vọng)`} connectNulls={true} />
+                                                <Line yAxisId="flow" type="monotone" dataKey="p50" stroke={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'} strokeWidth={3} strokeDasharray="8 5" dot={{ r: 3 }} name={selectedRainSource === 'bestmatch' ? t('lakeModal.forecast.bestMatchAvg') : t('lakeModal.forecast.forecastExpected', { model: MODELS.find(m => m.id === selectedModel)?.label })} connectNulls={true} />
 
                                             </ComposedChart>
                                         </ResponsiveContainer>
@@ -645,18 +651,18 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 {/* Results Table Integration */}
                                 <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col h-full">
                                     <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
-                                        <Clock size={18} /> KẾT QUẢ DỰ BÁO CHI TIẾT
+                                        <Clock size={18} /> {t('lakeModal.forecast.tableTitle')}
                                     </h3>
-                                    <p className="text-xs text-gray-500 mb-4 italic">12 giờ tiếp theo (LSTM)</p>
+                                    <p className="text-xs text-gray-500 mb-4 italic">{t('lakeModal.forecast.next12h')}</p>
                                     <div className="flex-1 overflow-auto border border-gray-100 rounded-lg">
                                         <table className="w-full text-sm text-left">
                                             <thead className="bg-[#f8fafc] text-gray-600 font-bold border-b text-[10px] uppercase tracking-wider">
                                                 <tr>
-                                                    <th className="px-3 py-3">Giờ</th>
-                                                    <th className="px-2 py-3 text-center text-cyan-600">Mưa</th>
-                                                    <th className="px-3 py-3 text-center">Min</th>
-                                                    <th className="px-3 py-3 text-center">Avg</th>
-                                                    <th className="px-3 py-3 text-center text-red-600">Max</th>
+                                                    <th className="px-3 py-3">{t('lakeModal.forecast.hour')}</th>
+                                                    <th className="px-2 py-3 text-center text-cyan-600">{t('lakeModal.forecast.rain')}</th>
+                                                    <th className="px-3 py-3 text-center">{t('lakeModal.forecast.min')}</th>
+                                                    <th className="px-3 py-3 text-center">{t('lakeModal.forecast.avg')}</th>
+                                                    <th className="px-3 py-3 text-center text-red-600">{t('lakeModal.forecast.max')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -677,38 +683,38 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                         </table>
                                     </div>
                                     <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                        <div className="text-[10px] font-bold text-blue-800 mb-1">CHỈ SỐ TIN CẬY</div>
+                                        <div className="text-[10px] font-bold text-blue-800 mb-1">{t('lakeModal.forecast.confidenceIndex')}</div>
                                         <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
                                             <div className="bg-blue-500 h-full w-[85%]"></div>
                                         </div>
-                                        <div className="flex justify-between text-[10px] text-blue-600 mt-1"><span>Độ tin cậy mô hình</span> <span>85%</span></div>
+                                        <div className="flex justify-between text-[10px] text-blue-600 mt-1"><span>{t('lakeModal.forecast.modelConfidence')}</span> <span>85%</span></div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Info cards */}
                             <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-                                <h3 className="text-gray-800 font-bold mb-4 border-b pb-2 text-sm flex items-center gap-2"><BookOpen size={16} /> HƯỚNG DẪN ĐỌC BIỂU ĐỒ & DỮ LIỆU</h3>
+                                <h3 className="text-gray-800 font-bold mb-4 border-b pb-2 text-sm flex items-center gap-2"><BookOpen size={16} /> {t('lakeModal.forecast.guideTitle')}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
                                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                         <span className="w-8 border-t-2 border-red-500 border-dashed"></span>
-                                        <span className="text-xs font-semibold text-gray-700">P90 — Kịch bản cao nhất</span>
+                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.p90Guide')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                         <span className="w-8 border-t-2 border-blue-600 border-dashed"></span>
-                                        <span className="text-xs font-semibold text-gray-700">P50 — Dự báo kỳ vọng (AVG)</span>
+                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.p50Guide')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                         <span className="w-8 border-t-2 border-indigo-500 border-dashed"></span>
-                                        <span className="text-xs font-semibold text-gray-700">P10 — Kịch bản thấp nhất</span>
+                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.p10Guide')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                         <span className="w-8 border-t-3 border-blue-600"></span>
-                                        <span className="text-xs font-semibold text-gray-700">Khảo sát thực tế (đo được)</span>
+                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.surveyGuide')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 bg-cyan-50 p-3 rounded-lg border border-cyan-100">
                                         <span className="w-8 h-3 bg-violet-500 rounded opacity-80 inline-block"></span>
-                                        <span className="text-xs font-semibold text-cyan-700">Cột mưa (mm) — hướng xuống, trục phải</span>
+                                        <span className="text-xs font-semibold text-cyan-700">{t('lakeModal.forecast.rainGuide')}</span>
                                     </div>
                                 </div>
                             </div>
