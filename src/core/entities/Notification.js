@@ -14,7 +14,7 @@ const notificationSchema = new mongoose.Schema({
         type: String,
         enum: [
             // Cá nhân
-            'post_approved', 'post_rejected',
+            'post_approved', 'post_rejected', 'post_moderation',
             // Hệ thống (public)
             'flood_alert',       // khu vực ngập
             'rain_warning',      // mưa lớn sắp/đang xảy ra
