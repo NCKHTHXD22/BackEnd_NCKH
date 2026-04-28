@@ -1,0 +1,9 @@
+# ── Core AI ───────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9        # để nhận file upload
+
+# ── Computer Vision ────────────────────────────────────────────────
+ultralytics>=8.2.0             # YOLO (bao gồm PyTorch tự động)
+opencv-python-headless>=4.9.0  # headless (không cần GUI trên server)
+numpy>=1.26.0

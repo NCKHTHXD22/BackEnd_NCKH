@@ -1,6 +1,7 @@
 import { postRepo } from "../../infrastructure/repositories/post.repo.js";
 import { notificationRepo } from "../../infrastructure/repositories/notification.repo.js";
 import cloudinary from "../config/cloudinary.js";
+import { analyzeFloodImage, determinePostStatus } from "../../services/aiInference.service.js";
 
 export const getAllFloodPosts = async (req, res) => {
     try {
@@ -36,6 +37,21 @@ export const getFloodPostById = async (req, res) => {
 
 export const createFloodPost = async (req, res) => {
     try {
+        // ── 1. Phân tích AI với ảnh đầu tiên (nếu có) ─────────────
+        let aiResult = { success: false, label: null, floodLevel: null, score: null, warnable: false };
+
+        if (req.files?.length > 0) {
+            const firstImagePath = req.files[0].path;
+            console.log(`🤖 Bắt đầu phân tích AI: ${firstImagePath}`);
+            aiResult = await analyzeFloodImage(firstImagePath);
+        }
+
+        // ── 2. Xác định status dựa trên kết quả AI ────────────────
+        const status = determinePostStatus(aiResult);
+        const isAutoApproved = (status === "approved");
+        console.log(`📋 AI → label=${aiResult.label}, flood=${aiResult.floodLevel}cm, status=${status}`);
+
+        // ── 3. Upload ảnh lên Cloudinary ───────────────────────────
         let imageUrls = [];
         if (req.files?.length > 0) {
             for (const file of req.files) {
@@ -44,6 +60,7 @@ export const createFloodPost = async (req, res) => {
             }
         }
 
+        // ── 4. Lưu vào DB (kèm kết quả AI) ────────────────────────
         const newPost = await postRepo.create({
             user: req.user._id,
             location: typeof req.body.location === "string" ? JSON.parse(req.body.location) : req.body.location,
@@ -53,14 +70,45 @@ export const createFloodPost = async (req, res) => {
             description: req.body.description,
             imageUrls,
             isFrequentFlood: req.body.isFrequentFlood || false,
-            status: "pending"
+            // AI fields
+            aiProcessed:    aiResult.success !== undefined,
+            aiLabel:        aiResult.label        ?? null,
+            aiFloodLevel:   aiResult.floodLevel   ?? null,
+            aiScore:        aiResult.score        ?? null,
+            aiAutoApproved: isAutoApproved,
+            status,
         });
 
-        res.status(201).json(newPost);
+        // ── 5. Gửi thông báo cho user ──────────────────────────────
+        const notifContent = isAutoApproved
+            ? `✅ Bài đăng của bạn đã được duyệt tự động (AI phát hiện mức ngập ~${aiResult.floodLevel?.toFixed(0)} cm).`
+            : aiResult.label === "UNDETECTED" || !aiResult.success
+                ? `⏳ Bài đăng của bạn đang chờ Admin xét duyệt (AI không nhận diện được mức ngập).`
+                : `⏳ Bài đăng của bạn đang chờ Admin xét duyệt.`;
+
+        await notificationRepo.create({
+            user: req.user._id,
+            type: "post_moderation",
+            title: isAutoApproved ? "Bài đăng đã được duyệt" : "Bài đăng đang chờ duyệt",
+            content: notifContent,
+            priority: isAutoApproved ? 2 : 1,
+        });
+
+        res.status(201).json({
+            ...newPost.toObject(),
+            _aiInfo: {
+                label: aiResult.label,
+                floodLevel: aiResult.floodLevel,
+                score: aiResult.score,
+                autoApproved: isAutoApproved,
+            }
+        });
     } catch (error) {
+        console.error("❌ createFloodPost error:", error);
         res.status(500).json({ error: error.message });
     }
 };
+
 
 export const updateFloodPost = async (req, res) => {
     try {
