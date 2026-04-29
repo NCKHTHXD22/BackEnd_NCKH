@@ -1,4 +1,5 @@
 import axios from 'axios';
+import inflowLakeHistoryRepo from '../../infrastructure/repositories/inflowLakeHistory.repo.js';
 
 const AUTH = Buffer.from(`rfm2O3ciJ3aOJy1iA2SAfS3P_qwa:cklyddfdciGjQJGdtiPg936PDo8a`).toString('base64');
 
@@ -37,17 +38,46 @@ class LiveHydroController {
         return this._token;
     }
 
+    // Try fetching the last `hours` hours from InflowLakeHistory DB
+    async _fetchFromDB(lakeId, hours) {
+        const end = new Date();
+        const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+        const rows = await inflowLakeHistoryRepo.findByLake(Number(lakeId), start, end);
+        return Array.isArray(rows) ? rows : [];
+    }
+
+    _buildDBResponse(dbHistory) {
+        // dbHistory is sorted ascending by timestamp (findByLake uses sort: 1)
+        const latest = dbHistory[dbHistory.length - 1];
+        return {
+            qvao: latest.qvao || 0,
+            luuluongxa: latest.luuluongxa || 0,
+            htl: latest.htl || 0,
+            source: 'db',
+            history: dbHistory.map(d => ({
+                time: d.timestamp instanceof Date
+                    ? d.timestamp.toISOString()
+                    : new Date(d.timestamp).toISOString(),
+                qvao: d.qvao || 0,
+                luuluongxa: d.luuluongxa || 0,
+                htl: d.htl || 0
+            }))
+        };
+    }
+
     async getLiveHydro(req, res, next) {
+        const { lakeId } = req.params;
+
+        const end = new Date();
+        end.setMinutes(0, 0, 0);
+        const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+        const formatISO = (d) => d.toISOString().replace(/\.\d{3}Z$/, '.000Z');
+
+        // ── 1. Try live Danang API ────────────────────────────────────────────
+        let apiData = null;
         try {
-            const { lakeId } = req.params;
             const token = await this.getToken();
             const proxyUrl = this._getProxyUrl();
-
-            const end = new Date();
-            end.setMinutes(0, 0, 0);
-            const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
-
-            const formatISO = (d) => d.toISOString().replace(/\.\d{3}Z$/, '.000Z');
 
             const hydroRes = await axios.post(proxyUrl, {
                 method: 'GET',
@@ -60,34 +90,46 @@ class LiveHydroController {
                 headers: { 'Authorization': `Bearer ${token}` }
             }, { timeout: 60000 });
 
-            let data = typeof hydroRes.data === 'string' ? JSON.parse(hydroRes.data) : hydroRes.data;
-            if (data && data.data) data = data.data;
+            let raw = typeof hydroRes.data === 'string' ? JSON.parse(hydroRes.data) : hydroRes.data;
+            if (raw && raw.data) raw = raw.data;
+            if (Array.isArray(raw) && raw.length > 0) apiData = raw;
+        } catch (err) {
+            console.warn(`[liveHydro] Danang API failed for lake ${lakeId}: ${err.message}`);
+        }
 
-            if (!Array.isArray(data) || data.length === 0) {
-                return res.json({ qvao: 0, luuluongxa: 0, htl: 0 });
-            }
-
-            // Sort ascending by thoigianxa for chronological chart display
-            data.sort((a, b) => (a.thoigianxa || '').localeCompare(b.thoigianxa || ''));
-            const latest = data[data.length - 1]; // newest = last after ascending sort
-
-            res.json({
+        // ── 2. Return API data if available ──────────────────────────────────
+        if (apiData) {
+            apiData.sort((a, b) => (a.thoigianxa || '').localeCompare(b.thoigianxa || ''));
+            const latest = apiData[apiData.length - 1];
+            return res.json({
                 qvao: latest.qvao || 0,
                 luuluongxa: latest.luuluongxa || 0,
                 htl: latest.htl || 0,
-                history: data.map(d => ({
-                    // Parse VN time correctly with +07:00
+                source: 'api',
+                history: apiData.map(d => ({
                     time: d.thoigianxa ? new Date(d.thoigianxa + '+07:00').toISOString() : null,
                     qvao: d.qvao || 0,
                     luuluongxa: d.luuluongxa || 0,
                     htl: d.htl || 0
                 }))
             });
-
-        } catch (error) {
-            console.error('Hydro data fetch error:', error.message);
-            res.status(500).json({ error: 'Could not fetch hydro data' });
         }
+
+        // ── 3. Fallback: DB — try last 24h, then 7 days ───────────────────────
+        try {
+            let dbHistory = await this._fetchFromDB(lakeId, 24);
+            if (dbHistory.length === 0) {
+                dbHistory = await this._fetchFromDB(lakeId, 7 * 24);
+            }
+            if (dbHistory.length > 0) {
+                return res.json(this._buildDBResponse(dbHistory));
+            }
+        } catch (dbErr) {
+            console.warn(`[liveHydro] DB fallback failed for lake ${lakeId}: ${dbErr.message}`);
+        }
+
+        // ── 4. No data at all ────────────────────────────────────────────────
+        return res.json({ qvao: 0, luuluongxa: 0, htl: 0 });
     }
 }
 

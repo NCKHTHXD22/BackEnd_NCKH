@@ -1027,14 +1027,14 @@ export default function OperationDashboard({ lakeId }) {
                         </div>
                     </div>
                     
-                    <div className="w-full p-4 h-[380px]">
+                    <div className="w-full p-4 h-[520px]">
                         {unifiedData.length === 0 ? (
                             <div className="flex items-center justify-center h-full text-slate-400 text-xs italic">
                                 {t('operation.processingChart')}
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={unifiedData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }} barCategoryGap="10%">
+                                <ComposedChart data={unifiedData} margin={{ top: 10, right: 40, left: 10, bottom: 50 }} barCategoryGap="10%">
                                     <defs>
                                         <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.3} />
@@ -1053,8 +1053,10 @@ export default function OperationDashboard({ lakeId }) {
                                         fontWeight="700"
                                         axisLine={false}
                                         tickLine={false}
-                                        interval={Math.max(1, Math.floor(unifiedData.length / 12))}
-                                        height={40}
+                                        interval={Math.max(1, Math.floor(unifiedData.length / 10))}
+                                        height={55}
+                                        angle={-35}
+                                        textAnchor="end"
                                         tickFormatter={val => {
                                             if (!val || typeof val !== 'string') return val;
                                             const [d, t] = val.split(' ');
@@ -1068,6 +1070,7 @@ export default function OperationDashboard({ lakeId }) {
                                         fontWeight="800"
                                         axisLine={false}
                                         tickLine={false}
+                                        domain={['auto', 'auto']}
                                         tickFormatter={v => v.toLocaleString()}
                                     />
                                     <YAxis
