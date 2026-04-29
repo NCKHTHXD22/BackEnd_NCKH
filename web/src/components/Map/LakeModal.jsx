@@ -129,21 +129,26 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     // Generate unified forecast data (Actuals + Real LSTM + Fallbacks)
     const generateUnifiedData = () => {
-        const baseQ = lakeData.Q_to_Lake || 80;
         const now = new Date();
         now.setMinutes(0, 0, 0); // Align to hour start
 
-        // Helper: Format date for labels (GMT+7)
-        const formatLabel = (date) => {
-            return date.getHours().toString().padStart(2, '0') + ':00 ' +
-                date.getDate().toString().padStart(2, '0') + '/' +
-                (date.getMonth() + 1).toString().padStart(2, '0');
-        };
+        const formatLabel = (date) =>
+            date.getHours().toString().padStart(2, '0') + ':00 ' +
+            date.getDate().toString().padStart(2, '0') + '/' +
+            (date.getMonth() + 1).toString().padStart(2, '0');
+
+        // Build hour-key string for timestamp matching
+        const hourKey = (dt) =>
+            dt.getFullYear() + '-' +
+            String(dt.getMonth()).padStart(2, '0') + '-' +
+            String(dt.getDate()).padStart(2, '0') + 'T' +
+            String(dt.getHours()).padStart(2, '0');
 
         const result = [];
-        // Combined Timeline: Last 24h to Next 12h relative to CURRENT TIME
-        const START_HISTORY = 36; // 36 hours of history
-        const END_FORECAST = 12; // 12 hours of forecast
+        const START_HISTORY = 36;
+        const END_FORECAST = 12;
+
+        let lastKnownActual = null; // carry-forward to bridge gaps in gov data
 
         for (let i = 0; i <= (START_HISTORY + END_FORECAST); i++) {
             const hourOffset = i - START_HISTORY;
@@ -151,70 +156,48 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             const label = formatLabel(targetTime);
             const isFuture = hourOffset > 0;
             const isNow = hourOffset === 0;
+            const targetKey = hourKey(targetTime);
 
-            // 1. Check Historical Data — match by full ISO hour (YYYY-MM-DDTHH)
-            const targetHourKey = targetTime.getFullYear() + '-' +
-                String(targetTime.getMonth()).padStart(2, '0') + '-' +
-                String(targetTime.getDate()).padStart(2, '0') + 'T' +
-                String(targetTime.getHours()).padStart(2, '0');
-            const realPoint = realHistoryData.find(d => {
-                const dt = new Date(d.timestamp);
-                const key = dt.getFullYear() + '-' +
-                    String(dt.getMonth()).padStart(2, '0') + '-' +
-                    String(dt.getDate()).padStart(2, '0') + 'T' +
-                    String(dt.getHours()).padStart(2, '0');
-                return key === targetHourKey;
-            });
+            // 1. Historical data — match by hour key
+            const realPoint = realHistoryData.find(d => hourKey(new Date(d.timestamp)) === targetKey);
 
-            // 2. Check LSTM Forecast Data — same full-hour match
-            const realPred = Array.isArray(realLstmData) ?
-                realLstmData.find(d => {
-                    const dt = new Date(d.targetTime || d.forecastTime);
-                    const key = dt.getFullYear() + '-' +
-                        String(dt.getMonth()).padStart(2, '0') + '-' +
-                        String(dt.getDate()).padStart(2, '0') + 'T' +
-                        String(dt.getHours()).padStart(2, '0');
-                    return key === targetHourKey;
-                }) : null;
+            // 2. LSTM forecast — match by hour key
+            const realPred = Array.isArray(realLstmData)
+                ? realLstmData.find(d => hourKey(new Date(d.targetTime || d.forecastTime)) === targetKey)
+                : null;
 
             const actualQvao = realPoint ? realPoint.qvao : null;
+            // Track last non-null actual to fill gaps when gov API lags
+            if (actualQvao !== null) lastKnownActual = actualQvao;
 
-            // Match rain from rainLakeHistory by hour
-            const rainPoint = rainLakeHistory.find(d => {
-                const dt = new Date(d.timestamp);
-                const key = dt.getFullYear() + '-' +
-                    String(dt.getMonth()).padStart(2, '0') + '-' +
-                    String(dt.getDate()).padStart(2, '0') + 'T' +
-                    String(dt.getHours()).padStart(2, '0');
-                return key === targetHourKey;
-            });
+            // Rain matching
+            const rainPoint = rainLakeHistory.find(d => hourKey(new Date(d.timestamp)) === targetKey);
             const stationRain = rainPoint ? (rainPoint.sumDepth || 0) : 0;
-
-            // Forecast rain: use rain from LSTM prediction if available
             const forecastRain = realPred ? (realPred.rain_forecast || realPred.rain || 0) : 0;
             const rainVal = isFuture ? forecastRain : stationRain;
 
-            // BestMatch = average of all sources (currently only station; extend later)
-            const bestMatchRain = rainVal;
+            // Bridge value: actual Q if available, else last known (for gap hours)
+            const bridgeVal = actualQvao ?? lastKnownActual;
 
             const dataPoint = {
                 time: label,
                 fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
                 isFuture,
-                qActual: !isFuture ? actualQvao : null,
+                // Extend actual line through hours where gov data hasn't arrived yet
+                qActual: !isFuture ? (actualQvao ?? lastKnownActual) : null,
+                // Bridge LSTM forecast to last known actual at "now"
                 p50: isNow
-                    ? actualQvao
+                    ? bridgeVal
                     : (isFuture ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null),
                 p10: isNow
-                    ? actualQvao
+                    ? bridgeVal
                     : (isFuture ? (realPred ? realPred.p10 : null) : null),
                 p90: isNow
-                    ? actualQvao
+                    ? bridgeVal
                     : (isFuture ? (realPred ? realPred.p90 : null) : null),
                 rain: rainVal,
                 rain_station: stationRain,
-                rain_bestmatch: bestMatchRain,
-                // Placeholder slots for future NWP sources
+                rain_bestmatch: rainVal,
                 rain_ecmwf: null,
                 rain_gfs: null,
                 rain_jma: null,
@@ -223,7 +206,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
             result.push(dataPoint);
         }
-        
+
         return result;
     };
 
