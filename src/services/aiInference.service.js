@@ -17,10 +17,10 @@ const AI_TIMEOUT_MS = 60_000; // 60s (HF cold start có thể chậm)
  * @returns {Promise<{success, label, floodLevel, score, warnable, message}>}
  */
 export async function analyzeFloodImage(imagePath) {
-    const pythonUrl = ENV.PYTHON_API_URL;
+    const pythonUrl = ENV.HF_YOLO_API_URL;
 
     if (!pythonUrl) {
-        console.warn("⚠️  PYTHON_API_URL chưa cấu hình — bỏ qua AI");
+        console.warn("⚠️  HF_YOLO_API_URL chưa cấu hình — bỏ qua AI");
         return { success: false, label: "NO_SERVICE", floodLevel: null, score: null, warnable: false };
     }
 

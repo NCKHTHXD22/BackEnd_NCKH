@@ -20,5 +20,10 @@ export const ENV = {
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 't5ZzrVsusmRjtd9wewpPJQUQEKc',
     JWT_SECRET: process.env.JWT_SECRET || '8bdf1f9e47e16c67e8f74ffebcf5aa41d7b274a86bde1cd58f83b7119d384a5f5c44f17cb7721d25aeb4589b7d1e833af4dfbc899f676209ecdc260d041d2b3d',
     ADMIN_REGISTRATION_SECRET: process.env.ADMIN_REGISTRATION_SECRET || 'abc123supersecret987',
-    PYTHON_API_URL: process.env.PYTHON_API_URL || 'http://103.107.182.191:8000/predict'
+
+    // Python AI Service (LSTM)
+    PYTHON_API_URL: process.env.PYTHON_API_URL || 'http://103.107.182.191:8000/predict',
+
+    // HuggingFace AI Service (YOLO)
+    HF_YOLO_API_URL: process.env.HF_YOLO_API_URL || 'https://anvo2004-flood-ai-inference.hf.space/predict'
 };
