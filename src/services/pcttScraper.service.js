@@ -126,8 +126,18 @@ class PcttScraperService {
 
                 try {
                     if (!pageRowsCache[pageIdx]) {
-                        console.log(`🌐 [SCRAPER] Đang tải trang ${pageIdx + 1}/3...`);
-                        pageRowsCache[pageIdx] = await scrapePageRows(page, PAGE_URLS[pageIdx]);
+                        console.log(`🌐 [SCRAPER] Đang tải các trang song song...`);
+                        const tasks = PAGE_URLS.map(async (url, idx) => {
+                            const p = await browser.newPage();
+                            try {
+                                const r = await scrapePageRows(p, url);
+                                return { idx, rows: r };
+                            } finally {
+                                await p.close();
+                            }
+                        });
+                        const resultsArr = await Promise.all(tasks);
+                        resultsArr.forEach(r => { pageRowsCache[r.idx] = r.rows; });
                     }
 
                     const rows = pageRowsCache[pageIdx];

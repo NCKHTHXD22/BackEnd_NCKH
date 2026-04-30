@@ -37,6 +37,7 @@ import {
     ReferenceLine
 } from 'recharts';
 import mapApi from '../../api/mapApi';
+import axiosClient from '../../api/axiosClient';
 
 // Rain source configs
 const RAIN_SOURCES = [
@@ -67,6 +68,27 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const [realLstmData, setRealLstmData] = useState([]);
     const [realHistoryData, setRealHistoryData] = useState([]);
     const [rainLakeHistory, setRainLakeHistory] = useState([]);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        try {
+            await axiosClient.post("/inflowlake-history/sync");
+            // Refresh data after sync
+            const [history, rainHistory] = await Promise.all([
+                mapApi.getInflowHistory(lakeId).catch(() => []),
+                mapApi.getRainLakeHistory(lakeId).catch(() => []),
+            ]);
+            setRealHistoryData(history);
+            setRainLakeHistory(Array.isArray(rainHistory) ? rainHistory : []);
+            alert("Đã đồng bộ xong dữ liệu mới nhất!");
+        } catch (err) {
+            console.error("❌ Sync failed:", err);
+            alert("Đồng bộ thất bại. Vui lòng thử lại sau.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     // Fetch real data on load and when switching to forecast
     useEffect(() => {
@@ -347,8 +369,18 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             <span className="text-gray-600">{t('lakeModal.overview.discharge')}</span>
                                             <span className="font-semibold text-red-600">{currentLuuluongxa.toFixed(2)} m³/s</span>
                                         </div>
-                                        <div className="flex justify-between border-b border-gray-100 pb-2 text-xs">
-                                            <span className="text-gray-500">{t('lakeModal.overview.updatedAt')}</span>
+                                        <div className="flex justify-between items-center border-b border-gray-100 pb-2 text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-500">{t('lakeModal.overview.updatedAt')}</span>
+                                                <button 
+                                                    onClick={handleSync}
+                                                    disabled={isSyncing}
+                                                    className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${isSyncing ? 'animate-spin' : ''}`}
+                                                    title="Đồng bộ dữ liệu mới ngay"
+                                                >
+                                                    <Activity size={12} className={isSyncing ? 'text-blue-600' : 'text-gray-400'} />
+                                                </button>
+                                            </div>
                                             <span className="text-gray-500">
                                                 {currentUpdateTime ? new Date(currentUpdateTime).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : 'N/A'}
                                             </span>

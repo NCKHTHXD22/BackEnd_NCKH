@@ -46,6 +46,21 @@ class InflowLakeHistoryController {
             next(err);
         }
     }
+
+    async syncRecent(req, res, next) {
+        try {
+            console.log('🔄 [SYNC] Manual sync triggered from Web');
+            // Cập nhật history từ scraper/api
+            await inflowLakeHistoryService.syncRecentData();
+            // Sau đó cập nhật bảng Live cho Dashboard
+            const inflowLakeService = (await import("../../services/inflowLake.service.js")).default;
+            await inflowLakeService.updateAllLakeFromHistory();
+            
+            res.json({ message: "Đã đồng bộ xong dữ liệu mới nhất từ trang PCTT." });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default new InflowLakeHistoryController();
