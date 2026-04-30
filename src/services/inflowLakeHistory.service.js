@@ -1,6 +1,7 @@
 import axios from 'axios';
 import InflowLakeHistoryRepo from '../infrastructure/repositories/inflowLakeHistory.repo.js';
 import InflowLakeRepo from '../infrastructure/repositories/inflowLake.repo.js';
+import pcttScraperService from './pcttScraper.service.js';
 
 class InflowLakeHistoryService {
     constructor() {
@@ -120,25 +121,75 @@ class InflowLakeHistoryService {
 
     /**
      * Called by cron: sync the last 2 days of data
+     * Fallback to scraper if GOV API fails
      */
     async syncRecentData() {
         const lakes = await InflowLakeRepo.findAll();
         if (!lakes.length) return;
 
-        const token = await this.getToken();
+        let token;
+        try {
+            token = await this.getToken();
+        } catch (err) {
+            console.warn('⚠️ [HISTORY] API Token failed, switching to FALLBACK SCRAPER...');
+            return await this._syncRecentFromScraper(lakes);
+        }
 
         const end = new Date();
-        // Round end to current hour
         end.setMinutes(0, 0, 0);
         const start = new Date(end.getTime() - (2 * 24 * 60 * 60 * 1000)); // Last 2 days
 
         let totalSaved = 0;
+        let anySuccess = false;
+
         for (const lake of lakes) {
             const savedCount = await this.fetchAndProcessLakeData(lake, token, start, end);
+            if (savedCount > 0) anySuccess = true;
             totalSaved += savedCount;
         }
 
-        console.log(`✅ [CRON] InflowLakeHistory synced ${totalSaved} new/updated recent records.`);
+        if (!anySuccess && totalSaved === 0) {
+            console.warn('⚠️ [HISTORY] GOV API returned 0 records, trying FALLBACK SCRAPER...');
+            return await this._syncRecentFromScraper(lakes);
+        }
+
+        console.log(`✅ [CRON] InflowLakeHistory synced ${totalSaved} records via GOV API.`);
+    }
+
+    /**
+     * Fallback history sync using scraper
+     */
+    async _syncRecentFromScraper(lakes) {
+        try {
+            const scraperData = await pcttScraperService.scrapeAllLakes();
+            if (scraperData.size === 0) {
+                console.error('❌ [HISTORY_SCRAPER] No data found on pctt.danang.gov.vn');
+                return;
+            }
+
+            let totalSaved = 0;
+            for (const lake of lakes) {
+                const records = scraperData.get(lake.Id_Lake);
+                if (!records || records.length === 0) continue;
+
+                const docs = records.map(r => ({
+                    Id_Lake: lake.Id_Lake,
+                    lakeName: lake.name,
+                    qvao: r.qvao,
+                    luuluongxa: r.luuluongxa,
+                    q_turbine: r.q_turbine,
+                    q_spillway: r.q_spillway,
+                    htl: r.htl,
+                    timestamp: r.timestamp
+                }));
+
+                await InflowLakeHistoryRepo.bulkUpsert(docs);
+                totalSaved += docs.length;
+            }
+            console.log(`✅ [HISTORY_SCRAPER] Synced ${totalSaved} records from HTML tables.`);
+        } catch (err) {
+            console.error('❌ [HISTORY_SCRAPER] Error:', err.message);
+        }
     }
 
     /**
