@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
-from data.rain_matrix_loader import load_rain_matrix, load_rain_from_stations
+from data.rain_matrix_loader import load_rain_matrix
 from config.rain_stations import RAIN_STATIONS, RESERVOIR_TO_STATIONS
 
 VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
@@ -71,7 +71,9 @@ def get_token():
     return _access_token
 
 
-# ================= HYDRO =================
+# ================= HYDRO (Fetched from Node.js Backend) =================
+BACKEND_API_URL = "https://backend-nckh-lm57.onrender.com/api"
+
 def fetch_hydro_data(rid, days=180, end_time=None):
     if end_time is None:
         end_time = _vn_now().replace(minute=0, second=0, microsecond=0)
@@ -79,40 +81,65 @@ def fetch_hydro_data(rid, days=180, end_time=None):
     start = end_time - timedelta(days=days)
 
     try:
-        token = get_token()
-
-        r = _get_with_retry(
-            f"{BASE_URL}/baocaothuydiens_bieudo",
-            headers={"Authorization": f"Bearer {token}"},
-            params={
-                "thuydien_id": rid,
-                "ngaybatdau": start.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
-                "ngayketthuc": end_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
-            },
-            timeout=120
-        )
+        # Thay vì gọi trực tiếp API Gov (đang sập), ta gọi qua Backend Node.js
+        # Backend này đã được tích hợp Scraper dự phòng
+        url = f"{BACKEND_API_URL}/inflowlake-history/{rid}"
+        params = {
+            "start": start.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
+            "end": end_time.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
+        }
+        
+        print(f"  [INFO] Fetching hydro from Backend: {url}")
+        r = _get_with_retry(url, params=params, timeout=60)
 
         if r is None:
             return pd.DataFrame()
 
         raw = r.json()
-        df = pd.DataFrame(raw["data"] if isinstance(raw, dict) else raw)
+        # Node.js API trả về array trực tiếp: [ {Id_Lake, qvao, htl, luuluongxa, timestamp}, ... ]
+        df = pd.DataFrame(raw)
 
         if df.empty:
             return pd.DataFrame()
 
-        df["time"] = pd.to_datetime(df["thoigianxa"], errors="coerce").dt.floor("h")
+        # Mapping lại các trường từ MongoDB format sang format LSTM cần
+        df["time"] = pd.to_datetime(df["timestamp"], errors="coerce").dt.floor("h")
 
         df["inflow"] = pd.to_numeric(df["qvao"], errors="coerce")
         df["water_level"] = pd.to_numeric(df["htl"], errors="coerce")
         df["outflow"] = pd.to_numeric(df["luuluongxa"], errors="coerce")
 
         df = df[["time", "inflow", "water_level", "outflow"]].dropna()
+        df = df.sort_values("time")
 
         return df
 
     except Exception as e:
-        print("Hydro error:", e)
+        print("Hydro error from Backend:", e)
+        return pd.DataFrame()
+
+def fetch_rain_from_backend(rid, start, end):
+    """Lấy dữ liệu mưa IDW đã tính toán từ Node.js Backend."""
+    try:
+        url = f"{BACKEND_API_URL}/rain-lake-history/{rid}/range"
+        params = {
+            "from": start.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
+            "to": end.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
+        }
+        r = _get_with_retry(url, params=params, timeout=30)
+        if r is None:
+            return pd.DataFrame()
+        
+        raw = r.json()
+        df = pd.DataFrame(raw)
+        if df.empty:
+            return pd.DataFrame()
+        
+        df["time"] = pd.to_datetime(df["timestamp"]).dt.tz_convert("Asia/Ho_Chi_Minh").dt.tz_localize(None).dt.floor("h")
+        df["rain"] = pd.to_numeric(df["sumDepth"], errors="coerce").fillna(0.0)
+        return df[["time", "rain"]]
+    except Exception as e:
+        print(f"  [ERROR] fetch_rain_from_backend: {e}")
         return pd.DataFrame()
 
 # ================= RAIN INTEGRATION (VNDMS Matrix + Raw + Forecast) =================
@@ -139,10 +166,10 @@ def fetch_rain_data(rid, lat, lon, reference_time=None, days=180):
     df_gap = pd.DataFrame()
     if last_matrix_time < reference_time:
         gap_start = last_matrix_time + timedelta(hours=1)
-        print(f"  [INFO] Detecting gap: {gap_start} to {reference_time}. Fetching from Rain Data...")
-        df_gap = load_rain_from_stations(rid, gap_start, reference_time)
+        print(f"  [INFO] Detecting gap: {gap_start} to {reference_time}. Fetching from Backend Rain Data...")
+        df_gap = fetch_rain_from_backend(rid, gap_start, reference_time)
         if not df_gap.empty:
-            print(f"  [OK] Filled {len(df_gap)} hours from Raw Rain Data (IDW calculated)")
+            print(f"  [OK] Filled {len(df_gap)} hours from Backend Rain Data")
 
     # Gộp Quá khứ (Matrix + Gap)
     combined = pd.concat([df_matrix, df_gap])
