@@ -69,6 +69,23 @@ export const updateUserInfo = async (req, res) => {
     }
 };
 
+export const registerPushToken = async (req, res) => {
+    try {
+        const clerkId = req.auth.userId;
+        const { token } = req.body;
+        if (!token || !token.startsWith("ExponentPushToken[")) {
+            return res.status(400).json({ message: "Token không hợp lệ" });
+        }
+        const user = await userRepo.findByClerkId(clerkId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+        user.expoPushToken = token;
+        await user.save();
+        res.json({ message: "Push token đã được lưu" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 export const deleteUser = async (req, res) => {
     try {
         const clerkId = req.auth.userId;

@@ -2,6 +2,7 @@ import { postRepo } from "../../infrastructure/repositories/post.repo.js";
 import { notificationRepo } from "../../infrastructure/repositories/notification.repo.js";
 import cloudinary from "../config/cloudinary.js";
 import { analyzeFloodImage, determinePostStatus } from "../../services/aiInference.service.js";
+import { sendExpoPush } from "../../services/expoPush.service.js";
 
 export const getAllFloodPosts = async (req, res) => {
     try {
@@ -94,6 +95,14 @@ export const createFloodPost = async (req, res) => {
             priority: isAutoApproved ? 2 : 1,
         });
 
+        if (req.user.expoPushToken) {
+            sendExpoPush(req.user.expoPushToken, {
+                title: isAutoApproved ? "Bài đăng đã được duyệt ✅" : "Bài đăng đang chờ duyệt ⏳",
+                body: notifContent,
+                data: { type: "post_moderation", postId: newPost._id?.toString() },
+            });
+        }
+
         res.status(201).json({
             ...newPost.toObject(),
             _aiInfo: {
@@ -164,15 +173,25 @@ export const moderateFloodPost = async (req, res) => {
 
         if (!updated) return res.status(404).json({ message: "Post not found" });
 
-        await updated.populate("user", "name email clerkId");
+        await updated.populate("user", "name email clerkId expoPushToken");
+
+        const moderateContent = status === "approved"
+            ? "Bài đăng của bạn đã được duyệt"
+            : `Bài đăng của bạn đã bị từ chối. Lý do: ${rejectReason || "Không rõ"}`;
 
         await notificationRepo.create({
             user: updated.user._id,
             type: "post_moderation",
-            content: status === "approved"
-                ? "Bài đăng của bạn đã được duyệt"
-                : `Bài đăng của bạn đã bị từ chối. Lý do: ${rejectReason || "Không rõ"}`,
+            content: moderateContent,
         });
+
+        if (updated.user.expoPushToken) {
+            sendExpoPush(updated.user.expoPushToken, {
+                title: status === "approved" ? "Bài đăng được duyệt ✅" : "Bài đăng bị từ chối ❌",
+                body: moderateContent,
+                data: { type: "post_moderation", postId: updated._id?.toString() },
+            });
+        }
 
         res.status(200).json(updated);
     } catch (err) {

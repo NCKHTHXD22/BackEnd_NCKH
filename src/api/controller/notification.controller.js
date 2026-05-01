@@ -1,5 +1,7 @@
 import { notificationRepo } from "../../infrastructure/repositories/notification.repo.js";
 import ReservoirAlert from "../../core/entities/ReservoirAlert.js";
+import User from "../../core/entities/User.js";
+import { sendExpoPush } from "../../services/expoPush.service.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const isExpired = (n) => n.expires_at && new Date(n.expires_at) < new Date();
@@ -130,6 +132,21 @@ export const createSystemNotification = async (req, res) => {
             is_active: true,
             expires_at: expires_at ? new Date(expires_at) : null,
         });
+
+        // Broadcast push tới tất cả user có token
+        const usersWithToken = await User.find(
+            { expoPushToken: { $ne: null }, allowNotification: { $ne: false } },
+            "expoPushToken"
+        ).lean();
+        const tokens = usersWithToken.map(u => u.expoPushToken).filter(Boolean);
+        if (tokens.length > 0) {
+            sendExpoPush(tokens, {
+                title: title || "Thông báo hệ thống",
+                body: content,
+                data: { type, notifId: notif._id?.toString() },
+            });
+        }
+
         res.status(201).json(notif);
     } catch (err) {
         res.status(500).json({ error: err.message });

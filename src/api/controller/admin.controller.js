@@ -2,6 +2,7 @@ import { postRepo } from "../../infrastructure/repositories/post.repo.js";
 import { userRepo } from "../../infrastructure/repositories/user.repo.js";
 import { adminRepo } from "../../infrastructure/repositories/admin.repo.js";
 import { notificationRepo } from "../../infrastructure/repositories/notification.repo.js";
+import { sendExpoPush } from "../../services/expoPush.service.js";
 
 /* POSTS */
 export const getPendingPosts = async (req, res) => {
@@ -36,11 +37,21 @@ export const approvePost = async (req, res) => {
         const post = await postRepo.update(req.params.id, { status: "approved" });
         if (!post) return res.status(404).json({ error: "Post not found" });
 
+        const content = `Bài đăng "${post.description}" đã được duyệt.`;
         await notificationRepo.create({
             user: post.user,
             type: "post_approved",
-            content: `Bài đăng "${post.description}" đã được duyệt.`,
+            content,
         });
+
+        const owner = await userRepo.model.findById(post.user).select("expoPushToken").lean();
+        if (owner?.expoPushToken) {
+            sendExpoPush(owner.expoPushToken, {
+                title: "Bài đăng được duyệt ✅",
+                body: content,
+                data: { type: "post_approved", postId: post._id?.toString() },
+            });
+        }
 
         res.json({ message: "Post approved", post });
     } catch (err) {
@@ -54,11 +65,21 @@ export const rejectPost = async (req, res) => {
         const post = await postRepo.update(req.params.id, { status: "rejected", rejectReason: reason });
         if (!post) return res.status(404).json({ error: "Post not found" });
 
+        const content = `Bài đăng "${post.description}" bị từ chối. Lý do: ${reason}`;
         await notificationRepo.create({
             user: post.user,
             type: "post_rejected",
-            content: `Bài đăng "${post.description}" bị từ chối. Lý do: ${reason}`,
+            content,
         });
+
+        const owner = await userRepo.model.findById(post.user).select("expoPushToken").lean();
+        if (owner?.expoPushToken) {
+            sendExpoPush(owner.expoPushToken, {
+                title: "Bài đăng bị từ chối ❌",
+                body: content,
+                data: { type: "post_rejected", postId: post._id?.toString() },
+            });
+        }
 
         res.json({ message: "Post rejected", post });
     } catch (err) {

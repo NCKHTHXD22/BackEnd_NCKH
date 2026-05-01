@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
     phone: String,
     allowNotification: Boolean,
     favoriteLocation: [String],
+    expoPushToken: { type: String, default: null },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     status: { type: String, enum: ['active', 'banned'], default: 'active' },
 }, {
