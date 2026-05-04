@@ -596,7 +596,7 @@ export default function OperationDashboard({ lakeId }) {
                     : [];
 
                 const mapped = arr.map(d => {
-                    const dt = new Date(d.forecastTime || d.targetTime);
+                    const dt = new Date(d.forecastTime || d.targetTime || d.time);
                     return {
                         _ts: dt,
                         fullLabel:

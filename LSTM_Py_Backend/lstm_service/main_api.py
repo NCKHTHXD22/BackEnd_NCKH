@@ -16,6 +16,7 @@ from data.data_fetcher import (
     fetch_rain_data,
     fetch_meteo_history,
     fetch_rain_forecast_idw,
+    _vn_now,
 )
 from features.feature_engineering import (
     add_time_features,

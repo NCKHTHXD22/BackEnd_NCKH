@@ -1,38 +1,37 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const MONGODB_URI = "mongodb+srv://annguyen14032004_db_user:rf3IE3SUW0iw27tW@cluster0.ugvzdvo.mongodb.net/NCKH?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 const ForecastLSTMSchema = new mongoose.Schema({
     Id_Lake: Number,
-    qvao_forecast: Number,
-    p10: Number,
-    p90: Number,
     forecastTime: Date,
-    generatedAt: { type: Date, default: Date.now }
+    qvao_forecast: Number
 }, { collection: 'forecast_LSTM' });
 
 const ForecastLSTM = mongoose.model('ForecastLSTM', ForecastLSTMSchema);
 
 async function checkData() {
     try {
+        console.log(`Connecting to: ${MONGODB_URI}`);
         await mongoose.connect(MONGODB_URI);
-        console.log("Connected to MongoDB");
+        console.log('✅ Connected to MongoDB');
 
         const count = await ForecastLSTM.countDocuments();
-        console.log(`Total documents in forecast_LSTM: ${count}`);
+        console.log(`Total forecast records: ${count}`);
 
         if (count > 0) {
-            const latest = await ForecastLSTM.find().sort({ generatedAt: -1 }).limit(10);
-            console.log("\nLatest 10 documents:");
-            latest.forEach(doc => {
-                console.log(`- RID: ${doc.Id_Lake} | ForecastTime: ${doc.forecastTime.toISOString()} | Q_Forecast: ${doc.qvao_forecast} | GeneratedAt: ${doc.generatedAt.toISOString()}`);
-            });
+            const sample = await ForecastLSTM.findOne().sort({ generatedAt: -1 });
+            console.log('Latest sample:', JSON.stringify(sample, null, 2));
+
+            const distinctLakes = await ForecastLSTM.distinct('Id_Lake');
+            console.log('Lakes with data:', distinctLakes);
         }
 
-        process.exit(0);
+        await mongoose.disconnect();
     } catch (err) {
-        console.error(err);
-        process.exit(1);
+        console.error('❌ Error:', err.message);
     }
 }
 

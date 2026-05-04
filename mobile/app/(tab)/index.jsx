@@ -1413,12 +1413,18 @@ function FloodPostPopup({ item }) {
       </View>
 
       {/* ── Mức ngập + loại khu vực ── */}
-      {(floodLevel || areaType) && (
+      {(floodLevel || areaType || item.aiProcessed) && (
         <View style={postStyles.badgeRow}>
           {!!floodLevel && (
             <View style={postStyles.floodBadge}>
               <Ionicons name="water" size={12} color="#0D47A1" />
               <Text style={postStyles.floodBadgeText}>Ngập {floodLevel} cm</Text>
+            </View>
+          )}
+          {item.aiProcessed && item.aiFloodLevel !== null && (
+            <View style={[postStyles.floodBadge, { backgroundColor: '#E3F2FD', borderColor: '#90CAF9' }]}>
+              <Text style={{ fontSize: 12 }}>🤖</Text>
+              <Text style={[postStyles.floodBadgeText, { color: '#1565C0' }]}>AI đo: {item.aiFloodLevel} cm</Text>
             </View>
           )}
           {!!areaType && (

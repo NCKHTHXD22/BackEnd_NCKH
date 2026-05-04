@@ -104,10 +104,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
                 if (activeTab === 'forecast' && selectedModel === 'lstm') {
                     const lstm = await mapApi.getForecastLstm(lakeId).catch(() => null);
-                    if (lstm && lstm.predictions) {
-                        setRealLstmData(lstm.predictions);
-                    } else if (Array.isArray(lstm)) {
-                        setRealLstmData(lstm);
+                    if (lstm) {
+                        const predictions = Array.isArray(lstm) ? lstm : (lstm.predictions || []);
+                        setRealLstmData(predictions);
                     } else {
                         setRealLstmData([]);
                     }
@@ -159,12 +158,14 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             date.getDate().toString().padStart(2, '0') + '/' +
             (date.getMonth() + 1).toString().padStart(2, '0');
 
-        // Build hour-key string for timestamp matching
-        const hourKey = (dt) =>
-            dt.getFullYear() + '-' +
-            String(dt.getMonth()).padStart(2, '0') + '-' +
-            String(dt.getDate()).padStart(2, '0') + 'T' +
-            String(dt.getHours()).padStart(2, '0');
+        // Build hour-key string for robust timestamp matching (Local Time)
+        const hourKey = (dt) => {
+            if (!dt || isNaN(dt.getTime())) return null;
+            return dt.getFullYear() + '-' +
+                String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+                String(dt.getDate()).padStart(2, '0') + 'T' +
+                String(dt.getHours()).padStart(2, '0');
+        };
 
         const result = [];
         const START_HISTORY = 36;
@@ -185,7 +186,10 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
             // 2. LSTM forecast — match by hour key
             const realPred = Array.isArray(realLstmData)
-                ? realLstmData.find(d => hourKey(new Date(d.targetTime || d.forecastTime)) === targetKey)
+                ? realLstmData.find(d => {
+                    const dTime = d.targetTime || d.forecastTime || d.time;
+                    return dTime && hourKey(new Date(dTime)) === targetKey;
+                })
                 : null;
 
             const actualQvao = realPoint ? realPoint.qvao : null;
@@ -241,7 +245,11 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             // Try to fetch real forecast data
             if (mapApi.getForecastLstm && selectedModel === 'lstm') {
                 const result = await mapApi.getForecastLstm(lakeId).catch(() => null);
-                if (result) setForecastResults(result);
+                if (result) {
+                    const predictions = Array.isArray(result) ? result : (result.predictions || []);
+                    setRealLstmData(predictions); // Update the state used by unifiedData
+                    setForecastResults(result);
+                }
             }
             if (mapApi.getForecastHistory) {
                 const history = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);

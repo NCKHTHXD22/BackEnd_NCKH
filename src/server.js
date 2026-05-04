@@ -37,6 +37,8 @@ import "./jobs/rainLakeHistory.job.js";
 import "./jobs/lstmForecast.job.js";
 import "./jobs/inflowLakeHistory.job.js";
 import "./jobs/floodAlert.job.js";
+import "./jobs/keepAlive.job.js"; // Giữ server luôn thức
+
 const app = express();
 
 // Middlewares
