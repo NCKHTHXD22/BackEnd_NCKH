@@ -96,7 +96,7 @@ class InflowLakeService {
 
         const end = new Date();
         end.setMinutes(0, 0, 0);
-        const start = new Date(end.getTime() - (180 * 24 * 60 * 60 * 1000));
+        const start = new Date(end.getTime() - (6 * 60 * 60 * 1000)); // last 6 hours
 
         let successCount = 0;
         for (const lake of lakes) {
