@@ -77,13 +77,41 @@ async function scrapePageRows(page, url) {
 }
 
 class PcttScraperService {
+    /**
+     * Tìm Chromium executable — Puppeteer bundled hoặc system path trên Linux
+     */
+    async _getExecutablePath() {
+        // Ưu tiên env var (set trong Render dashboard nếu cần)
+        if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+
+        // System Chromium paths phổ biến trên Ubuntu/Debian (Render chạy Ubuntu)
+        const { existsSync } = await import('fs');
+        const systemPaths = [
+            '/usr/bin/chromium-browser',
+            '/usr/bin/chromium',
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+        ];
+        for (const p of systemPaths) {
+            if (existsSync(p)) {
+                console.log(`🔍 [SCRAPER] Dùng system Chromium: ${p}`);
+                return p;
+            }
+        }
+
+        // Để Puppeteer tự tìm bundled Chrome (mặc định)
+        return undefined;
+    }
+
     async scrapeAllLakes() {
         const results = new Map();
         let browser = null;
 
         try {
+            const executablePath = await this._getExecutablePath();
             browser = await puppeteer.launch({
                 headless: true,
+                executablePath,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -94,6 +122,7 @@ class PcttScraperService {
                     '--single-process',
                 ],
             });
+            console.log('✅ [SCRAPER] Puppeteer browser launched');
 
             // Fetch 3 trang song song
             console.log('🌐 [SCRAPER] Đang tải 3 trang PCTT song song...');

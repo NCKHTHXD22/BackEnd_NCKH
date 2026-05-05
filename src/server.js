@@ -323,6 +323,32 @@ app.get('/api/seed-lake-specs', async (req, res) => {
     }
 });
 
+// 🔍 Debug: Test scraper + GOV API
+import pcttScraperService from './services/pcttScraper.service.js';
+import inflowLakeHistoryService from './services/inflowLakeHistory.service.js';
+
+app.get('/api/test-scraper', async (req, res) => {
+    try {
+        const data = await pcttScraperService.scrapeAllLakes();
+        const summary = {};
+        for (const [id, records] of data) {
+            summary[id] = { count: records.length, latest: records[0] };
+        }
+        res.json({ ok: true, lakes: data.size, summary });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+});
+
+app.get('/api/test-govapi', async (req, res) => {
+    try {
+        const token = await inflowLakeHistoryService.getToken();
+        res.json({ ok: true, tokenLength: token?.length, tokenPreview: token?.slice(0, 30) + '...' });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
+});
+
 // Start Server
 const PORT = ENV.PORT || 5001;
 
