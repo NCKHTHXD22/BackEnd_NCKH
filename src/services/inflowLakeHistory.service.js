@@ -137,7 +137,7 @@ class InflowLakeHistoryService {
 
         const end = new Date();
         end.setMinutes(0, 0, 0);
-        const start = new Date(end.getTime() - (2 * 24 * 60 * 60 * 1000)); // Last 2 days
+        const start = new Date(end.getTime() - (6 * 60 * 60 * 1000)); // last 6 hours (API paginates oldest-first, 2-day window misses today's data)
 
         let totalSaved = 0;
         let anySuccess = false;
