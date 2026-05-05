@@ -53,15 +53,20 @@ class InflowLakeService {
         const lakes = await inflowLakeRepo.findAll();
         if (!lakes.length) return;
 
-        // ── Thử API chính ──────────────────────────────────────────────────────────
-        const apiSuccess = await this._syncFromGovApi(lakes);
-
-        if (!apiSuccess) {
-            // ── Fallback: cào dữ liệu từ HTML pctt.danang.gov.vn ──────────────────
-            console.warn('⚠️  [HYDRO] API chính thất bại → chuyển sang FALLBACK SCRAPER (pctt.danang.gov.vn)...');
-            await this._syncFromScraper(lakes);
+        // Scraper là nguồn chính (axios+cheerio, không cần browser)
+        const scraperData = await pcttScraperService.scrapeAllLakes().catch(() => new Map());
+        if (scraperData.size > 0) {
+            await this._syncFromScraper(lakes, scraperData);
+            console.log('✅ InflowLake đã cập nhật hydro data từ PCTT scraper');
+            return;
         }
 
+        // Fallback: GOV API (last 6 hours via proxy)
+        console.warn('⚠️  [HYDRO] Scraper failed → thử GOV API fallback...');
+        const apiSuccess = await this._syncFromGovApi(lakes);
+        if (!apiSuccess) {
+            console.error('❌ [HYDRO] Cả scraper và GOV API đều thất bại.');
+        }
         console.log('✅ InflowLake đã cập nhật thông số thủy văn (hydro data)');
     }
 
@@ -151,11 +156,9 @@ class InflowLakeService {
      * Fallback: lấy dữ liệu bằng cách cào HTML từ pctt.danang.gov.vn
      * Chỉ cập nhật các hồ được map trong LAKE_MAPPING, giữ nguyên dữ liệu cũ nếu không scrape được
      */
-    async _syncFromScraper(lakes) {
+    async _syncFromScraper(lakes, scraperData) {
         try {
-            const scraperData = await pcttScraperService.scrapeAllLakes();
-
-            if (scraperData.size === 0) {
+            if (!scraperData || scraperData.size === 0) {
                 console.error('❌ [SCRAPER] Không lấy được dữ liệu từ pctt.danang.gov.vn');
                 return;
             }
@@ -167,7 +170,7 @@ class InflowLakeService {
                     continue;
                 }
 
-                // Lấy bản ghi mới nhất (thường là hàng đầu tiên trong bảng)
+                // Lấy bản ghi mới nhất (hàng đầu tiên trong bảng)
                 const data = lakeRecords[0];
 
                 await inflowLakeRepo.updateHydroData(
