@@ -59,21 +59,41 @@ function parseVNDateTime(dateStr, timeStr) {
 
 async function scrapePageRows(page, url) {
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-    await new Promise(r => setTimeout(r, 1500));
 
-    return await page.evaluate(() => {
-        const tbl = document.querySelectorAll('table')[9];
-        if (!tbl) return [];
-        const rows = tbl.querySelectorAll('tr');
-        const result = [];
-        rows.forEach((tr, rIdx) => {
-            if (rIdx < 3) return;
-            const cells = tr.querySelectorAll('td');
-            if (cells.length < 2) return;
-            result.push(Array.from(cells).map(c => c.innerText.trim()));
+    // Chờ bảng dữ liệu load xong — thử lần lượt với các timeout tăng dần
+    let rows = [];
+    for (const waitMs of [3000, 5000, 8000]) {
+        await new Promise(r => setTimeout(r, waitMs));
+
+        rows = await page.evaluate(() => {
+            // Lấy tất cả tables, tìm bảng có nhiều hàng nhất (bảng dữ liệu)
+            const tables = document.querySelectorAll('table');
+            let bestTable = null;
+            let bestCount = 0;
+            tables.forEach(tbl => {
+                const rowCount = tbl.querySelectorAll('tr').length;
+                if (rowCount > bestCount) { bestCount = rowCount; bestTable = tbl; }
+            });
+
+            // Fallback: dùng index 9 nếu không tìm được bảng lớn
+            const tbl = (bestCount > 5 ? bestTable : null) || document.querySelectorAll('table')[9];
+            if (!tbl) return [];
+
+            const result = [];
+            tbl.querySelectorAll('tr').forEach((tr, rIdx) => {
+                if (rIdx < 3) return; // bỏ 3 hàng header
+                const cells = tr.querySelectorAll('td');
+                if (cells.length < 2) return;
+                result.push(Array.from(cells).map(c => c.innerText.trim()));
+            });
+            return result;
         });
-        return result;
-    });
+
+        if (rows.length > 0) break; // có data rồi, dừng chờ
+        console.log(`  ⏳ [SCRAPER] Chờ thêm ${waitMs}ms cho trang load...`);
+    }
+
+    return rows;
 }
 
 class PcttScraperService {
