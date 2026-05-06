@@ -1,0 +1,24 @@
+[Unit]
+Description=Flood AI Inference Service (FastAPI + YOLO)
+After=network.target
+
+[Service]
+# ── Đổi đường dẫn cho phù hợp với server của bạn ──
+WorkingDirectory=/home/ubuntu/ai_inferences
+ExecStart=/home/ubuntu/ai_inferences/.venv/bin/python server.py
+Restart=always
+RestartSec=5
+
+# Chạy với user không phải root (bảo mật hơn)
+User=ubuntu
+Group=ubuntu
+
+# Env vars
+Environment="PYTHONUNBUFFERED=1"
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=flood-ai
+
+[Install]
+WantedBy=multi-user.target

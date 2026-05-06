@@ -9,9 +9,14 @@ export const authMiddleware = async (req, res, next) => {
             return res.status(401).json({ error: "Unauthorized: User not authenticated." });
         }
 
-        const user = await userRepo.findByClerkId(auth.userId);
+        let user = await userRepo.findByClerkId(auth.userId);
+        
+        // Nếu user có tài khoản Clerk nhưng bị mất/chưa có trong MongoDB -> tự động tạo
         if (!user) {
-            return res.status(404).json({ error: "User not found in database." });
+            user = await userRepo.create({
+                clerkId: auth.userId,
+            });
+            console.log(`[Auth] Auto-created missing user in DB: ${auth.userId}`);
         }
 
         req.auth = auth;
@@ -20,6 +25,6 @@ export const authMiddleware = async (req, res, next) => {
         next();
     } catch (err) {
         console.error("authMiddleware error:", err.message);
-        res.status(500).json({ error: "Authentication error" });
+        res.status(401).json({ error: "Authentication error: " + err.message });
     }
 };

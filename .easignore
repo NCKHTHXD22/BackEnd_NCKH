@@ -1,0 +1,15 @@
+# Backend Node.js - không cần cho mobile build
+src/
+tmp/
+scratch/
+
+# Python LSTM Backend - rất nặng
+LSTM_Py_Backend/
+
+# Các file rác ở root
+*.py
+scratch_test_api.js
+temp_read_excel.py
+
+# node_modules của mobile (EAS tự cài lại trên cloud)
+mobile/node_modules/

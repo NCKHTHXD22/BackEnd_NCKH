@@ -91,7 +91,15 @@ export default function DataTable({ data, onApprove, onReject }) {
                     {p.location?.province} - {p.location?.district}
                   </td>
                   <td className="border px-2 py-2">{p.description || "-"}</td>
-                  <td className="border px-2 py-2">{p.floodLevel} cm</td>
+                  <td className="border px-2 py-2">
+                    <div className="font-medium">{p.floodLevel} cm</div>
+                    {p.aiProcessed && (
+                      <div className="text-[11px] mt-1 bg-blue-50 text-blue-700 border border-blue-200 rounded px-1 py-0.5 inline-block">
+                        🤖 AI đo: {p.aiFloodLevel !== null ? `${p.aiFloodLevel} cm` : "Không rõ"}
+                        {p.aiScore && ` (${Math.round(p.aiScore * 100)}%)`}
+                      </div>
+                    )}
+                  </td>
                   <td className="border px-2 py-2">{p.areaType}</td>
                   <td className="border px-2 py-2">
                     {new Date(p.floodTime).toLocaleString()}

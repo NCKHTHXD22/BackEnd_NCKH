@@ -23,7 +23,9 @@ const InflowLakeSchema = new mongoose.Schema(
 
         // HYDRO DATA
         qvao: { type: Number, default: 0 },
-        luuluongxa: { type: Number, default: 0 },
+        luuluongxa: { type: Number, default: 0 },      // tổng xả
+        q_turbine: { type: Number, default: 0 },        // chạy máy
+        q_spillway: { type: Number, default: 0 },       // qua tràn
         htl: { type: Number, default: 0 },
 
         lastUpdate: { type: Date, default: Date.now }

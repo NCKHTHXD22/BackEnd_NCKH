@@ -1,6 +1,27 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', color: '#ef4444' }}>
+          <h2>Lỗi hiển thị trang</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{String(this.state.error)}</pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 12, padding: '8px 16px', cursor: 'pointer' }}>
+            Thử lại
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import AdminLogin from "./page/admin/Login";
+import AdminRegister from "./page/admin/Register";
+import ForgotPassword from "./page/admin/ForgotPassword";
 import AdminLayout from "./page/admin/Layout";
 import Pending from "./page/admin/Pending";
 import Approved from "./page/admin/Approved";
@@ -11,7 +32,6 @@ import ReportsPublic from "./page/Home/Reports";
 import HomePage from "./page/Home/HomePage";
 import SubmitReport from "./page/Home/SubmitReport";
 import MyReports from "./page/Home/MyReport";
-import Footer from "./components/Admin/AdminPage/Footer"; // Thêm dòng này
 import AdminDashboard from "./page/admin/AdminDashboard";
 
 function RequireAdmin({ children }) {
@@ -23,13 +43,16 @@ function RequireAdmin({ children }) {
 function App() {
   return (
     <BrowserRouter>
+      <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-gray-100">
         <div className="flex-1 flex flex-col">
           <Routes>
-            {/* Admin login (riêng, không dùng layout) */}
+            {/* Admin auth pages (riêng, không dùng layout) */}
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
 
-            {/* Public routes */}
+            {/* Public routes — bản đồ tại root */}
             <Route path="/" element={<HomePage />} />
             <Route path="/reports" element={<ReportsPublic />} />
             <Route path="/submit" element={<SubmitReport />} />
@@ -59,6 +82,7 @@ function App() {
           </Routes>
         </div>
       </div>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

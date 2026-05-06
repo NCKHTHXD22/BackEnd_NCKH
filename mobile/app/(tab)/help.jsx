@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, Image, FlatList, ActivityIndicator
+  ScrollView, Alert, FlatList, ActivityIndicator
 } from "react-native";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import MapView, { PROVIDER_GOOGLE,Marker } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useAuth } from "@clerk/clerk-expo";
 import axios from "axios";
+import { API_URL } from "@/lib/env";
 
 
 export default function HelpRequestScreen() {
@@ -49,37 +51,37 @@ export default function HelpRequestScreen() {
   }, []);
 
   const handlePickImage = async () => {
-        const { granted } = await ImagePicker.requestCameraPermissionsAsync();
-        if (!granted) {
-          Alert.alert("Bạn cần cấp quyền truy cập máy ảnh");
-          return;
-        }
-  
-        Alert.alert("Thêm hình ảnh", "Bạn muốn chọn ảnh từ thư viện hay chụp ảnh mới?", [
-          {
-            text: "Chụp ảnh",
-            onPress: async () => {
-              const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
-              if (!result.canceled) setImages([...images, result.assets[0]]);
-          },
+    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+    if (!granted) {
+      Alert.alert("Bạn cần cấp quyền truy cập máy ảnh");
+      return;
+    }
+
+    Alert.alert("Thêm hình ảnh", "Bạn muốn chọn ảnh từ thư viện hay chụp ảnh mới?", [
+      {
+        text: "Chụp ảnh",
+        onPress: async () => {
+          const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
+          if (!result.canceled) setImages([...images, result.assets[0]]);
         },
-        {
-          text: "Chọn từ thư viện",
-          onPress: async () => {
-            const { granted: mediaGranted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (!mediaGranted) {
-              Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh");
-              return;
-            }
-            const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.5, allowsMultipleSelection: true });
-            if (!result.canceled) {
-              setImages([...images, ...result.assets]);
-            }
-          },
+      },
+      {
+        text: "Chọn từ thư viện",
+        onPress: async () => {
+          const { granted: mediaGranted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (!mediaGranted) {
+            Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh");
+            return;
+          }
+          const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.5, allowsMultipleSelection: true });
+          if (!result.canceled) {
+            setImages([...images, ...result.assets]);
+          }
         },
-        { text: "Hủy", style: "cancel" },
-      ]);
-    };
+      },
+      { text: "Hủy", style: "cancel" },
+    ]);
+  };
 
   const handleRemoveImage = (index) => {
     const newImages = [...images];
@@ -109,14 +111,14 @@ export default function HelpRequestScreen() {
 
   const handleSubmit = async () => {
     const resetForm = () => {
-  setName("");
-  setPhone("");
-  setAddress({ province: "Đà Nẵng", ward: "", street: "" });
-  setWhat3words("");
-  setDescription("");
-  setImages([]);
-  setErrors({});
-};
+      setName("");
+      setPhone("");
+      setAddress({ province: "Đà Nẵng", ward: "", street: "" });
+      setWhat3words("");
+      setDescription("");
+      setImages([]);
+      setErrors({});
+    };
 
     const newErrors = {};
     let missingFields = [];
@@ -149,7 +151,7 @@ export default function HelpRequestScreen() {
         });
       });
       const token = await getToken();
-      await axios.post("https://flwarning.onrender.com/api/help", formData, {
+      await axios.post(`${API_URL}/api/help`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -217,25 +219,25 @@ export default function HelpRequestScreen() {
         </MapView>
         <Text style={styles.label}>🖼️ Hình ảnh minh họa</Text>
         {/* Ảnh đính kèm */}
-                  <TouchableOpacity onPress={handlePickImage} style={styles.imagePicker}>
-                  {images.length === 0 ? (
-                    <Text>📷 Thêm hình ảnh</Text>
-                  ) : (
-                    <View style={styles.imageGrid}>
-                      {images.map((img, index) => (
-                        <View key={index} style={styles.imageWrapper}>
-                          <Image source={{ uri: img.uri }} style={styles.image} />
-                          <TouchableOpacity
-                            onPress={() => handleRemoveImage(index)}
-                            style={styles.removeIcon}
-                          >
-                            <Text style={{ color:"white", fontSize: 7 }}>❌</Text>
-                          </TouchableOpacity>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </TouchableOpacity>
+        <TouchableOpacity onPress={handlePickImage} style={styles.imagePicker}>
+          {images.length === 0 ? (
+            <Text>📷 Thêm hình ảnh</Text>
+          ) : (
+            <View style={styles.imageGrid}>
+              {images.map((img, index) => (
+                <View key={index} style={styles.imageWrapper}>
+                  <Image source={{ uri: img.uri }} style={styles.image} />
+                  <TouchableOpacity
+                    onPress={() => handleRemoveImage(index)}
+                    style={styles.removeIcon}
+                  >
+                    <Text style={{ color: "white", fontSize: 7 }}>❌</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={isSubmitting}>
           <Text style={styles.submitText}>Gửi yêu cầu trợ giúp</Text>
@@ -261,45 +263,45 @@ const styles = StyleSheet.create({
   submitText: { color: "white", fontWeight: "bold" },
   map: { height: 200, marginVertical: 10, borderRadius: 8 },
   imagePicker: {
-  alignItems: "center",
-  borderWidth: 1,
-  borderColor: "#bbb",
-  padding: 10,
-  borderRadius: 10,
-  marginBottom: 10,
-  minHeight: 140,
-  justifyContent: "center",
-  backgroundColor: "#fafafa",
-},
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#bbb",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    minHeight: 140,
+    justifyContent: "center",
+    backgroundColor: "#fafafa",
+  },
 
-imageGrid: {
-  flexDirection: "row",
-  flexWrap: "wrap",
-  justifyContent: "flex-start",
-  gap: 10,
-},
+  imageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    gap: 10,
+  },
 
-imageWrapper: {
-  width: 80,
-  height: 80,
-  margin: 4,
-  position: "relative",
-},
+  imageWrapper: {
+    width: 80,
+    height: 80,
+    margin: 4,
+    position: "relative",
+  },
 
-image: {
-  width: "100%",
-  height: "100%",
-  borderRadius: 8,
-},
-removeIcon: {
-  position: "absolute",
-  top: -6,
-  right: -6,
-  backgroundColor: "red",
-  borderRadius: 12,
-  padding: 4,
-  zIndex: 1,
-},
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+  },
+  removeIcon: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "red",
+    borderRadius: 12,
+    padding: 4,
+    zIndex: 1,
+  },
   title: { fontWeight: "bold", color: "#e60000", fontSize: 16, textAlign: "center", marginBottom: 12 },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }
 });

@@ -1,14 +1,37 @@
 import React, { useState } from 'react';
-import { FaSearch, FaUserCircle, FaBars, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaUserCircle, FaBars, FaTimes, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAdminToken, removeAdminToken } from '../services/auth';
+import logoImg from '../assets/images/Logo_V1_transparent.png';
+
+function LangToggle() {
+    const { i18n } = useTranslation();
+    const current = i18n.language;
+    const toggle = () => {
+        const next = current === 'vi' ? 'en' : 'vi';
+        i18n.changeLanguage(next);
+        localStorage.setItem('lang', next);
+    };
+    return (
+        <button
+            onClick={toggle}
+            className="hidden md:flex items-center gap-1 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200"
+            title="Switch language"
+        >
+            <span className={current === 'vi' ? 'text-white' : 'text-white/50'}>VI</span>
+            <span className="text-white/30">|</span>
+            <span className={current === 'en' ? 'text-white' : 'text-white/50'}>EN</span>
+        </button>
+    );
+}
 
 export default function NavbarPublic() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
 
-    // Check if user is logged in (using admin token for now based on current auth flow)
     const isLoggedIn = !!getAdminToken();
 
     const handleLogout = () => {
@@ -17,17 +40,20 @@ export default function NavbarPublic() {
         navigate('/');
     };
 
+    const toggleLang = () => {
+        const next = i18n.language === 'vi' ? 'en' : 'vi';
+        i18n.changeLanguage(next);
+        localStorage.setItem('lang', next);
+    };
+
     return (
         <div className="absolute top-0 left-0 w-full z-[1000] bg-[#2A4B7C] bg-opacity-95 text-white shadow-md flex items-center justify-between px-4 py-2">
             {/* Left: Logo & Title */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                    {/* Placeholder for Logo */}
-                    <span className="text-red-600 font-bold text-xs p-1 text-center">VN DMS</span>
-                </div>
+                <img src={logoImg} alt="DSS Logo" className="w-10 h-10 object-contain" />
                 <div className="hidden md:flex flex-col">
-                    <h1 className="text-sm font-bold m-0 leading-tight">HỆ THỐNG GIÁM SÁT THIÊN TAI VIỆT NAM</h1>
-                    <p className="text-xs text-gray-300 m-0">VIETNAM DISASTERS MONITORING SYSTEM (VNDMS)</p>
+                    <h1 className="text-sm font-bold m-0 leading-tight">{t('navbar.title')}</h1>
+                    <p className="text-xs text-gray-300 m-0">{t('navbar.subtitle')}</p>
                 </div>
             </div>
 
@@ -36,7 +62,7 @@ export default function NavbarPublic() {
                 <div className="relative w-full">
                     <input
                         type="text"
-                        placeholder="Tìm kiếm..."
+                        placeholder={t('navbar.search')}
                         className="w-full bg-[#1e3a63] text-white border border-gray-500 rounded-full py-1.5 px-4 pl-10 focus:outline-none focus:border-blue-400 text-sm h-8"
                     />
                     <FaSearch className="absolute left-3 top-2 text-gray-400 text-sm" />
@@ -44,7 +70,10 @@ export default function NavbarPublic() {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+                {/* Language Toggle */}
+                <LangToggle />
+
                 {/* Mobile Menu Toggle */}
                 <button
                     className="md:hidden text-gray-300 hover:text-white"
@@ -54,39 +83,57 @@ export default function NavbarPublic() {
                 </button>
 
                 {isLoggedIn ? (
-                    <div className="relative hidden md:flex">
+                    <div className="relative hidden md:block">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2 text-sm hover:text-blue-300 transition-colors"
+                            className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 px-3 py-1.5 rounded-full transition-all duration-200 group"
                         >
-                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden border border-gray-400">
-                                <FaUserCircle className="text-gray-500 w-8 h-8" />
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-sm flex-shrink-0">
+                                A
                             </div>
-                            <span className="truncate max-w-[120px]">Admin_User</span>
-                            <span className="text-[10px]">▼</span>
+                            <span className="text-sm font-semibold text-white/90 group-hover:text-white truncate max-w-[100px]">
+                                Admin
+                            </span>
+                            <svg
+                                className={`w-3.5 h-3.5 text-white/60 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
                         </button>
 
-                        {/* Dropdown Menu */}
                         {isDropdownOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-gray-800 text-sm z-50 border border-gray-200">
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100">Thông tin cá nhân</a>
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100">Đổi mật khẩu</a>
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100">Nhận bản tin cảnh báo</a>
-                                <div className="border-t border-gray-200 my-1"></div>
-                                <button
-                                    onClick={() => navigate('/admin/dashboard')}
-                                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600 font-medium"
-                                >
-                                    Quản trị
-                                </button>
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100">Dự báo hạn</a>
-                                <div className="border-t border-gray-200 my-1"></div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                                >
-                                    Đăng xuất
-                                </button>
+                            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-2xl py-2 text-gray-800 text-sm z-50 border border-gray-100 overflow-hidden">
+                                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow">
+                                        A
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-800 leading-tight">Admin User</p>
+                                        <p className="text-[10px] text-gray-500">{t('navbar.adminRole')}</p>
+                                    </div>
+                                </div>
+
+                                <div className="py-1">
+                                    <button
+                                        onClick={() => navigate('/admin/dashboard')}
+                                        className="flex items-center gap-2.5 w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-700 font-semibold transition-colors"
+                                    >
+                                        <FaCog size={13} /> {t('navbar.manageSystem')}
+                                    </button>
+                                    <a href="#" className="flex items-center gap-2.5 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors">
+                                        <FaUserCircle size={13} /> {t('navbar.profile')}
+                                    </a>
+                                </div>
+
+                                <div className="border-t border-gray-100 mt-1 pt-1">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-2.5 w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 font-semibold transition-colors"
+                                    >
+                                        <FaSignOutAlt size={13} /> {t('navbar.logout')}
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -95,7 +142,7 @@ export default function NavbarPublic() {
                         onClick={() => navigate('/admin/login')}
                         className="hidden md:flex items-center gap-2 bg-[#3A5B8C] hover:bg-[#4A6B9C] border border-gray-400 px-4 py-1.5 rounded-full text-sm transition-colors"
                     >
-                        <FaUserCircle /> Đăng nhập
+                        <FaUserCircle /> {t('navbar.login')}
                     </button>
                 )}
             </div>
@@ -106,30 +153,43 @@ export default function NavbarPublic() {
                     <div className="relative w-full">
                         <input
                             type="text"
-                            placeholder="Tìm kiếm..."
+                            placeholder={t('navbar.search')}
                             className="w-full bg-[#1e3a63] text-white border border-gray-500 rounded-full py-2 px-4 pl-10 focus:outline-none focus:border-blue-400 text-sm"
                         />
                         <FaSearch className="absolute left-3 top-3 text-gray-400" />
                     </div>
 
+                    {/* Mobile Lang Toggle */}
+                    <button
+                        onClick={toggleLang}
+                        className="flex items-center gap-1 bg-white/10 border border-white/20 px-3 py-1.5 rounded-full text-xs font-bold w-fit"
+                    >
+                        <span className={i18n.language === 'vi' ? 'text-white' : 'text-white/50'}>VI</span>
+                        <span className="text-white/30">|</span>
+                        <span className={i18n.language === 'en' ? 'text-white' : 'text-white/50'}>EN</span>
+                    </button>
+
                     {isLoggedIn ? (
                         <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-3 border-b border-gray-600 pb-2">
-                                <FaUserCircle className="text-gray-300 w-8 h-8" />
-                                <span className="font-medium">Admin_User</span>
+                            <div className="flex items-center gap-3 border-b border-gray-600 pb-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow">
+                                    A
+                                </div>
+                                <div>
+                                    <p className="font-bold">Admin User</p>
+                                    <p className="text-xs text-gray-400">{t('navbar.adminRole')}</p>
+                                </div>
                             </div>
-                            <a href="#" className="py-2 hover:text-blue-300">Thông tin cá nhân</a>
-                            <a href="#" className="py-2 hover:text-blue-300">Đổi mật khẩu</a>
-                            <a href="#" className="py-2 hover:text-blue-300">Nhận bản tin cảnh báo</a>
-                            <button onClick={() => navigate('/admin/dashboard')} className="py-2 text-left text-blue-300 font-medium font-bold">Quản trị</button>
-                            <button onClick={handleLogout} className="py-2 text-left text-red-400">Đăng xuất</button>
+                            <button onClick={() => navigate('/admin/dashboard')} className="py-2 text-left text-blue-300 font-semibold flex items-center gap-2"><FaCog size={13} /> {t('navbar.manageSystem')}</button>
+                            <a href="#" className="py-2 hover:text-blue-300 flex items-center gap-2"><FaUserCircle size={13} /> {t('navbar.profile')}</a>
+                            <button onClick={handleLogout} className="py-2 text-left text-red-400 flex items-center gap-2 font-semibold"><FaSignOutAlt size={13} /> {t('navbar.logout')}</button>
                         </div>
                     ) : (
                         <button
                             onClick={() => navigate('/admin/login')}
                             className="flex items-center justify-center gap-2 bg-[#3A5B8C] py-2 rounded-md font-medium"
                         >
-                            <FaUserCircle /> Đăng nhập
+                            <FaUserCircle /> {t('navbar.login')}
                         </button>
                     )}
                 </div>

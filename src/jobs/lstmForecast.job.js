@@ -1,56 +1,93 @@
 import cron from "node-cron";
 import axios from "axios";
-import Forecast from "../core/entities/Forecast.js";
+import InflowLakeHistoryRepo from "../infrastructure/repositories/inflowLakeHistory.repo.js";
+import ForecastLSTM from "../core/entities/ForecastLSTM.js";
 import { RESERVOIRS } from "../api/config/reservoirs.js";
 
 const RES_IDS = Object.keys(RESERVOIRS).map(Number);
-
-const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8000/predict";
+const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://103.107.182.191:8000/predict";
 
 async function updateLSTMForecast() {
-    console.log(`🕒 [LSTM] STARTING HOURLY UPDATE AT ${new Date().toISOString()}`);
+    const startTime = new Date();
+    // Log in VN Time for clarity
+    const startTimeVN = new Date(startTime.getTime() + 7 * 60 * 60 * 1000).toISOString();
+    
+    console.log(`\n🕒 [LSTM] STARTING UPDATE AT ${startTimeVN} (VN Time)`);
+    console.log(`   Python API: ${PYTHON_API_URL}`);
+
+    let successCount = 0;
+    let failCount = 0;
 
     for (const rid of RES_IDS) {
         try {
-            console.log(`🔄 Fetching prediction for Reservoir ${rid}...`);
+            const resInfo = RESERVOIRS[rid] || { name: `Res ${rid}` };
+            console.log(`\n🔄 [LSTM] Reservoir ${rid} (${resInfo.name}) — Preparing forecast...`);
 
-            const response = await axios.post(PYTHON_API_URL, { rid });
-            const { predictions } = response.data;
+            // Find the latest actual record in DB to use as Reference Time
+            const latestRecords = await InflowLakeHistoryRepo.findLatest(rid, 1);
+            let referenceTime = null;
+            
+            if (latestRecords && latestRecords.length > 0) {
+                referenceTime = latestRecords[0].timestamp.toISOString();
+                console.log(`   [Target] Reference Time (Latest DB): ${new Date(new Date(referenceTime).getTime() + 7 * 60 * 60 * 1000).toISOString()} (VN)`);
+            } else {
+                console.log(`   [Target] No history found, using default (current hour)`);
+            }
 
-            if (!predictions || predictions.length === 0) continue;
+            const response = await axios.post(PYTHON_API_URL, { 
+                rid,
+                reference_time: referenceTime 
+            }, {
+                timeout: 180000, // 3 min per reservoir (safety margin)
+                headers: { "Content-Type": "application/json" }
+            });
 
-            // Logic: 
-            // 1. Current hour (T0) - if exists, we might keep it or update actuals.
-            // 2. Future hours (T1 to T12) - update with new predictions.
+            const { predictions, modelUsed, referenceTime: pythonRefTime } = response.data;
 
+            if (!predictions || predictions.length === 0) {
+                console.warn(`⚠ [LSTM] Reservoir ${rid}: no predictions returned`);
+                failCount++;
+                continue;
+            }
+
+            // Upsert by (Id_Lake, forecastTime)
             const operations = predictions.map(p => ({
                 updateOne: {
-                    filter: { reservoirId: rid, targetTime: new Date(p.targetTime) },
+                    filter: { Id_Lake: rid, forecastTime: new Date(p.targetTime) },
                     update: {
                         $set: {
-                            value: p.p50,
+                            qvao_forecast: p.p50,
                             p10: p.p10,
                             p90: p.p90,
-                            createdAt: new Date()
+                            generatedAt: new Date()
                         }
                     },
                     upsert: true
                 }
             }));
 
-            await Forecast.bulkWrite(operations);
-            console.log(`✅ Updated ${predictions.length} forecast steps for Reservoir ${rid}`);
+            const result = await ForecastLSTM.bulkWrite(operations, { ordered: false });
+            console.log(`   ✅ Success: ${result.upsertedCount} new, ${result.modifiedCount} updated | model=${modelUsed}`);
+            successCount++;
 
         } catch (error) {
-            console.error(`❌ Error updating LSTM for Reservoir ${rid}:`, error.message);
+            failCount++;
+            if (error.code === "ECONNREFUSED") {
+                console.error(`❌ [LSTM] Reservoir ${rid}: Python API không khả dụng (${PYTHON_API_URL})`);
+            } else if (error.code === "ETIMEDOUT" || error.message.includes("timeout")) {
+                console.error(`❌ [LSTM] Reservoir ${rid}: Timeout sau 2 phút`);
+            } else {
+                console.error(`❌ [LSTM] Reservoir ${rid}: ${error.message}`);
+            }
         }
     }
+
+    const elapsed = ((Date.now() - startTime.getTime()) / 1000).toFixed(1);
+    console.log(`\n📊 [LSTM] Completed: ${successCount}/${RES_IDS.length} success, ${failCount} failed (${elapsed}s)\n`);
 }
 
-// Chạy lần đầu khi start server
-// updateLSTMForecast();
-
-// Cron chạy vào phút thứ 6 của mỗi giờ
+// Chạy theo lịch: phút :06 của mỗi giờ
+// Đủ thời gian sau xx:00 để dữ liệu hydro giờ đó đã được cập nhật
 cron.schedule("6 * * * *", () => {
     updateLSTMForecast();
 });

@@ -2,11 +2,11 @@ import "dotenv/config";
 
 export default {
   expo: {
-    name: "FLWV1",
+    name: "AKTA-FLT",
     slug: "mobile",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/i1.png",
+    icon: "./assets/images/Logo.png",
     scheme: "mobile",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -19,7 +19,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/i1.png",
+        foregroundImage: "./assets/images/AdaptiveIcon.png",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
@@ -50,15 +50,17 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/i1.png",
-          imageWidth: 200,
+          image: "./assets/images/Logo.png",
+          imageWidth: 250,
           resizeMode: "contain",
           backgroundColor: "#ffffff",
         },
       ],
       "react-native-edge-to-edge",
       "expo-splash-screen",
-  "expo-location"
+      "expo-location",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     experiments: {
       typedRoutes: true,

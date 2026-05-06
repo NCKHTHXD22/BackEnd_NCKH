@@ -1,14 +1,19 @@
 import axios from 'axios';
+import inflowLakeHistoryRepo from '../../infrastructure/repositories/inflowLakeHistory.repo.js';
+
+const AUTH = Buffer.from(`rfm2O3ciJ3aOJy1iA2SAfS3P_qwa:cklyddfdciGjQJGdtiPg936PDo8a`).toString('base64');
 
 class LiveHydroController {
     constructor() {
-        this.BASE_URL = "https://apiv2.danang.gov.vn/apiPCTT/1.0";
-        this.TOKEN_URL = "https://apiv2.danang.gov.vn/oauth2/token";
-        // Matching python backend data_fetcher keys
-        this.CONSUMER_KEY = "rfm2O3ciJ3aOJy1iA2SAfS3P_qwa";
-        this.CONSUMER_SECRET = "cklyddfdciGjQJGdtiPg936PDo8a";
         this._token = null;
         this._expiry = null;
+    }
+
+    _getProxyUrl() {
+        const base = process.env.PYTHON_API_URL
+            ? process.env.PYTHON_API_URL.replace('/predict', '')
+            : 'http://localhost:8000';
+        return `${base}/proxy/danang`;
     }
 
     async getToken() {
@@ -16,62 +21,115 @@ class LiveHydroController {
             return this._token;
         }
 
-        const auth = Buffer.from(`${this.CONSUMER_KEY}:${this.CONSUMER_SECRET}`).toString('base64');
+        const proxyUrl = this._getProxyUrl();
+        const res = await axios.post(proxyUrl, {
+            method: 'POST',
+            url: 'https://apiv2.danang.gov.vn/oauth2/token',
+            data: { grant_type: 'client_credentials' },
+            headers: {
+                'Authorization': `Basic ${AUTH}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }, { timeout: 30000 });
 
-        try {
-            const res = await axios.post(this.TOKEN_URL, "grant_type=client_credentials", {
-                headers: {
-                    'Authorization': `Basic ${auth}`,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            });
-            this._token = res.data.access_token;
-            // Subtract 60 seconds as buffer
-            this._expiry = new Date(Date.now() + (res.data.expires_in - 60) * 1000);
-            return this._token;
-        } catch (error) {
-            console.error("Token fetch error:", error.message);
-            throw new Error("Could not fetch Danang API token");
-        }
+        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+        this._token = data.access_token;
+        this._expiry = new Date(Date.now() + (data.expires_in - 60) * 1000);
+        return this._token;
+    }
+
+    // Try fetching the last `hours` hours from InflowLakeHistory DB
+    async _fetchFromDB(lakeId, hours) {
+        const end = new Date();
+        const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+        const rows = await inflowLakeHistoryRepo.findByLake(Number(lakeId), start, end);
+        return Array.isArray(rows) ? rows : [];
+    }
+
+    _buildDBResponse(dbHistory) {
+        // dbHistory is sorted ascending by timestamp (findByLake uses sort: 1)
+        const latest = dbHistory[dbHistory.length - 1];
+        return {
+            qvao: latest.qvao || 0,
+            luuluongxa: latest.luuluongxa || 0,
+            htl: latest.htl || 0,
+            source: 'db',
+            history: dbHistory.map(d => ({
+                time: d.timestamp instanceof Date
+                    ? d.timestamp.toISOString()
+                    : new Date(d.timestamp).toISOString(),
+                qvao: d.qvao || 0,
+                luuluongxa: d.luuluongxa || 0,
+                htl: d.htl || 0
+            }))
+        };
     }
 
     async getLiveHydro(req, res, next) {
+        const { lakeId } = req.params;
+
+        const end = new Date();
+        end.setMinutes(0, 0, 0);
+        const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+        const formatISO = (d) => d.toISOString().replace(/\.\d{3}Z$/, '.000Z');
+
+        // ── 1. Try live Danang API ────────────────────────────────────────────
+        let apiData = null;
         try {
-            const { lakeId } = req.params;
             const token = await this.getToken();
+            const proxyUrl = this._getProxyUrl();
 
-            const end = new Date();
-            end.setMinutes(0, 0, 0); // floor to hour
-            const start = new Date(end.getTime() - (24 * 60 * 60 * 1000)); // 1 day ago
-
-            const hydroRes = await axios.get(`${this.BASE_URL}/baocaothuydiens_bieudo`, {
+            const hydroRes = await axios.post(proxyUrl, {
+                method: 'GET',
+                url: 'https://apiv2.danang.gov.vn/apiPCTT/1.0/baocaothuydiens_bieudo',
                 params: {
                     thuydien_id: lakeId,
-                    ngaybatdau: start.toISOString().replace(/\.\d{3}Z$/, ".000Z"),
-                    ngayketthuc: end.toISOString().replace(/\.\d{3}Z$/, ".000Z")
+                    ngaybatdau: formatISO(start),
+                    ngayketthuc: formatISO(end)
                 },
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+                headers: { 'Authorization': `Bearer ${token}` }
+            }, { timeout: 60000 });
 
-            const data = hydroRes.data?.data;
-            if (!data || data.length === 0) {
-                return res.json({ qvao: 0, luuluongxa: 0, htl: 0 });
-            }
+            let raw = typeof hydroRes.data === 'string' ? JSON.parse(hydroRes.data) : hydroRes.data;
+            if (raw && raw.data) raw = raw.data;
+            if (Array.isArray(raw) && raw.length > 0) apiData = raw;
+        } catch (err) {
+            console.warn(`[liveHydro] Danang API failed for lake ${lakeId}: ${err.message}`);
+        }
 
-            // Get the latest valid record
-            const latest = data[data.length - 1];
-            res.json({
+        // ── 2. Return API data if available ──────────────────────────────────
+        if (apiData) {
+            apiData.sort((a, b) => (a.thoigianxa || '').localeCompare(b.thoigianxa || ''));
+            const latest = apiData[apiData.length - 1];
+            return res.json({
                 qvao: latest.qvao || 0,
                 luuluongxa: latest.luuluongxa || 0,
-                htl: latest.htl || 0
+                htl: latest.htl || 0,
+                source: 'api',
+                history: apiData.map(d => ({
+                    time: d.thoigianxa ? new Date(d.thoigianxa + '+07:00').toISOString() : null,
+                    qvao: d.qvao || 0,
+                    luuluongxa: d.luuluongxa || 0,
+                    htl: d.htl || 0
+                }))
             });
-
-        } catch (error) {
-            console.error("Hydro data fetch error:", error.message);
-            res.status(500).json({ error: "Could not fetch hydro data" });
         }
+
+        // ── 3. Fallback: DB — try last 24h, then 7 days ───────────────────────
+        try {
+            let dbHistory = await this._fetchFromDB(lakeId, 24);
+            if (dbHistory.length === 0) {
+                dbHistory = await this._fetchFromDB(lakeId, 7 * 24);
+            }
+            if (dbHistory.length > 0) {
+                return res.json(this._buildDBResponse(dbHistory));
+            }
+        } catch (dbErr) {
+            console.warn(`[liveHydro] DB fallback failed for lake ${lakeId}: ${dbErr.message}`);
+        }
+
+        // ── 4. No data at all ────────────────────────────────────────────────
+        return res.json({ qvao: 0, luuluongxa: 0, htl: 0 });
     }
 }
 

@@ -1,5 +1,6 @@
 import axiosClient from "./axiosClient";
-import axios from "axios"; // để gọi API ngoài hệ thống
+import axios from "axios";
+import { API_URL } from "../lib/env"; // để gọi API ngoài hệ thống
 
 const adminApi = {
   // Auth
@@ -37,7 +38,7 @@ const adminApi = {
   // Sensors (lấy từ API ngoài)
   getSensorsInfo: () =>
     axios
-      .get("https://flwarning.onrender.com/api/alerts")
+      .get(`${API_URL}/api/alerts`)
       .then(res => res.data),
 };
 

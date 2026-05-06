@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSignUp, useAuth, SignedOut } from "@clerk/clerk-expo";
+import { API_URL } from "@/lib/env";
 import { useState } from "react";
 import { authStyles } from "../../assets/styles/auth.styles.js";
 import { Image } from "expo-image";
@@ -35,34 +36,30 @@ const SignUpScreen = () => {
     if (!email || !password || !name || !phone) {
       return Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin.");
     }
-    if (password.length < 8 ) {
+    if (password.length < 8) {
       return Alert.alert("Lỗi", "Mật khẩu phải từ 8 ký tự trở lên.");
     }
-    if (!/[A-Z]/.test(password))
-    {
-      return Alert.alert("Lỗi","Mật khẩu phải có ít nhất 1 kí tự in hoa");
+    if (!/[A-Z]/.test(password)) {
+      return Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 1 kí tự in hoa");
     }
-    if (!/[0-9]/.test(password))
-    {
-      return Alert.alert("Lỗi","Mật khẩu phải có ít nhất 1 kí tự chữ số");
+    if (!/[0-9]/.test(password)) {
+      return Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 1 kí tự chữ số");
     }
-    if (phone.length!=10)
-    {
-      return Alert.alert("Lỗi","Số điện thoại nhập phải đủ 10 chữ số. Vui lòng nhập lại");
+    if (phone.length != 10) {
+      return Alert.alert("Lỗi", "Số điện thoại nhập phải đủ 10 chữ số. Vui lòng nhập lại");
     }
-    const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email))
-    {
-      return Alert.alert("Lỗi","Email không đúng. Vui lòng nhập lại email"
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return Alert.alert("Lỗi", "Email không đúng. Vui lòng nhập lại email"
       );
     }
     if (!isLoaded) return;
     try {
-        if(isSignedIn){
-          await SignedOut();
-        }
-    }catch (error){
-        console.error("Lỗi khi đăng xuất:",error);
+      if (isSignedIn) {
+        await SignedOut();
+      }
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
     }
 
     setLoading(true);
@@ -81,7 +78,7 @@ const SignUpScreen = () => {
   const handleVerificationSuccess = async () => {
     try {
       const token = await getToken();
-      const response = await fetch("https://flwarning.onrender.com/api/users", {
+      const response = await fetch(`${API_URL}/api/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,0 +1,18 @@
+📋 BẢNG ĐIỂM NSE 2025 TOÀN CỤC
+========================================
+Hồ ID 0                   | NSE: 0.804
+HO A VUONG                | NSE: 0.794
+HO DAK MI 4               | NSE: 0.868
+HO SONG BUNG 4            | NSE: 0.757
+HO SONG TRANH 2           | NSE: 0.656
+Hồ ID 5                   | NSE: 0.788
+Hồ ID 6                   | NSE: 0.261
+HO SONG BUNG 4A           | NSE: 0.208
+HO SONG BUNG 5            | NSE: 0.593
+HO SONG BUNG 2            | NSE: 0.839
+Hồ ID 10                  | NSE: -3.093
+HO SONG BUNG 6            | NSE: 0.168
+HO SONG TRANH 3           | NSE: 0.856
+HO ZA HUNG                | NSE: 0.562
+HO DAK MI 3               | NSE: 0.606
+HO KHE DIEN               | NSE: 0.750

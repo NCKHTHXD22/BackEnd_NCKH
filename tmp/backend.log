@@ -1,0 +1,694 @@
+
+> backend_nckh@1.0.0 dev
+> node --watch src/server.js
+
+[dotenv@17.2.3] injecting env (18) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+✅ Clerk middleware enabled
+(node:17368) [MONGOOSE] Warning: Duplicate schema index on {"logged_at":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Server is running on port: 5001
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+✅ Clerk middleware enabled
+(node:23940) [MONGOOSE] Warning: Duplicate schema index on {"logged_at":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Server is running on port: 5001
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+MongoDB connected successfully
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 12:43:49 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.44m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.11m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.5s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+✅ [VRAIN REALTIME] Cập nhật 90 trạm + lịch sử
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 12:45:00 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.44m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.11m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.7s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: ⚙️  override existing env vars with { override: true }
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+✅ Clerk middleware enabled
+(node:31840) [MONGOOSE] Warning: Duplicate schema index on {"logged_at":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Server is running on port: 5001
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+✅ Clerk middleware enabled
+(node:680) [MONGOOSE] Warning: Duplicate schema index on {"logged_at":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Server is running on port: 5001
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+MongoDB connected successfully
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 12:53:07 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.44m | level=normal
+[GET] /api/inflowLake/live-hydro/4
+[liveHydro] Danang API failed for lake 4: Request failed with status code 404
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.11m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+[GET] /api/inflowLake/live-hydro/4
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+[liveHydro] Danang API failed for lake 4: Request failed with status code 404
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.6s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+[GET] /api/inflowLake/live-hydro/1
+[liveHydro] Danang API failed for lake 1: Request failed with status code 404
+✅ [VRAIN REALTIME] Cập nhật 90 trạm + lịch sử
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 13:00:00 VN
+  ❌ [FloodAlert] lake_id=1: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=2: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=3: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=4: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.7s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=0
+
+✅ [VRAIN REALTIME] Cập nhật 90 trạm + lịch sử
+⏳ [CRON] RainLakeHistory (1h) - chạy lúc :02 để chờ fetchRainData xong
+📊 [HISTORY] Hồ 1 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 2 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 3 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 4 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 7 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 8 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 9 @ 2026-04-29T06:00:00.000Z → 0.2
+📊 [HISTORY] Hồ 11 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 12 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 13 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 14 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 15 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 16 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 17 @ 2026-04-29T06:00:00.000Z → 0
+📊 [HISTORY] Hồ 19 @ 2026-04-29T06:00:00.000Z → 0
+⏳ [CRON] Bắt đầu đồng bộ InflowLake (History + Hydro)...
+✔ Hồ 1 ← 0mm | Không mưa
+✔ Hồ 2 ← 0mm | Không mưa
+✔ Hồ 3 ← 0mm | Không mưa
+✔ Hồ 4 ← 0mm | Không mưa
+✔ Hồ 7 ← 0mm | Không mưa
+✔ Hồ 8 ← 0mm | Không mưa
+✔ Hồ 9 ← 0.2mm | Mưa nhỏ
+✔ Hồ 11 ← 0mm | Không mưa
+✔ Hồ 12 ← 0mm | Không mưa
+✔ Hồ 13 ← 0mm | Không mưa
+✔ Hồ 14 ← 0mm | Không mưa
+✔ Hồ 15 ← 0mm | Không mưa
+✔ Hồ 16 ← 0mm | Không mưa
+✔ Hồ 17 ← 0mm | Không mưa
+✔ Hồ 19 ← 0mm | Không mưa
+✅ InflowLake đã cập nhật level + sumDepth
+❌ Token fetch error via Proxy: Request failed with status code 404
+✅ [CRON] Đồng bộ InflowLake hoàn tất
+[GET] /api/forecast-lstm/4
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+
+🕒 [LSTM] STARTING UPDATE AT 2026-04-29T13:06:00.030Z (VN Time)
+   Python API: https://anvo2004-flood-ai-inference.hf.space/predict
+
+🔄 [LSTM] Reservoir 1 (HO A VUONG) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 1: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 2 (HO DAK MI 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T08:00:00.000Z (VN)
+❌ [LSTM] Reservoir 2: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 3 (HO SONG BUNG 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T09:00:00.000Z (VN)
+❌ [LSTM] Reservoir 3: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 4 (HO SONG TRANH 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T09:00:00.000Z (VN)
+❌ [LSTM] Reservoir 4: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 7 (HO SONG BUNG 4A) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 7: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 8 (HO SONG BUNG 5) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 8: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 9 (HO SONG BUNG 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 9: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 11 (HO SONG BUNG 6) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 11: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 12 (HO SONG TRANH 3) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 12: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 13 (HO ZA HUNG) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 13: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 14 (HO DAK MI 3) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 14: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 15 (HO KHE DIEN) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 15: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 16 (HO SONG CON 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 16: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 17 (HO SONG TRANH 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 17: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 18 (HO DAK MI 2) — Preparing forecast...
+   [Target] No history found, using default (current hour)
+❌ [LSTM] Reservoir 18: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 19 (HO DAK MI 4C) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 19: Request failed with status code 422
+
+📊 [LSTM] Completed: 0/16 success, 16 failed (8.8s)
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Restarting 'src/server.js'
+[dotenv@17.2.3] injecting env (18) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+✅ Clerk middleware enabled
+(node:27100) [MONGOOSE] Warning: Duplicate schema index on {"logged_at":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Server is running on port: 5001
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+MongoDB connected successfully
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 13:09:56 VN
+  ❌ [FloodAlert] lake_id=1: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=2: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=3: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=4: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.5s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=0
+
+✅ [VRAIN REALTIME] Cập nhật 90 trạm + lịch sử
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 13:15:00 VN
+⏳ [CRON] InflowLakeHistory Sync (1h)
+🔄 [PROXY] Fetching token via VPS: https://anvo2004-flood-ai-inference.hf.space/proxy/danang
+❌ Token fetch error via Proxy: Request failed with status code 404
+❌ [CRON] InflowLakeHistory Sync Error: Cannot get token from Danang API via Proxy
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.44m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.11m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.6s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 13:30:00 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.44m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.11m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.6s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 13:45:00 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.44m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.11m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 17.2s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 14:00:00 VN
+  ❌ [FloodAlert] lake_id=1: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=2: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=3: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=4: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 17.3s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=0
+
+✅ [VRAIN REALTIME] Cập nhật 90 trạm + lịch sử
+⏳ [CRON] RainLakeHistory (1h) - chạy lúc :02 để chờ fetchRainData xong
+📊 [HISTORY] Hồ 1 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 2 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 3 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 4 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 7 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 8 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 9 @ 2026-04-29T07:00:00.000Z → 0.8
+📊 [HISTORY] Hồ 11 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 12 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 13 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 14 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 15 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 16 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 17 @ 2026-04-29T07:00:00.000Z → 0
+📊 [HISTORY] Hồ 19 @ 2026-04-29T07:00:00.000Z → 0
+⏳ [CRON] Bắt đầu đồng bộ InflowLake (History + Hydro)...
+✔ Hồ 1 ← 0mm | Không mưa
+✔ Hồ 2 ← 0mm | Không mưa
+✔ Hồ 3 ← 0mm | Không mưa
+✔ Hồ 4 ← 0mm | Không mưa
+✔ Hồ 7 ← 0mm | Không mưa
+✔ Hồ 8 ← 0mm | Không mưa
+✔ Hồ 9 ← 0.8mm | Mưa nhỏ
+✔ Hồ 11 ← 0mm | Không mưa
+✔ Hồ 12 ← 0mm | Không mưa
+✔ Hồ 13 ← 0mm | Không mưa
+✔ Hồ 14 ← 0mm | Không mưa
+✔ Hồ 15 ← 0mm | Không mưa
+✔ Hồ 16 ← 0mm | Không mưa
+✔ Hồ 17 ← 0mm | Không mưa
+✔ Hồ 19 ← 0mm | Không mưa
+✅ InflowLake đã cập nhật level + sumDepth
+❌ Token fetch error via Proxy: Request failed with status code 404
+✅ [CRON] Đồng bộ InflowLake hoàn tất
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🕒 [LSTM] STARTING UPDATE AT 2026-04-29T14:06:00.029Z (VN Time)
+   Python API: https://anvo2004-flood-ai-inference.hf.space/predict
+
+🔄 [LSTM] Reservoir 1 (HO A VUONG) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 1: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 2 (HO DAK MI 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T08:00:00.000Z (VN)
+❌ [LSTM] Reservoir 2: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 3 (HO SONG BUNG 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T09:00:00.000Z (VN)
+❌ [LSTM] Reservoir 3: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 4 (HO SONG TRANH 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T09:00:00.000Z (VN)
+❌ [LSTM] Reservoir 4: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 7 (HO SONG BUNG 4A) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 7: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 8 (HO SONG BUNG 5) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 8: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 9 (HO SONG BUNG 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 9: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 11 (HO SONG BUNG 6) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 11: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 12 (HO SONG TRANH 3) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 12: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 13 (HO ZA HUNG) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 13: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 14 (HO DAK MI 3) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 14: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 15 (HO KHE DIEN) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 15: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 16 (HO SONG CON 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 16: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 17 (HO SONG TRANH 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 17: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 18 (HO DAK MI 2) — Preparing forecast...
+   [Target] No history found, using default (current hour)
+❌ [LSTM] Reservoir 18: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 19 (HO DAK MI 4C) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 19: Request failed with status code 422
+
+📊 [LSTM] Completed: 0/16 success, 16 failed (8.6s)
+
+⏳ [CRON] InflowLakeHistory Sync (1h)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 14:15:00 VN
+🔄 [PROXY] Fetching token via VPS: https://anvo2004-flood-ai-inference.hf.space/proxy/danang
+❌ Token fetch error via Proxy: Request failed with status code 404
+❌ [CRON] InflowLakeHistory Sync Error: Cannot get token from Danang API via Proxy
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.45m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.1m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.6s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 14:30:00 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.45m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.1m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.8s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 14:45:00 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.45m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.1m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.12m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.8s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 15:00:00 VN
+  ❌ [FloodAlert] lake_id=1: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=2: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=3: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ❌ [FloodAlert] lake_id=4: OperationLog validation failed: alert_level: `ok` is not a valid enum value for path `alert_level`.
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 17.5s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=0
+
+✅ [VRAIN REALTIME] Cập nhật 90 trạm + lịch sử
+🏓 [KEEP-ALIVE] Ping OK (200)
+⏳ [CRON] RainLakeHistory (1h) - chạy lúc :02 để chờ fetchRainData xong
+📊 [HISTORY] Hồ 1 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 2 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 3 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 4 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 7 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 8 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 9 @ 2026-04-29T08:00:00.000Z → 0.8
+📊 [HISTORY] Hồ 11 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 12 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 13 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 14 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 15 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 16 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 17 @ 2026-04-29T08:00:00.000Z → 0
+📊 [HISTORY] Hồ 19 @ 2026-04-29T08:00:00.000Z → 0
+⏳ [CRON] Bắt đầu đồng bộ InflowLake (History + Hydro)...
+✔ Hồ 1 ← 0mm | Không mưa
+✔ Hồ 2 ← 0mm | Không mưa
+✔ Hồ 3 ← 0mm | Không mưa
+✔ Hồ 4 ← 0mm | Không mưa
+✔ Hồ 7 ← 0mm | Không mưa
+✔ Hồ 8 ← 0mm | Không mưa
+✔ Hồ 9 ← 0.8mm | Mưa nhỏ
+✔ Hồ 11 ← 0mm | Không mưa
+✔ Hồ 12 ← 0mm | Không mưa
+✔ Hồ 13 ← 0mm | Không mưa
+✔ Hồ 14 ← 0mm | Không mưa
+✔ Hồ 15 ← 0mm | Không mưa
+✔ Hồ 16 ← 0mm | Không mưa
+✔ Hồ 17 ← 0mm | Không mưa
+✔ Hồ 19 ← 0mm | Không mưa
+✅ InflowLake đã cập nhật level + sumDepth
+❌ Token fetch error via Proxy: Request failed with status code 404
+✅ [CRON] Đồng bộ InflowLake hoàn tất
+🌧️ [VRAIN HISTORY] AUTO UPDATE 2026-04-29
+❌ [VRAIN HISTORY] ERROR: Request failed with status code 401
+
+🕒 [LSTM] STARTING UPDATE AT 2026-04-29T15:06:00.042Z (VN Time)
+   Python API: https://anvo2004-flood-ai-inference.hf.space/predict
+
+🔄 [LSTM] Reservoir 1 (HO A VUONG) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 1: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 2 (HO DAK MI 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T08:00:00.000Z (VN)
+❌ [LSTM] Reservoir 2: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 3 (HO SONG BUNG 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T09:00:00.000Z (VN)
+❌ [LSTM] Reservoir 3: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 4 (HO SONG TRANH 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T09:00:00.000Z (VN)
+❌ [LSTM] Reservoir 4: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 7 (HO SONG BUNG 4A) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 7: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 8 (HO SONG BUNG 5) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 8: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 9 (HO SONG BUNG 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 9: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 11 (HO SONG BUNG 6) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 11: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 12 (HO SONG TRANH 3) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 12: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 13 (HO ZA HUNG) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 13: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 14 (HO DAK MI 3) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 14: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 15 (HO KHE DIEN) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 15: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 16 (HO SONG CON 2) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 16: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 17 (HO SONG TRANH 4) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 17: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 18 (HO DAK MI 2) — Preparing forecast...
+   [Target] No history found, using default (current hour)
+❌ [LSTM] Reservoir 18: Request failed with status code 422
+
+🔄 [LSTM] Reservoir 19 (HO DAK MI 4C) — Preparing forecast...
+   [Target] Reference Time (Latest DB): 2026-04-29T07:00:00.000Z (VN)
+❌ [LSTM] Reservoir 19: Request failed with status code 422
+
+📊 [LSTM] Completed: 0/16 success, 16 failed (9.2s)
+
+⏳ [CRON] InflowLakeHistory Sync (1h)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 15:15:00 VN
+🔄 [PROXY] Fetching token via VPS: https://anvo2004-flood-ai-inference.hf.space/proxy/danang
+❌ Token fetch error via Proxy: Request failed with status code 404
+❌ [CRON] InflowLakeHistory Sync Error: Cannot get token from Danang API via Proxy
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.45m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.1m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.11m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 17.0s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+🏓 [KEEP-ALIVE] Ping OK (200)
+🏓 [KEEP-ALIVE] Ping OK (200)
+
+🚨 [FloodAlert] START CHECK @ 2026-04-29 15:30:00 VN
+  ✅ [FloodAlert] A Vương | HTL=368.46m | Z_max=368.45m | level=normal
+  ✅ [FloodAlert] Đắk Mi 4 | HTL=254.12m | Z_max=254.1m | level=normal
+  ✅ [FloodAlert] Sông Bung 4 | HTL=216.45m | Z_max=216.44m | level=normal
+  ✅ [FloodAlert] Sông Tranh 2 | HTL=169.05m | Z_max=169.11m | level=normal
+  ⚠ [FloodAlert] lake_id=7: HTL=95.4m nằm ngoài phạm vi [120, 142]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=8: HTL=59.2m nằm ngoài phạm vi [165, 189.5]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=9: HTL=597.7m nằm ngoài phạm vi [320, 345]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=11: HTL=29.98m nằm ngoài phạm vi [83, 104]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=12: HTL=71.09m nằm ngoài phạm vi [50, 69]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=13: HTL=449.03m nằm ngoài phạm vi [140, 164.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=14: Không tìm thấy bảng Z-V hồ lake_id=14
+  ⚠ [FloodAlert] lake_id=15: HTL=203.66m nằm ngoài phạm vi [8, 28]. Đánh dấu data_error.
+  ⚠ [FloodAlert] lake_id=16: HTL=277.36m nằm ngoài phạm vi [310, 338.5]. Đánh dấu data_error.
+  ❌ [FloodAlert] lake_id=17: Không tìm thấy bảng Z-V hồ lake_id=17
+  ⚠ [FloodAlert] lake_id=19: HTL=66.79m nằm ngoài phạm vi [143, 166]. Đánh dấu data_error.
+📊 [FloodAlert] Done 16.5s | 🔴 danger=0 🟡 warning=0 🔵 watch=0 ✅ normal=4
+
+Failed running 'src/server.js'

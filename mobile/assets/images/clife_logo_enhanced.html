@@ -1,0 +1,313 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@300;700&display=swap');
+  @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes spin-rev  { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+  @keyframes pulse-glow {
+    0%,100%{filter:drop-shadow(0 0 8px #1e8fff88) drop-shadow(0 0 20px #1e8fff44)}
+    50%{filter:drop-shadow(0 0 16px #1e8fffcc) drop-shadow(0 0 40px #1e8fff66)}
+  }
+  @keyframes node-pulse {
+    0%,100%{r:5;opacity:0.9} 50%{r:7;opacity:1}
+  }
+  @keyframes dash-flow {
+    to{stroke-dashoffset:-40}
+  }
+  @keyframes float-up {
+    0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)}
+  }
+  @keyframes city-shimmer {
+    0%,100%{opacity:0.18} 50%{opacity:0.32}
+  }
+  @keyframes text-glow {
+    0%,100%{filter:drop-shadow(0 0 6px #00aaff99) drop-shadow(0 2px 0 #003a7a)}
+    50%{filter:drop-shadow(0 0 18px #00ccffcc) drop-shadow(0 2px 0 #003a7a)}
+  }
+  @keyframes ring-rotate {
+    from{stroke-dashoffset:0} to{stroke-dashoffset:200}
+  }
+  .logo-wrap {
+    display:flex;align-items:center;justify-content:center;
+    width:100%;padding:20px 0;background:transparent;
+  }
+  .spin { animation: spin-slow 30s linear infinite; transform-origin:center; transform-box:fill-box; }
+  .spin-rev { animation: spin-rev 20s linear infinite; transform-origin:center; transform-box:fill-box; }
+  .pulse { animation: pulse-glow 3s ease-in-out infinite; }
+  .float { animation: float-up 4s ease-in-out infinite; }
+  .logo-svg { filter: drop-shadow(0 0 30px #0a5fcc55); }
+</style>
+<div class="logo-wrap">
+<svg class="logo-svg" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Outer ring gradient -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#4dc3ff"/>
+      <stop offset="40%" stop-color="#1a7ddd"/>
+      <stop offset="100%" stop-color="#0a3a80"/>
+    </linearGradient>
+    <!-- Shield gradient -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="30%" y2="100%">
+      <stop offset="0%"  stop-color="#1a5db8"/>
+      <stop offset="50%" stop-color="#0d3d8c"/>
+      <stop offset="100%" stop-color="#071e4a"/>
+    </linearGradient>
+    <!-- Shield highlight -->
+    <linearGradient id="shieldHL" x1="0%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"  stop-color="#4dc3ff" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#1a7ddd" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Text gradient -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"  stop-color="#7ddeff"/>
+      <stop offset="40%" stop-color="#2aa8ff"/>
+      <stop offset="100%" stop-color="#0060c0"/>
+    </linearGradient>
+    <!-- Text stroke grad -->
+    <linearGradient id="textStroke" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"  stop-color="#a8e8ff"/>
+      <stop offset="100%" stop-color="#004499"/>
+    </linearGradient>
+    <!-- Glow filter -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strongGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="textGlowF" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- City silhouette clip -->
+    <clipPath id="shieldClip">
+      <path d="M250,95 L330,130 L345,180 L345,275 Q310,320 250,345 Q190,320 155,275 L155,180 L170,130 Z"/>
+    </clipPath>
+    <!-- Node glow -->
+    <radialGradient id="nodeGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7de8ff"/>
+      <stop offset="100%" stop-color="#1a7ddd"/>
+    </radialGradient>
+    <!-- Background circle glow -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0a3a8033"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background soft glow -->
+  <circle cx="250" cy="250" r="200" fill="url(#bgGlow)"/>
+
+  <!-- === OUTER SPINNING RING TRACK === -->
+  <g class="spin-rev">
+    <!-- Dashed orbit ring -->
+    <circle cx="250" cy="250" r="195" fill="none" stroke="#1a7ddd" stroke-width="1" stroke-dasharray="6 8" opacity="0.3"/>
+  </g>
+
+  <!-- === OUTER MAIN RING === -->
+  <circle cx="250" cy="250" r="186" fill="none" stroke="url(#ringGrad)" stroke-width="10" opacity="0.9" filter="url(#glow)"/>
+  <!-- Ring inner highlight -->
+  <circle cx="250" cy="250" r="186" fill="none" stroke="#4dc3ff" stroke-width="2" stroke-dasharray="40 20 10 20 60 30" opacity="0.5"/>
+
+  <!-- === CONNECTOR BARS ON RING (4 cardinal) === -->
+  <g fill="none" stroke="url(#ringGrad)" stroke-width="7" stroke-linecap="round" filter="url(#glow)">
+    <!-- Top -->
+    <line x1="240" y1="64" x2="260" y2="64"/>
+    <!-- Bottom -->
+    <line x1="240" y1="436" x2="260" y2="436"/>
+    <!-- Left -->
+    <line x1="64" y1="240" x2="64" y2="260"/>
+    <!-- Right -->
+    <line x1="436" y1="240" x2="436" y2="260"/>
+  </g>
+
+  <!-- === PEOPLE NODES ON RING (6 positions) === -->
+  <!-- Each "person" = circle (head) + arc (body) styled as human silhouette -->
+  <!-- Top (12 o'clock) -->
+  <g filter="url(#glow)">
+    <!-- Person top -->
+    <circle cx="250" cy="66" r="10" fill="url(#nodeGrad)" stroke="#7de8ff" stroke-width="1.5">
+      <animate attributeName="r" values="10;12;10" dur="3s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M243,78 Q250,90 257,78" fill="none" stroke="url(#ringGrad)" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- Person bottom-right (4 o'clock) -->
+    <circle cx="413" cy="339" r="10" fill="url(#nodeGrad)" stroke="#7de8ff" stroke-width="1.5">
+      <animate attributeName="r" values="10;12;10" dur="3.5s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M406,351 Q413,362 420,351" fill="none" stroke="url(#ringGrad)" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- Person bottom-left (8 o'clock) -->
+    <circle cx="87" cy="339" r="10" fill="url(#nodeGrad)" stroke="#7de8ff" stroke-width="1.5">
+      <animate attributeName="r" values="10;12;10" dur="4s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M80,351 Q87,362 94,351" fill="none" stroke="url(#ringGrad)" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- Person top-right (2 o'clock) -->
+    <circle cx="413" cy="161" r="9" fill="url(#nodeGrad)" stroke="#7de8ff" stroke-width="1.5">
+      <animate attributeName="r" values="9;11;9" dur="3.2s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M406,173 Q413,183 420,173" fill="none" stroke="url(#ringGrad)" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Person top-left (10 o'clock) -->
+    <circle cx="87" cy="161" r="9" fill="url(#nodeGrad)" stroke="#7de8ff" stroke-width="1.5">
+      <animate attributeName="r" values="9;11;9" dur="3.8s" begin="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M80,173 Q87,183 94,173" fill="none" stroke="url(#ringGrad)" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Person bottom (6 o'clock) -->
+    <circle cx="250" cy="434" r="10" fill="url(#nodeGrad)" stroke="#7de8ff" stroke-width="1.5">
+      <animate attributeName="r" values="10;12;10" dur="3.6s" begin="0.3s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M243,446 Q250,456 257,446" fill="none" stroke="url(#ringGrad)" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- === CONNECTION LINES between people nodes (data flow) === -->
+  <g opacity="0.35" fill="none" stroke="#2aa8ff" stroke-width="1.2" stroke-dasharray="5 5">
+    <animateTransform attributeName="transform" type="rotate" from="0 250 250" to="360 250 250" dur="60s" repeatCount="indefinite"/>
+    <line x1="250" y1="76" x2="413" y2="169"/>
+    <line x1="413" y1="169" x2="413" y2="331"/>
+    <line x1="413" y1="331" x2="250" y2="424"/>
+    <line x1="250" y1="424" x2="87" y2="331"/>
+    <line x1="87" y1="331" x2="87" y2="169"/>
+    <line x1="87" y1="169" x2="250" y2="76"/>
+  </g>
+
+  <!-- === INNER RING === -->
+  <circle cx="250" cy="250" r="150" fill="none" stroke="url(#ringGrad)" stroke-width="6" opacity="0.7" filter="url(#glow)"/>
+
+  <!-- === CIRCUIT NODES on inner ring === -->
+  <g filter="url(#glow)">
+    <circle cx="250" cy="100" r="6" fill="#4dc3ff" stroke="#a8e8ff" stroke-width="1.5"/>
+    <circle cx="390" cy="180" r="6" fill="#4dc3ff" stroke="#a8e8ff" stroke-width="1.5"/>
+    <circle cx="390" cy="320" r="6" fill="#4dc3ff" stroke="#a8e8ff" stroke-width="1.5"/>
+    <circle cx="250" cy="400" r="6" fill="#4dc3ff" stroke="#a8e8ff" stroke-width="1.5"/>
+    <circle cx="110" cy="320" r="6" fill="#4dc3ff" stroke="#a8e8ff" stroke-width="1.5"/>
+    <circle cx="110" cy="180" r="6" fill="#4dc3ff" stroke="#a8e8ff" stroke-width="1.5"/>
+  </g>
+
+  <!-- === SHIELD BODY === -->
+  <g class="float">
+    <path d="M250,95 L330,130 L345,180 L345,275 Q310,320 250,345 Q190,320 155,275 L155,180 L170,130 Z"
+          fill="url(#shieldGrad)" stroke="url(#ringGrad)" stroke-width="3" filter="url(#glow)"/>
+    <!-- Shield highlight overlay -->
+    <path d="M250,95 L330,130 L345,180 L345,230 Q300,200 250,200 Q200,200 155,230 L155,180 L170,130 Z"
+          fill="url(#shieldHL)" opacity="0.5"/>
+    <!-- Shield inner border -->
+    <path d="M250,105 L323,137 L337,183 L337,271 Q305,312 250,334 Q195,312 163,271 L163,183 L177,137 Z"
+          fill="none" stroke="#4dc3ff" stroke-width="1" opacity="0.4"/>
+
+    <!-- === CITY SKYLINE (clipped inside shield) === -->
+    <g clip-path="url(#shieldClip)" opacity="0.22">
+      <animateTransform attributeName="transform" type="translate" values="0,0;0,-2;0,0" dur="4s" repeatCount="indefinite"/>
+      <!-- Buildings silhouette -->
+      <rect x="163" y="240" width="12" height="35" fill="#7de8ff"/>
+      <rect x="162" y="225" width="4"  height="18" fill="#7de8ff"/><!-- antenna -->
+      <rect x="178" y="250" width="20" height="25" fill="#7de8ff"/>
+      <rect x="180" y="238" width="16" height="14" fill="#7de8ff"/>
+      <rect x="200" y="230" width="22" height="45" fill="#7de8ff"/>
+      <rect x="207" y="215" width="8"  height="17" fill="#7de8ff"/><!-- tower spire -->
+      <rect x="224" y="245" width="14" height="30" fill="#7de8ff"/>
+      <rect x="224" y="235" width="6"  height="12" fill="#7de8ff"/>
+      <rect x="240" y="220" width="18" height="55" fill="#7de8ff"/>
+      <rect x="247" y="205" width="4"  height="17" fill="#7de8ff"/><!-- antenna -->
+      <rect x="260" y="238" width="16" height="37" fill="#7de8ff"/>
+      <rect x="278" y="248" width="22" height="27" fill="#7de8ff"/>
+      <rect x="280" y="232" width="18" height="18" fill="#7de8ff"/>
+      <rect x="302" y="240" width="14" height="35" fill="#7de8ff"/>
+      <rect x="317" y="252" width="20" height="23" fill="#7de8ff"/>
+      <rect x="319" y="238" width="16" height="16" fill="#7de8ff"/>
+      <!-- Ground -->
+      <rect x="155" y="275" width="190" height="6" fill="#7de8ff"/>
+    </g>
+
+    <!-- === TECH MESH NETWORK (inside shield upper) === -->
+    <g opacity="0.55" filter="url(#glow)">
+      <!-- Mesh nodes -->
+      <circle cx="250" cy="145" r="4" fill="#4dc3ff"/>
+      <circle cx="215" cy="165" r="3" fill="#2aa8ff"/>
+      <circle cx="285" cy="165" r="3" fill="#2aa8ff"/>
+      <circle cx="200" cy="195" r="3" fill="#1e7fdd"/>
+      <circle cx="250" cy="185" r="3.5" fill="#4dc3ff"/>
+      <circle cx="300" cy="195" r="3" fill="#1e7fdd"/>
+      <circle cx="225" cy="210" r="2.5" fill="#2aa8ff"/>
+      <circle cx="275" cy="210" r="2.5" fill="#2aa8ff"/>
+      <circle cx="250" cy="225" r="3" fill="#4dc3ff"/>
+      <!-- Mesh lines -->
+      <g fill="none" stroke="#4dc3ff" stroke-width="0.9" opacity="0.7">
+        <line x1="250" y1="145" x2="215" y2="165"/>
+        <line x1="250" y1="145" x2="285" y2="165"/>
+        <line x1="215" y1="165" x2="200" y2="195"/>
+        <line x1="215" y1="165" x2="250" y2="185"/>
+        <line x1="285" y1="165" x2="250" y2="185"/>
+        <line x1="285" y1="165" x2="300" y2="195"/>
+        <line x1="200" y1="195" x2="225" y2="210"/>
+        <line x1="250" y1="185" x2="225" y2="210"/>
+        <line x1="250" y1="185" x2="275" y2="210"/>
+        <line x1="300" y1="195" x2="275" y2="210"/>
+        <line x1="225" y1="210" x2="250" y2="225"/>
+        <line x1="275" y1="210" x2="250" y2="225"/>
+      </g>
+    </g>
+
+    <!-- === LIGHTNING BOLT (center of mesh) === -->
+    <g filter="url(#strongGlow)" opacity="0.85">
+      <path d="M254,132 L244,155 L252,155 L246,175 L262,150 L253,150 Z"
+            fill="#a8e8ff" stroke="#7de8ff" stroke-width="0.8"/>
+      <animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite"/>
+    </g>
+
+    <!-- === WAVE ORNAMENT (bottom shield) === -->
+    <g opacity="0.5" fill="none" stroke="#4dc3ff" stroke-width="2.5" stroke-linecap="round">
+      <path d="M215,285 Q228,270 250,278 Q272,286 285,270"/>
+      <path d="M225,298 Q238,283 250,291 Q262,299 275,283" stroke-width="1.8" opacity="0.6"/>
+    </g>
+
+    <!-- === SCROLLWORK (lower shield) === -->
+    <g opacity="0.45" fill="none" stroke="#2aa8ff" stroke-width="2" stroke-linecap="round">
+      <path d="M235,308 Q228,318 235,325 Q242,332 250,328 Q258,324 265,330 Q272,336 265,320 Q260,312 250,315 Q240,318 235,308 Z"/>
+    </g>
+
+    <!-- === C-LIFE TEXT === -->
+    <g filter="url(#textGlowF)">
+      <text x="250" y="262" text-anchor="middle" dominant-baseline="central"
+            font-family="Orbitron, monospace" font-weight="900" font-size="46"
+            fill="url(#textGrad)" stroke="url(#textStroke)" stroke-width="1.5" paint-order="stroke">C-Life</text>
+      <animate attributeName="opacity" values="1;0.92;1" dur="3s" repeatCount="indefinite"/>
+    </g>
+    <!-- Text underline glow -->
+    <line x1="178" y1="272" x2="322" y2="272" stroke="#4dc3ff" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- === FLOWING DATA PARTICLES on ring === -->
+  <g filter="url(#glow)" opacity="0.8">
+    <circle cx="0" cy="0" r="3" fill="#7de8ff">
+      <animateMotion dur="6s" repeatCount="indefinite">
+        <mpath href="#ringPath"/>
+      </animateMotion>
+    </circle>
+    <circle cx="0" cy="0" r="2.5" fill="#4dc3ff">
+      <animateMotion dur="6s" begin="2s" repeatCount="indefinite">
+        <mpath href="#ringPath"/>
+      </animateMotion>
+    </circle>
+    <circle cx="0" cy="0" r="2" fill="#a8e8ff">
+      <animateMotion dur="6s" begin="4s" repeatCount="indefinite">
+        <mpath href="#ringPath"/>
+      </animateMotion>
+    </circle>
+  </g>
+  <path id="ringPath" d="M250,64 A186,186 0 1,1 249.9,64 Z" fill="none"/>
+
+  <!-- === OUTER CIRCUIT ARCS (spinning) === -->
+  <g class="spin">
+    <circle cx="250" cy="250" r="218" fill="none" stroke="#1a7ddd" stroke-width="2"
+            stroke-dasharray="30 15 8 15 50 20 8 20" opacity="0.25"/>
+  </g>
+  <g class="spin-rev">
+    <circle cx="250" cy="250" r="228" fill="none" stroke="#4dc3ff" stroke-width="1"
+            stroke-dasharray="12 40 6 40" opacity="0.15"/>
+  </g>
+</svg>
+</div>

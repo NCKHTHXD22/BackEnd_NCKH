@@ -36,7 +36,15 @@ export default function DataTable({ data }) {
                     {p.location?.province} - {p.location?.district}
                   </td>
                   <td className="border px-2 py-2">{p.description || "-"}</td>
-                  <td className="border px-2 py-2">{p.floodLevel} cm</td>
+                  <td className="border px-2 py-2">
+                    <div className="font-medium">{p.floodLevel} cm</div>
+                    {p.aiProcessed && (
+                      <div className="text-[11px] mt-1 bg-blue-50 text-blue-700 border border-blue-200 rounded px-1 py-0.5 inline-block">
+                        🤖 AI đo: {p.aiFloodLevel !== null ? `${p.aiFloodLevel} cm` : "Không rõ"}
+                        {p.aiScore && ` (${Math.round(p.aiScore * 100)}%)`}
+                      </div>
+                    )}
+                  </td>
                   <td className="border px-2 py-2">{p.areaType}</td>
                   <td className="border px-2 py-2">
                     {new Date(p.floodTime).toLocaleString()}
@@ -45,13 +53,21 @@ export default function DataTable({ data }) {
                     {p.user?.name || p.user?.email}
                   </td>
                   <td className="border px-2 py-2">
-                    {p.status === "approved" ? (
-                      <span className="text-green-600 font-semibold">Đã duyệt</span>
-                    ) : p.status === "rejected" ? (
-                      <span className="text-red-600 font-semibold">Đã từ chối</span>
-                    ) : (
-                      <span className="text-yellow-600 font-semibold">Chờ duyệt</span>
-                    )}
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      {p.status === "approved" ? (
+                        <span className="text-green-600 font-semibold">Đã duyệt</span>
+                      ) : p.status === "rejected" ? (
+                        <span className="text-red-600 font-semibold">Đã từ chối</span>
+                      ) : (
+                        <span className="text-yellow-600 font-semibold">Chờ duyệt</span>
+                      )}
+                      
+                      {p.aiAutoApproved && (
+                        <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap border border-purple-200">
+                          🤖 AI Tự duyệt
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

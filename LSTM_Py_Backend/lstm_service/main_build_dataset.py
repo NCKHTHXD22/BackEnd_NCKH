@@ -1,5 +1,7 @@
-# main_build_dataset.py
 from data.dataset_builder import build_global_dataset
 
 if __name__ == "__main__":
-    build_global_dataset(days=1200) # 3.3 Years of data for high accuracy
+    build_global_dataset(
+        start_date="2022-01-01",
+        end_date="2025-12-31",
+    )

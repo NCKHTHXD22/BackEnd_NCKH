@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   FaClock,
   FaCheckCircle,
@@ -21,24 +22,23 @@ const link = (isActive) =>
 export default function Sidebar() {
   const [isReportsOpen, setIsReportsOpen] = useState(true);
   const [isAccountsOpen, setIsAccountsOpen] = useState(true);
+  const { t } = useTranslation();
 
   return (
     <aside className="w-64 bg-gray-900 border-r h-screen flex flex-col shadow-lg">
       <div className="p-4 border-b border-gray-800 flex items-center justify-center">
-        <h3 className="font-bold text-xl text-gray-100 uppercase tracking-wider">FW Admin</h3>
+        <h3 className="font-bold text-xl text-gray-100 uppercase tracking-wider">{t('sidebar.title')}</h3>
       </div>
       <nav className="flex flex-col gap-2 p-4 text-sm font-medium flex-grow overflow-y-auto">
 
-        {/* Dashboard / Home */}
         <NavLink to="/" end className="flex items-center gap-3 p-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
-          <FaTachometerAlt className="text-lg" /> <span>Trang chủ</span>
+          <FaTachometerAlt className="text-lg" /> <span>{t('sidebar.home')}</span>
         </NavLink>
 
         <NavLink to="/admin/dashboard" end className="flex items-center gap-3 p-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors mb-2">
-          <FaTachometerAlt className="text-lg" /> <span>Thống kê Admin</span>
+          <FaTachometerAlt className="text-lg" /> <span>{t('sidebar.adminStats')}</span>
         </NavLink>
 
-        {/* Group 1: Trạng thái người dùng (Báo cáo) */}
         <div className="flex flex-col">
           <button
             onClick={() => setIsReportsOpen(!isReportsOpen)}
@@ -46,7 +46,7 @@ export default function Sidebar() {
           >
             <div className="flex items-center gap-2">
               <FaClipboardList />
-              <span>Trạng thái người dùng</span>
+              <span>{t('sidebar.userStatus')}</span>
             </div>
             {isReportsOpen ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
           </button>
@@ -54,13 +54,13 @@ export default function Sidebar() {
           {isReportsOpen && (
             <div className="flex flex-col gap-1 mt-1">
               <NavLink to="/admin/pending" className={({ isActive }) => link(isActive)}>
-                <FaClock /> Bài chờ
+                <FaClock /> {t('sidebar.pending')}
               </NavLink>
               <NavLink to="/admin/approved" className={({ isActive }) => link(isActive)}>
-                <FaCheckCircle /> Đã duyệt
+                <FaCheckCircle /> {t('sidebar.approved')}
               </NavLink>
               <NavLink to="/admin/rejected" className={({ isActive }) => link(isActive)}>
-                <FaTimesCircle /> Bị từ chối
+                <FaTimesCircle /> {t('sidebar.rejected')}
               </NavLink>
             </div>
           )}
@@ -68,7 +68,6 @@ export default function Sidebar() {
 
         <div className="my-2 border-t border-gray-800"></div>
 
-        {/* Group 2: Quản lý tài khoản */}
         <div className="flex flex-col">
           <button
             onClick={() => setIsAccountsOpen(!isAccountsOpen)}
@@ -76,7 +75,7 @@ export default function Sidebar() {
           >
             <div className="flex items-center gap-2">
               <FaUsersCog />
-              <span>Quản lý tài khoản</span>
+              <span>{t('sidebar.accountManagement')}</span>
             </div>
             {isAccountsOpen ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
           </button>
@@ -84,10 +83,10 @@ export default function Sidebar() {
           {isAccountsOpen && (
             <div className="flex flex-col gap-1 mt-1">
               <NavLink to="/admin/users" className={({ isActive }) => link(isActive)}>
-                <FaUsers /> Người dùng
+                <FaUsers /> {t('sidebar.users')}
               </NavLink>
               <NavLink to="/admin/admins" className={({ isActive }) => link(isActive)}>
-                <FaUserShield /> Quản lý Admin
+                <FaUserShield /> {t('sidebar.admins')}
               </NavLink>
             </div>
           )}

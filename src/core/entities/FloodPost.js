@@ -39,6 +39,13 @@ const postSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    // ── Kết quả AI xử lý ảnh ──────────────────────────────────────
+    aiProcessed:    { type: Boolean, default: false },
+    aiLabel:        { type: String, default: null },   // SAFE | HIGH | DEEP | DANGEROUS | UNDETECTED | ERROR_AI
+    aiFloodLevel:   { type: Number, default: null },   // cm (do AI tính từ ảnh)
+    aiScore:        { type: Number, default: null },   // confidence 0–1
+    aiAutoApproved: { type: Boolean, default: false }, // true nếu AI tự duyệt (không cần Admin)
+    // ─────────────────────────────────────────────────────────────
     status: {
         type: String,
         enum: ['pending', 'approved', 'rejected'],
