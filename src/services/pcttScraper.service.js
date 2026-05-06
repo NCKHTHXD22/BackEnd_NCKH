@@ -144,23 +144,30 @@ class PcttScraperService {
             });
             console.log('✅ [SCRAPER] Puppeteer browser launched');
 
-            // Fetch 3 trang song song
-            console.log('🌐 [SCRAPER] Đang tải 3 trang PCTT song song...');
-            const pageRowsCache = await Promise.all(
-                PAGE_URLS.map(async (url, idx) => {
-                    const p = await browser.newPage();
-                    try {
-                        const rows = await scrapePageRows(p, url);
-                        console.log(`  ✔ Trang ${idx + 1}: ${rows.length} hàng`);
-                        return rows;
-                    } catch (err) {
-                        console.error(`  ❌ Trang ${idx + 1} (${url}): ${err.message}`);
-                        return [];
-                    } finally {
-                        await p.close();
-                    }
-                })
-            );
+            // Fetch 3 trang tuần tự, mỗi trang dùng một trình duyệt riêng để đảm bảo ổn định tuyệt đối
+            console.log('🌐 [SCRAPER] Đang tải các trang PCTT tuần tự (Isolated Browser)...');
+            const pageRowsCache = [];
+            for (let i = 0; i < PAGE_URLS.length; i++) {
+                const url = PAGE_URLS[i];
+                let singleBrowser = null;
+                try {
+                    console.log(`  🕒 Đang cào Trang ${i + 1}: ${url}`);
+                    singleBrowser = await puppeteer.launch({
+                        headless: true,
+                        executablePath: await this._getExecutablePath(),
+                        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+                    });
+                    const p = await singleBrowser.newPage();
+                    const rows = await scrapePageRows(p, url);
+                    console.log(`  ✔ Trang ${i + 1} hoàn tất: ${rows.length} hàng`);
+                    pageRowsCache.push(rows);
+                } catch (err) {
+                    console.error(`  ❌ Trang ${i + 1} (${url}) lỗi: ${err.message}`);
+                    pageRowsCache.push([]);
+                } finally {
+                    if (singleBrowser) await singleBrowser.close();
+                }
+            }
 
             // Parse từng hồ
             for (const [lakeIdStr, mapping] of Object.entries(LAKE_MAPPING)) {
