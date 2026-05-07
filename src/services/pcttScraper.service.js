@@ -42,18 +42,28 @@ class PcttScraperService {
             const startStr = start.toISOString().split('T')[0] + "T00:00:00.000Z";
             const endStr = end.toISOString().split('T')[0] + "T23:59:59.000Z";
             
-            const fullUrl = `${this.API_URL}?ngaybatdau=${startStr}&ngayketthuc=${endStr}&lst_thuydien_id=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19`;
-            
-            console.log(`🚀 [PCTT_API] Fetching from: ${fullUrl}`);
-            const response = await axios.get(fullUrl, { timeout: 30000 });
-            const data = response.data;
+            const allIds = [1, 2, 3, 4, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 19];
+            const batchSize = 4;
+            const allData = [];
 
-            if (!Array.isArray(data)) {
-                console.error("❌ [PCTT_API] Data is not an array");
+            for (let i = 0; i < allIds.length; i += batchSize) {
+                const batch = allIds.slice(i, i + batchSize).join(',');
+                const fullUrl = `${this.API_URL}?ngaybatdau=${startStr}&ngayketthuc=${endStr}&lst_thuydien_id=${batch}`;
+                
+                console.log(`🚀 [PCTT_API] Fetching batch: ${batch}`);
+                const response = await axios.get(fullUrl, { timeout: 30000 });
+                if (Array.isArray(response.data)) {
+                    allData.push(...response.data);
+                }
+            }
+
+            if (allData.length === 0) {
+                console.error("❌ [PCTT_API] No data received from any batch");
                 return results;
             }
 
-            console.log(`✅ [PCTT_API] Received ${data.length} rows`);
+            console.log(`✅ [PCTT_API] Received ${allData.length} total rows`);
+            const data = allData;
 
             // Duyệt từng hồ trong bản đồ Mapping
             for (const [lakeIdStr, fields] of Object.entries(LAKE_FIELD_MAP)) {
