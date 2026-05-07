@@ -125,24 +125,10 @@ class PcttScraperService {
 
     async scrapeAllLakes() {
         const results = new Map();
-        let browser = null;
 
         try {
             const executablePath = await this._getExecutablePath();
-            browser = await puppeteer.launch({
-                headless: true,
-                executablePath,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--single-process',
-                ],
-            });
-            console.log('✅ [SCRAPER] Puppeteer browser launched');
+            // KHÔNG mở trình duyệt ở đây nữa để tránh tốn RAM
 
             // Fetch 3 trang tuần tự, mỗi trang dùng một trình duyệt riêng để đảm bảo ổn định tuyệt đối
             console.log('🌐 [SCRAPER] Đang tải các trang PCTT tuần tự (Isolated Browser)...');
@@ -197,7 +183,7 @@ class PcttScraperService {
         } catch (err) {
             console.error('❌ [SCRAPER] Lỗi:', err.message);
         } finally {
-            if (browser) await browser.close();
+            // Đã đóng browser trong từng vòng lặp ở trên
         }
 
         return results;
