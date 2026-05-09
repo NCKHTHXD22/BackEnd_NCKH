@@ -214,13 +214,13 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 // Bridge LSTM forecast to last known actual at "now"
                 p50: isNow
                     ? bridgeVal
-                    : (isFuture ? (realPred ? (realPred.p50 || realPred.qvao_forecast) : null) : null),
+                    : (realPred ? (realPred.p50 || realPred.qvao_forecast) : null),
                 p10: isNow
                     ? bridgeVal
-                    : (isFuture ? (realPred ? realPred.p10 : null) : null),
+                    : (realPred ? realPred.p10 : null),
                 p90: isNow
                     ? bridgeVal
-                    : (isFuture ? (realPred ? realPred.p90 : null) : null),
+                    : (realPred ? realPred.p90 : null),
                 rain: rainVal,
                 rain_station: stationRain,
                 rain_bestmatch: rainVal,
@@ -650,13 +650,13 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3"
                                                     fill="url(#colorBand)" fillOpacity={1}
                                                     name={t('lakeModal.forecast.p90Label')}
-                                                    dot={false} connectNulls={false} />
+                                                    dot={false} connectNulls={true} />
                                                 {/* P10 — lower bound line + white fill to erase below */}
                                                 <Area yAxisId="flow" type="monotone" dataKey="p10"
                                                     stroke="#6366f1" strokeWidth={1.5} strokeDasharray="6 3"
                                                     fill="#fff" fillOpacity={1}
                                                     name={t('lakeModal.forecast.p10Label')}
-                                                    dot={false} connectNulls={false} />
+                                                    dot={false} connectNulls={true} />
 
                                                 {/* Specific Sources Lines (Only in Best Match) */}
                                                 {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (

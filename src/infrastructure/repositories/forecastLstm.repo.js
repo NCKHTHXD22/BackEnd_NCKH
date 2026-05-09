@@ -7,8 +7,8 @@ export class ForecastLstmRepository extends BaseRepository {
     }
 
     async findByLakeId(Id_Lake) {
-        // Only return forecasts from 1 hour ago onward (current + future 12h window)
-        const cutoff = new Date(Date.now() - 60 * 60 * 1000);
+        // Only return forecasts from 48 hours ago onward (to show historical bands in UI)
+        const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
         return this.model.find({ Id_Lake, forecastTime: { $gte: cutoff } }).sort({ forecastTime: 1 });
     }
 
