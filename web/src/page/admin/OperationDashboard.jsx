@@ -565,7 +565,10 @@ export default function OperationDashboard({ lakeId }) {
                                 ":00",
                             qIn: d.qvao || 0,
                             qOut: d.luuluongxa || 0,
+                            q_turbine: d.q_turbine || 0,
+                            q_spillway: d.q_spillway || 0,
                             waterLevel: d.htl || 0,
+                            rain: d.rain || 0,
                             isForecast: false,
                         };
                     });
@@ -704,30 +707,25 @@ export default function OperationDashboard({ lakeId }) {
             map.set(d.fullLabel, { ...d });
         });
 
-        // Forecast points: add on top of history (they may overlap at boundary)
+        // Forecast points: only add future points (skip historical overlap — bridge handles boundary)
         forecastData.forEach(d => {
-            const existing = map.get(d.fullLabel);
-            if (existing) {
-                map.set(d.fullLabel, {
-                    ...existing,
-                    p50: d.p50,
-                    p10: d.p10,
-                    p90: d.p90,
-                    isForecast: existing.isForecast,
-                });
-            } else {
+            if (!map.has(d.fullLabel)) {
                 map.set(d.fullLabel, { ...d, qIn: null, qOut: null, waterLevel: null });
             }
         });
 
-        // Merge rain forecast (best_match) từ Open-Meteo
-        if (rainLabelMap.size > 0) {
-            map.forEach((point, label) => {
-                const rain = rainLabelMap.get(label);
-                if (rain) map.set(label, { ...point, rainBest: rain.bestMatch });
+        // Merge rain: Use ACTUAL rain from history if available, else use FORECAST rain
+        map.forEach((point, label) => {
+            const rainFc = rainLabelMap.get(label);
+            const actualRain = point.rain;
+            
+            // if we have actual rain (from history), prioritize it. 
+            // if not, and it is a forecast point, use the rain forecast.
+            map.set(label, { 
+                ...point, 
+                rainBest: actualRain !== undefined ? actualRain : (rainFc ? rainFc.bestMatch : null)
             });
-            // TRUNCATED: Không thêm điểm mưa tương lai nếu chưa có dự báo lưu lượng
-        }
+        });
 
         // Sort chronologically
         const sorted = Array.from(map.values()).sort((a, b) => a._ts - b._ts);
