@@ -341,10 +341,17 @@ export default function HomePage() {
                                     <div className="font-bold border-b pb-1 mb-2 text-amber-700">🌊 Báo lũ cộng đồng</div>
                                     <div className="text-xs space-y-1">
                                         <p><strong>Địa điểm:</strong> {post.location?.address ? `${post.location.address}, ` : ''}{post.location?.district}, {post.location?.province}</p>
-                                        <p><strong>Mức lũ:</strong> <span className="font-bold" style={{ color: aiColor }}>{post.floodLevel} cm</span></p>
+                                        <p><strong>Mức lũ (báo cáo):</strong> <span className="font-bold text-blue-600">{post.floodLevel} cm</span></p>
+                                        {post.aiFloodLevel != null && (
+                                            <p><strong>Mức ngập (AI):</strong> <span className="font-bold" style={{ color: aiColor }}>{post.aiFloodLevel} cm</span></p>
+                                        )}
                                         <p><strong>Khu vực:</strong> {post.areaType}</p>
                                         {post.description && <p><strong>Mô tả:</strong> {post.description}</p>}
-                                        {post.aiLabel && <p><strong>AI:</strong> <span className="font-bold" style={{ color: aiColor }}>{post.aiLabel}</span></p>}
+                                        {post.aiLabel && (
+                                            <p><strong>Phân loại AI:</strong> <span className="font-bold px-1.5 py-0.5 rounded text-white text-[10px]" style={{ backgroundColor: aiColor }}>{post.aiLabel}</span>
+                                            {post.aiScore != null && <span className="text-gray-400 ml-1">({Math.round(post.aiScore * 100)}%)</span>}
+                                            </p>
+                                        )}
                                         <p className="text-gray-400 pt-1 border-t">{new Date(post.floodTime || post.createdAt).toLocaleString('vi-VN')}</p>
                                     </div>
                                     {post.imageUrls?.[0] && (
