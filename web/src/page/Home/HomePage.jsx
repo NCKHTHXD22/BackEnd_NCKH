@@ -43,6 +43,15 @@ const reservoirIcon = new L.Icon({
     popupAnchor: [0, -28],
 });
 
+// Custom Icon for Community Posts
+const postIcon = new L.DivIcon({
+    html: `<div style="width:28px;height:28px;background:#f59e0b;border:2px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.4)"><span style="display:block;transform:rotate(45deg);text-align:center;line-height:24px;font-size:13px">🌊</span></div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -30],
+    className: '',
+});
+
 // Component to handle map resizing dynamically
 const MapResizer = () => {
     const map = useMap();
@@ -129,6 +138,11 @@ export default function HomePage() {
     const [activeBaseMap, setActiveBaseMap] = useState('google');
     const [showVietnamBorder, setShowVietnamBorder] = useState(true);
     const [showSurface, setShowSurface] = useState(false);
+
+    // Community layer toggles
+    const [showRainLayer, setShowRainLayer] = useState(true);
+    const [showReservoirLayer, setShowReservoirLayer] = useState(true);
+    const [showPostsLayer, setShowPostsLayer] = useState(false);
 
     useEffect(() => {
         const fetchMapData = async () => {
@@ -245,7 +259,7 @@ export default function HomePage() {
                     </Marker>
 
                     {/* Rendering Rain Stations */}
-                    {rainStations.map((station, index) => {
+                    {showRainLayer && rainStations.map((station, index) => {
                         const lat = station.location?.lat || station.lat;
                         const lng = station.location?.lng || station.lng;
                         if (!lat || !lng) return null;
@@ -276,7 +290,7 @@ export default function HomePage() {
                     })}
 
                     {/* Rendering Reservoirs */}
-                    {reservoirs.map((res, index) => {
+                    {showReservoirLayer && reservoirs.map((res, index) => {
                         let lat = res.location?.lat || res.lat;
                         let lng = res.location?.lng || res.lng || res.lon;
                         const resConfig = RESERVOIRS[res.Id_Lake] || Object.values(RESERVOIRS).find(r => r.name.toLowerCase() === res.Lake_Name?.toLowerCase() || r.name.toLowerCase() === res.name?.toLowerCase());
@@ -312,6 +326,35 @@ export default function HomePage() {
                                 </Tooltip>
                             </Marker>
                         )
+                    })}
+
+                    {/* Rendering Approved Community Posts */}
+                    {showPostsLayer && publicPosts.map((post, index) => {
+                        const lat = post.location?.latitude;
+                        const lng = post.location?.longitude;
+                        if (!lat || !lng) return null;
+                        const aiColor = post.aiLabel === 'DANGEROUS' ? '#ef4444' : post.aiLabel === 'DEEP' ? '#f97316' : post.aiLabel === 'HIGH' ? '#f59e0b' : '#10b981';
+                        return (
+                            <Marker key={`post-${index}`} position={[lat, lng]} icon={postIcon}>
+                                <Popup>
+                                    <div className="font-bold border-b pb-1 mb-2 text-amber-700">🌊 Báo lũ cộng đồng</div>
+                                    <div className="text-xs space-y-1">
+                                        <p><strong>Địa điểm:</strong> {post.location?.address ? `${post.location.address}, ` : ''}{post.location?.district}, {post.location?.province}</p>
+                                        <p><strong>Mức lũ:</strong> <span className="font-bold" style={{ color: aiColor }}>{post.floodLevel} cm</span></p>
+                                        <p><strong>Khu vực:</strong> {post.areaType}</p>
+                                        {post.description && <p><strong>Mô tả:</strong> {post.description}</p>}
+                                        {post.aiLabel && <p><strong>AI:</strong> <span className="font-bold" style={{ color: aiColor }}>{post.aiLabel}</span></p>}
+                                        <p className="text-gray-400 pt-1 border-t">{new Date(post.floodTime || post.createdAt).toLocaleString('vi-VN')}</p>
+                                    </div>
+                                    {post.imageUrls?.[0] && (
+                                        <img src={post.imageUrls[0]} alt="" className="mt-2 rounded w-full h-20 object-cover" />
+                                    )}
+                                </Popup>
+                                <Tooltip direction="top" offset={[0, -30]} opacity={1}>
+                                    <span className="text-xs font-semibold">{post.location?.district} · {post.floodLevel}cm</span>
+                                </Tooltip>
+                            </Marker>
+                        );
                     })}
                 </MapContainer>
             </div>
@@ -435,58 +478,51 @@ export default function HomePage() {
 
             {/* Community Info Panel (Thông tin cộng đồng) */}
             {showCommunityPanel && (
-                <div className="absolute right-16 top-20 bottom-32 z-[1000] w-[360px] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col text-sm">
-                    <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white p-3 font-bold flex justify-between items-center">
-                        <span className="flex items-center gap-2"><FaUsers /> Thông tin cộng đồng</span>
-                        <button onClick={() => setShowCommunityPanel(false)} className="text-white/70 hover:text-white">
-                            <FaChevronRight />
-                        </button>
+                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-lg shadow-2xl overflow-hidden text-sm border border-gray-200">
+                    <div className="bg-gray-50 p-3 border-b font-semibold flex justify-between items-center text-gray-700">
+                        <span className="flex items-center gap-2"><FaUsers className="text-blue-600" /> Thông tin cộng đồng</span>
+                        <button onClick={() => setShowCommunityPanel(false)} className="text-gray-400 hover:text-gray-600 text-lg">❯</button>
                     </div>
-
-                    <div className="bg-blue-50 text-blue-800 text-xs px-3 py-2 font-medium border-b">
-                        {publicPosts.length} bài viết đã được duyệt
-                    </div>
-
-                    <div className="p-2 border-b flex gap-2">
-                        <div className="relative flex-1">
-                            <FaSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div className="p-3 space-y-2">
+                        <label
+                            className={`flex items-center gap-3 p-2.5 border rounded-lg cursor-pointer transition-all ${showRainLayer ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        >
                             <input
-                                type="text"
-                                placeholder="Tìm kiếm..."
-                                className="w-full border rounded-lg pl-8 pr-2 py-1.5 text-xs focus:outline-blue-500"
+                                type="checkbox"
+                                checked={showRainLayer}
+                                onChange={e => setShowRainLayer(e.target.checked)}
+                                className="accent-blue-600"
                             />
-                        </div>
-                    </div>
+                            <span className="font-medium flex items-center gap-1.5"><FaCloudRain className="text-blue-400" /> Trạm mưa</span>
+                        </label>
 
-                    <div className="flex-1 overflow-y-auto">
-                        {publicPosts.length > 0 ? (
-                            publicPosts.map(post => (
-                                <div key={post._id} className="border-b p-3 flex gap-3 hover:bg-blue-50 cursor-pointer transition-colors group">
-                                    <div className="mt-1">
-                                        <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
-                                            <FaUsers size={14} />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-gray-800 text-[13px] leading-tight mb-1">{post.title || "Thông tin cộng đồng"}</h3>
-                                        <div className="text-[11px] text-gray-600 space-y-0.5">
-                                            <p><span className="font-medium text-gray-700">Thời gian:</span> {new Date(post.createdAt || new Date()).toLocaleString('vi-VN')}</p>
-                                            <p className="line-clamp-2"><span className="font-medium text-gray-700">Nội dung:</span> {post.content || post.description || "N/A"}</p>
-                                            {post.location && <p><span className="font-medium text-gray-700">Vị trí:</span> {post.location}</p>}
-                                        </div>
-                                        {post.imageUrl && (
-                                            <img src={post.imageUrl} alt="" className="mt-2 rounded-md w-full h-24 object-cover" />
-                                        )}
-                                    </div>
-                                    <div className="flex items-center text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <FaChevronRight />
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="p-6 text-center text-gray-500 text-xs mt-10">
-                                <FaUsers className="mx-auto text-4xl mb-3 text-gray-300" />
-                                Chưa có thông tin cộng đồng nào được duyệt.
+                        <label
+                            className={`flex items-center gap-3 p-2.5 border rounded-lg cursor-pointer transition-all ${showReservoirLayer ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={showReservoirLayer}
+                                onChange={e => setShowReservoirLayer(e.target.checked)}
+                                className="accent-blue-600"
+                            />
+                            <span className="font-medium flex items-center gap-1.5"><FaWater className="text-cyan-500" /> Trạm hồ chứa</span>
+                        </label>
+
+                        <label
+                            className={`flex items-center gap-3 p-2.5 border rounded-lg cursor-pointer transition-all ${showPostsLayer ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-sm' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={showPostsLayer}
+                                onChange={e => setShowPostsLayer(e.target.checked)}
+                                className="accent-amber-500"
+                            />
+                            <span className="font-medium flex items-center gap-1.5"><FaUsers className="text-amber-500" /> Báo lũ cộng đồng</span>
+                        </label>
+
+                        {showPostsLayer && (
+                            <div className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                                🌊 {publicPosts.filter(p => p.location?.latitude).length} điểm báo lũ đang hiển thị
                             </div>
                         )}
                     </div>
