@@ -707,9 +707,10 @@ export default function OperationDashboard({ lakeId }) {
             map.set(d.fullLabel, { ...d });
         });
 
-        // Forecast points: only add future points (skip historical overlap — bridge handles boundary)
+        // Forecast points: only add strictly-future points (after last historical timestamp)
+        const lastHistTs = chartData.length ? chartData[chartData.length - 1]._ts : new Date(0);
         forecastData.forEach(d => {
-            if (!map.has(d.fullLabel)) {
+            if (d._ts > lastHistTs) {
                 map.set(d.fullLabel, { ...d, qIn: null, qOut: null, waterLevel: null });
             }
         });

@@ -16,6 +16,7 @@ import {
 import { MdSatellite, MdLayers, MdWarning } from 'react-icons/md';
 import mapApi from '../../api/mapApi';
 import { RESERVOIRS } from '../../utils/reservoirs';
+import hydroDamImg from '../../assets/images/hydro-dam.png';
 import LakeModal from '../../components/Map/LakeModal';
 import vietnamBoundary from '../../utils/vietnamBoundary.json';
 
@@ -37,10 +38,10 @@ const rainIcon = new L.Icon({
 
 // Custom Icon for Reservoirs
 const reservoirIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2857/2857415.png',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28],
+    iconUrl: hydroDamImg,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36],
 });
 
 // Custom Icon for Community Posts
