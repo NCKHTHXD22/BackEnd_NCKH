@@ -349,6 +349,60 @@ app.get('/api/test-govapi', async (req, res) => {
     }
 });
 
+// 🏢 Proxy: Lấy tòa nhà cao qua Overpass (server-side, không bị rate limit mobile)
+app.get('/api/buildings', async (req, res) => {
+    const { lat, lng, radius = 3000 } = req.query;
+    if (!lat || !lng) return res.status(400).json({ error: 'Thiếu lat/lng' });
+
+    const query =
+        `[out:json][timeout:20];` +
+        `(` +
+        `way["building"]["name"](around:${radius},${lat},${lng});` +
+        `way["building:levels"](around:${radius},${lat},${lng});` +
+        `way["tourism"="hotel"](around:${radius},${lat},${lng});` +
+        `relation["building"]["name"](around:${radius},${lat},${lng});` +
+        `);out center tags 30;`;
+
+    const MIRRORS = [
+        'https://overpass-api.de/api/interpreter',
+        'https://z.overpass-api.de/api/interpreter',
+        'https://lz4.overpass-api.de/api/interpreter',
+    ];
+
+    let buildings = [];
+    for (const mirror of MIRRORS) {
+        try {
+            const { data } = await axios.post(
+                mirror,
+                `data=${encodeURIComponent(query)}`,
+                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 20000 }
+            );
+            const parsed = (data.elements || [])
+                .filter(el => el.center || (el.lat != null && el.lon != null))
+                .map(el => ({
+                    id:           el.id,
+                    lat:          el.center?.lat ?? el.lat,
+                    lng:          el.center?.lon ?? el.lon,
+                    name:         el.tags?.['name:vi'] || el.tags?.name || 'Tòa nhà cao tầng',
+                    levels:       el.tags?.['building:levels'] || null,
+                    height:       el.tags?.height || null,
+                    buildingType: el.tags?.building || el.tags?.tourism || null,
+                }))
+                .filter(b => b.lat && b.lng);
+
+            if (parsed.length > 0) {
+                buildings = parsed;
+                console.log(`[Buildings API] ${mirror.split('/')[2]}: ${buildings.length} kết quả`);
+                break;
+            }
+        } catch (e) {
+            console.log(`[Buildings API] ${mirror.split('/')[2]} thất bại: ${e.message}`);
+        }
+    }
+
+    res.json(buildings);
+});
+
 // Start Server
 const PORT = ENV.PORT || 5001;
 

@@ -19,6 +19,7 @@ import mapStyles from "../../assets/styles/home.styles.js";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "@/lib/env";
+import { scheduleFloodAlert, scheduleTestNotification } from "@/lib/pushNotifications";
 
 const OWM_KEY = "c41fa113b3691968f275c36bcadebe29";
 const GMAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -112,76 +113,107 @@ function cloudinaryThumb(url) {
   return url.replace("/upload/", "/upload/w_280,h_180,c_fill,q_auto,f_webp/");
 }
 
-// ── Google Places fallback — dùng Places API (New) vì Nearby Search cũ bị tắt ────────
-// Endpoint: https://places.googleapis.com/v1/places:searchNearby (POST, JSON)
+// ── Google Places (New) fallback — Nearby Search API ─────────────────────────
 async function fetchBuildingsFromGooglePlaces(lat, lng, gmapsKey) {
-  // Các loại công trình cần tìm (Places API New dùng "includedTypes")
-  const typeSets = [
-    ["lodging"],           // khách sạn
-    ["office"],            // tòa văn phòng
-    ["apartment_complex"], // chung cư
-  ];
-  const seen    = new Set();
   const results = [];
-
-  for (const includedTypes of typeSets) {
-    try {
-      const body = {
-        includedTypes,
-        maxResultCount: 10,
-        locationRestriction: {
-          circle: {
-            center: { latitude: lat, longitude: lng },
-            radius: 3000.0,
-          },
-        },
-      };
-
-      const res = await fetch(
-        "https://places.googleapis.com/v1/places:searchNearby",
-        {
-          method:  "POST",
-          headers: {
-            "Content-Type":     "application/json",
-            "X-Goog-Api-Key":   gmapsKey,
-            // Chỉ lấy những field cần thiết (tránh billing tốn kém)
-            "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.types",
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      const data = await res.json();
-
-      if (data.error) {
-        console.warn(`Google Places New (${includedTypes}): ${data.error.status} — ${data.error.message}`);
-        continue;
-      }
-
-      (data.places || []).forEach((p) => {
-        if (!seen.has(p.id)) {
-          seen.add(p.id);
-          const pTypes = p.types || [];
-          const buildingType = pTypes.includes("lodging")           ? "hotel"
-                             : pTypes.includes("apartment_complex") ? "apartments"
-                             : "office";
-          results.push({
-            id:           `gp-${p.id}`,
-            lat:          p.location?.latitude,
-            lng:          p.location?.longitude,
-            name:         p.displayName?.text || p.displayName || "Tòa nhà",
-            levels:       null,
-            height:       null,
-            buildingType,
-            type:         "building",
-          });
-        }
-      });
-    } catch (e) {
-      console.warn(`Google Places New (${includedTypes}) lỗi: ${e.message}`);
+  try {
+    const body = {
+      includedTypes: ["lodging", "shopping_mall", "department_store"],
+      locationRestriction: {
+        circle: { center: { latitude: lat, longitude: lng }, radius: 3000 },
+      },
+      maxResultCount: 20,
+      languageCode: "vi",
+    };
+    const res = await fetch("https://places.googleapis.com/v1/places:searchNearby", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": gmapsKey,
+        "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.types",
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.error) {
+      console.warn(`[Buildings] Google Places New lỗi: ${data.error.message || JSON.stringify(data.error)}`);
+      return results;
     }
+    (data.places || []).forEach((p) => {
+      const types = p.types || [];
+      const buildingType = types.includes("lodging") ? "hotel"
+        : (types.includes("shopping_mall") || types.includes("department_store")) ? "commercial"
+        : "office";
+      results.push({
+        id:           `gp-${p.id}`,
+        lat:          p.location?.latitude,
+        lng:          p.location?.longitude,
+        name:         p.displayName?.text || "Tòa nhà",
+        levels:       null,
+        height:       null,
+        buildingType,
+        type:         "building",
+      });
+    });
+  } catch (e) {
+    console.warn(`[Buildings] Google Places New lỗi: ${e.message}`);
   }
   console.log(`[Buildings] Google Places New: tìm được ${results.length} công trình`);
+  return results;
+}
+
+// ── Overpass GET fallback — query đơn giản hơn, dùng GET thay POST ─────────────
+async function fetchBuildingsFromOverpassGet(lat, lng) {
+  const results = [];
+  try {
+    // Query đơn giản: chỉ lấy node có tên + building tag trong 2km
+    const q = `[out:json][timeout:20];(
+      nwr["building"]["name"](around:2000,${lat},${lng});
+      nwr["tourism"="hotel"](around:2000,${lat},${lng});
+      nwr["shop"="mall"](around:2000,${lat},${lng});
+    );out center tags 20;`;
+    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`;
+    
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("json")) {
+      console.warn(`[Buildings] Overpass GET: non-JSON response (HTML?), bỏ qua`);
+      return results;
+    }
+    const data = await res.json();
+
+    (data.elements || []).forEach((el) => {
+      const elLat = el.lat || el.center?.lat;
+      const elLng = el.lon || el.center?.lon;
+      if (!elLat || !elLng) return;
+
+      const tags = el.tags || {};
+      const buildingType =
+        tags.tourism === "hotel" || tags.building === "hotel" ? "hotel"
+        : tags.building === "office" ? "office"
+        : tags.building === "apartments" ? "apartments"
+        : tags.shop === "mall" ? "commercial"
+        : "building";
+
+      results.push({
+        id:           `osg-${el.id}`,
+        lat:          elLat,
+        lng:          elLng,
+        name:         tags["name:vi"] || tags.name || "Tòa nhà",
+        levels:       tags["building:levels"] || null,
+        height:       tags.height || null,
+        buildingType,
+        type:         "building",
+      });
+    });
+    console.log(`[Buildings] Overpass GET: tìm được ${results.length} công trình`);
+  } catch (e) {
+    console.warn(`[Buildings] Overpass GET lỗi: ${e.message}`);
+  }
   return results;
 }
 
@@ -210,6 +242,9 @@ export default function HomeScreen() {
   const [tallBuildings, setTallBuildings] = useState([]);
   const [loadingBuildings, setLoadingBuildings] = useState(false);
   const [buildingCenter, setBuildingCenter] = useState(null); // tọa độ tâm vòng tròn
+
+  // ── Warning posts layer ──────────────────────────────────────────────────────
+  const [showWarningPosts, setShowWarningPosts] = useState(false);
   // ── Route polyline ──────────────────────────────────────────────────────────
   const [routeCoords, setRouteCoords] = useState([]);
   const [routeInfo, setRouteInfo]   = useState(null); // { distance, duration }
@@ -235,6 +270,7 @@ export default function HomeScreen() {
   const FLOOD_LEVEL_CM      = 30;              // chỉ cảnh báo khi ngập > 30cm
   const RAIN_HEAVY_MM       = 50;              // ≥50mm/h = cực kỳ nặng
   const RAIN_RADIUS_KM      = 5;
+  const THREE_DAYS_MS       = 3 * 24 * 60 * 60 * 1000;
 
   // ── Caches (tránh refetch không cần thiết) ──────────────────────────────────
   const buildingCacheRef = useRef({}); // key: "lat2,lng2" → buildings[]
@@ -304,7 +340,29 @@ export default function HomeScreen() {
     setLoadingBuildings(true);
     setTallBuildings([]);
 
-    // ―― Overpass: chạy TẤT CẢ mirrors SONG SONG, lấy cái nào trả về trước ――
+    let buildings = null;
+
+    // ── Primary: Backend proxy (gọi Overpass server-side, không bị rate limit) ──
+    const proxyCtrl = new AbortController();
+    const proxyTimer = setTimeout(() => proxyCtrl.abort(), 25000);
+    try {
+      const r = await fetch(
+        `${API_URL}/api/buildings?lat=${lat}&lng=${lng}&radius=3000`,
+        { headers: { Accept: "application/json" }, signal: proxyCtrl.signal }
+      );
+      clearTimeout(proxyTimer);
+      const data = await r.json();
+      if (Array.isArray(data) && data.length > 0) {
+        buildings = data.map((b) => ({ ...b, type: "building" }));
+        console.log(`[Buildings] Backend proxy OK: ${buildings.length} buildings`);
+      }
+    } catch (e) {
+      clearTimeout(proxyTimer);
+      console.log(`[Buildings] Backend proxy lỗi: ${e.message}`);
+    }
+
+    // ―― Fallback: Overpass trực tiếp (4 mirrors SONG SONG) ――
+    if (!buildings || buildings.length === 0) {
     const OVERPASS_MIRRORS = [
       "https://z.overpass-api.de/api/interpreter",
       "https://lz4.overpass-api.de/api/interpreter",
@@ -312,12 +370,14 @@ export default function HomeScreen() {
       "https://overpass.kumi.systems/api/interpreter",
     ];
 
+    // Mở rộng query: bao gồm relation + bất kỳ building có name → tìm được nhiều hơn
     const query =
-      `[out:json][timeout:15];` +
+      `[out:json][timeout:20];` +
       `(` +
+      `way["building"]["name"](around:3000,${lat},${lng});` +
       `way["building:levels"](around:3000,${lat},${lng});` +
-      `way["building"~"hotel|office|apartments|commercial"](around:3000,${lat},${lng});` +
       `way["tourism"="hotel"](around:3000,${lat},${lng});` +
+      `relation["building"]["name"](around:3000,${lat},${lng});` +
       `);out center tags 30;`;
 
     const nameOf = (tags) => {
@@ -329,13 +389,14 @@ export default function HomeScreen() {
       return "Tòa nhà cao tầng";
     };
 
+    // Hỗ trợ cả way/relation (có center) lẫn node (có lat/lon trực tiếp)
     const parseOverpass = (data) =>
       (data.elements || [])
-        .filter((el) => el.center)
+        .filter((el) => el.center || (el.lat != null && el.lon != null))
         .map((el) => ({
           id:           el.id,
-          lat:          el.center.lat,
-          lng:          el.center.lon,
+          lat:          el.center?.lat ?? el.lat,
+          lng:          el.center?.lon ?? el.lon,
           name:         nameOf(el.tags),
           levels:       el.tags?.["building:levels"] || null,
           height:       el.tags?.height || null,
@@ -345,7 +406,7 @@ export default function HomeScreen() {
 
     const tryMirror = (endpoint) => new Promise(async (resolve, reject) => {
       const ctrl  = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 10000);
+      const timer = setTimeout(() => ctrl.abort(), 20000); // 20s timeout
       try {
         const res = await fetch(endpoint, {
           method:  "POST",
@@ -369,24 +430,34 @@ export default function HomeScreen() {
       }
     });
 
-    let buildings = null;
     try {
       buildings = await Promise.any(OVERPASS_MIRRORS.map(tryMirror));
       console.log(`[Buildings] Overpass tổng: ${buildings.length} buildings`);
     } catch {
-      console.log("[Buildings] Tất cả Overpass mirrors thất bại → Google Places");
+      console.log("[Buildings] Tất cả Overpass mirrors thất bại → Google Places New");
     }
 
-    // Fallback: Google Places Nearby Search
+    // Fallback 1: Google Places (New) Nearby Search
     if (!buildings || buildings.length === 0) {
       buildings = await fetchBuildingsFromGooglePlaces(lat, lng, GMAPS_KEY);
-      console.log(`[Buildings] Google Places trả về: ${buildings.length} buildings`);
+      console.log(`[Buildings] Google Places New trả về: ${buildings.length} buildings`);
     }
+
+    // Fallback 2: Overpass GET (query đơn giản hơn, dùng GET)
+    if (!buildings || buildings.length === 0) {
+      console.log("[Buildings] Google Places cũng thất bại → Overpass GET fallback");
+      buildings = await fetchBuildingsFromOverpassGet(lat, lng);
+      console.log(`[Buildings] Overpass GET trả về: ${buildings.length} buildings`);
+    }
+    } // end if (!buildings from backend proxy)
 
     const filtered = filterBuildings(buildings || [], lat, lng);
     console.log(`[Buildings] Sau filterBuildings: ${filtered.length} hiển thị (từ ${(buildings||[]).length} raw)`);
 
-    buildingCacheRef.current[cacheKey] = buildings || [];
+    // Chỉ cache nếu có kết quả — tránh cache 0 buildings vĩnh viễn
+    if ((buildings || []).length > 0) {
+      buildingCacheRef.current[cacheKey] = buildings;
+    }
     setTallBuildings(filtered);
     setLoadingBuildings(false);
   }, []);
@@ -571,6 +642,24 @@ export default function HomeScreen() {
     setShowFunctionPanel(false);
   };
 
+  // ── Test notification: schedule 10s sau khi mount (thoát app để xem) ─────────
+  useEffect(() => {
+    scheduleTestNotification(10);
+  }, []);
+
+  // ── Đồng bộ OS notification khi localAlerts thay đổi ─────────────────────────
+  // Gửi OS notification cho mỗi alert mới để hiển thị khi app ở background/closed
+  const prevAlertIdsRef = useRef(new Set());
+  useEffect(() => {
+    if (localAlerts.length === 0) return;
+    localAlerts.forEach((a) => {
+      if (!prevAlertIdsRef.current.has(a.id)) {
+        scheduleFloodAlert(a.title, a.message, { alertId: a.id, type: a.type });
+      }
+    });
+    prevAlertIdsRef.current = new Set(localAlerts.map((a) => a.id));
+  }, [localAlerts]);
+
   // ── GPS watch ───────────────────────────────────────────────────────────────
   useEffect(() => {
     let subscription;
@@ -654,7 +743,7 @@ export default function HomeScreen() {
       const t = setTimeout(() => setMarkerTracking(false), 800);
       return () => clearTimeout(t);
     }
-  }, [markers, rainStations, reservoirs, showReservoirs, showRainStations]);
+  }, [markers, rainStations, reservoirs, showReservoirs, showRainStations, showWarningPosts]);
 
   // Khi buildings load xong (thường sau 5-15s do Overpass timeout), bật lại
   // tracksViewChanges 1.2s để Ionicons có thời gian render, rồi tắt lại
@@ -918,6 +1007,12 @@ export default function HomeScreen() {
       {/* ── Layer toggles top-right ── */}
       <View style={uiStyles.layerButtons}>
         <TouchableOpacity
+          onPress={() => setShowWarningPosts(!showWarningPosts)}
+          style={[uiStyles.layerBtn, { backgroundColor: showWarningPosts ? "#D32F2F" : "#9E9E9E" }]}
+        >
+          <Ionicons name="alert-circle" size={20} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => setShowReservoirs(!showReservoirs)}
           style={[uiStyles.layerBtn, { backgroundColor: showReservoirs ? "#009688" : "#ccc" }]}
         >
@@ -970,9 +1065,10 @@ export default function HomeScreen() {
           />
         )}
 
-        {/* Flood post markers */}
+        {/* Flood post markers — khi warning layer bật thì ẩn bài trong 3 ngày */}
         {markers
           .filter((item) => {
+            if (showWarningPosts && item.createdAt && Date.now() - new Date(item.createdAt).getTime() <= THREE_DAYS_MS) return false;
             if (viewMode === "flood" && location)
               return getDistanceKm(location.latitude, location.longitude, item.coordinates.lat, item.coordinates.lng) <= 0.8;
             return true;
@@ -985,6 +1081,27 @@ export default function HomeScreen() {
               tracksViewChanges={markerTracking}
             >
               <Ionicons name="information-circle" size={28} color="#f9a825" />
+            </Marker>
+          ))}
+
+        {/* Bài đăng cảnh báo đã duyệt trong 3 ngày gần nhất */}
+        {showWarningPosts && markers
+          .filter((item) => {
+            if (!item.createdAt || Date.now() - new Date(item.createdAt).getTime() > THREE_DAYS_MS) return false;
+            if (viewMode === "flood" && location)
+              return getDistanceKm(location.latitude, location.longitude, item.coordinates.lat, item.coordinates.lng) <= 0.8;
+            return true;
+          })
+          .map((item, idx) => (
+            <Marker
+              key={`warn-${idx}`}
+              coordinate={{ latitude: item.coordinates.lat, longitude: item.coordinates.lng }}
+              onPress={(e) => { e.stopPropagation(); handleMarkerPress(item); }}
+              tracksViewChanges={markerTracking}
+            >
+              <View style={markerStyles.warnPostWrapper}>
+                <Ionicons name="alert-circle" size={32} color="#D32F2F" />
+              </View>
             </Marker>
           ))}
 
@@ -1572,6 +1689,11 @@ const markerStyles = StyleSheet.create({
   },
   buildingBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
   pinWrapper: { alignItems: "center" },
+  warnPostWrapper: {
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: "#D32F2F", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.5, shadowRadius: 4,
+  },
 });
 
 const popupStyles = StyleSheet.create({
