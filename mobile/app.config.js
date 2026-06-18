@@ -31,6 +31,9 @@ export default {
         "android.permission.INTERNET",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
       ],
       config: {
         googleMaps: {
@@ -47,6 +50,16 @@ export default {
     plugins: [
       "expo-router",
       "expo-image-picker",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/Logo.png",
+          color: "#01579B",
+          sounds: [],
+          androidMode: "default",
+          androidCollapsedTitle: "AKTA-FLT — Cảnh báo lũ lụt",
+        },
+      ],
       [
         "expo-splash-screen",
         {

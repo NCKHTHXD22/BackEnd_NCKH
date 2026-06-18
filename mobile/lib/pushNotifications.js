@@ -7,11 +7,45 @@ import Constants from 'expo-constants';
 // Cấu hình cách nhận thông báo khi app đang chạy (foreground)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
+
+// Gửi thông báo OS ngay lập tức (hiển thị kể cả khi app ở background/closed)
+export async function scheduleFloodAlert(title, body, data = {}) {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: { title, body, data, sound: true },
+      trigger: null, // null = fire immediately
+    });
+  } catch (e) {
+    console.warn('scheduleFloodAlert error:', e.message);
+  }
+}
+
+// Đặt lịch thông báo thử nghiệm sau `delaySeconds` giây (mặc định 10s)
+// Mục đích: user thoát app rồi xem thông báo xuất hiện trên thanh trạng thái
+export async function scheduleTestNotification(delaySeconds = 10) {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🚨 AKTA-FLT — Thử nghiệm cảnh báo',
+        body: 'Hệ thống cảnh báo lũ lụt đang hoạt động. Thoát app và xem thông báo này!',
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: delaySeconds,
+      },
+    });
+    console.log(`[Notification] Test notification scheduled in ${delaySeconds}s`);
+  } catch (e) {
+    console.warn('scheduleTestNotification error:', e.message);
+  }
+}
 
 // Hàm đăng ký lấy Expo Push Token
 export async function registerForPushNotificationsAsync() {
