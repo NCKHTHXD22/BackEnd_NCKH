@@ -160,7 +160,7 @@ async function run() {
     }
 
     console.log('\n🎉 BACKFILL HOÀN TẤT!');
-    console.log('Kiểm tra: https://backend-nckh-lm57.onrender.com/api/rain-lake-history/1');
+    console.log('Kiểm tra: https://nckh.dxvtech.vn/api/rain-lake-history/1');
     await mongoose.disconnect();
 }
 

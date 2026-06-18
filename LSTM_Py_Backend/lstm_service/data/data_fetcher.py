@@ -72,7 +72,7 @@ def get_token():
 
 
 # ================= HYDRO (Fetched from Node.js Backend) =================
-BACKEND_API_URL = "https://backend-nckh-lm57.onrender.com/api"
+BACKEND_API_URL = "https://nckh.dxvtech.vn/api"
 
 def fetch_hydro_data(rid, days=180, end_time=None):
     if end_time is None:

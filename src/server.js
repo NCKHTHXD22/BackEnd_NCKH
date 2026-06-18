@@ -37,7 +37,6 @@ import "./jobs/rainLakeHistory.job.js";
 import "./jobs/lstmForecast.job.js";
 import "./jobs/inflowLakeHistory.job.js";
 import "./jobs/floodAlert.job.js";
-import "./jobs/keepAlive.job.js"; // Giữ server luôn thức
 
 const app = express();
 
@@ -408,15 +407,4 @@ const PORT = ENV.PORT || 5001;
 
 app.listen(PORT, () => {
     console.log(` Server is running on port: ${PORT}`);
-
-    // 🔄 Keep-alive: Tự ping mỗi 14 phút để Render free tier không spin down
-    const SELF_URL = 'https://backend-nckh-lm57.onrender.com';
-    setInterval(async () => {
-        try {
-            const res = await fetch(`${SELF_URL}/api/flood-tower`);
-            console.log(`🏓 [KEEP-ALIVE] Ping OK (${res.status})`);
-        } catch (e) {
-            console.log(`🏓 [KEEP-ALIVE] Ping failed: ${e.message}`);
-        }
-    }, 14 * 60 * 1000); // 14 phút
 });
