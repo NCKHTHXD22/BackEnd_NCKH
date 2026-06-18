@@ -103,7 +103,14 @@ def fetch_hydro_data(rid, days=180, end_time=None):
             return pd.DataFrame()
 
         # Mapping lại các trường từ MongoDB format sang format LSTM cần
-        df["time"] = pd.to_datetime(df["timestamp"], errors="coerce").dt.floor("h")
+        # Backend trả timestamp dạng UTC ("...Z") — convert về naive VN-local (UTC+7)
+        # để nhất quán với phần còn lại của pipeline (load_rain_matrix, fetch_rain_from_backend...)
+        df["time"] = (
+            pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
+            .dt.tz_convert("Asia/Ho_Chi_Minh")
+            .dt.tz_localize(None)
+            .dt.floor("h")
+        )
 
         df["inflow"] = pd.to_numeric(df["qvao"], errors="coerce")
         df["water_level"] = pd.to_numeric(df["htl"], errors="coerce")
