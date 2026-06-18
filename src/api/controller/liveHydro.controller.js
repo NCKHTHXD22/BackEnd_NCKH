@@ -1,5 +1,6 @@
 import axios from 'axios';
 import inflowLakeHistoryRepo from '../../infrastructure/repositories/inflowLakeHistory.repo.js';
+import rainLakeHistoryRepo from '../../infrastructure/repositories/rainLakeHistory.repo.js';
 
 const AUTH = Buffer.from(`rfm2O3ciJ3aOJy1iA2SAfS3P_qwa:cklyddfdciGjQJGdtiPg936PDo8a`).toString('base64');
 
@@ -46,22 +47,32 @@ class LiveHydroController {
         return Array.isArray(rows) ? rows : [];
     }
 
-    _buildDBResponse(dbHistory) {
-        // dbHistory is sorted ascending by timestamp (findByLake uses sort: 1)
+    _buildDBResponse(dbHistory, rainHistory = []) {
+        // Build a map of rain history by ISO timestamp string
+        const rainMap = new Map();
+        rainHistory.forEach(r => {
+            const ts = r.timestamp instanceof Date ? r.timestamp.toISOString() : new Date(r.timestamp).toISOString();
+            rainMap.set(ts, r.sumDepth || 0);
+        });
+
         const latest = dbHistory[dbHistory.length - 1];
         return {
             qvao: latest.qvao || 0,
             luuluongxa: latest.luuluongxa || 0,
             htl: latest.htl || 0,
             source: 'db',
-            history: dbHistory.map(d => ({
-                time: d.timestamp instanceof Date
-                    ? d.timestamp.toISOString()
-                    : new Date(d.timestamp).toISOString(),
-                qvao: d.qvao || 0,
-                luuluongxa: d.luuluongxa || 0,
-                htl: d.htl || 0
-            }))
+            history: dbHistory.map(d => {
+                const ts = d.timestamp instanceof Date ? d.timestamp.toISOString() : new Date(d.timestamp).toISOString();
+                return {
+                    time: ts,
+                    qvao: d.qvao || 0,
+                    luuluongxa: d.luuluongxa || 0,
+                    q_turbine: d.q_turbine || 0,
+                    q_spillway: d.q_spillway || 0,
+                    htl: d.htl || 0,
+                    rain: rainMap.get(ts) || 0
+                };
+            })
         };
     }
 
@@ -70,7 +81,8 @@ class LiveHydroController {
 
         const end = new Date();
         end.setMinutes(0, 0, 0);
-        const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+        // Extend to 36 hours history to match forecast tab logic
+        const start = new Date(end.getTime() - 36 * 60 * 60 * 1000);
         const formatISO = (d) => d.toISOString().replace(/\.\d{3}Z$/, '.000Z');
 
         // ── 1. Try live Danang API ────────────────────────────────────────────
@@ -97,6 +109,14 @@ class LiveHydroController {
             console.warn(`[liveHydro] Danang API failed for lake ${lakeId}: ${err.message}`);
         }
 
+        // Fetch local rain history regardless of source
+        const rainHistory = await rainLakeHistoryRepo.getByLakeAndRange(Number(lakeId), start, end).catch(() => []);
+        const rainMap = new Map();
+        rainHistory.forEach(r => {
+            const ts = r.timestamp instanceof Date ? r.timestamp.toISOString() : new Date(r.timestamp).toISOString();
+            rainMap.set(ts, r.sumDepth || 0);
+        });
+
         // ── 2. Return API data if available ──────────────────────────────────
         if (apiData) {
             apiData.sort((a, b) => (a.thoigianxa || '').localeCompare(b.thoigianxa || ''));
@@ -106,23 +126,32 @@ class LiveHydroController {
                 luuluongxa: latest.luuluongxa || 0,
                 htl: latest.htl || 0,
                 source: 'api',
-                history: apiData.map(d => ({
-                    time: d.thoigianxa ? new Date(d.thoigianxa + '+07:00').toISOString() : null,
-                    qvao: d.qvao || 0,
-                    luuluongxa: d.luuluongxa || 0,
-                    htl: d.htl || 0
-                }))
+                history: apiData.map(d => {
+                    const ts = d.thoigianxa ? new Date(d.thoigianxa + '+07:00').toISOString() : null;
+                    return {
+                        time: ts,
+                        qvao: d.qvao || 0,
+                        luuluongxa: d.luuluongxa || 0,
+                        q_turbine: d.luuluongchayMay ?? d.q_turbine ?? d.q_may ?? 0,
+                        q_spillway: d.luuluongquatran ?? d.q_spillway ?? d.q_tran ?? 0,
+                        htl: d.htl || 0,
+                        rain: ts ? (rainMap.get(ts) || 0) : 0
+                    };
+                })
             });
         }
 
-        // ── 3. Fallback: DB — try last 24h, then 7 days ───────────────────────
+        // ── 3. Fallback: DB — try last 36h, then 7 days ───────────────────────
         try {
-            let dbHistory = await this._fetchFromDB(lakeId, 24);
+            let dbHistory = await this._fetchFromDB(lakeId, 36);
             if (dbHistory.length === 0) {
                 dbHistory = await this._fetchFromDB(lakeId, 7 * 24);
+                // If fetching 7 days, we need more rain history too
+                const rain7d = await rainLakeHistoryRepo.getByLakeAndRange(Number(lakeId), new Date(Date.now() - 7 * 24 * 3600000), new Date()).catch(() => []);
+                return res.json(this._buildDBResponse(dbHistory, rain7d));
             }
             if (dbHistory.length > 0) {
-                return res.json(this._buildDBResponse(dbHistory));
+                return res.json(this._buildDBResponse(dbHistory, rainHistory));
             }
         } catch (dbErr) {
             console.warn(`[liveHydro] DB fallback failed for lake ${lakeId}: ${dbErr.message}`);

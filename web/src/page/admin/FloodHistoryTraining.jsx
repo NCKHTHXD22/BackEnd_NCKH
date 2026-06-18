@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next";
 import { formatLakeName } from "../../utils/lakeName";
 import {
     ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid,
-    Tooltip, Legend, ResponsiveContainer, ReferenceLine
+    Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea
 } from "recharts";
-import { fetchRainForecast, buildRainLabelMap, RAIN_SOURCES } from "../../api/openMeteoApi";
+import { fetchRainForecast, buildRainLabelMap, fetchRainArchive, RAIN_SOURCES } from "../../api/openMeteoApi";
 import {
     Play, Pause, Square, Zap, BarChart3, TrendingUp, TrendingDown,
     CheckCircle, Clock, RefreshCw, ChevronLeft, ChevronRight,
-    Activity, Shield, Info, Waves
+    Activity, Shield, Info, Waves, ZoomIn, ZoomOut, Maximize2
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -283,6 +283,13 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     const [playState, setPlayState] = useState("stopped");
     const [playSpeed, setPlaySpeed] = useState(5);
 
+    // Zoom state
+    const [simZoomStart, setSimZoomStart] = useState(null);
+    const [simZoomEnd, setSimZoomEnd] = useState(null);
+    const [refAreaLeft, setRefAreaLeft] = useState(null);
+    const [refAreaRight, setRefAreaRight] = useState(null);
+    const [isSelectingZoom, setIsSelectingZoom] = useState(false);
+
     const intervalRef = useRef(null);
 
     // Đánh giá
@@ -298,6 +305,29 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     // ── Mưa dự báo Open-Meteo multi-source (cho tab Dự báo) ───────────────────
     const [rainLabelMap, setRainLabelMap] = useState(new Map()); // fullLabel → { bestMatch, bySource }
     const [showRainSources, setShowRainSources] = useState(true); // bật/tắt hiển thị từng nguồn
+
+    // ── Fetch mưa: backend DB trước, fallback ERA5 archive ────────────────────
+    const fetchRainByLabel = useCallback(async (start, end) => {
+        try {
+            const res = await axiosClient.get(`/rain-lake-history/${lakeId}/range`, {
+                params: { from: start, to: end }
+            });
+            const arr = Array.isArray(res.data) ? res.data : [];
+            if (arr.length > 0) {
+                const map = new Map();
+                arr.forEach(r => {
+                    const dt = new Date(r.timestamp);
+                    const dd = dt.getDate().toString().padStart(2, "0");
+                    const mm = (dt.getMonth() + 1).toString().padStart(2, "0");
+                    const hh = dt.getHours().toString().padStart(2, "0");
+                    map.set(`${dd}/${mm} ${hh}:00`, r.sumDepth ?? 0);
+                });
+                return map;
+            }
+        } catch { /* fall through */ }
+        // Fallback: ERA5 reanalysis từ Open-Meteo Archive
+        return fetchRainArchive(lakeId, start, end);
+    }, [lakeId]);
 
     // ── Fetch ──────────────────────────────────────────────────────────────────
     const fetchHistory = useCallback(async (start, end) => {
@@ -366,9 +396,15 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
             ...(hasModelData && forecastMap[d.shortLabel] ? forecastMap[d.shortLabel] : {}),
         }));
 
-        setSimData(merged);
+        // 4. Mưa: DB trạm đo trước, fallback ERA5 archive
+        const rainMap = await fetchRainByLabel(event.start, event.end);
+        const withRain = rainMap.size > 0
+            ? merged.map(d => ({ ...d, rainStation: rainMap.get(d.shortLabel) ?? null }))
+            : merged;
+
+        setSimData(withRain);
         setSimLoading(false);
-    }, [fetchHistory, lakeId]);
+    }, [fetchHistory, fetchRainByLabel]);
 
     const loadEval = useCallback(async (event) => {
         setEvalEvent(event); setEvalLoading(true); setEvalWindow(0);
@@ -412,10 +448,16 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
         }
         setMetrics(calcMetrics(merged.map(d => d.qvao), merged.map(d => d.lstm_p50)));
 
-        setEvalData(merged);
-        setOpTable(simulateOptimalOperation(merged));
+        // Mưa: DB trạm đo trước, fallback ERA5 archive
+        const rainMap = await fetchRainByLabel(event.start, event.end);
+        const evalWithRain = rainMap.size > 0
+            ? merged.map(d => ({ ...d, rainStation: rainMap.get(d.shortLabel) ?? null }))
+            : merged;
+
+        setEvalData(evalWithRain);
+        setOpTable(simulateOptimalOperation(evalWithRain));
         setEvalLoading(false);
-    }, [fetchHistory, lakeId]);
+    }, [fetchHistory, fetchRainByLabel]);
 
     useEffect(() => { loadHistData(); }, []);
 
@@ -496,6 +538,73 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                 : { ...d, qvao: null, luuluongxa: null, lstm_p50: null, lstm_p10: null, lstm_p90: null }
         );
     }, [simData, playIndex, playState]);
+
+    const displayedSimData = useMemo(() => {
+        if (simZoomStart === null || simZoomEnd === null) return simChartData;
+        return simChartData.slice(simZoomStart, simZoomEnd + 1);
+    }, [simChartData, simZoomStart, simZoomEnd]);
+
+    const handleZoomIn = useCallback(() => {
+        const total = simChartData.length;
+        if (!total) return;
+        const s = simZoomStart ?? 0;
+        const e = simZoomEnd ?? total - 1;
+        const range = e - s;
+        const newRange = Math.max(24, Math.floor(range * 0.55));
+        const center = Math.floor((s + e) / 2);
+        const newStart = Math.max(0, center - Math.floor(newRange / 2));
+        setSimZoomStart(newStart);
+        setSimZoomEnd(Math.min(total - 1, newStart + newRange));
+    }, [simChartData, simZoomStart, simZoomEnd]);
+
+    const handleZoomOut = useCallback(() => {
+        const total = simChartData.length;
+        if (!total) return;
+        const s = simZoomStart ?? 0;
+        const e = simZoomEnd ?? total - 1;
+        const newRange = Math.floor((e - s) * 1.65);
+        const center = Math.floor((s + e) / 2);
+        const newStart = Math.max(0, center - Math.floor(newRange / 2));
+        const newEnd = Math.min(total - 1, newStart + newRange);
+        if (newStart === 0 && newEnd >= total - 1) {
+            setSimZoomStart(null);
+            setSimZoomEnd(null);
+        } else {
+            setSimZoomStart(newStart);
+            setSimZoomEnd(newEnd);
+        }
+    }, [simChartData, simZoomStart, simZoomEnd]);
+
+    const handleChartMouseDown = useCallback((e) => {
+        if (!e?.activeLabel) return;
+        setRefAreaLeft(e.activeLabel);
+        setRefAreaRight(null);
+        setIsSelectingZoom(true);
+    }, []);
+
+    const handleChartMouseMove = useCallback((e) => {
+        if (!isSelectingZoom || !e?.activeLabel) return;
+        setRefAreaRight(e.activeLabel);
+    }, [isSelectingZoom]);
+
+    const handleChartMouseUp = useCallback(() => {
+        if (!isSelectingZoom) return;
+        setIsSelectingZoom(false);
+        if (!refAreaLeft || !refAreaRight || refAreaLeft === refAreaRight) {
+            setRefAreaLeft(null); setRefAreaRight(null);
+            return;
+        }
+        const leftIdx  = simChartData.findIndex(d => d.shortLabel === refAreaLeft);
+        const rightIdx = simChartData.findIndex(d => d.shortLabel === refAreaRight);
+        if (leftIdx === -1 || rightIdx === -1 || Math.abs(rightIdx - leftIdx) < 2) {
+            setRefAreaLeft(null); setRefAreaRight(null);
+            return;
+        }
+        setSimZoomStart(Math.min(leftIdx, rightIdx));
+        setSimZoomEnd(Math.max(leftIdx, rightIdx));
+        setRefAreaLeft(null);
+        setRefAreaRight(null);
+    }, [isSelectingZoom, refAreaLeft, refAreaRight, simChartData]);
 
     // Y-domain helpers
     const yDomain = (data, keys) => {
@@ -725,8 +834,8 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                         <span className="text-xs bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-full border border-amber-200">
                                             Đỉnh {peakQin} m³/s
                                         </span>
-                                        {/* Toggle hiện/ẩn từng nguồn mưa */}
-                                        {rainLabelMap.size > 0 && (
+                                        {/* Toggle hiện/ẩn nguồn mưa (trạm đo hoặc dự báo) */}
+                                        {(rainLabelMap.size > 0 || simData.some(d => d.rainStation != null)) && (
                                             <button
                                                 onClick={() => setShowRainSources(v => !v)}
                                                 className={`text-xs font-bold px-2.5 py-1 rounded-full border transition-colors ${
@@ -742,13 +851,46 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                     </div>
                                 </div>
 
+                                {/* Zoom toolbar */}
+                                {!simLoading && simData.length > 0 && (
+                                    <div className="flex items-center gap-1 mb-2">
+                                        <span className="text-xs text-slate-400 mr-0.5">Zoom:</span>
+                                        <button onClick={handleZoomIn} title="Phóng to"
+                                            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors">
+                                            <ZoomIn size={15} />
+                                        </button>
+                                        <button onClick={handleZoomOut} title="Thu nhỏ"
+                                            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors">
+                                            <ZoomOut size={15} />
+                                        </button>
+                                        <button onClick={() => { setSimZoomStart(null); setSimZoomEnd(null); }} title="Xem toàn bộ"
+                                            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors">
+                                            <Maximize2 size={15} />
+                                        </button>
+                                        {simZoomStart !== null && (
+                                            <span className="text-xs text-blue-500 font-mono ml-1">
+                                                {displayedSimData.length}h / {simChartData.length}h
+                                            </span>
+                                        )}
+                                        <span className="text-xs text-slate-300 ml-2 hidden sm:inline">← Kéo trên biểu đồ để chọn vùng zoom</span>
+                                    </div>
+                                )}
+
                                 {simLoading ? (
                                     <div className="h-96 flex items-center justify-center text-slate-400 gap-2">
                                         <RefreshCw size={20} className="animate-spin text-blue-400" /> Đang tải...
                                     </div>
                                 ) : (
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <ComposedChart data={simChartData} margin={{ top: 6, right: 28, left: 8, bottom: 50 }}>
+                                    <ResponsiveContainer width="100%" height={600}>
+                                        <ComposedChart
+                                            data={displayedSimData}
+                                            margin={{ top: 6, right: 50, left: 8, bottom: 50 }}
+                                            barCategoryGap="10%"
+                                            onMouseDown={handleChartMouseDown}
+                                            onMouseMove={handleChartMouseMove}
+                                            onMouseUp={handleChartMouseUp}
+                                            style={{ cursor: isSelectingZoom ? "crosshair" : "default" }}
+                                        >
                                             <defs>
                                                 <linearGradient id="gradP90sim" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
@@ -759,38 +901,53 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                     <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
                                                 </linearGradient>
                                                 <linearGradient id="rainSimGrad" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.85} />
-                                                    <stop offset="100%" stopColor="#0284c7" stopOpacity={0.4} />
+                                                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.8} />
+                                                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.2} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                             <XAxis
                                                 dataKey="shortLabel"
                                                 fontSize={9}
-                                                interval={Math.max(1, Math.floor(simData.length / 12))}
+                                                interval={Math.max(1, Math.floor(displayedSimData.length / 14))}
                                                 angle={-35} textAnchor="end" height={55}
                                                 axisLine={false} tickLine={false}
                                                 tick={{ fill: "#64748b", fontWeight: "600" }}
                                             />
                                             <YAxis
                                                 yAxisId="q"
-                                                domain={yDomain(simData, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90", "lstm_model"])}
+                                                domain={yDomain(displayedSimData, ["qvao", "luuluongxa", "lstm_p10", "lstm_p90", "lstm_model"])}
                                                 fontSize={10} axisLine={false} tickLine={false}
                                                 tick={{ fill: "#64748b" }} width={42}
                                                 label={{ value: "Q (m³/s)", angle: -90, position: "insideLeft", fontSize: 10, fill: "#94a3b8", dx: -2 }}
                                             />
-                                            {/* Trục mưa reversed: các nguồn dự báo hiển thị từ trên xuống */}
+                                            {/* Trục mưa — reversed: 0mm ở đỉnh, bars rủ xuống như tab Vận hành */}
                                             <YAxis
                                                 yAxisId="rain" orientation="right"
-                                                stroke="#38bdf8" fontSize={9} tickCount={3}
-                                                domain={([, dMax]) => [Math.max(dMax * 4, 12), 0]}
-                                                axisLine={false} tickLine={false} width={30}
+                                                reversed={true}
+                                                stroke="#0ea5e9" fontSize={9} fontWeight="800"
+                                                domain={[0, 100]}
+                                                axisLine={false} tickLine={false} width={36}
                                                 tickFormatter={v => `${v}mm`}
+                                                tick={{ fill: "#0ea5e9" }}
                                             />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Legend wrapperStyle={{ fontSize: 10, paddingTop: 4 }} iconType="circle" />
 
-                                            {/* ── Mưa dự báo từng nguồn (bar hướng xuống) ── */}
+                                            {/* ── Mưa trạm đo thực (IDW) — bar chính, phía trên ── */}
+                                            {showRainSources && (
+                                                <Bar
+                                                    yAxisId="rain"
+                                                    dataKey="rainStation"
+                                                    name="Mưa trạm đo (IDW)"
+                                                    fill="url(#rainSimGrad)"
+                                                    maxBarSize={25}
+                                                    radius={[0, 0, 4, 4]}
+                                                    isAnimationActive={false}
+                                                />
+                                            )}
+
+                                            {/* ── Mưa dự báo từng nguồn (bar mỏng, overlay) ── */}
                                             {rainLabelMap.size > 0 && showRainSources && RAIN_SOURCES.filter(s => !s.isBest).map(src => (
                                                 <Bar
                                                     key={src.key}
@@ -805,12 +962,12 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                         }
                                                     ))?.bySource?.[src.key] ?? null}
                                                     name={`Mưa ${src.label}`}
-                                                    fill={src.color} opacity={0.4}
-                                                    radius={[0,0,2,2]}
-                                                    maxBarSize={5} isAnimationActive={false}
+                                                    fill={src.color} opacity={0.5}
+                                                    radius={[0,0,3,3]}
+                                                    maxBarSize={6} isAnimationActive={false}
                                                 />
                                             ))}
-                                            {/* Best Match */}
+                                            {/* Mưa BestMatch (Open-Meteo) */}
                                             {rainLabelMap.size > 0 && (
                                                 <Bar
                                                     yAxisId="rain"
@@ -827,7 +984,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                     }
                                                     name="Mưa (BestMatch)"
                                                     fill="url(#rainSimGrad)" radius={[0,0,4,4]}
-                                                    maxBarSize={8} isAnimationActive={false}
+                                                    maxBarSize={25} isAnimationActive={false}
                                                 />
                                             )}
 
@@ -850,6 +1007,16 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                                 strokeWidth={4} dot={false} strokeDasharray="10 5" isAnimationActive={false} connectNulls={false} />
                                             <Line yAxisId="q" type="monotone" dataKey="lstm_model" name="LSTM Model (DB)" stroke="#7c3aed"
                                                 strokeWidth={4} dot={false} isAnimationActive={false} connectNulls={false} />
+
+                                            {/* Drag-to-zoom selection area */}
+                                            {isSelectingZoom && refAreaLeft && refAreaRight && (
+                                                <ReferenceArea
+                                                    yAxisId="q"
+                                                    x1={refAreaLeft} x2={refAreaRight}
+                                                    strokeOpacity={0.4} stroke="#3b82f6"
+                                                    fill="#3b82f6" fillOpacity={0.1}
+                                                />
+                                            )}
 
                                             {/* Playback marker */}
                                             {playIndex > 0 && simData[playIndex] && (
@@ -947,6 +1114,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                             { label: "LSTM P50", val: simData[playIndex]?.lstm_p50, unit: "m³/s", color: "text-blue-700", bg: "bg-blue-50 border-blue-200", bar: "bg-blue-400", max: peakQin },
                                             { label: "LSTM P10", val: simData[playIndex]?.lstm_p10, unit: "m³/s", color: "text-sky-600", bg: "bg-sky-50 border-sky-200", bar: "bg-sky-300", max: peakQin },
                                             { label: "LSTM P90", val: simData[playIndex]?.lstm_p90, unit: "m³/s", color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-200", bar: "bg-indigo-300", max: peakQin },
+                                            { label: "Mưa trạm đo", val: simData[playIndex]?.rainStation, unit: "mm", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200", bar: "bg-emerald-400", max: Math.max(...simData.map(d => d.rainStation ?? 0), 1) },
                                         ].map(({ label, val, unit, color, bg, bar, max }) => (
                                             <div key={label} className={`rounded-xl border px-3 py-2 ${bg}`}>
                                                 <div className="flex justify-between items-center mb-1">
@@ -1172,28 +1340,44 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                                     <Activity size={16} /> SO SÁNH THỰC TẾ vs LSTM (P10 / P50 / P90)
                                 </h3>
                                 <ResponsiveContainer width="100%" height={280}>
-                                    <ComposedChart data={evalSlice} margin={{ top: 10, right: 20, left: 10, bottom: 55 }}>
+                                    <ComposedChart data={evalSlice} margin={{ top: 10, right: 50, left: 10, bottom: 55 }} barCategoryGap="10%">
                                         <defs>
                                             <linearGradient id="gradEval" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.12} />
                                                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02} />
+                                            </linearGradient>
+                                            <linearGradient id="rainEvalGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.8} />
+                                                <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.2} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                         <XAxis dataKey="shortLabel" fontSize={10} interval={Math.max(1, Math.floor(evalSlice.length / 10))}
                                             angle={-30} textAnchor="end" height={60} axisLine={false} tickLine={false}
                                             tick={{ fill: "#64748b", fontWeight: "600" }} />
-                                        <YAxis domain={yDomain(evalSlice, ["qvao", "lstm_p10", "lstm_p90", "lstm_model"])}
+                                        <YAxis yAxisId="q" domain={yDomain(evalSlice, ["qvao", "lstm_p10", "lstm_p90", "lstm_model"])}
                                             fontSize={10} axisLine={false} tickLine={false} tick={{ fill: "#64748b" }} />
+                                        <YAxis
+                                            yAxisId="rain" orientation="right"
+                                            reversed={true}
+                                            stroke="#0ea5e9" fontSize={9} fontWeight="800"
+                                            domain={[0, 100]}
+                                            axisLine={false} tickLine={false} width={36}
+                                            tickFormatter={v => `${v}mm`}
+                                            tick={{ fill: "#0ea5e9" }}
+                                        />
                                         <Tooltip content={<CustomTooltip />} />
                                         <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" />
-                                        <Area type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd" strokeWidth={1.5}
+                                        {/* Mưa trạm đo — bar phía trên, rủ xuống */}
+                                        <Bar yAxisId="rain" dataKey="rainStation" name="Mưa trạm (IDW)"
+                                            fill="url(#rainEvalGrad)" radius={[0, 0, 4, 4]} maxBarSize={25} isAnimationActive={false} />
+                                        <Area yAxisId="q" type="monotone" dataKey="lstm_p90" name="LSTM P90" stroke="#93c5fd" strokeWidth={1.5}
                                             strokeDasharray="4 3" fill="url(#gradEval)" dot={false} legendType="line" />
-                                        <Area type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa" strokeWidth={1.5}
+                                        <Area yAxisId="q" type="monotone" dataKey="lstm_p10" name="LSTM P10" stroke="#60a5fa" strokeWidth={1.5}
                                             strokeDasharray="4 3" fill="#ffffff" dot={false} legendType="line" />
-                                        <Line type="monotone" dataKey="qvao" name="Q Thực tế" stroke="#f59e0b" strokeWidth={3} dot={false} />
-                                        <Line type="monotone" dataKey="lstm_p50" name="LSTM P50 (mô phỏng)" stroke="#2563eb" strokeWidth={2} dot={false} strokeDasharray="7 2" />
-                                        <Line type="monotone" dataKey="lstm_model" name="LSTM Model (DB)" stroke="#7c3aed" strokeWidth={2.5} dot={false} />
+                                        <Line yAxisId="q" type="monotone" dataKey="qvao" name="Q Thực tế" stroke="#f59e0b" strokeWidth={3} dot={false} />
+                                        <Line yAxisId="q" type="monotone" dataKey="lstm_p50" name="LSTM P50 (mô phỏng)" stroke="#2563eb" strokeWidth={2} dot={false} strokeDasharray="7 2" />
+                                        <Line yAxisId="q" type="monotone" dataKey="lstm_model" name="LSTM Model (DB)" stroke="#7c3aed" strokeWidth={2.5} dot={false} />
                                     </ComposedChart>
                                 </ResponsiveContainer>
                                 <WindowNav total={evalData.length} window={evalWindow} setWindow={setEvalWindow}

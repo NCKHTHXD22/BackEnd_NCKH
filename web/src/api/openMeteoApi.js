@@ -14,6 +14,7 @@
  */
 
 const BASE_URL = "https://api.open-meteo.com/v1/forecast";
+const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
 const TZ = "Asia/Bangkok"; // UTC+7
 
 // Danh sách nguồn mưa cho tab Dự báo (multi-source)
@@ -129,6 +130,53 @@ export async function fetchRainForecast(lakeId, models = ["best_match"], days = 
     } catch (err) {
         console.error("[openMeteoApi] Fetch error:", err);
         return { times: [], bySource: {}, bestMatch: [] };
+    }
+}
+
+/**
+ * Fetch mưa lịch sử từ Open-Meteo Archive API (ERA5 reanalysis).
+ * Dùng khi DB không có dữ liệu trạm đo cho khoảng thời gian lịch sử.
+ *
+ * @param {number|string} lakeId
+ * @param {string} startDate  - "YYYY-MM-DD"
+ * @param {string} endDate    - "YYYY-MM-DD"
+ * @returns {Promise<Map<string, number>>}  shortLabel ("dd/mm hh:00") → mm/h
+ */
+export async function fetchRainArchive(lakeId, startDate, endDate) {
+    const coords = RESERVOIR_COORDS[Number(lakeId)];
+    if (!coords) return new Map();
+
+    const cacheKey = `archive_${lakeId}_${startDate}_${endDate}`;
+    const cached = _cache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) return cached.data;
+
+    const url = `${ARCHIVE_URL}?latitude=${coords.lat}&longitude=${coords.lon}` +
+        `&start_date=${startDate}&end_date=${endDate}` +
+        `&hourly=precipitation` +
+        `&timezone=${encodeURIComponent(TZ)}`;
+
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+
+        const times  = json.hourly?.time          ?? [];
+        const values = json.hourly?.precipitation ?? [];
+
+        const map = new Map();
+        times.forEach((iso, i) => {
+            const dt = new Date(iso);
+            const dd = dt.getDate().toString().padStart(2, "0");
+            const mm = (dt.getMonth() + 1).toString().padStart(2, "0");
+            const hh = dt.getHours().toString().padStart(2, "0");
+            map.set(`${dd}/${mm} ${hh}:00`, values[i] ?? 0);
+        });
+
+        _cache.set(cacheKey, { ts: Date.now(), data: map });
+        return map;
+    } catch (err) {
+        console.error("[openMeteoApi] Archive fetch error:", err);
+        return new Map();
     }
 }
 
