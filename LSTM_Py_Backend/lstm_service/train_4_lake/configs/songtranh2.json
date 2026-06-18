@@ -1,0 +1,18 @@
+{
+  "name": "songtranh2",
+  "display_name": "HO SONG TRANH 2",
+  "original_rid": 3,
+  "hidden_size": 192,
+  "seq_len": 240,
+  "horizon": 24,
+  "batch_size": 512,
+  "epochs": 60,
+  "lr": 0.0002,
+  "weight_decay": 0.001,
+  "warmup_epochs": 8,
+  "patience": 20,
+  "quantiles": [0.1, 0.5, 0.9],
+  "n_future": 3,
+  "inflow_cap_sqrt": 89.44,
+  "notes": "Lower basin reservoir. Highest inflow cap (sqrt(8000)) due to large catchment."
+}

@@ -85,29 +85,10 @@ def nse_loss(pred_med, targets):
 
 def hybrid_loss(preds, targets, quantiles):
     """
-    Hybrid Loss (tham khao Google Flood Forecasting):
-      - 40% NSE Loss: toi uu truc tiep chi so danh gia thuy van
-      - 40% Quantile Loss: du bao dai bat dinh P10/P50/P90
-      - 20% Peak-Aware MSE: phat nang khi bo sot dinh lu
+    Delegates to models/quantile_loss.py which now implements a balanced 
+    hybrid of Quantile Loss + Stable Peak-Aware MSE.
     """
-    q_loss = quantile_loss(preds, targets, quantiles)
-
-    med_idx = len(quantiles) // 2
-    pred_med = preds[:, :, med_idx]
-
-    # NSE Loss
-    nse = nse_loss(pred_med, targets)
-
-    # Peak-Aware MSE
-    residual = pred_med - targets
-    peak_threshold = torch.quantile(targets, 0.90)
-    is_peak = (targets >= peak_threshold)
-    mse_normal = residual ** 2
-    underpredict_peak = is_peak & (residual < 0)
-    penalty = torch.where(underpredict_peak, 5.0 * mse_normal, mse_normal)
-    peak_mse = torch.where(is_peak, 2.0 * penalty, penalty).mean()
-
-    return 0.4 * q_loss + 0.4 * nse + 0.2 * peak_mse
+    return quantile_loss(preds, targets, quantiles)
 
 
 # ====================== METRICS ======================

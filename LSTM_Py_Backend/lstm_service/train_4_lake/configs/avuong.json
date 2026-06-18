@@ -1,0 +1,18 @@
+{
+  "name": "avuong",
+  "display_name": "HO A VUONG",
+  "original_rid": 0,
+  "hidden_size": 192,
+  "seq_len": 240,
+  "horizon": 24,
+  "batch_size": 512,
+  "epochs": 60,
+  "lr": 0.0002,
+  "weight_decay": 0.001,
+  "warmup_epochs": 8,
+  "patience": 20,
+  "quantiles": [0.1, 0.5, 0.9],
+  "n_future": 3,
+  "inflow_cap_sqrt": 50.0,
+  "notes": "Upstream fast-response basin. Standard architecture."
+}

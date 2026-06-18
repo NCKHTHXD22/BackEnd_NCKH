@@ -1,0 +1,18 @@
+{
+  "name": "songbung4",
+  "display_name": "HO SONG BUNG 4",
+  "original_rid": 2,
+  "hidden_size": 192,
+  "seq_len": 240,
+  "horizon": 24,
+  "batch_size": 512,
+  "epochs": 60,
+  "lr": 0.0002,
+  "weight_decay": 0.001,
+  "warmup_epochs": 8,
+  "patience": 20,
+  "quantiles": [0.1, 0.5, 0.9],
+  "n_future": 3,
+  "inflow_cap_sqrt": 67.08,
+  "notes": "Song Bung tributary. Standard architecture."
+}

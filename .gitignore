@@ -6,4 +6,7 @@ __pycache__/
 *.pyc
 .vscode/
 dataset_*.npy
-# Note: artifacts/*.pt and *.pkl are intentionally tracked (model weights for HuggingFace deploy)
+# Note: artifacts/*.pt and *.pkl are intentionally tracked (model weights for HuggingFace deploy)
+
+# Regenerable per-lake training tensors (run train_4_lake/prepare_dataset.py to recreate, ~5.6GB)
+LSTM_Py_Backend/lstm_service/train_4_lake/data/
