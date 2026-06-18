@@ -1,0 +1,60 @@
+# HueLSTM Default Config — 3 hồ Thừa Thiên Huế
+# Tham khảo: google-research/flood-forecasting/example-configs/floodhub-settings-config.yml
+
+model: mean_embedding_forecast_lstm
+
+# Architecture
+hidden_size: 256
+num_layers: 2
+dropout: 0.4
+fc_hidden: 128
+basin_embed_dim: 32
+
+# Features
+n_hist_features: 47
+n_nwp_features: 8
+n_basins: 3
+
+# Sequence (Google production: 365d hindcast, 7d forecast)
+hindcast_length: 720    # 30 ngày (tăng lên 8760 = 365d khi có đủ data)
+forecast_length: 168    # 7 ngày
+
+# Output head
+head: quantile          # Dùng "cmal" để có full probabilistic output như Google
+quantiles: [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]
+n_distributions: 3      # Cho CMAL head
+pred_clip: [0.0, null]  # clip Q ≥ 0
+
+# Data
+sqrt_transform: true
+target_noise_std: 0.005  # Theo Google: tránh overfit
+
+# Training splits (mùa lũ làm validation)
+train_start: "2012-01-01"
+train_end: "2022-12-31"
+val_start: "2023-01-01"   # Mùa lũ 2023
+val_end: "2023-12-31"
+test_start: "2024-01-01"  # Holdout 2024
+
+# Training
+batch_size: 64
+epochs: 100
+lr: 0.0005
+weight_decay: 0.0
+warmup_epochs: 10
+gradient_clip_norm: 1.0   # Theo Google
+
+# Teacher forcing
+teacher_forcing_start: 0.8
+teacher_forcing_end: 0.0
+
+# Scheduler
+scheduler: cosine
+
+# Oversampling
+oversample_p95_factor: 2
+oversample_p99_factor: 3
+
+# Inference
+inference_method: median
+artifacts_dir: artifacts

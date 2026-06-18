@@ -1,0 +1,26 @@
+# HueLSTM — Flood Forecasting cho 3 hồ Thừa Thiên Huế
+# Tham khảo: google-research/flood-forecasting/environments/
+
+# Core ML
+torch>=2.1.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+
+# Training utilities
+tqdm>=4.66.0
+pandas>=2.1.0
+openpyxl>=3.1.0  # Excel export
+
+# API server
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+
+# HTTP / data fetch
+requests>=2.31.0
+
+# Config
+pyyaml>=6.0
+
+# Optional: GPU acceleration (uncomment if using CUDA)
+# torch==2.1.0+cu121 --index-url https://download.pytorch.org/whl/cu121
