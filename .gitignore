@@ -1,5 +1,6 @@
 node_modules
 .env
+tmp/
 venv/
 __pycache__/
 *.pyc
