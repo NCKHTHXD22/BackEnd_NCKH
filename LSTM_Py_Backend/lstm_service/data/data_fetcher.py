@@ -73,6 +73,60 @@ def get_token():
 
 # ================= HYDRO (Fetched from Node.js Backend) =================
 BACKEND_API_URL = "https://backend-nckh-lm57.onrender.com/api"
+LOCAL_BACKEND_API_URL = "http://localhost:5001/api"
+
+def fetch_hydro_from_danang(rid, start, end_time):
+    try:
+        import base64
+        import requests
+        # Lấy token từ API chính chủ
+        auth_str = "rfm2O3ciJ3aOJy1iA2SAfS3P_qwa:cklyddfdciGjQJGdtiPg936PDo8a"
+        auth_b64 = base64.b64encode(auth_str.encode()).decode()
+        r_token = requests.post("https://apiv2.danang.gov.vn/oauth2/token", 
+                                headers={"Authorization": f"Basic {auth_b64}"}, 
+                                data={"grant_type": "client_credentials"}, verify=False, timeout=15)
+        if r_token.status_code != 200:
+            return pd.DataFrame()
+        token = r_token.json().get("access_token")
+        
+        # Fetch dữ liệu thủy văn
+        API_URL = "https://apiv2.danang.gov.vn/apiPCTT/1.0/baocaothuydiens_bieudo"
+        start_str = start.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        end_str = end_time.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        r_data = requests.get(API_URL, 
+                              params={"thuydien_id": rid, "ngaybatdau": start_str, "ngayketthuc": end_str},
+                              headers={"Authorization": f"Bearer {token}"}, verify=False, timeout=15)
+        
+        if r_data.status_code != 200:
+            return pd.DataFrame()
+            
+        json_resp = r_data.json()
+        if isinstance(json_resp, dict):
+            raw_data = json_resp.get("data", [])
+        else:
+            raw_data = json_resp
+            
+        if not raw_data:
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(raw_data)
+        
+        # API trả về giờ VN nhưng không có múi giờ, ta dùng parser
+        if "thoigianxa" in df.columns:
+            df["time"] = pd.to_datetime(df["thoigianxa"], errors="coerce")
+        else:
+            df["time"] = pd.to_datetime(df["thoigian"], format="%d/%m/%Y %H:%M", errors="coerce")
+            
+        df["inflow"] = pd.to_numeric(df["qvao"], errors="coerce")
+        df["water_level"] = pd.to_numeric(df["htl"], errors="coerce")
+        df["outflow"] = pd.to_numeric(df["luuluongxa"], errors="coerce")
+
+        df = df[["time", "inflow", "water_level", "outflow"]].dropna()
+        df = df.sort_values("time")
+        return df
+    except Exception as e:
+        print(f"  [ERROR] Da Nang API failed: {e}")
+        return pd.DataFrame()
 
 def fetch_hydro_data(rid, days=180, end_time=None):
     if end_time is None:
@@ -81,8 +135,14 @@ def fetch_hydro_data(rid, days=180, end_time=None):
     start = end_time - timedelta(days=days)
 
     try:
-        # Thay vì gọi trực tiếp API Gov (đang sập), ta gọi qua Backend Node.js
-        # Backend này đã được tích hợp Scraper dự phòng
+        # Gọi thẳng API chính chủ của Đà Nẵng trước!
+        print("  [INFO] Fetching hydro directly from Da Nang Gov API...")
+        df_gov = fetch_hydro_from_danang(rid, start, end_time)
+        if not df_gov.empty:
+            print(f"  [OK] Fetched {len(df_gov)} records from Da Nang API!")
+            return df_gov
+
+        # Nếu API Đà Nẵng sập, mới gọi qua Backend NodeJS dự phòng
         url = f"{BACKEND_API_URL}/inflowlake-history/{rid}"
         params = {
             "start": start.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
@@ -90,7 +150,12 @@ def fetch_hydro_data(rid, days=180, end_time=None):
         }
         
         print(f"  [INFO] Fetching hydro from Backend: {url}")
-        r = _get_with_retry(url, params=params, timeout=60)
+        r = _get_with_retry(url, params=params, max_retries=1, timeout=30) # Chỉ thử Render 1 lần cho lẹ
+
+        if r is None:
+            local_url = f"{LOCAL_BACKEND_API_URL}/inflowlake-history/{rid}"
+            print(f"  [WARN] Render down/suspended! Falling back to Localhost: {local_url}")
+            r = _get_with_retry(local_url, params=params, max_retries=2, timeout=30)
 
         if r is None:
             return pd.DataFrame()
@@ -103,7 +168,8 @@ def fetch_hydro_data(rid, days=180, end_time=None):
             return pd.DataFrame()
 
         # Mapping lại các trường từ MongoDB format sang format LSTM cần
-        df["time"] = pd.to_datetime(df["timestamp"], errors="coerce").dt.floor("h")
+        # timestamp từ DB là UTC (có đuôi Z), convert sang VN time và bỏ timezone (naive) để match với rain data
+        df["time"] = pd.to_datetime(df["timestamp"], errors="coerce").dt.tz_convert("Asia/Ho_Chi_Minh").dt.tz_localize(None).dt.floor("h")
 
         df["inflow"] = pd.to_numeric(df["qvao"], errors="coerce")
         df["water_level"] = pd.to_numeric(df["htl"], errors="coerce")
@@ -126,7 +192,13 @@ def fetch_rain_from_backend(rid, start, end):
             "from": start.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z",
             "to": end.strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
         }
-        r = _get_with_retry(url, params=params, timeout=30)
+        r = _get_with_retry(url, params=params, max_retries=1, timeout=15)
+        
+        if r is None:
+            local_url = f"{LOCAL_BACKEND_API_URL}/rain-lake-history/{rid}/range"
+            print(f"  [WARN] Render rain backend failed! Falling back to Localhost: {local_url}")
+            r = _get_with_retry(local_url, params=params, max_retries=2, timeout=15)
+            
         if r is None:
             return pd.DataFrame()
         
@@ -316,19 +388,44 @@ def _fetch_precipitation_at(lat, lon, reference_time, hours=24) -> np.ndarray | 
     """
     Lấy mảng precipitation hourly tại 1 điểm từ Open-Meteo.
     Trả về np.ndarray shape (hours,) hoặc None nếu lỗi.
+
+    Tự động chọn endpoint:
+      - reference_time đủ xa trong quá khứ (> 5 ngày trước now) → archive API
+        (mưa đã quan trắc) — dùng cho tính năng "Quay lại quá khứ".
+      - Ngược lại → forecast API (dự báo gốc, dùng cho realtime).
     """
+    now_vn = _vn_now()
+    # 5 ngày là ngưỡng an toàn cho archive lag (Open-Meteo archive delay ~5 ngày).
+    is_past = (now_vn - reference_time) > timedelta(days=5)
     try:
-        r = _get_with_retry(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": lat,
-                "longitude": lon,
-                "hourly": "precipitation",
-                "forecast_days": 3,
-                "timezone": "UTC",
-            },
-            timeout=30,
-        )
+        if is_past:
+            # Archive API: cần start_date / end_date ở dạng YYYY-MM-DD.
+            start_time = reference_time + timedelta(hours=1)
+            end_time   = start_time + timedelta(hours=hours)
+            r = _get_with_retry(
+                "https://archive-api.open-meteo.com/v1/archive",
+                params={
+                    "latitude":  lat,
+                    "longitude": lon,
+                    "start_date": (start_time - timedelta(days=1)).strftime("%Y-%m-%d"),
+                    "end_date":   (end_time + timedelta(days=1)).strftime("%Y-%m-%d"),
+                    "hourly":    "precipitation",
+                    "timezone":  "UTC",
+                },
+                timeout=40,
+            )
+        else:
+            r = _get_with_retry(
+                "https://api.open-meteo.com/v1/forecast",
+                params={
+                    "latitude": lat,
+                    "longitude": lon,
+                    "hourly": "precipitation",
+                    "forecast_days": 3,
+                    "timezone": "UTC",
+                },
+                timeout=30,
+            )
         if r is None:
             return None
 
@@ -346,6 +443,8 @@ def _fetch_precipitation_at(lat, lon, reference_time, hours=24) -> np.ndarray | 
         end_time   = start_time + timedelta(hours=hours)
         mask = (times_vn >= start_time) & (times_vn < end_time)
         arr  = rain[mask.values]
+        # NaN từ archive → 0 (giờ nào trống coi như không mưa)
+        arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
         return arr if len(arr) == hours else None
 
     except Exception:
@@ -370,7 +469,7 @@ def fetch_rain_forecast_idw(res_id: int, reference_time: datetime, hours: int = 
     """
     station_names = RESERVOIR_TO_STATIONS.get(res_id, [])
     if not station_names:
-        print(f"  [WARN] fetch_rain_forecast_idw: res_id={res_id} không có trong RESERVOIR_TO_STATIONS")
+        print(f"  [WARN] fetch_rain_forecast_idw: res_id={res_id} khong co trong RESERVOIR_TO_STATIONS")
         return pd.DataFrame()
 
     # ── 1. Lấy precipitation tại từng trạm ──────────────────────────────
@@ -383,10 +482,10 @@ def fetch_rain_forecast_idw(res_id: int, reference_time: datetime, hours: int = 
         if arr is not None:
             station_rains[name] = arr
         else:
-            print(f"  [WARN] IDW: không lấy được mưa tại trạm {name} ({info['lat']},{info['lon']})")
+            print(f"  [WARN] IDW: khong lay duoc mua tai tram {name} ({info['lat']},{info['lon']})")
 
     if not station_rains:
-        print(f"  [WARN] fetch_rain_forecast_idw: không có trạm nào trả dữ liệu cho res_id={res_id}")
+        print(f"  [WARN] fetch_rain_forecast_idw: khong co tram nao tra du lieu cho res_id={res_id}")
         return pd.DataFrame()
 
     # ── 2. Tính tâm lưu vực (centroid của các trạm có dữ liệu) ─────────
@@ -436,14 +535,20 @@ def fetch_rain_forecast_idw(res_id: int, reference_time: datetime, hours: int = 
 
 
 # ================= METEO HISTORY (Open-Meteo Archive) =================
-def fetch_meteo_history(lat, lon, days=11) -> pd.DataFrame:
+def fetch_meteo_history(lat, lon, days=11, end_time=None) -> pd.DataFrame:
     """
     Lấy lịch sử khí tượng (past days) từ Open-Meteo ERA5 archive:
       time | temperature | relative_humidity | et0 | wind_speed
 
     Dùng để bổ sung X_past khi inference.
+
+    `end_time`: anchor giờ cuối cùng của cửa sổ history (mặc định = now VN). Truyền vào
+    để hỗ trợ tính năng "Quay lại quá khứ" — tránh lấy meteo sau as-of (look-ahead bias).
     """
-    end_vn  = _vn_now().replace(minute=0, second=0, microsecond=0)
+    if end_time is None:
+        end_vn = _vn_now().replace(minute=0, second=0, microsecond=0)
+    else:
+        end_vn = end_time.replace(minute=0, second=0, microsecond=0)
     start_vn = end_vn - timedelta(days=days)
 
     try:

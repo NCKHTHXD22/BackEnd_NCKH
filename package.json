@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "start:lstm": "cd LSTM_Py_Backend/lstm_service && python main_api.py"
   },
   "keywords": [],
   "type": "module",
@@ -18,16 +19,14 @@
     "axios": "^1.13.4",
     "axios-cookiejar-support": "^6.0.5",
     "bcrypt": "^6.0.0",
-    "cheerio": "^1.2.0",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "exceljs": "^4.4.0",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^8.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.0.0",
+    "mongoose": "^9.6.1",
     "multer": "^2.1.0",
     "node-cron": "^4.2.1",
     "playwright": "^1.58.1",

@@ -18,62 +18,42 @@ from features.feature_engineering import (
     add_meteo_features,
 )
 from models.inflow_model import InflowForecastModel
+from models.model_loader import load_model_from_checkpoint
 from utils.scaler_utils import GlobalScaler
 from operation import get_operation_calculator
-
-# Must match dataset_builder.py exactly.
-# 36 features (cũ) hoặc 38 features (mới, nếu có water_level + outflow sau update_excel_z_qout).
-# INPUT_SIZE được tự động xác định từ scaler sau khi load.
-INPUT_SIZE = None  # sẽ được set sau khi load scaler
-
-# Thứ tự features phải khớp chính xác với dataset_builder.py
-FEATURES_BASE = [
-    "rain", "rain_3h", "rain_6h", "rain_12h", "rain_24h",
-    "rain_48h", "rain_72h", "rain_96h", "rain_120h", "rain_168h",
-    "rain_intensity", "rain_12h_std", "rain_24h_max",
-    "rain_lag_1", "rain_lag_3", "rain_lag_6", "rain_lag_12", "rain_lag_24",
-    "inflow", "inflow_prev", "inflow_diff", "inflow_diff_2",
-    "inflow_3h_avg", "inflow_6h_avg", "inflow_12h_avg",
-    "inflow_24h_avg", "inflow_48h_avg", "inflow_rising",
-    "rain_inflow_interaction", "soil_moisture_x_inflow",
-    "water_level", "outflow", "Z_diff", "Z_24h_avg", "outflow_diff", "Q_ratio",
-    "et0", "wind_speed",
-    "hour_sin", "hour_cos", "doy_sin", "doy_cos", "month_sin", "month_cos",
-]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 scaler = GlobalScaler()
 scaler.load("artifacts/global_scaler.pkl")
 
-# Xác định INPUT_SIZE và danh sách FEATURES từ scaler đã lưu
-INPUT_SIZE = int(scaler.scaler.n_features_in_)
-# Dùng đúng số lượng features mà scaler được train
-FEATURES = FEATURES_BASE[:INPUT_SIZE]
+# Will be populated when loading model
+INPUT_SIZE = None
+FEATURES = []
+model_n_future = 3
 
 _model_cache: dict = {}
 
 
 def load_model(res_idx: int) -> InflowForecastModel:
+    global INPUT_SIZE, FEATURES, model_n_future
     if res_idx in _model_cache:
         return _model_cache[res_idx]
-    model = InflowForecastModel(
-        input_size=INPUT_SIZE,
-        hidden_size=HIDDEN_SIZE,
-        horizon=HORIZON,
-        quantiles=QUANTILES,
-        num_reservoirs=NUM_RESERVOIRS
-    ).to(device)
+
     fine_tuned = f"artifacts/inflow_model_rid_{res_idx}.pt"
     global_path = "artifacts/inflow_model.pt"
-    if os.path.exists(fine_tuned):
-        model.load_state_dict(torch.load(fine_tuned, map_location=device, weights_only=True))
-        print(f"  [Model] Fine-tuned: {fine_tuned}")
-    elif os.path.exists(global_path):
-        model.load_state_dict(torch.load(global_path, map_location=device, weights_only=True))
-        print(f"  [Model] Global: {global_path}")
-    else:
+    
+    model_path = fine_tuned if os.path.exists(fine_tuned) else global_path
+    if not os.path.exists(model_path):
         raise FileNotFoundError(f"Khong tim thay model tai {fine_tuned} hoac {global_path}")
-    model.eval()
+        
+    model, features, n_fut = load_model_from_checkpoint(model_path, device)
+    print(f"  [Model] Loaded from {model_path} with {len(features)} features and n_future={n_fut}")
+    
+    # Store global features to verify
+    INPUT_SIZE = len(features)
+    FEATURES = features
+    model_n_future = n_fut
+    
     _model_cache[res_idx] = model
     return model
 
@@ -142,6 +122,14 @@ def predict(rid):
         padding = pd.concat([df.iloc[[0]]] * needed, ignore_index=True)
         df = pd.concat([padding, df], ignore_index=True)
 
+    # Load model to set INPUT_SIZE and FEATURES
+    model = load_model(res_idx)
+
+    # Ensure optional features exist
+    for f in FEATURES:
+        if f not in df.columns:
+            df[f] = 0.0
+
     # 5. Kiem tra features
     available = [f for f in FEATURES if f in df.columns]
     if len(available) != INPUT_SIZE:
@@ -156,18 +144,17 @@ def predict(rid):
 
     # 7. Xay dung X_future tu mua du bao IDW [rain_fc, rain_fc_6h, rain_fc_24h]
     x_future_tensor = None
-    if N_FUTURE_FEATURES > 0:
+    if model_n_future > 0:
         if not rain_fc_df.empty and len(rain_fc_df) >= HORIZON:
             rain_fc     = rain_fc_df["rain_fc"].values[:HORIZON].astype(np.float32)
             rain_fc_6h  = rain_fc_df["rain_fc_6h"].values[:HORIZON].astype(np.float32)
             rain_fc_24h = rain_fc_df["rain_fc_24h"].values[:HORIZON].astype(np.float32)
             x_fut = np.stack([rain_fc, rain_fc_6h, rain_fc_24h], axis=1)  # (HORIZON, 3)
         else:
-            x_fut = np.zeros((HORIZON, N_FUTURE_FEATURES), dtype=np.float32)
+            x_fut = np.zeros((HORIZON, model_n_future), dtype=np.float32)
         x_future_tensor = torch.tensor(x_fut[None]).float().to(device)
 
     # 8. Inference
-    model = load_model(res_idx)
     with torch.no_grad():
         preds = model(
             torch.tensor(past_seq[None]).float().to(device),

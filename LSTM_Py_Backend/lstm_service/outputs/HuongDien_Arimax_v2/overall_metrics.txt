@@ -1,0 +1,6 @@
+n: 8,376.000
+RMSE: 296.890
+MAE: 112.057
+Bias: 36.513
+actual_mean: 168.872
+actual_max: 5,672.000

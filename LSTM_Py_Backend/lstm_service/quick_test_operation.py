@@ -116,8 +116,7 @@ def run_test(rid: int, Z_current_override: float = None):
         df["rain"] = df["rain"].fillna(0.0)
         rain_future = rain_all[rain_all["time"] > reference_time].copy()
         rain_future = rain_future.rename(columns={"rain": "rain_forecast"})
-
-    df["inflow"] = np.log1p(df["inflow"].clip(0))
+    df["inflow"] = np.sqrt(df["inflow"].clip(0))
     df = add_time_features(df)
     df = add_rain_features(df)
     df = add_inflow_features(df)
@@ -143,7 +142,7 @@ def run_test(rid: int, Z_current_override: float = None):
     rain_vals = rain_future["rain_forecast"].values.astype(np.float32)
     if len(rain_vals) < HORIZON:
         rain_vals = np.pad(rain_vals, (0, HORIZON - len(rain_vals)), constant_values=0.0)
-    future_rain = np.log1p(rain_vals[:HORIZON].reshape(-1, 1))
+    future_rain = rain_vals[:HORIZON].reshape(-1, 1)
 
     with torch.no_grad():
         preds = model(
@@ -153,7 +152,7 @@ def run_test(rid: int, Z_current_override: float = None):
         )
 
     raw_np   = np.clip(preds.cpu().numpy()[0], -20.0, 20.0)
-    preds_np = np.nan_to_num(np.expm1(raw_np), nan=0.0, posinf=0.0, neginf=0.0)
+    preds_np = np.nan_to_num(np.square(raw_np), nan=0.0, posinf=0.0, neginf=0.0)
     preds_np = np.sort(preds_np, axis=1)   # guarantee p10 <= p50 <= p90
 
     # ─────────────────────────────────────────────────────────────────────────

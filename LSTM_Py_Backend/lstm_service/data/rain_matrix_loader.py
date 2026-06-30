@@ -108,7 +108,7 @@ def _parse_monthly_file(filepath: str, inflow_start: int = None, rain_start: int
     try:
         df_raw = pd.read_excel(filepath, header=None, dtype=object)
     except Exception as e:
-        print(f"  [WARN] Không đọc được {filepath}: {e}")
+        print(f"  [WARN] Khong doc duoc {filepath}: {e}")
         return pd.DataFrame()
 
     # Tìm hàng chứa nhãn giờ "00h"
@@ -233,7 +233,7 @@ def load_inflow_rain_matrix(rid: int,
 
     base_dir = _resolve_base_dir(folder_name)
     if not base_dir:
-        print(f"  [WARN] Không tìm thấy thư mục: {folder_name}")
+        print(f"  [WARN] Khong tim thay thu muc: {folder_name}")
         return pd.DataFrame()
 
     if end_date is None:
@@ -249,7 +249,7 @@ def load_inflow_rain_matrix(rid: int,
         fname = f"{folder_name}_{y}_{m:02d}.xlsx"
         fpath = os.path.join(base_dir, fname)
         if not os.path.exists(fpath):
-            print(f"  [WARN] Thiếu file: {fname}")
+            print(f"  [WARN] Thieu file: {fname}")
             continue
         df = _parse_monthly_file(fpath)
         if not df.empty:

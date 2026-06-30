@@ -2,7 +2,7 @@
 SEQ_LENGTH = 240   # 10 ngày lịch sử (hourly)
 HORIZON    = 24    # 24h dự báo
 
-HIDDEN_SIZE = 192
+HIDDEN_SIZE = 128
 NUM_LAYERS  = 2
 
 BATCH_SIZE    = 512

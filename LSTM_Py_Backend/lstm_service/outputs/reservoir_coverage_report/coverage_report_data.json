@@ -1,0 +1,1852 @@
+{
+  "source_file": "D:\\NCKH\\backend\\BackEnd_NCKH\\LSTM_Py_Backend\\lstm_service\\Rain Data\\DATA_HYDROPOWER_2022_2026\\VNDMS_Thuy_Dien_TTHue_2022_2026.xlsx",
+  "request_start": "2022-01-01 00:00",
+  "data_end": "2026-05-19 11:00",
+  "summary": [
+    {
+      "reservoir": "Hương Điền",
+      "category": "hydropower",
+      "first_observation": "2022-01-01 02:00",
+      "last_observation": "2026-05-19 07:00",
+      "raw_rows": 12785,
+      "unique_hourly_slots": 12785,
+      "duplicate_rows_same_hour": 0,
+      "expected_hours_first_to_last": 38382,
+      "missing_hours_first_to_last": 25597,
+      "coverage_pct_first_to_last": 33.31,
+      "expected_hours_2022_to_now": 38388,
+      "observed_hours_2022_to_now": 12785,
+      "coverage_pct_2022_to_now": 33.3,
+      "longest_missing_gap_hours": 4193,
+      "longest_missing_gap_start": "2022-08-31 08:00",
+      "longest_missing_gap_end": "2023-02-22 00:00",
+      "sources": "ATMT"
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "category": "irrigation_lake",
+      "first_observation": "2022-01-04 05:30",
+      "last_observation": "2026-05-19 11:10",
+      "raw_rows": 20684,
+      "unique_hourly_slots": 4658,
+      "duplicate_rows_same_hour": 16026,
+      "expected_hours_first_to_last": 38311,
+      "missing_hours_first_to_last": 33653,
+      "coverage_pct_first_to_last": 12.16,
+      "expected_hours_2022_to_now": 38388,
+      "observed_hours_2022_to_now": 4658,
+      "coverage_pct_2022_to_now": 12.13,
+      "longest_missing_gap_hours": 527,
+      "longest_missing_gap_start": "2024-12-05 07:00",
+      "longest_missing_gap_end": "2024-12-27 05:00",
+      "sources": "htl"
+    },
+    {
+      "reservoir": "Bình Điền",
+      "category": "hydropower",
+      "first_observation": "2022-01-01 07:00",
+      "last_observation": "2026-05-19 07:00",
+      "raw_rows": 4457,
+      "unique_hourly_slots": 4457,
+      "duplicate_rows_same_hour": 0,
+      "expected_hours_first_to_last": 38377,
+      "missing_hours_first_to_last": 33920,
+      "coverage_pct_first_to_last": 11.61,
+      "expected_hours_2022_to_now": 38388,
+      "observed_hours_2022_to_now": 4457,
+      "coverage_pct_2022_to_now": 11.61,
+      "longest_missing_gap_hours": 4199,
+      "longest_missing_gap_start": "2022-08-31 08:00",
+      "longest_missing_gap_end": "2023-02-22 06:00",
+      "sources": "ATMT"
+    }
+  ],
+  "yearly": [
+    {
+      "reservoir": "Bình Điền",
+      "year": 2022,
+      "expected_hours": 8760,
+      "observed_hours": 648,
+      "missing_hours": 8112,
+      "coverage_pct": 7.4,
+      "first_observed_in_year": "2022-01-01 07:00",
+      "last_observed_in_year": "2022-08-31 07:00"
+    },
+    {
+      "reservoir": "Bình Điền",
+      "year": 2023,
+      "expected_hours": 8760,
+      "observed_hours": 986,
+      "missing_hours": 7774,
+      "coverage_pct": 11.26,
+      "first_observed_in_year": "2023-02-22 07:00",
+      "last_observed_in_year": "2023-12-31 17:00"
+    },
+    {
+      "reservoir": "Bình Điền",
+      "year": 2024,
+      "expected_hours": 8784,
+      "observed_hours": 193,
+      "missing_hours": 8591,
+      "coverage_pct": 2.2,
+      "first_observed_in_year": "2024-01-01 08:00",
+      "last_observed_in_year": "2024-10-27 07:00"
+    },
+    {
+      "reservoir": "Bình Điền",
+      "year": 2025,
+      "expected_hours": 8760,
+      "observed_hours": 2369,
+      "missing_hours": 6391,
+      "coverage_pct": 27.04,
+      "first_observed_in_year": "2025-02-07 07:00",
+      "last_observed_in_year": "2025-12-23 00:00"
+    },
+    {
+      "reservoir": "Bình Điền",
+      "year": 2026,
+      "expected_hours": 3324,
+      "observed_hours": 261,
+      "missing_hours": 3063,
+      "coverage_pct": 7.85,
+      "first_observed_in_year": "2026-02-02 07:00",
+      "last_observed_in_year": "2026-05-19 07:00"
+    },
+    {
+      "reservoir": "Hương Điền",
+      "year": 2022,
+      "expected_hours": 8760,
+      "observed_hours": 446,
+      "missing_hours": 8314,
+      "coverage_pct": 5.09,
+      "first_observed_in_year": "2022-01-01 02:00",
+      "last_observed_in_year": "2022-08-31 07:00"
+    },
+    {
+      "reservoir": "Hương Điền",
+      "year": 2023,
+      "expected_hours": 8760,
+      "observed_hours": 2077,
+      "missing_hours": 6683,
+      "coverage_pct": 23.71,
+      "first_observed_in_year": "2023-02-22 01:00",
+      "last_observed_in_year": "2023-12-31 23:00"
+    },
+    {
+      "reservoir": "Hương Điền",
+      "year": 2024,
+      "expected_hours": 8784,
+      "observed_hours": 681,
+      "missing_hours": 8103,
+      "coverage_pct": 7.75,
+      "first_observed_in_year": "2024-01-01 02:00",
+      "last_observed_in_year": "2024-10-27 07:00"
+    },
+    {
+      "reservoir": "Hương Điền",
+      "year": 2025,
+      "expected_hours": 8760,
+      "observed_hours": 7420,
+      "missing_hours": 1340,
+      "coverage_pct": 84.7,
+      "first_observed_in_year": "2025-02-07 00:00",
+      "last_observed_in_year": "2025-12-22 19:00"
+    },
+    {
+      "reservoir": "Hương Điền",
+      "year": 2026,
+      "expected_hours": 3324,
+      "observed_hours": 2161,
+      "missing_hours": 1163,
+      "coverage_pct": 65.01,
+      "first_observed_in_year": "2026-02-02 00:00",
+      "last_observed_in_year": "2026-05-19 07:00"
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "year": 2022,
+      "expected_hours": 8760,
+      "observed_hours": 213,
+      "missing_hours": 8547,
+      "coverage_pct": 2.43,
+      "first_observed_in_year": "2022-01-04 05:00",
+      "last_observed_in_year": "2022-12-31 06:00"
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "year": 2023,
+      "expected_hours": 8760,
+      "observed_hours": 176,
+      "missing_hours": 8584,
+      "coverage_pct": 2.01,
+      "first_observed_in_year": "2023-01-05 06:00",
+      "last_observed_in_year": "2023-12-31 06:00"
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "year": 2024,
+      "expected_hours": 8784,
+      "observed_hours": 178,
+      "missing_hours": 8606,
+      "coverage_pct": 2.03,
+      "first_observed_in_year": "2024-01-07 06:00",
+      "last_observed_in_year": "2024-12-29 23:00"
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "year": 2025,
+      "expected_hours": 8760,
+      "observed_hours": 975,
+      "missing_hours": 7785,
+      "coverage_pct": 11.13,
+      "first_observed_in_year": "2025-01-06 23:00",
+      "last_observed_in_year": "2025-12-25 17:00"
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "year": 2026,
+      "expected_hours": 3324,
+      "observed_hours": 3116,
+      "missing_hours": 208,
+      "coverage_pct": 93.74,
+      "first_observed_in_year": "2026-01-06 14:00",
+      "last_observed_in_year": "2026-05-19 11:00"
+    }
+  ],
+  "monthly": [
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-01",
+      "expected_hours": 744,
+      "observed_hours": 71,
+      "missing_hours": 673,
+      "coverage_pct": 9.54
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-02",
+      "expected_hours": 672,
+      "observed_hours": 71,
+      "missing_hours": 601,
+      "coverage_pct": 10.57
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-03",
+      "expected_hours": 744,
+      "observed_hours": 92,
+      "missing_hours": 652,
+      "coverage_pct": 12.37
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-04",
+      "expected_hours": 720,
+      "observed_hours": 88,
+      "missing_hours": 632,
+      "coverage_pct": 12.22
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-05",
+      "expected_hours": 744,
+      "observed_hours": 91,
+      "missing_hours": 653,
+      "coverage_pct": 12.23
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-06",
+      "expected_hours": 720,
+      "observed_hours": 65,
+      "missing_hours": 655,
+      "coverage_pct": 9.03
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-07",
+      "expected_hours": 744,
+      "observed_hours": 91,
+      "missing_hours": 653,
+      "coverage_pct": 12.23
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-08",
+      "expected_hours": 744,
+      "observed_hours": 79,
+      "missing_hours": 665,
+      "coverage_pct": 10.62
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-09",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-10",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-11",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2022-12",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-01",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-02",
+      "expected_hours": 672,
+      "observed_hours": 1,
+      "missing_hours": 671,
+      "coverage_pct": 0.15
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-03",
+      "expected_hours": 744,
+      "observed_hours": 33,
+      "missing_hours": 711,
+      "coverage_pct": 4.44
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-04",
+      "expected_hours": 720,
+      "observed_hours": 44,
+      "missing_hours": 676,
+      "coverage_pct": 6.11
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-05",
+      "expected_hours": 744,
+      "observed_hours": 7,
+      "missing_hours": 737,
+      "coverage_pct": 0.94
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-06",
+      "expected_hours": 720,
+      "observed_hours": 21,
+      "missing_hours": 699,
+      "coverage_pct": 2.92
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-07",
+      "expected_hours": 744,
+      "observed_hours": 26,
+      "missing_hours": 718,
+      "coverage_pct": 3.49
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-08",
+      "expected_hours": 744,
+      "observed_hours": 28,
+      "missing_hours": 716,
+      "coverage_pct": 3.76
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-09",
+      "expected_hours": 720,
+      "observed_hours": 17,
+      "missing_hours": 703,
+      "coverage_pct": 2.36
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-10",
+      "expected_hours": 744,
+      "observed_hours": 175,
+      "missing_hours": 569,
+      "coverage_pct": 23.52
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-11",
+      "expected_hours": 720,
+      "observed_hours": 350,
+      "missing_hours": 370,
+      "coverage_pct": 48.61
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2023-12",
+      "expected_hours": 744,
+      "observed_hours": 284,
+      "missing_hours": 460,
+      "coverage_pct": 38.17
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-01",
+      "expected_hours": 744,
+      "observed_hours": 68,
+      "missing_hours": 676,
+      "coverage_pct": 9.14
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-02",
+      "expected_hours": 696,
+      "observed_hours": 32,
+      "missing_hours": 664,
+      "coverage_pct": 4.6
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-03",
+      "expected_hours": 744,
+      "observed_hours": 43,
+      "missing_hours": 701,
+      "coverage_pct": 5.78
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-04",
+      "expected_hours": 720,
+      "observed_hours": 23,
+      "missing_hours": 697,
+      "coverage_pct": 3.19
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-05",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-06",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-07",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-08",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-09",
+      "expected_hours": 720,
+      "observed_hours": 8,
+      "missing_hours": 712,
+      "coverage_pct": 1.11
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-10",
+      "expected_hours": 744,
+      "observed_hours": 19,
+      "missing_hours": 725,
+      "coverage_pct": 2.55
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-11",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2024-12",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-01",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-02",
+      "expected_hours": 672,
+      "observed_hours": 65,
+      "missing_hours": 607,
+      "coverage_pct": 9.67
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-03",
+      "expected_hours": 744,
+      "observed_hours": 93,
+      "missing_hours": 651,
+      "coverage_pct": 12.5
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-04",
+      "expected_hours": 720,
+      "observed_hours": 88,
+      "missing_hours": 632,
+      "coverage_pct": 12.22
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-05",
+      "expected_hours": 744,
+      "observed_hours": 90,
+      "missing_hours": 654,
+      "coverage_pct": 12.1
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-06",
+      "expected_hours": 720,
+      "observed_hours": 106,
+      "missing_hours": 614,
+      "coverage_pct": 14.72
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-07",
+      "expected_hours": 744,
+      "observed_hours": 92,
+      "missing_hours": 652,
+      "coverage_pct": 12.37
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-08",
+      "expected_hours": 744,
+      "observed_hours": 91,
+      "missing_hours": 653,
+      "coverage_pct": 12.23
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-09",
+      "expected_hours": 720,
+      "observed_hours": 90,
+      "missing_hours": 630,
+      "coverage_pct": 12.5
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-10",
+      "expected_hours": 744,
+      "observed_hours": 408,
+      "missing_hours": 336,
+      "coverage_pct": 54.84
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-11",
+      "expected_hours": 720,
+      "observed_hours": 720,
+      "missing_hours": 0,
+      "coverage_pct": 100.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2025-12",
+      "expected_hours": 744,
+      "observed_hours": 526,
+      "missing_hours": 218,
+      "coverage_pct": 70.7
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2026-01",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2026-02",
+      "expected_hours": 672,
+      "observed_hours": 75,
+      "missing_hours": 597,
+      "coverage_pct": 11.16
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2026-03",
+      "expected_hours": 744,
+      "observed_hours": 86,
+      "missing_hours": 658,
+      "coverage_pct": 11.56
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2026-04",
+      "expected_hours": 720,
+      "observed_hours": 47,
+      "missing_hours": 673,
+      "coverage_pct": 6.53
+    },
+    {
+      "reservoir": "Bình Điền",
+      "month": "2026-05",
+      "expected_hours": 444,
+      "observed_hours": 53,
+      "missing_hours": 391,
+      "coverage_pct": 11.94
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-01",
+      "expected_hours": 744,
+      "observed_hours": 127,
+      "missing_hours": 617,
+      "coverage_pct": 17.07
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-02",
+      "expected_hours": 672,
+      "observed_hours": 0,
+      "missing_hours": 672,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-03",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-04",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-05",
+      "expected_hours": 744,
+      "observed_hours": 79,
+      "missing_hours": 665,
+      "coverage_pct": 10.62
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-06",
+      "expected_hours": 720,
+      "observed_hours": 68,
+      "missing_hours": 652,
+      "coverage_pct": 9.44
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-07",
+      "expected_hours": 744,
+      "observed_hours": 93,
+      "missing_hours": 651,
+      "coverage_pct": 12.5
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-08",
+      "expected_hours": 744,
+      "observed_hours": 79,
+      "missing_hours": 665,
+      "coverage_pct": 10.62
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-09",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-10",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-11",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2022-12",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-01",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-02",
+      "expected_hours": 672,
+      "observed_hours": 8,
+      "missing_hours": 664,
+      "coverage_pct": 1.19
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-03",
+      "expected_hours": 744,
+      "observed_hours": 168,
+      "missing_hours": 576,
+      "coverage_pct": 22.58
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-04",
+      "expected_hours": 720,
+      "observed_hours": 204,
+      "missing_hours": 516,
+      "coverage_pct": 28.33
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-05",
+      "expected_hours": 744,
+      "observed_hours": 32,
+      "missing_hours": 712,
+      "coverage_pct": 4.3
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-06",
+      "expected_hours": 720,
+      "observed_hours": 108,
+      "missing_hours": 612,
+      "coverage_pct": 15.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-07",
+      "expected_hours": 744,
+      "observed_hours": 136,
+      "missing_hours": 608,
+      "coverage_pct": 18.28
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-08",
+      "expected_hours": 744,
+      "observed_hours": 184,
+      "missing_hours": 560,
+      "coverage_pct": 24.73
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-09",
+      "expected_hours": 720,
+      "observed_hours": 104,
+      "missing_hours": 616,
+      "coverage_pct": 14.44
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-10",
+      "expected_hours": 744,
+      "observed_hours": 227,
+      "missing_hours": 517,
+      "coverage_pct": 30.51
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-11",
+      "expected_hours": 720,
+      "observed_hours": 446,
+      "missing_hours": 274,
+      "coverage_pct": 61.94
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2023-12",
+      "expected_hours": 744,
+      "observed_hours": 460,
+      "missing_hours": 284,
+      "coverage_pct": 61.83
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-01",
+      "expected_hours": 744,
+      "observed_hours": 204,
+      "missing_hours": 540,
+      "coverage_pct": 27.42
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-02",
+      "expected_hours": 696,
+      "observed_hours": 154,
+      "missing_hours": 542,
+      "coverage_pct": 22.13
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-03",
+      "expected_hours": 744,
+      "observed_hours": 153,
+      "missing_hours": 591,
+      "coverage_pct": 20.56
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-04",
+      "expected_hours": 720,
+      "observed_hours": 91,
+      "missing_hours": 629,
+      "coverage_pct": 12.64
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-05",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-06",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-07",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-08",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-09",
+      "expected_hours": 720,
+      "observed_hours": 47,
+      "missing_hours": 673,
+      "coverage_pct": 6.53
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-10",
+      "expected_hours": 744,
+      "observed_hours": 32,
+      "missing_hours": 712,
+      "coverage_pct": 4.3
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-11",
+      "expected_hours": 720,
+      "observed_hours": 0,
+      "missing_hours": 720,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2024-12",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-01",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-02",
+      "expected_hours": 672,
+      "observed_hours": 513,
+      "missing_hours": 159,
+      "coverage_pct": 76.34
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-03",
+      "expected_hours": 744,
+      "observed_hours": 736,
+      "missing_hours": 8,
+      "coverage_pct": 98.92
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-04",
+      "expected_hours": 720,
+      "observed_hours": 705,
+      "missing_hours": 15,
+      "coverage_pct": 97.92
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-05",
+      "expected_hours": 744,
+      "observed_hours": 739,
+      "missing_hours": 5,
+      "coverage_pct": 99.33
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-06",
+      "expected_hours": 720,
+      "observed_hours": 633,
+      "missing_hours": 87,
+      "coverage_pct": 87.92
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-07",
+      "expected_hours": 744,
+      "observed_hours": 720,
+      "missing_hours": 24,
+      "coverage_pct": 96.77
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-08",
+      "expected_hours": 744,
+      "observed_hours": 714,
+      "missing_hours": 30,
+      "coverage_pct": 95.97
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-09",
+      "expected_hours": 720,
+      "observed_hours": 718,
+      "missing_hours": 2,
+      "coverage_pct": 99.72
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-10",
+      "expected_hours": 744,
+      "observed_hours": 703,
+      "missing_hours": 41,
+      "coverage_pct": 94.49
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-11",
+      "expected_hours": 720,
+      "observed_hours": 715,
+      "missing_hours": 5,
+      "coverage_pct": 99.31
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2025-12",
+      "expected_hours": 744,
+      "observed_hours": 524,
+      "missing_hours": 220,
+      "coverage_pct": 70.43
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2026-01",
+      "expected_hours": 744,
+      "observed_hours": 0,
+      "missing_hours": 744,
+      "coverage_pct": 0.0
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2026-02",
+      "expected_hours": 672,
+      "observed_hours": 640,
+      "missing_hours": 32,
+      "coverage_pct": 95.24
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2026-03",
+      "expected_hours": 744,
+      "observed_hours": 690,
+      "missing_hours": 54,
+      "coverage_pct": 92.74
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2026-04",
+      "expected_hours": 720,
+      "observed_hours": 401,
+      "missing_hours": 319,
+      "coverage_pct": 55.69
+    },
+    {
+      "reservoir": "Hương Điền",
+      "month": "2026-05",
+      "expected_hours": 444,
+      "observed_hours": 430,
+      "missing_hours": 14,
+      "coverage_pct": 96.85
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-01",
+      "expected_hours": 744,
+      "observed_hours": 14,
+      "missing_hours": 730,
+      "coverage_pct": 1.88
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-02",
+      "expected_hours": 672,
+      "observed_hours": 6,
+      "missing_hours": 666,
+      "coverage_pct": 0.89
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-03",
+      "expected_hours": 744,
+      "observed_hours": 9,
+      "missing_hours": 735,
+      "coverage_pct": 1.21
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-04",
+      "expected_hours": 720,
+      "observed_hours": 28,
+      "missing_hours": 692,
+      "coverage_pct": 3.89
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-05",
+      "expected_hours": 744,
+      "observed_hours": 24,
+      "missing_hours": 720,
+      "coverage_pct": 3.23
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-06",
+      "expected_hours": 720,
+      "observed_hours": 20,
+      "missing_hours": 700,
+      "coverage_pct": 2.78
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-07",
+      "expected_hours": 744,
+      "observed_hours": 25,
+      "missing_hours": 719,
+      "coverage_pct": 3.36
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-08",
+      "expected_hours": 744,
+      "observed_hours": 27,
+      "missing_hours": 717,
+      "coverage_pct": 3.63
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-09",
+      "expected_hours": 720,
+      "observed_hours": 21,
+      "missing_hours": 699,
+      "coverage_pct": 2.92
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-10",
+      "expected_hours": 744,
+      "observed_hours": 10,
+      "missing_hours": 734,
+      "coverage_pct": 1.34
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-11",
+      "expected_hours": 720,
+      "observed_hours": 11,
+      "missing_hours": 709,
+      "coverage_pct": 1.53
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2022-12",
+      "expected_hours": 744,
+      "observed_hours": 18,
+      "missing_hours": 726,
+      "coverage_pct": 2.42
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-01",
+      "expected_hours": 744,
+      "observed_hours": 15,
+      "missing_hours": 729,
+      "coverage_pct": 2.02
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-02",
+      "expected_hours": 672,
+      "observed_hours": 16,
+      "missing_hours": 656,
+      "coverage_pct": 2.38
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-03",
+      "expected_hours": 744,
+      "observed_hours": 7,
+      "missing_hours": 737,
+      "coverage_pct": 0.94
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-04",
+      "expected_hours": 720,
+      "observed_hours": 16,
+      "missing_hours": 704,
+      "coverage_pct": 2.22
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-05",
+      "expected_hours": 744,
+      "observed_hours": 19,
+      "missing_hours": 725,
+      "coverage_pct": 2.55
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-06",
+      "expected_hours": 720,
+      "observed_hours": 18,
+      "missing_hours": 702,
+      "coverage_pct": 2.5
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-07",
+      "expected_hours": 744,
+      "observed_hours": 15,
+      "missing_hours": 729,
+      "coverage_pct": 2.02
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-08",
+      "expected_hours": 744,
+      "observed_hours": 10,
+      "missing_hours": 734,
+      "coverage_pct": 1.34
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-09",
+      "expected_hours": 720,
+      "observed_hours": 12,
+      "missing_hours": 708,
+      "coverage_pct": 1.67
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-10",
+      "expected_hours": 744,
+      "observed_hours": 14,
+      "missing_hours": 730,
+      "coverage_pct": 1.88
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-11",
+      "expected_hours": 720,
+      "observed_hours": 14,
+      "missing_hours": 706,
+      "coverage_pct": 1.94
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2023-12",
+      "expected_hours": 744,
+      "observed_hours": 20,
+      "missing_hours": 724,
+      "coverage_pct": 2.69
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-01",
+      "expected_hours": 744,
+      "observed_hours": 13,
+      "missing_hours": 731,
+      "coverage_pct": 1.75
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-02",
+      "expected_hours": 696,
+      "observed_hours": 15,
+      "missing_hours": 681,
+      "coverage_pct": 2.16
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-03",
+      "expected_hours": 744,
+      "observed_hours": 17,
+      "missing_hours": 727,
+      "coverage_pct": 2.28
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-04",
+      "expected_hours": 720,
+      "observed_hours": 19,
+      "missing_hours": 701,
+      "coverage_pct": 2.64
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-05",
+      "expected_hours": 744,
+      "observed_hours": 13,
+      "missing_hours": 731,
+      "coverage_pct": 1.75
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-06",
+      "expected_hours": 720,
+      "observed_hours": 10,
+      "missing_hours": 710,
+      "coverage_pct": 1.39
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-07",
+      "expected_hours": 744,
+      "observed_hours": 26,
+      "missing_hours": 718,
+      "coverage_pct": 3.49
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-08",
+      "expected_hours": 744,
+      "observed_hours": 13,
+      "missing_hours": 731,
+      "coverage_pct": 1.75
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-09",
+      "expected_hours": 720,
+      "observed_hours": 12,
+      "missing_hours": 708,
+      "coverage_pct": 1.67
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-10",
+      "expected_hours": 744,
+      "observed_hours": 12,
+      "missing_hours": 732,
+      "coverage_pct": 1.61
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-11",
+      "expected_hours": 720,
+      "observed_hours": 16,
+      "missing_hours": 704,
+      "coverage_pct": 2.22
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2024-12",
+      "expected_hours": 744,
+      "observed_hours": 12,
+      "missing_hours": 732,
+      "coverage_pct": 1.61
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-01",
+      "expected_hours": 744,
+      "observed_hours": 28,
+      "missing_hours": 716,
+      "coverage_pct": 3.76
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-02",
+      "expected_hours": 672,
+      "observed_hours": 15,
+      "missing_hours": 657,
+      "coverage_pct": 2.23
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-03",
+      "expected_hours": 744,
+      "observed_hours": 13,
+      "missing_hours": 731,
+      "coverage_pct": 1.75
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-04",
+      "expected_hours": 720,
+      "observed_hours": 11,
+      "missing_hours": 709,
+      "coverage_pct": 1.53
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-05",
+      "expected_hours": 744,
+      "observed_hours": 5,
+      "missing_hours": 739,
+      "coverage_pct": 0.67
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-06",
+      "expected_hours": 720,
+      "observed_hours": 5,
+      "missing_hours": 715,
+      "coverage_pct": 0.69
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-07",
+      "expected_hours": 744,
+      "observed_hours": 21,
+      "missing_hours": 723,
+      "coverage_pct": 2.82
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-08",
+      "expected_hours": 744,
+      "observed_hours": 26,
+      "missing_hours": 718,
+      "coverage_pct": 3.49
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-09",
+      "expected_hours": 720,
+      "observed_hours": 14,
+      "missing_hours": 706,
+      "coverage_pct": 1.94
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-10",
+      "expected_hours": 744,
+      "observed_hours": 12,
+      "missing_hours": 732,
+      "coverage_pct": 1.61
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-11",
+      "expected_hours": 720,
+      "observed_hours": 238,
+      "missing_hours": 482,
+      "coverage_pct": 33.06
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2025-12",
+      "expected_hours": 744,
+      "observed_hours": 587,
+      "missing_hours": 157,
+      "coverage_pct": 78.9
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2026-01",
+      "expected_hours": 744,
+      "observed_hours": 568,
+      "missing_hours": 176,
+      "coverage_pct": 76.34
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2026-02",
+      "expected_hours": 672,
+      "observed_hours": 663,
+      "missing_hours": 9,
+      "coverage_pct": 98.66
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2026-03",
+      "expected_hours": 744,
+      "observed_hours": 721,
+      "missing_hours": 23,
+      "coverage_pct": 96.91
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2026-04",
+      "expected_hours": 720,
+      "observed_hours": 720,
+      "missing_hours": 0,
+      "coverage_pct": 100.0
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "month": "2026-05",
+      "expected_hours": 444,
+      "observed_hours": 444,
+      "missing_hours": 0,
+      "coverage_pct": 100.0
+    }
+  ],
+  "top_missing_gaps": [
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2022-08-31 08:00",
+      "gap_end": "2023-02-22 06:00",
+      "missing_hours": 4199
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2024-04-18 18:00",
+      "gap_end": "2024-09-18 06:00",
+      "missing_hours": 3661
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2024-10-27 08:00",
+      "gap_end": "2025-02-07 06:00",
+      "missing_hours": 2471
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2025-12-23 01:00",
+      "gap_end": "2026-02-02 06:00",
+      "missing_hours": 990
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-05-03 08:00",
+      "gap_end": "2023-06-13 06:00",
+      "missing_hours": 983
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2024-09-19 20:00",
+      "gap_end": "2024-10-25 23:00",
+      "missing_hours": 868
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-09-18 08:00",
+      "gap_end": "2023-10-04 00:00",
+      "missing_hours": 377
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-02-22 08:00",
+      "gap_end": "2023-03-03 06:00",
+      "missing_hours": 215
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2026-04-16 18:00",
+      "gap_end": "2026-04-25 06:00",
+      "missing_hours": 205
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2024-02-07 18:00",
+      "gap_end": "2024-02-15 18:00",
+      "missing_hours": 193
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2022-06-23 14:00",
+      "gap_end": "2022-07-01 06:00",
+      "missing_hours": 185
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-08-23 08:00",
+      "gap_end": "2023-08-31 00:00",
+      "missing_hours": 185
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2022-01-21 08:00",
+      "gap_end": "2022-01-28 12:00",
+      "missing_hours": 173
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-11-07 13:00",
+      "gap_end": "2023-11-14 11:00",
+      "missing_hours": 167
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-03-03 08:00",
+      "gap_end": "2023-03-10 00:00",
+      "missing_hours": 161
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-07-23 08:00",
+      "gap_end": "2023-07-30 00:00",
+      "missing_hours": 161
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2026-04-02 08:00",
+      "gap_end": "2026-04-08 06:00",
+      "missing_hours": 143
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-06-30 08:00",
+      "gap_end": "2023-07-05 06:00",
+      "missing_hours": 119
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-12-13 14:00",
+      "gap_end": "2023-12-18 08:00",
+      "missing_hours": 115
+    },
+    {
+      "reservoir": "Bình Điền",
+      "gap_start": "2023-03-13 08:00",
+      "gap_end": "2023-03-18 00:00",
+      "missing_hours": 113
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2022-08-31 08:00",
+      "gap_end": "2023-02-22 00:00",
+      "missing_hours": 4193
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2024-04-19 00:00",
+      "gap_end": "2024-09-18 00:00",
+      "missing_hours": 3649
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2022-01-10 12:00",
+      "gap_end": "2022-05-03 16:00",
+      "missing_hours": 2717
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2024-10-27 08:00",
+      "gap_end": "2025-02-06 23:00",
+      "missing_hours": 2464
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2025-12-22 20:00",
+      "gap_end": "2026-02-01 23:00",
+      "missing_hours": 988
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-05-03 13:00",
+      "gap_end": "2023-06-13 00:00",
+      "missing_hours": 972
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2024-09-20 00:00",
+      "gap_end": "2024-10-25 23:00",
+      "missing_hours": 864
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-09-18 13:00",
+      "gap_end": "2023-10-04 00:00",
+      "missing_hours": 372
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-02-22 13:00",
+      "gap_end": "2023-03-03 00:00",
+      "missing_hours": 204
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2022-06-23 14:00",
+      "gap_end": "2022-07-01 06:00",
+      "missing_hours": 185
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2026-04-17 14:00",
+      "gap_end": "2026-04-24 23:00",
+      "missing_hours": 178
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-03-03 13:00",
+      "gap_end": "2023-03-10 00:00",
+      "missing_hours": 156
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2026-04-02 08:00",
+      "gap_end": "2026-04-07 23:00",
+      "missing_hours": 136
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-03-13 13:00",
+      "gap_end": "2023-03-18 00:00",
+      "missing_hours": 108
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-06-30 13:00",
+      "gap_end": "2023-07-05 00:00",
+      "missing_hours": 108
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-09-07 13:00",
+      "gap_end": "2023-09-12 00:00",
+      "missing_hours": 108
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2024-02-09 18:00",
+      "gap_end": "2024-02-13 19:00",
+      "missing_hours": 98
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-12-14 14:00",
+      "gap_end": "2023-12-18 08:00",
+      "missing_hours": 91
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-06-14 13:00",
+      "gap_end": "2023-06-18 00:00",
+      "missing_hours": 84
+    },
+    {
+      "reservoir": "Hương Điền",
+      "gap_start": "2023-06-26 13:00",
+      "gap_end": "2023-06-30 00:00",
+      "missing_hours": 84
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2024-12-05 07:00",
+      "gap_end": "2024-12-27 05:00",
+      "missing_hours": 527
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2024-06-16 09:00",
+      "gap_end": "2024-07-02 05:00",
+      "missing_hours": 381
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2022-01-27 07:00",
+      "gap_end": "2022-02-10 05:00",
+      "missing_hours": 335
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-01-09 01:00",
+      "gap_end": "2025-01-20 23:00",
+      "missing_hours": 287
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-06-22 07:00",
+      "gap_end": "2025-07-04 03:00",
+      "missing_hours": 285
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-12-25 18:00",
+      "gap_end": "2026-01-06 13:00",
+      "missing_hours": 284
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-02-16 07:00",
+      "gap_end": "2025-02-27 23:00",
+      "missing_hours": 281
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2024-11-18 23:00",
+      "gap_end": "2024-11-30 05:00",
+      "missing_hours": 271
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-02-28 23:00",
+      "gap_end": "2025-03-12 03:00",
+      "missing_hours": 269
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2023-03-03 07:00",
+      "gap_end": "2023-03-13 05:00",
+      "missing_hours": 239
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-01-25 08:00",
+      "gap_end": "2025-02-03 17:00",
+      "missing_hours": 226
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2023-02-04 03:00",
+      "gap_end": "2023-02-13 05:00",
+      "missing_hours": 219
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-04-29 07:00",
+      "gap_end": "2025-05-08 05:00",
+      "missing_hours": 215
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2023-06-30 07:00",
+      "gap_end": "2023-07-08 05:00",
+      "missing_hours": 191
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2024-12-30 00:00",
+      "gap_end": "2025-01-06 22:00",
+      "missing_hours": 191
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-04-04 07:00",
+      "gap_end": "2025-04-12 05:00",
+      "missing_hours": 191
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-05-08 07:00",
+      "gap_end": "2025-05-16 05:00",
+      "missing_hours": 191
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-05-30 07:00",
+      "gap_end": "2025-06-07 05:00",
+      "missing_hours": 191
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2023-05-11 18:00",
+      "gap_end": "2023-05-19 05:00",
+      "missing_hours": 180
+    },
+    {
+      "reservoir": "Tả Trạch",
+      "gap_start": "2025-02-04 19:00",
+      "gap_end": "2025-02-12 01:00",
+      "missing_hours": 175
+    }
+  ]
+}

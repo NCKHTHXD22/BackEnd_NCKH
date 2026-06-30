@@ -1,4 +1,6 @@
 import os
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 import torch
 import numpy as np
 import pandas as pd
@@ -48,7 +50,7 @@ def evaluate_finetuned_models():
 
     for rid in np.unique(dataset.rid):
         reservoir_name = next((v["name"] for k,v in RESERVOIRS.items() if v["idx"] == rid), f"Hồ ID={rid}")
-        model_path = f"artifacts/inflow_model_rid_{rid}.pt"
+        model_path = f"artifacts/inflow_model_local_{rid}.pt"
 
         if not os.path.exists(model_path):
             print(f"  Bỏ qua {reservoir_name:.<30} (Không tìm thấy {model_path})")
@@ -129,12 +131,17 @@ def evaluate_finetuned_models():
             "FHV (%)": round(float(fhv * 100), 1),
         })
 
-        # Vẽ biểu đồ 500 giờ đầu tiên
+        # Tìm vị trí đỉnh lũ cao nhất trong tập Test
+        max_idx = np.argmax(t)
+        # Lấy khung hình 200 giờ trước và 300 giờ sau đỉnh lũ
+        start_plot = max(0, max_idx - 200)
+        end_plot = min(len(t), max_idx + 300)
+
         plt.figure(figsize=(12, 5))
-        plt.plot(t[:500], label='Thực tế (Q_actual)', color='blue', alpha=0.7, linewidth=1.5)
-        plt.plot(p[:500], label='Dự báo P50 (Q_predict)', color='red', alpha=0.7, linestyle='--', linewidth=1.5)
-        plt.title(f"{reservoir_name} | Đánh giá Test 2025 | NSE: {nse:.2f}", fontsize=12, fontweight='bold')
-        plt.xlabel("Thời gian (Giờ liên tục)")
+        plt.plot(t[start_plot:end_plot], label='Thực tế (Q_actual)', color='blue', alpha=0.7, linewidth=1.5)
+        plt.plot(p[start_plot:end_plot], label='Dự báo P50 (Q_predict)', color='red', alpha=0.7, linestyle='--', linewidth=1.5)
+        plt.title(f"{reservoir_name} | Đỉnh Lũ Lớn Nhất 2025 | NSE: {nse:.2f}", fontsize=12, fontweight='bold')
+        plt.xlabel("Thời gian (Giờ)")
         plt.ylabel("Lưu lượng (m3/s)")
         plt.legend()
         plt.grid(True, linestyle=':', alpha=0.6)

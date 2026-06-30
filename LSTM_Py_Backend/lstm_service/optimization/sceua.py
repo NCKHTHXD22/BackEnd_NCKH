@@ -132,13 +132,11 @@ def sceua_optimize(
             converged = True
             break
 
-        # Hội tụ giá trị hàm
-        if len(history) > 10:
-            recent = history[-10:]
-            if max(recent) - min(recent) < config.tol_func:
-                reason = "func_convergence"
-                converged = True
-                break
+        # Hội tụ giá trị hàm (quần thể đã hội tụ về một mức fitness)
+        if np.max(fitness) - np.min(fitness) < config.tol_func:
+            reason = "func_convergence"
+            converged = True
+            break
 
         # Hội tụ tham số
         param_range = np.max(population, axis=0) - np.min(population, axis=0)
@@ -185,6 +183,7 @@ def _cce_step(
     # Chọn subcomplex q điểm bằng trapezoidal distribution
     # Điểm tốt hơn (index nhỏ) có xác suất được chọn cao hơn
     weights = 2.0 * (m - np.arange(m)) / (m * (m + 1))
+    weights = weights / np.sum(weights)  # Fix sai số dấu phẩy động
     chosen = rng.choice(m, size=min(q, m), replace=False, p=weights)
     chosen.sort()
 

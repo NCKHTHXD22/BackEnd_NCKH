@@ -49,19 +49,23 @@ class LiveHydroController {
     _buildDBResponse(dbHistory) {
         // dbHistory is sorted ascending by timestamp (findByLake uses sort: 1)
         const latest = dbHistory[dbHistory.length - 1];
+        const TZ_OFFSET_MS = 7 * 60 * 60 * 1000; // Mongo lưu UTC, +7h để khớp giờ VN
         return {
             qvao: latest.qvao || 0,
             luuluongxa: latest.luuluongxa || 0,
             htl: latest.htl || 0,
             source: 'db',
-            history: dbHistory.map(d => ({
-                time: d.timestamp instanceof Date
-                    ? d.timestamp.toISOString()
-                    : new Date(d.timestamp).toISOString(),
-                qvao: d.qvao || 0,
-                luuluongxa: d.luuluongxa || 0,
-                htl: d.htl || 0
-            }))
+            history: dbHistory.map(d => {
+                const base = d.timestamp instanceof Date
+                    ? d.timestamp
+                    : new Date(d.timestamp);
+                return {
+                    time: new Date(base.getTime() + TZ_OFFSET_MS).toISOString(),
+                    qvao: d.qvao || 0,
+                    luuluongxa: d.luuluongxa || 0,
+                    htl: d.htl || 0
+                };
+            })
         };
     }
 
