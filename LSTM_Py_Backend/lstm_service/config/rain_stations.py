@@ -19,7 +19,7 @@ RAIN_STATIONS = {
         "lat": 15.938, "lon": 107.625,
         "available_from": "2022",
         "vndms_name_keywords": ["Xa Prao", "Dong Giang - Xa Prao", "Đông Giang - Xã Prao",
-                                 "Quang Nam - Dong Giang - Xa Prao"],
+                                 "Da Nang - Dong Giang - Xa Prao"],
         "description": "Xã Prao, Đông Giang — lưu vực A Vương / Zà Hung",
     },
     "KaDang": {
@@ -96,14 +96,14 @@ RAIN_STATIONS = {
         "lat": 15.390, "lon": 107.920,
         "available_from": "2022",
         "vndms_name_keywords": ["Phuoc My", "Phước Sơn - Phước Mỹ",
-                                  "Quang Nam - Phuoc Son - Phuoc My"],
+                                  "Da Nang - Phuoc Son - Phuoc My"],
         "description": "Phước Mỹ, Phước Sơn — trạm cốt lõi lưu vực Đắk Mi",
     },
     "PhuocNang": {
         "lat": 15.460, "lon": 107.810,
         "available_from": "2022",
         "vndms_name_keywords": ["Uy Ban Huyen", "Nam Tra My",
-                                  "Quang Nam - Nam Tra My - Uy Ban Huyen"],
+                                  "Da Nang - Nam Tra My - Uy Ban Huyen"],
         "description": "Tắk Pố, Nam Trà My — trung tâm huyện Nam Trà My, đầu nguồn Đắk Mi",
     },
 
@@ -197,7 +197,7 @@ RAIN_STATIONS = {
         "lat": 15.350, "lon": 108.070,
         "available_from": "2022",
         "vndms_name_keywords": ["TD Song Tranh 2", "Tra Nam", "Trà Nam", "Trà Don",
-                                  "Quang Nam - Tra Nam - TD Song Tranh 2"],
+                                  "Da Nang - Tra Nam - TD Song Tranh 2"],
         "description": "Trà Nam / Trà Don, Nam Trà My — lòng hồ Sông Tranh 2",
     },
 

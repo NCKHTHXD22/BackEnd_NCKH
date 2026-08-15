@@ -10,7 +10,7 @@ license: mit
 
 # LSTM Inflow Prediction API
 
-FastAPI service cung cấp dự báo lưu lượng đến (inflow) cho 16 hồ chứa thủy điện tỉnh Quảng Nam.
+FastAPI service cung cấp dự báo lưu lượng đến (inflow) cho 16 hồ chứa thủy điện thành phố Đà Nẵng.
 
 ## Endpoint
 

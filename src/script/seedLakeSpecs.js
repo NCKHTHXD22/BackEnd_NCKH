@@ -28,8 +28,8 @@ const LAKE_SPECS = [
         lake_id: 1,
         name: 'A Vương',
         river: 'Sông A Vương',
-        province: 'Quảng Nam',
-        address: 'Xã A Rooi, Đông Giang, Quảng Nam',
+        province: 'Đà Nẵng',
+        address: 'Xã A Rooi, Đông Giang, Đà Nẵng',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 340.0, MNDBT: 380.0, MNGC: 381.0, crest: 382.0,
@@ -55,8 +55,8 @@ const LAKE_SPECS = [
         lake_id: 2,
         name: 'Đắk Mi 4',
         river: 'Sông Đắk Mi',
-        province: 'Quảng Nam',
-        address: 'Xã Phước Hòa, Phước Sơn, Quảng Nam',
+        province: 'Đà Nẵng',
+        address: 'Xã Phước Hòa, Phước Sơn, Đà Nẵng',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 225.0, MNDBT: 258.0, MNGC: 260.5, crest: 261.5,
@@ -82,8 +82,8 @@ const LAKE_SPECS = [
         lake_id: 3,
         name: 'Sông Bung 4',
         river: 'Sông Bung',
-        province: 'Quảng Nam',
-        address: 'Xã Tà Pơơ, Nam Giang, Quảng Nam',
+        province: 'Đà Nẵng',
+        address: 'Xã Tà Pơơ, Nam Giang, Đà Nẵng',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 205.0, MNDBT: 222.5, MNGC: 224.0, crest: 225.0,
@@ -109,8 +109,8 @@ const LAKE_SPECS = [
         lake_id: 4,
         name: 'Sông Tranh 2',
         river: 'Sông Tranh (Thu Bồn)',
-        province: 'Quảng Nam',
-        address: 'Xã Trà Đốc, Bắc Trà My, Quảng Nam',
+        province: 'Đà Nẵng',
+        address: 'Xã Trà Đốc, Bắc Trà My, Đà Nẵng',
         regulation_doc: 'QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn',
 
         MNC: 158.0, MNDBT: 175.0, MNGC: 176.5, crest: 177.0,
@@ -138,7 +138,7 @@ const LAKE_SPECS = [
     {
         lake_id: 7,
         name: 'Sông Bung 4A',
-        river: 'Sông Bung', province: 'Quảng Nam', address: 'Nam Giang, Quảng Nam',
+        river: 'Sông Bung', province: 'Đà Nẵng', address: 'Nam Giang, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 130.0, MNDBT: 138.0, MNGC: 139.0, crest: 140.0,
         total_volume: 20, dead_volume: 5, flood_volume: 8,
@@ -149,7 +149,7 @@ const LAKE_SPECS = [
     {
         lake_id: 8,
         name: 'Sông Bung 5',
-        river: 'Sông Bung', province: 'Quảng Nam', address: 'Đông Giang, Quảng Nam',
+        river: 'Sông Bung', province: 'Đà Nẵng', address: 'Đông Giang, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 175.0, MNDBT: 185.0, MNGC: 186.5, crest: 187.5,
         total_volume: 100, dead_volume: 28, flood_volume: 30,
@@ -160,7 +160,7 @@ const LAKE_SPECS = [
     {
         lake_id: 9,
         name: 'Sông Bung 2',
-        river: 'Sông Bung', province: 'Quảng Nam', address: 'Nam Giang, Quảng Nam',
+        river: 'Sông Bung', province: 'Đà Nẵng', address: 'Nam Giang, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 330.0, MNDBT: 340.0, MNGC: 342.0, crest: 343.0,
         total_volume: 250, dead_volume: 70, flood_volume: 60,
@@ -171,7 +171,7 @@ const LAKE_SPECS = [
     {
         lake_id: 11,
         name: 'Sông Bung 6',
-        river: 'Sông Bung', province: 'Quảng Nam', address: 'Nam Giang, Quảng Nam',
+        river: 'Sông Bung', province: 'Đà Nẵng', address: 'Nam Giang, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)',
         MNC: 93.0, MNDBT: 100.0, MNGC: 101.0, crest: 102.0,
         total_volume: 50, dead_volume: 12, flood_volume: 15,
@@ -182,7 +182,7 @@ const LAKE_SPECS = [
     {
         lake_id: 12,
         name: 'Sông Tranh 3',
-        river: 'Sông Tranh (Thu Bồn)', province: 'Quảng Nam', address: 'Tiên Phước, Quảng Nam',
+        river: 'Sông Tranh (Thu Bồn)', province: 'Đà Nẵng', address: 'Tiên Phước, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Tranh)',
         MNC: 60.0, MNDBT: 65.0, MNGC: 66.0, crest: 67.0,
         total_volume: 60, dead_volume: 15, flood_volume: 18,
@@ -193,7 +193,7 @@ const LAKE_SPECS = [
     {
         lake_id: 13,
         name: 'Za Hung',
-        river: 'Sông Za Hung', province: 'Quảng Nam', address: 'Tây Giang, Quảng Nam',
+        river: 'Sông Za Hung', province: 'Đà Nẵng', address: 'Tây Giang, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (thượng nguồn A Vương)',
         MNC: 150.0, MNDBT: 160.0, MNGC: 161.5, crest: 162.5,
         total_volume: 130, dead_volume: 35, flood_volume: 40,
@@ -204,7 +204,7 @@ const LAKE_SPECS = [
     {
         lake_id: 14,
         name: 'Đắk Mi 3',
-        river: 'Sông Đắk Mi', province: 'Quảng Nam', address: 'Phước Sơn, Quảng Nam',
+        river: 'Sông Đắk Mi', province: 'Đà Nẵng', address: 'Phước Sơn, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Đắk Mi)',
         MNC: 340.0, MNDBT: 352.0, MNGC: 353.5, crest: 354.5,
         total_volume: 70, dead_volume: 18, flood_volume: 20,
@@ -215,7 +215,7 @@ const LAKE_SPECS = [
     {
         lake_id: 15,
         name: 'Khe Diên',
-        river: 'Sông Vu Gia', province: 'Quảng Nam', address: 'Nông Sơn, Quảng Nam',
+        river: 'Sông Vu Gia', province: 'Đà Nẵng', address: 'Nông Sơn, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (hạ lưu Vu Gia)',
         MNC: 18.0, MNDBT: 24.0, MNGC: 25.0, crest: 26.0,
         total_volume: 35, dead_volume: 8, flood_volume: 10,
@@ -226,7 +226,7 @@ const LAKE_SPECS = [
     {
         lake_id: 16,
         name: 'Sông Côn 2',
-        river: 'Sông Côn', province: 'Quảng Nam', address: 'Đông Giang, Quảng Nam',
+        river: 'Sông Côn', province: 'Đà Nẵng', address: 'Đông Giang, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương',
         MNC: 320.0, MNDBT: 334.0, MNGC: 335.5, crest: 336.5,
         total_volume: 90, dead_volume: 22, flood_volume: 25,
@@ -237,7 +237,7 @@ const LAKE_SPECS = [
     {
         lake_id: 17,
         name: 'Sông Tranh 4',
-        river: 'Sông Tranh (Thu Bồn)', province: 'Quảng Nam', address: 'Hiệp Đức, Quảng Nam',
+        river: 'Sông Tranh (Thu Bồn)', province: 'Đà Nẵng', address: 'Hiệp Đức, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Tranh)',
         MNC: 53.0, MNDBT: 58.0, MNGC: 59.0, crest: 60.0,
         total_volume: 40, dead_volume: 10, flood_volume: 12,
@@ -248,7 +248,7 @@ const LAKE_SPECS = [
     {
         lake_id: 19,
         name: 'Đắk Mi 4C',
-        river: 'Sông Đắk Mi', province: 'Quảng Nam', address: 'Phước Sơn, Quảng Nam',
+        river: 'Sông Đắk Mi', province: 'Đà Nẵng', address: 'Phước Sơn, Đà Nẵng',
         regulation_doc: 'Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Đắk Mi)',
         MNC: 153.0, MNDBT: 162.0, MNGC: 163.0, crest: 164.0,
         total_volume: 45, dead_volume: 12, flood_volume: 15,
