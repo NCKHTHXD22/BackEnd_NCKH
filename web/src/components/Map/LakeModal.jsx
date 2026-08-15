@@ -289,29 +289,31 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white w-full max-w-[95vw] h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-gray-200">
+            <div className="bg-white w-full max-w-[95vw] h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-fade-in">
 
                 {/* Header */}
-                <div className="bg-[#1e3a8a] text-white p-4 flex justify-between items-start">
-                    <div>
+                <div className="relative text-white p-5 flex justify-between items-start overflow-hidden bg-header shrink-0">
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/5" />
+                    <div className="pointer-events-none absolute bottom-0 right-32 h-24 w-24 rounded-full bg-cyan-400/10" />
+                    <div className="relative">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                            <span className="text-sm text-blue-200">{t('lakeModal.reservoirDetails')}</span>
+                            <span className="w-2 h-2 bg-emerald-300 rounded-full ring-4 ring-emerald-300/20 animate-pulse-soft"></span>
+                            <span className="text-sm text-blue-100/80">{t('lakeModal.reservoirDetails')}</span>
                         </div>
-                        <h2 className="text-2xl font-bold tracking-wide uppercase">
+                        <h2 className="text-2xl font-black tracking-wide uppercase">
                             {i18n.language === 'en' ? lakeName : `HỒ ${lakeName}`}
                         </h2>
-                        <p className="text-sm text-blue-200 mt-1">
+                        <p className="text-sm text-blue-100/70 mt-1">
                             {lakeData.address || lakeData.province || ''}
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <div className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 transition-colors">
+                    <div className="relative flex gap-2">
+                        <div className="bg-emerald-500 hover:bg-emerald-400 cursor-pointer text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-md shadow-emerald-900/20">
                             <span className="w-2 h-2 bg-white rounded-full"></span> {t('lakeModal.operating')}
                         </div>
                         <button
                             onClick={onClose}
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold text-sm flex items-center gap-1 transition-colors"
+                            className="bg-white/15 hover:bg-white/25 border border-white/20 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-colors"
                         >
                             <X size={16} /> {t('lakeModal.close')}
                         </button>
@@ -319,7 +321,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="bg-white px-6 py-3 border-b border-gray-100 flex items-center gap-2 overflow-x-auto">
+                <div className="bg-white px-6 py-3 border-b border-slate-100 flex items-center gap-2 overflow-x-auto shrink-0">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -332,64 +334,64 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 </div>
 
                 {/* Tab Content Area */}
-                <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
+                <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
 
                     {/* OVERVIEW TAB */}
                     {activeTab === 'overview' && (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Basic Info */}
-                                <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
                                     <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
                                         <Info size={18} /> {t('lakeModal.overview.basicInfo')}
                                     </h3>
                                     <div className="space-y-3 text-sm">
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">{t('lakeModal.overview.designCapacity')}</span>
+                                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-slate-500">{t('lakeModal.overview.designCapacity')}</span>
                                             <span className="font-semibold text-blue-900">343.55 {t('lakeModal.overview.million_m3')}</span>
                                         </div>
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">{t('lakeModal.overview.normalPool')}</span>
+                                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-slate-500">{t('lakeModal.overview.normalPool')}</span>
                                             <span className="font-semibold text-blue-900">380 m</span>
                                         </div>
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">{t('lakeModal.overview.deadLevel')}</span>
+                                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-slate-500">{t('lakeModal.overview.deadLevel')}</span>
                                             <span className="font-semibold text-blue-900">340 m</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Current Status */}
-                                <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
                                     <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
                                         <Activity size={18} /> {t('lakeModal.overview.currentStatus')}
                                     </h3>
                                     <div className="space-y-3 text-sm">
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">{t('lakeModal.overview.upstreamLevel')}</span>
+                                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-slate-500">{t('lakeModal.overview.upstreamLevel')}</span>
                                             <span className="font-semibold text-blue-900">{currentHtl.toFixed(2)} m</span>
                                         </div>
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">{t('lakeModal.overview.inflow')}</span>
+                                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-slate-500">{t('lakeModal.overview.inflow')}</span>
                                             <span className="font-semibold text-blue-900">{currentQvao.toFixed(2)} m³/s</span>
                                         </div>
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-600">{t('lakeModal.overview.discharge')}</span>
+                                        <div className="flex justify-between border-b border-slate-100 pb-2">
+                                            <span className="text-slate-500">{t('lakeModal.overview.discharge')}</span>
                                             <span className="font-semibold text-red-600">{currentLuuluongxa.toFixed(2)} m³/s</span>
                                         </div>
-                                        <div className="flex justify-between items-center border-b border-gray-100 pb-2 text-xs">
+                                        <div className="flex justify-between items-center border-b border-slate-100 pb-2 text-xs">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-gray-500">{t('lakeModal.overview.updatedAt')}</span>
+                                                <span className="text-slate-400">{t('lakeModal.overview.updatedAt')}</span>
                                                 <button 
                                                     onClick={handleSync}
                                                     disabled={isSyncing}
-                                                    className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${isSyncing ? 'animate-spin' : ''}`}
+                                                    className={`p-1 rounded-full hover:bg-slate-100 transition-colors ${isSyncing ? 'animate-spin' : ''}`}
                                                     title="Đồng bộ dữ liệu mới ngay"
                                                 >
-                                                    <Activity size={12} className={isSyncing ? 'text-blue-600' : 'text-gray-400'} />
+                                                    <Activity size={12} className={isSyncing ? 'text-blue-600' : 'text-slate-400'} />
                                                 </button>
                                             </div>
-                                            <span className="text-gray-500">
+                                            <span className="text-slate-400">
                                                 {currentUpdateTime ? new Date(currentUpdateTime).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : 'N/A'}
                                             </span>
                                         </div>
@@ -398,7 +400,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             </div>
 
                             {/* Chart */}
-                            <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                            <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
                                 <h3 className="text-blue-800 font-bold mb-4 flex items-center gap-2 border-b pb-2">
                                     <Activity size={18} /> {t('lakeModal.overview.waterLevelChart')}
                                 </h3>
@@ -423,8 +425,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             <RechartsTooltip content={({ active, payload, label }) => {
                                                 if (active && payload && payload.length) {
                                                     return (
-                                                        <div className="bg-white p-2 border border-gray-200 shadow-lg rounded-lg text-xs">
-                                                            <p className="font-bold border-b pb-1 mb-1 text-gray-700">{label}</p>
+                                                        <div className="bg-white p-2 border border-slate-100 shadow-lg rounded-lg text-xs">
+                                                            <p className="font-bold border-b pb-1 mb-1 text-slate-600">{label}</p>
                                                             <div className="flex justify-between gap-4">
                                                                 <span className="text-blue-600">MN:</span>
                                                                 <span className="font-bold">{Number(payload[0].value).toFixed(2)} m</span>
@@ -453,12 +455,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     {activeTab === 'forecast' && (
                         <div className="space-y-6">
                             {/* Controls Panel */}
-                            <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 text-sm space-y-4">
+                            <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100 text-sm space-y-4">
                                 {/* Rain Source Selector */}
                                 <div>
                                     <div className="flex items-center gap-2 mb-3">
                                         <CloudRain size={16} className="text-blue-600" />
-                                        <span className="font-bold text-gray-700">{t('lakeModal.forecast.rainSourceLabel')}</span>
+                                        <span className="font-bold text-slate-600">{t('lakeModal.forecast.rainSourceLabel')}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {RAIN_SOURCES.map(src => (
@@ -481,7 +483,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 <div className="border-t pt-4">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Zap size={16} className="text-purple-600" />
-                                        <span className="font-bold text-gray-700">{t('lakeModal.forecast.modelLabel')}</span>
+                                        <span className="font-bold text-slate-600">{t('lakeModal.forecast.modelLabel')}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {MODELS.map(model => (
@@ -501,12 +503,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                                <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
                                     <button
                                         onClick={handleRunModel}
                                         disabled={isRunning}
                                         className={`px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-md transition-all ${isRunning
-                                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                                            ? 'bg-slate-400 text-white cursor-not-allowed'
                                             : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg'
                                             }`}
                                     >
@@ -531,9 +533,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     {/* Status info */}
                                     <div className="flex-1 flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
-                                        <span className="text-xs text-gray-500">
-                                            Mô hình: <strong className="text-gray-700">{MODELS.find(m => m.id === selectedModel)?.label}</strong> | 
-                                            Nguồn: <strong className="text-gray-700">{RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label}</strong>
+                                        <span className="text-xs text-slate-400">
+                                            Mô hình: <strong className="text-slate-600">{MODELS.find(m => m.id === selectedModel)?.label}</strong> | 
+                                            Nguồn: <strong className="text-slate-600">{RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label}</strong>
                                         </span>
                                     </div>
                                 </div>
@@ -542,11 +544,11 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             {/* Unified Forecast Visualization */}
                             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                                 {/* Large Combined Chart */}
-                                <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-slate-100">
                                     <h3 className="text-blue-800 font-bold mb-1 flex items-center gap-2">
                                         <Activity size={20} /> {t('lakeModal.forecast.chartTitle')}
                                     </h3>
-                                    <p className="text-sm text-gray-500 mb-6 italic">
+                                    <p className="text-sm text-slate-400 mb-6 italic">
                                         {t('lakeModal.forecast.chartSubtitle')}
                                     </p>
                                     <div className="h-[450px] w-full">
@@ -588,8 +590,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     if (active && payload && payload.length) {
                                                         const data = payload[0].payload;
                                                         return (
-                                                            <div className="bg-white p-3 border border-gray-200 shadow-xl rounded-lg text-xs min-w-[200px]">
-                                                                <p className="font-bold border-b pb-1 mb-2 text-gray-700">{label} {data.isFuture ? t('lakeModal.forecast.forecastLabel') : t('lakeModal.forecast.actualLabel')}</p>
+                                                            <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-lg text-xs min-w-[200px]">
+                                                                <p className="font-bold border-b pb-1 mb-2 text-slate-600">{label} {data.isFuture ? t('lakeModal.forecast.forecastLabel') : t('lakeModal.forecast.actualLabel')}</p>
                                                                 {payload.map((entry, idx) => {
                                                                     // Skip rendering P10/P90 explicitly to declutter tooltip (Optional, but looks cleaner)
                                                                     if (entry.dataKey === 'p10' || entry.dataKey === 'p90') return null;
@@ -672,14 +674,14 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 </div>
 
                                 {/* Results Table Integration */}
-                                <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col h-full">
-                                    <h3 className="text-gray-800 font-bold mb-1 flex items-center gap-2">
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100 flex flex-col h-full">
+                                    <h3 className="text-slate-700 font-bold mb-1 flex items-center gap-2">
                                         <Clock size={18} /> {t('lakeModal.forecast.tableTitle')}
                                     </h3>
-                                    <p className="text-xs text-gray-500 mb-4 italic">{t('lakeModal.forecast.next12h')}</p>
-                                    <div className="flex-1 overflow-auto border border-gray-100 rounded-lg">
+                                    <p className="text-xs text-slate-400 mb-4 italic">{t('lakeModal.forecast.next12h')}</p>
+                                    <div className="flex-1 overflow-auto border border-slate-100 rounded-lg">
                                         <table className="w-full text-sm text-left">
-                                            <thead className="bg-[#f8fafc] text-gray-600 font-bold border-b text-[10px] uppercase tracking-wider">
+                                            <thead className="bg-[#f8fafc] text-slate-500 font-bold border-b text-[10px] uppercase tracking-wider">
                                                 <tr>
                                                     <th className="px-3 py-3">{t('lakeModal.forecast.hour')}</th>
                                                     <th className="px-2 py-3 text-center text-cyan-600">{t('lakeModal.forecast.rain')}</th>
@@ -690,15 +692,15 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             </thead>
                                             <tbody>
                                                 {unifiedData.filter(d => d.isFuture).slice(0, 12).map((d, i) => (
-                                                    <tr key={i} className={`border-b border-gray-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-gray-50/30' : ''}`}>
-                                                        <td className="px-3 py-3 font-bold text-gray-700">{d.fullTime}</td>
+                                                    <tr key={i} className={`border-b border-slate-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-slate-50/40' : ''}`}>
+                                                        <td className="px-3 py-3 font-bold text-slate-600">{d.fullTime}</td>
                                                         <td className="px-2 py-3 text-center text-cyan-600 font-medium">
                                                             {(d.rain_bestmatch || d.rain || 0) > 0
                                                                 ? `${(d.rain_bestmatch || d.rain || 0).toFixed(1)}`
-                                                                : <span className="text-gray-300">—</span>}
+                                                                : <span className="text-slate-300">—</span>}
                                                         </td>
                                                         <td className="px-2 py-3 text-center text-blue-500 font-medium">{d.p10?.toFixed(1) || '0.0'}</td>
-                                                        <td className="px-2 py-3 text-center font-bold text-gray-800">{d.p50?.toFixed(1) || '0.0'}</td>
+                                                        <td className="px-2 py-3 text-center font-bold text-slate-700">{d.p50?.toFixed(1) || '0.0'}</td>
                                                         <td className="px-2 py-3 text-center text-red-500 font-medium">{d.p90?.toFixed(1) || '0.0'}</td>
                                                     </tr>
                                                 ))}
@@ -707,7 +709,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     </div>
                                     <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
                                         <div className="text-[10px] font-bold text-blue-800 mb-1">{t('lakeModal.forecast.confidenceIndex')}</div>
-                                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                        <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                                             <div className="bg-blue-500 h-full w-[85%]"></div>
                                         </div>
                                         <div className="flex justify-between text-[10px] text-blue-600 mt-1"><span>{t('lakeModal.forecast.modelConfidence')}</span> <span>85%</span></div>
@@ -716,24 +718,24 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             </div>
 
                             {/* Info cards */}
-                            <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-                                <h3 className="text-gray-800 font-bold mb-4 border-b pb-2 text-sm flex items-center gap-2"><BookOpen size={16} /> {t('lakeModal.forecast.guideTitle')}</h3>
+                            <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
+                                <h3 className="text-slate-700 font-bold mb-4 border-b pb-2 text-sm flex items-center gap-2"><BookOpen size={16} /> {t('lakeModal.forecast.guideTitle')}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
                                         <span className="w-8 border-t-2 border-red-500 border-dashed"></span>
-                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.p90Guide')}</span>
+                                        <span className="text-xs font-semibold text-slate-600">{t('lakeModal.forecast.p90Guide')}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
                                         <span className="w-8 border-t-2 border-blue-600 border-dashed"></span>
-                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.p50Guide')}</span>
+                                        <span className="text-xs font-semibold text-slate-600">{t('lakeModal.forecast.p50Guide')}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
                                         <span className="w-8 border-t-2 border-indigo-500 border-dashed"></span>
-                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.p10Guide')}</span>
+                                        <span className="text-xs font-semibold text-slate-600">{t('lakeModal.forecast.p10Guide')}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
                                         <span className="w-8 border-t-3 border-blue-600"></span>
-                                        <span className="text-xs font-semibold text-gray-700">{t('lakeModal.forecast.surveyGuide')}</span>
+                                        <span className="text-xs font-semibold text-slate-600">{t('lakeModal.forecast.surveyGuide')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 bg-cyan-50 p-3 rounded-lg border border-cyan-100">
                                         <span className="w-8 h-3 bg-violet-500 rounded opacity-80 inline-block"></span>

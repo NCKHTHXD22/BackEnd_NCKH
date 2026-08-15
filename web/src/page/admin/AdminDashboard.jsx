@@ -2,14 +2,15 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import adminApi from "../../api/adminApi";
-import "../../styles/AdminDashboard.css";
 import {
   FaUsers,
   FaWater,
   FaCheckCircle,
   FaTimesCircle,
   FaHourglassHalf,
-  FaSync
+  FaSync,
+  FaChartBar,
+  FaNewspaper,
 } from "react-icons/fa";
 import {
   BarChart,
@@ -33,6 +34,35 @@ const sensorIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854866.png",
   iconSize: [30, 30],
 });
+
+/* ── KPI card ────────────────────────────────────────────────────────────── */
+function KpiCard({ label, value, icon: Icon, color, light, actionLabel, onAction }) {
+  return (
+    <div className="card-hover bg-white dark:bg-gray-800 rounded-2xl p-5 border border-slate-100 dark:border-gray-700 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[2.1rem] font-black leading-none" style={{ color }}>{value}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-gray-400 mt-2">{label}</p>
+        </div>
+        <div
+          className="shrink-0 rounded-2xl flex items-center justify-center"
+          style={{ width: 48, height: 48, background: light, boxShadow: `inset 0 0 0 1px ${color}22` }}
+        >
+          <Icon size={20} style={{ color }} />
+        </div>
+      </div>
+      {actionLabel && (
+        <button
+          onClick={onAction}
+          className="mt-3.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-transform active:scale-95"
+          style={{ color, background: light }}
+        >
+          {actionLabel} →
+        </button>
+      )}
+    </div>
+  );
+}
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -127,25 +157,26 @@ function AdminDashboard() {
     { name: t('adminDashboard.rejectedChart'), value: stats.rejected },
   ];
 
-  const COLORS = ["#28a745", "#ffc107", "#dc3545"];
+  const COLORS = ["#16a34a", "#d97706", "#dc2626"];
 
   return (
-    <div className="w-full flex flex-col px-4 pt-20">
-      <div className="flex flex-col items-start mb-4 gap-2"></div>
+    <div className="w-full flex flex-col px-4 pt-6 pb-6 animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="dashboard-title m-0">📊 {t('adminDashboard.title')}</h2>
+        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight flex items-center gap-2.5 m-0">
+          <FaChartBar className="text-blue-600" /> {t('adminDashboard.title')}
+        </h2>
         <div className="flex items-center gap-3">
           <button
             onClick={() => fetchStats()}
             disabled={loading}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-xl font-bold shadow-md shadow-blue-900/20 transition-all active:scale-95 disabled:opacity-50 bg-header"
           >
             <FaSync className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? t('adminDashboard.refreshing') : t('adminDashboard.refresh')}
           </button>
           <button
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="p-3 shadow-md rounded-full border bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            className="p-3 shadow-sm rounded-full border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition"
           >
             {theme === "light" ? "🌙" : "☀️"}
           </button>
@@ -153,113 +184,90 @@ function AdminDashboard() {
       </div>
 
       {loading ? (
-        <p className="text-gray-500">{t('adminDashboard.loading')}</p>
+        <p className="text-slate-400">{t('adminDashboard.loading')}</p>
       ) : (
         <>
-          <div className="dashboard-grid">
-            <div className="dashboard-card bg-blue">
-              <div className="info">
-                <h3>{stats.users}</h3>
-                <p>{t('adminDashboard.users')}</p>
-                <button
-                  onClick={() => navigate("/admin/users")}
-                  className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
+            <KpiCard
+              label={t('adminDashboard.users')} value={stats.users}
+              icon={FaUsers} color="#2563eb" light="linear-gradient(135deg,#dbeafe,#bfdbfe)"
+              actionLabel={t('adminDashboard.manage')} onAction={() => navigate("/admin/users")}
+            />
+            <KpiCard
+              label={t('adminDashboard.sensors')} value={stats.sensors}
+              icon={FaWater} color="#0891b2" light="linear-gradient(135deg,#cffafe,#a5f3fc)"
+            />
+            <KpiCard
+              label={t('adminDashboard.approvedPosts')} value={stats.approved}
+              icon={FaCheckCircle} color="#16a34a" light="linear-gradient(135deg,#dcfce7,#bbf7d0)"
+              actionLabel={t('adminDashboard.manageApproved')} onAction={() => navigate("/admin/approved")}
+            />
+            <KpiCard
+              label={t('adminDashboard.pendingPosts')} value={stats.pending}
+              icon={FaHourglassHalf} color="#d97706" light="linear-gradient(135deg,#fef3c7,#fde68a)"
+              actionLabel={t('adminDashboard.managePending')} onAction={() => navigate("/admin/pending")}
+            />
+            <KpiCard
+              label={t('adminDashboard.rejectedPosts')} value={stats.rejected}
+              icon={FaTimesCircle} color="#dc2626" light="linear-gradient(135deg,#fee2e2,#fecaca)"
+              actionLabel={t('adminDashboard.manageRejected')} onAction={() => navigate("/admin/rejected")}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-slate-100 dark:border-gray-700 shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-slate-800 dark:text-white mb-4">
+                <FaChartBar className="text-blue-500" /> {t('adminDashboard.userStats')}
+              </h3>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={[
+                    { name: t('adminDashboard.week'), value: userStats.week },
+                    { name: t('adminDashboard.month'), value: userStats.month },
+                    { name: t('adminDashboard.year'), value: userStats.year },
+                  ]}
+                  barCategoryGap="32%"
+                  margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
                 >
-                  {t('adminDashboard.manage')}
-                </button>
-              </div>
-              <FaUsers className="icon" />
+                  <defs>
+                    <linearGradient id="userBarGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#60a5fa" />
+                      <stop offset="100%" stopColor="#1d4ed8" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fontWeight: 600, fill: '#475569' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(37, 99, 235,0.06)', radius: 6 }} />
+                  <Bar dataKey="value" fill="url(#userBarGrad)" radius={[8, 8, 0, 0]} maxBarSize={56} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
 
-            <div className="dashboard-card bg-cyan">
-              <div className="info">
-                <h3>{stats.sensors}</h3>
-                <p>{t('adminDashboard.sensors')}</p>
-              </div>
-              <FaWater className="icon" />
-            </div>
-
-            <div className="dashboard-card bg-green">
-              <div className="info">
-                <h3>{stats.approved}</h3>
-                <p>{t('adminDashboard.approvedPosts')}</p>
-                <button
-                  onClick={() => navigate("/admin/approved")}
-                  className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
-                >
-                  {t('adminDashboard.manageApproved')}
-                </button>
-              </div>
-              <FaCheckCircle className="icon" />
-            </div>
-
-            <div className="dashboard-card bg-yellow">
-              <div className="info">
-                <h3>{stats.pending}</h3>
-                <p>{t('adminDashboard.pendingPosts')}</p>
-                <button
-                  onClick={() => navigate("/admin/pending")}
-                  className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
-                >
-                  {t('adminDashboard.managePending')}
-                </button>
-              </div>
-              <FaHourglassHalf className="icon" />
-            </div>
-
-            <div className="dashboard-card bg-red">
-              <div className="info">
-                <h3>{stats.rejected}</h3>
-                <p>{t('adminDashboard.rejectedPosts')}</p>
-                <button
-                  onClick={() => navigate("/admin/rejected")}
-                  className="mt-2 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
-                >
-                  {t('adminDashboard.manageRejected')}
-                </button>
-              </div>
-              <FaTimesCircle className="icon" />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-slate-100 dark:border-gray-700 shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-slate-800 dark:text-white mb-4">
+                <FaNewspaper className="text-blue-500" /> {t('adminDashboard.postStats')}
+              </h3>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={postData} barCategoryGap="32%" margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fontWeight: 600, fill: '#475569' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(37, 99, 235,0.06)', radius: 6 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={56}>
+                    {postData.map((entry, index) => (
+                      <Cell key={index} fill={COLORS[index]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="mt-8">
-            <h3 className="font-semibold mb-4">📈 {t('adminDashboard.userStats')}</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={[
-                  { name: t('adminDashboard.week'), value: userStats.week },
-                  { name: t('adminDashboard.month'), value: userStats.month },
-                  { name: t('adminDashboard.year'), value: userStats.year },
-                ]}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#007bff" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="mt-6">
+            <OperationDashboard />
           </div>
-
-          <div className="mt-8">
-            <h3 className="font-semibold mb-4">📰 {t('adminDashboard.postStats')}</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={postData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#8884d8">
-                  {postData.map((entry, index) => (
-                    <Cell key={index} fill={COLORS[index]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <OperationDashboard />
         </>
       )}
     </div>

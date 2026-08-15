@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { FaHourglassHalf } from "react-icons/fa";
 import adminApi from "../../api/adminApi";
 import DataTable from "../../components/Admin/AdminPage/DataTablePostWait"; // Đổi tên PostCard thành DataTable nếu file là Postcard.jsx
 
@@ -47,11 +48,17 @@ export default function Pending() {
   };
 
   return (
-    <div className="w-full flex flex-col px-4 pt-20">
-      <div className="flex flex-col items-start mb-4 gap-2"></div>
-      <h2 className="text-xl font-semibold mb-4">Bài chờ duyệt</h2>
+    <div className="w-full flex flex-col px-4 pt-6 pb-6 animate-fade-in">
+      <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5 mb-5">
+        <FaHourglassHalf className="text-amber-500" /> Bài chờ duyệt
+        {!loading && (
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
+            {posts.length}
+          </span>
+        )}
+      </h2>
       {loading ? (
-        <div>Đang tải...</div>
+        <div className="flex items-center justify-center py-16 text-slate-400 text-sm font-medium">Đang tải...</div>
       ) : (
         <DataTable data={posts} onApprove={approve} onReject={reject} />
       )}

@@ -370,12 +370,12 @@ export default function HomePage() {
             {/* --- FLOATING UI CONTROLS --- */}
 
             {/* Left Sidebar */}
-            <div className="absolute left-2 top-20 z-[1000] flex flex-col gap-1 bg-[#2A4B7C] bg-opacity-80 rounded-lg text-gray-200 shadow-lg">
-                <button className="hover:bg-gray-700 hover:text-white p-2.5 transition-colors rounded-t-lg" title="Cài đặt"><FaCog /></button>
-                <button className="hover:bg-gray-700 hover:text-white p-2.5 transition-colors" title="Định vị"><FaCrosshairs /></button>
+            <div className="absolute left-2 top-20 z-[1000] flex flex-col gap-1 bg-[#0c1a42]/85 backdrop-blur-sm rounded-xl text-blue-100 shadow-lg border border-white/10">
+                <button className="hover:bg-white/10 hover:text-white p-2.5 transition-colors rounded-t-lg" title="Cài đặt"><FaCog /></button>
+                <button className="hover:bg-white/10 hover:text-white p-2.5 transition-colors" title="Định vị"><FaCrosshairs /></button>
                 <div className="relative group inline-block">
                     <button
-                        className={`p-2.5 transition-colors w-full flex justify-center ${showNewsPanel ? 'bg-red-600 text-white' : 'text-red-400 hover:bg-gray-700'}`}
+                        className={`p-2.5 transition-colors w-full flex justify-center ${showNewsPanel ? 'bg-red-600 text-white' : 'text-red-400 hover:bg-white/10'}`}
                         onClick={() => { setShowNewsPanel(!showNewsPanel); setShowWarningPanel(false); setShowCommunityPanel(false); }}
                     >
                         <FaExclamationTriangle />
@@ -385,14 +385,14 @@ export default function HomePage() {
                     </div>
                 </div>
                 <button
-                    className={`p-2.5 transition-colors ${showWarningPanel ? 'bg-orange-600 text-white' : 'hover:bg-gray-700 hover:text-white text-orange-400'}`}
+                    className={`p-2.5 transition-colors ${showWarningPanel ? 'bg-orange-600 text-white' : 'hover:bg-white/10 hover:text-white text-orange-400'}`}
                     title="Cảnh báo thiên tai"
                     onClick={() => { setShowWarningPanel(!showWarningPanel); setShowNewsPanel(false); setShowCommunityPanel(false); }}
                 >
                     <MdWarning />
                 </button>
                 <button
-                    className={`p-2.5 transition-colors rounded-b-lg ${showBaseMapPanel ? 'bg-white text-blue-700' : 'hover:bg-gray-700 hover:text-white'}`}
+                    className={`p-2.5 transition-colors rounded-b-lg ${showBaseMapPanel ? 'bg-white text-blue-700' : 'hover:bg-white/10 hover:text-white'}`}
                     title="Lớp bản đồ"
                     onClick={() => setShowBaseMapPanel(!showBaseMapPanel)}
                 >
@@ -403,7 +403,7 @@ export default function HomePage() {
             {/* Right Sidebar */}
             <div className="absolute right-2 top-20 z-[1000] flex flex-col gap-1.5">
                 {/* Functional icons group */}
-                <div className="flex flex-col gap-1 bg-[#2A4B7C] bg-opacity-90 rounded-lg p-1.5 shadow-lg">
+                <div className="flex flex-col gap-1 bg-[#0c1a42]/90 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white/10">
                     <SidebarIcon
                         icon={<FaGlobeAsia size={16} />}
                         label="Bản đồ nền"
@@ -423,7 +423,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Zoom controls */}
-                <div className="flex flex-col gap-1 bg-[#2A4B7C] bg-opacity-90 rounded-lg p-1.5 shadow-lg">
+                <div className="flex flex-col gap-1 bg-[#0c1a42]/90 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white/10">
                     <SidebarIcon icon={<FaPlus size={14} />} label="Phóng to" />
                     <SidebarIcon icon={<FaMinus size={14} />} label="Thu nhỏ" />
                     <SidebarIcon icon={<FaExpand size={14} />} label="Toàn màn hình" />
@@ -674,7 +674,7 @@ export default function HomePage() {
                     <button className="bg-white text-red-600 rounded-full w-10 h-10 shadow-md border border-gray-300 hover:bg-gray-100 flex items-center justify-center shrink-0">
                         <FaPlay className="ml-1" />
                     </button>
-                    <div className="flex-1 bg-[#284061] bg-opacity-80 p-2 md:p-3 rounded text-white shadow-md text-xs">
+                    <div className="flex-1 bg-[#0c1a42]/85 backdrop-blur-sm p-2 md:p-3 rounded-xl text-white shadow-md text-xs border border-white/10">
                         <div className="relative pt-6 px-1">
                             <div className="absolute top-0 left-0 bg-[#E09022] text-white px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold whitespace-nowrap">
                                 {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -697,7 +697,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Legend */}
-                <div className="bg-[#2A4B7C] bg-opacity-80 text-white rounded p-2 text-[10px] w-full md:w-80 shadow-md pointer-events-auto mt-2 md:mt-0">
+                <div className="bg-[#0c1a42]/85 backdrop-blur-sm text-white rounded-xl p-2 text-[10px] w-full md:w-80 shadow-md pointer-events-auto mt-2 md:mt-0 border border-white/10">
                     <div className="font-bold mb-1 ml-1 text-xs">TỐC ĐỘ GIÓ</div>
                     <div className="flex justify-between mb-1 text-[9px] px-1">
                         <span className="w-10">Cấp gió</span>

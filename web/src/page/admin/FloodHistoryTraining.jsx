@@ -212,7 +212,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             {payload.map((p, i) => (
                 <div key={i} className="flex justify-between gap-4 py-0.5">
                     <span style={{ color: p.color }} className="font-semibold">{p.name}</span>
-                    <span className="font-black text-gray-700">{typeof p.value === 'number' ? p.value.toFixed(1) : p.value} {p.unit || "m³/s"}</span>
+                    <span className="font-black text-slate-700">{typeof p.value === 'number' ? p.value.toFixed(1) : p.value} {p.unit || "m³/s"}</span>
                 </div>
             ))}
         </div>
@@ -625,7 +625,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                     className="p-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 disabled:opacity-30 transition-colors">
                     <ChevronLeft size={16} />
                 </button>
-                <div className="flex-1 relative h-2 bg-gray-100 rounded-full overflow-hidden cursor-pointer"
+                <div className="flex-1 relative h-2 bg-slate-100 rounded-full overflow-hidden cursor-pointer"
                     onClick={e => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         const ratio = (e.clientX - rect.left) / rect.width;
@@ -638,7 +638,7 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
                     className="p-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 disabled:opacity-30 transition-colors">
                     <ChevronRight size={16} />
                 </button>
-                <span className="text-xs text-gray-400 font-mono w-32 text-right">
+                <span className="text-xs text-slate-400 font-mono w-32 text-right">
                     {label} ({total}h tổng)
                 </span>
             </div>

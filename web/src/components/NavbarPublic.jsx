@@ -47,36 +47,40 @@ export default function NavbarPublic() {
     };
 
     return (
-        <div className="absolute top-0 left-0 w-full z-[1000] bg-[#2A4B7C] bg-opacity-95 text-white shadow-md flex items-center justify-between px-4 py-2">
+        <div className="relative top-0 left-0 w-full z-[1000] text-white shadow-lg flex items-center justify-between px-4 py-2 overflow-hidden bg-header">
+            {/* Decorative blobs */}
+            <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/5" />
+            <div className="pointer-events-none absolute bottom-0 right-24 h-16 w-16 rounded-full bg-cyan-400/10" />
+
             {/* Left: Logo & Title */}
-            <div className="flex items-center gap-3">
+            <div className="relative flex items-center gap-3">
                 <img src={logoImg} alt="DSS Logo" className="w-10 h-10 object-contain" />
                 <div className="hidden md:flex flex-col">
                     <h1 className="text-sm font-bold m-0 leading-tight">{t('navbar.title')}</h1>
-                    <p className="text-xs text-gray-300 m-0">{t('navbar.subtitle')}</p>
+                    <p className="text-xs text-blue-100/70 m-0">{t('navbar.subtitle')}</p>
                 </div>
             </div>
 
             {/* Center: Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="relative hidden md:flex flex-1 max-w-md mx-4">
                 <div className="relative w-full">
                     <input
                         type="text"
                         placeholder={t('navbar.search')}
-                        className="w-full bg-[#1e3a63] text-white border border-gray-500 rounded-full py-1.5 px-4 pl-10 focus:outline-none focus:border-blue-400 text-sm h-8"
+                        className="w-full bg-white/15 text-white border border-white/20 rounded-full py-1.5 px-4 pl-10 placeholder-white/50 focus:outline-none focus:bg-white/22 focus:border-white/40 text-sm h-8 transition-all"
                     />
-                    <FaSearch className="absolute left-3 top-2 text-gray-400 text-sm" />
+                    <FaSearch className="absolute left-3 top-2 text-white/50 text-sm" />
                 </div>
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-3">
+            <div className="relative flex items-center gap-3">
                 {/* Language Toggle */}
                 <LangToggle />
 
                 {/* Mobile Menu Toggle */}
                 <button
-                    className="md:hidden text-gray-300 hover:text-white"
+                    className="md:hidden text-white/80 hover:text-white"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
                     {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -140,7 +144,7 @@ export default function NavbarPublic() {
                 ) : (
                     <button
                         onClick={() => navigate('/admin/login')}
-                        className="hidden md:flex items-center gap-2 bg-[#3A5B8C] hover:bg-[#4A6B9C] border border-gray-400 px-4 py-1.5 rounded-full text-sm transition-colors"
+                        className="hidden md:flex items-center gap-2 bg-white/15 hover:bg-white/22 border border-white/20 hover:border-white/40 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
                     >
                         <FaUserCircle /> {t('navbar.login')}
                     </button>
@@ -149,14 +153,14 @@ export default function NavbarPublic() {
 
             {/* Mobile Menu Dropdown */}
             {isMobileMenuOpen && (
-                <div className="absolute top-full left-0 w-full bg-[#2A4B7C] border-t border-gray-600 md:hidden p-4 flex flex-col gap-4 shadow-xl">
+                <div className="absolute top-full left-0 w-full border-t border-white/15 md:hidden p-4 flex flex-col gap-4 shadow-xl z-[1000] bg-header">
                     <div className="relative w-full">
                         <input
                             type="text"
                             placeholder={t('navbar.search')}
-                            className="w-full bg-[#1e3a63] text-white border border-gray-500 rounded-full py-2 px-4 pl-10 focus:outline-none focus:border-blue-400 text-sm"
+                            className="w-full bg-white/15 text-white border border-white/20 rounded-full py-2 px-4 pl-10 placeholder-white/50 focus:outline-none focus:border-white/40 text-sm"
                         />
-                        <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                        <FaSearch className="absolute left-3 top-3 text-white/50" />
                     </div>
 
                     {/* Mobile Lang Toggle */}
@@ -171,23 +175,23 @@ export default function NavbarPublic() {
 
                     {isLoggedIn ? (
                         <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-3 border-b border-gray-600 pb-3">
+                            <div className="flex items-center gap-3 border-b border-white/15 pb-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow">
                                     A
                                 </div>
                                 <div>
                                     <p className="font-bold">Admin User</p>
-                                    <p className="text-xs text-gray-400">{t('navbar.adminRole')}</p>
+                                    <p className="text-xs text-blue-100/70">{t('navbar.adminRole')}</p>
                                 </div>
                             </div>
-                            <button onClick={() => navigate('/admin/dashboard')} className="py-2 text-left text-blue-300 font-semibold flex items-center gap-2"><FaCog size={13} /> {t('navbar.manageSystem')}</button>
-                            <a href="#" className="py-2 hover:text-blue-300 flex items-center gap-2"><FaUserCircle size={13} /> {t('navbar.profile')}</a>
-                            <button onClick={handleLogout} className="py-2 text-left text-red-400 flex items-center gap-2 font-semibold"><FaSignOutAlt size={13} /> {t('navbar.logout')}</button>
+                            <button onClick={() => navigate('/admin/dashboard')} className="py-2 text-left text-white font-semibold flex items-center gap-2"><FaCog size={13} /> {t('navbar.manageSystem')}</button>
+                            <a href="#" className="py-2 text-white/80 hover:text-white flex items-center gap-2"><FaUserCircle size={13} /> {t('navbar.profile')}</a>
+                            <button onClick={handleLogout} className="py-2 text-left text-red-300 flex items-center gap-2 font-semibold"><FaSignOutAlt size={13} /> {t('navbar.logout')}</button>
                         </div>
                     ) : (
                         <button
                             onClick={() => navigate('/admin/login')}
-                            className="flex items-center justify-center gap-2 bg-[#3A5B8C] py-2 rounded-md font-medium"
+                            className="flex items-center justify-center gap-2 bg-white/15 border border-white/20 py-2 rounded-md font-medium"
                         >
                             <FaUserCircle /> {t('navbar.login')}
                         </button>

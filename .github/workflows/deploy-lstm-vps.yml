@@ -1,0 +1,41 @@
+name: Deploy LSTM service to VPS
+
+# Triggers when trained-model artifacts or the LSTM service code change on main,
+# or can be run manually from the Actions tab.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "LSTM_Py_Backend/lstm_service/**"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.VPS_SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload deploy script
+        env:
+          VPS_HOST: ${{ secrets.VPS_SSH_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          scp -i ~/.ssh/deploy_key .github/scripts/deploy-lstm.sh "$VPS_USER@$VPS_HOST:/tmp/deploy-lstm.sh"
+
+      - name: Run deploy on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_SSH_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "bash /tmp/deploy-lstm.sh && rm -f /tmp/deploy-lstm.sh"
+
+      - name: Clean up key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

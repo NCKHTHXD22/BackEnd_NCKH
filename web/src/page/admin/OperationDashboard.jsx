@@ -772,21 +772,21 @@ export default function OperationDashboard({ lakeId }) {
         : <CheckCircle size={20} className="text-emerald-500" />;
 
     return (
-        <div className="flex flex-col bg-white text-gray-700 font-sans mt-8 rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+        <div className="flex flex-col bg-white text-slate-600 font-sans mt-8 rounded-xl border border-slate-200 shadow-xl overflow-hidden">
 
             {/* ── Header ── */}
-            <div className="flex items-center justify-between p-5 bg-gray-50 border-b border-gray-200">
+            <div className="flex items-center justify-between p-5 bg-slate-50 border-b border-slate-200">
                 <div className="text-xl font-bold flex items-center text-blue-900">
                     <Droplets className="text-blue-600 mr-2" size={24} /> {t('lakeModal.tabs.operation')}
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex flex-col items-end">
-                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{t('operation.viewingReservoir')}</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{t('operation.viewingReservoir')}</span>
                         <div className="flex items-center gap-2">
                             <MapIcon size={16} className="text-blue-500" />
                             {!lakeId ? (
                                 <select
-                                    className="bg-white text-sm font-bold text-gray-800 outline-none border border-gray-300 px-4 py-2 rounded-lg cursor-pointer hover:border-blue-400 transition-colors shadow-sm"
+                                    className="bg-white text-sm font-bold text-slate-700 outline-none border border-slate-300 px-4 py-2 rounded-lg cursor-pointer hover:border-blue-400 transition-colors shadow-sm"
                                     value={selectedReservoir}
                                     onChange={e => setSelectedReservoir(e.target.value)}
                                 >
@@ -1163,7 +1163,7 @@ export default function OperationDashboard({ lakeId }) {
             <div className="px-6 pb-6 flex flex-col gap-4">
 
                 {/* Status Explanation */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden">
                     <button
                         onClick={() => setShowExplain(v => !v)}
                         className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100 hover:from-blue-100 hover:to-cyan-100 transition-colors"
@@ -1181,36 +1181,36 @@ export default function OperationDashboard({ lakeId }) {
                         <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                             {/* Current status */}
                             <div>
-                                <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
                                     <Activity size={16} className="text-blue-600" /> {t('operation.currentStatusTitle')}
                                 </h4>
-                                <p className="text-gray-600 leading-relaxed bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                <p className="text-slate-500 leading-relaxed bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                                     {statusNarrative}
                                 </p>
                                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                                    <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+                                    <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                         <div className="text-blue-700 font-black text-base">{latestHydro.htl.toFixed(2)}<span className="text-xs font-normal"> m</span></div>
-                                        <div className="text-[10px] text-gray-500 mt-0.5">{t('operation.upstreamLevelLabel')}</div>
+                                        <div className="text-[10px] text-slate-400 mt-0.5">{t('operation.upstreamLevelLabel')}</div>
                                     </div>
-                                    <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+                                    <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                         <div className="text-amber-600 font-black text-base">{latestHydro.qvao.toFixed(1)}<span className="text-xs font-normal"> m³/s</span></div>
-                                        <div className="text-[10px] text-gray-500 mt-0.5">{t('operation.qInLabel')}</div>
+                                        <div className="text-[10px] text-slate-400 mt-0.5">{t('operation.qInLabel')}</div>
                                     </div>
-                                    <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+                                    <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                         <div className="text-red-600 font-black text-base">{latestHydro.luuluongxa.toFixed(1)}<span className="text-xs font-normal"> m³/s</span></div>
-                                        <div className="text-[10px] text-gray-500 mt-0.5">{t('operation.qOutLabel')}</div>
+                                        <div className="text-[10px] text-slate-400 mt-0.5">{t('operation.qOutLabel')}</div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Forecast explanation */}
                             <div>
-                                <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
                                     <TrendingUp size={16} className="text-purple-600" /> {t('operation.lstmExplainTitle')}
                                 </h4>
                                 {forecastData.length > 0 ? (
                                     <>
-                                        <p className="text-gray-600 leading-relaxed bg-purple-50/50 p-4 rounded-lg border border-purple-100">
+                                        <p className="text-slate-500 leading-relaxed bg-purple-50/50 p-4 rounded-lg border border-purple-100">
                                             {t('operation.lstmDesc1', { hours: forecastData.length })}&nbsp;
                                             <span className="text-indigo-600 font-bold">{t('operation.p10Short')}</span>,&nbsp;
                                             <span className="text-purple-700 font-bold">{t('operation.p50Short')}</span>,&nbsp;
@@ -1234,7 +1234,7 @@ export default function OperationDashboard({ lakeId }) {
                                         </div>
                                     </>
                                 ) : (
-                                    <p className="text-gray-400 italic bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                    <p className="text-slate-400 italic bg-slate-50 p-4 rounded-lg border border-slate-100">
                                         {t('operation.noLstmData')}
                                     </p>
                                 )}
@@ -1244,13 +1244,13 @@ export default function OperationDashboard({ lakeId }) {
                 </div>
 
                 {/* Discharge Recommendation */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden">
                     <button
                         onClick={() => setShowRec(v => !v)}
-                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                        className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors border-b border-slate-100"
                         style={{ background: `linear-gradient(to right, ${rec.level === 'danger' ? '#fff1f2, #fff1f2' : rec.level === 'warning' ? '#fffbeb, #fef9c3' : '#f0fdf4, #ecfdf5'})` }}
                     >
-                        <div className="flex items-center gap-3 font-bold text-gray-900 text-sm">
+                        <div className="flex items-center gap-3 font-bold text-slate-800 text-sm">
                             <div className={`p-1.5 rounded-lg text-white ${rec.level === 'danger' ? 'bg-red-500' : rec.level === 'warning' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                                 <Shield size={15} />
                             </div>
@@ -1259,7 +1259,7 @@ export default function OperationDashboard({ lakeId }) {
                                 {rec.level === 'danger' ? t('operation.lvlDanger') : rec.level === 'warning' ? t('operation.lvlWarning') : t('operation.lvlNormal')}
                             </span>
                         </div>
-                        {showRec ? <ChevronUp size={18} className="text-gray-600" /> : <ChevronDown size={18} className="text-gray-600" />}
+                        {showRec ? <ChevronUp size={18} className="text-slate-500" /> : <ChevronDown size={18} className="text-slate-500" />}
                     </button>
 
                     {showRec && (
@@ -1268,28 +1268,28 @@ export default function OperationDashboard({ lakeId }) {
                             <div className={`flex items-center gap-4 p-4 rounded-xl border-2 mb-5 ${recBg}`}>
                                 {recIcon}
                                 <div className="flex-1">
-                                    <div className="font-bold text-gray-800 text-sm mb-0.5">{rec.reason}</div>
-                                    <div className="text-xs text-gray-500">{t('operation.recBasis')}</div>
+                                    <div className="font-bold text-slate-700 text-sm mb-0.5">{rec.reason}</div>
+                                    <div className="text-xs text-slate-400">{t('operation.recBasis')}</div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">{t('operation.propDischarge')}</div>
+                                    <div className="text-[10px] text-slate-400 uppercase font-bold mb-1">{t('operation.propDischarge')}</div>
                                     <div className="font-black text-2xl" style={{ color: recColor }}>{rec.qRec.toFixed(0)}</div>
-                                    <div className="text-xs text-gray-500 font-bold">m³/s</div>
+                                    <div className="text-xs text-slate-400 font-bold">m³/s</div>
                                 </div>
                             </div>
 
                             {/* Flow indicator */}
-                            <div className="flex items-center gap-3 mb-5 text-sm font-bold text-gray-600">
+                            <div className="flex items-center gap-3 mb-5 text-sm font-bold text-slate-500">
                                 <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
                                     <div className="text-amber-700 text-xs mb-0.5">{t('operation.qInCurrent')}</div>
                                     <div className="text-amber-800 text-lg font-black">{latestHydro.qvao.toFixed(1)} <span className="text-xs font-normal">m³/s</span></div>
                                 </div>
-                                <ArrowRight size={20} className="text-gray-400 shrink-0" />
+                                <ArrowRight size={20} className="text-slate-400 shrink-0" />
                                 <div className="flex-1 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
                                     <div className="text-red-600 text-xs mb-0.5">{t('operation.qOutCurrent')}</div>
                                     <div className="text-red-700 text-lg font-black">{latestHydro.luuluongxa.toFixed(1)} <span className="text-xs font-normal">m³/s</span></div>
                                 </div>
-                                <ArrowRight size={20} className="text-gray-400 shrink-0" />
+                                <ArrowRight size={20} className="text-slate-400 shrink-0" />
                                 <div className="flex-1 border-2 rounded-lg p-3 text-center" style={{ borderColor: recColor, background: `${recColor}10` }}>
                                     <div className="text-xs mb-0.5 font-bold" style={{ color: recColor }}>{t('operation.suggestDischarge')}</div>
                                     <div className="text-lg font-black" style={{ color: recColor }}>{rec.qRec.toFixed(0)} <span className="text-xs font-normal">m³/s</span></div>
@@ -1297,14 +1297,14 @@ export default function OperationDashboard({ lakeId }) {
                             </div>
 
                             {/* Detailed explanation */}
-                            <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-                                <h5 className="font-bold text-gray-700 text-sm mb-2 flex items-center gap-2">
+                            <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                                <h5 className="font-bold text-slate-600 text-sm mb-2 flex items-center gap-2">
                                     <Info size={14} className="text-blue-600" /> {t('operation.detailExplainTitle')}
                                 </h5>
-                                <p className="text-gray-600 text-sm leading-relaxed">
+                                <p className="text-slate-500 text-sm leading-relaxed">
                                     {rec.detail}
                                 </p>
-                                <div className="mt-3 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center gap-2">
+                                <div className="mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-400 flex items-center gap-2">
                                     <Shield size={12} className="text-blue-500" />
                                     {t('operation.recFooter1')} {lakeSpec?.regulation_doc || 'QĐ 1865/QĐ-TTg'} {t('operation.recFooter2')}
                                 </div>
@@ -1314,10 +1314,13 @@ export default function OperationDashboard({ lakeId }) {
                 </div>
 
                 {/* ── Nhật ký vận hành (Phase 4) ── */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-md overflow-hidden">
-                    <button
+                <div className="bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden">
+                    <div
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setShowOpLog(v => !v)}
-                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100 hover:bg-slate-100 transition-colors"
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowOpLog(v => !v); } }}
+                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
                     >
                         <div className="flex items-center gap-3 font-bold text-slate-800 text-sm">
                             <div className="p-1.5 bg-slate-700 rounded-lg text-white">
@@ -1354,7 +1357,7 @@ export default function OperationDashboard({ lakeId }) {
                             </button>
                             {showOpLog ? <ChevronUp size={18} className="text-slate-500" /> : <ChevronDown size={18} className="text-slate-500" />}
                         </div>
-                    </button>
+                    </div>
 
                     {showOpLog && (
                         <div className="overflow-x-auto">
