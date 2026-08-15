@@ -47,10 +47,12 @@ export default function NavbarPublic() {
     };
 
     return (
-        <div className="relative top-0 left-0 w-full z-[1000] text-white shadow-lg flex items-center justify-between px-4 py-2 overflow-hidden bg-header">
-            {/* Decorative blobs */}
-            <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/5" />
-            <div className="pointer-events-none absolute bottom-0 right-24 h-16 w-16 rounded-full bg-cyan-400/10" />
+        <div className="relative top-0 left-0 w-full z-[1000] text-white shadow-lg flex items-center justify-between px-4 py-2 bg-header">
+            {/* Decorative blobs (clipped to header only, doesn't affect dropdowns below) */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/5" />
+                <div className="absolute bottom-0 right-24 h-16 w-16 rounded-full bg-cyan-400/10" />
+            </div>
 
             {/* Left: Logo & Title */}
             <div className="relative flex items-center gap-3">
