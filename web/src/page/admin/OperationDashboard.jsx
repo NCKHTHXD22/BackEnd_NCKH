@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { formatLakeName } from "../../utils/lakeName";
 import mapApi from "../../api/mapApi";
 import { fetchRainForecast, buildRainLabelMap, RAIN_SOURCES } from "../../api/openMeteoApi";
+import FullscreenChartWrapper from "../../components/Admin/AdminPage/FullscreenChartWrapper";
 import {
     ComposedChart,
     Line,
@@ -775,18 +776,18 @@ export default function OperationDashboard({ lakeId }) {
         <div className="flex flex-col bg-white text-slate-600 font-sans mt-8 rounded-xl border border-slate-200 shadow-xl overflow-hidden">
 
             {/* ── Header ── */}
-            <div className="flex items-center justify-between p-5 bg-slate-50 border-b border-slate-200">
-                <div className="text-xl font-bold flex items-center text-blue-900">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-5 bg-slate-50 border-b border-slate-200">
+                <div className="text-lg sm:text-xl font-bold flex items-center text-blue-900">
                     <Droplets className="text-blue-600 mr-2" size={24} /> {t('lakeModal.tabs.operation')}
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
                         <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{t('operation.viewingReservoir')}</span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                             <MapIcon size={16} className="text-blue-500" />
                             {!lakeId ? (
                                 <select
-                                    className="bg-white text-sm font-bold text-slate-700 outline-none border border-slate-300 px-4 py-2 rounded-lg cursor-pointer hover:border-blue-400 transition-colors shadow-sm"
+                                    className="w-full sm:w-auto min-w-0 bg-white text-sm font-bold text-slate-700 outline-none border border-slate-300 px-4 py-2 rounded-lg cursor-pointer hover:border-blue-400 transition-colors shadow-sm"
                                     value={selectedReservoir}
                                     onChange={e => setSelectedReservoir(e.target.value)}
                                 >
@@ -1010,12 +1011,12 @@ export default function OperationDashboard({ lakeId }) {
 
                 {/* ── Row 2: Full Width Chart ── */}
                 <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-                    <div className="flex justify-between items-center p-4 bg-slate-50 border-b border-slate-100">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-4 bg-slate-50 border-b border-slate-100">
                         <div className="flex items-center gap-3 text-[10px] text-slate-500 font-black uppercase tracking-widest">
-                            <Activity size={14} className="text-blue-500" />
+                            <Activity size={14} className="text-blue-500 shrink-0" />
                             <span>{t('operation.chartHeader')}</span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                                 <Clock size={14} className="text-slate-400" />
                                 <span>{t('operation.updatedAt')} <LiveClock /></span>
@@ -1026,7 +1027,7 @@ export default function OperationDashboard({ lakeId }) {
                         </div>
                     </div>
                     
-                    <div className="w-full p-4 h-[520px]">
+                    <FullscreenChartWrapper className="w-full p-4 h-[520px]" label="Toàn màn hình biểu đồ">
                         {unifiedData.length === 0 ? (
                             <div className="flex items-center justify-center h-full text-slate-400 text-xs italic">
                                 {t('operation.processingChart')}
@@ -1113,9 +1114,10 @@ export default function OperationDashboard({ lakeId }) {
                                     />
                                     <Legend
                                         verticalAlign="top"
-                                        align="right"
+                                        align="center"
                                         iconType="plainline"
-                                        wrapperStyle={{ fontSize: '9px', fontWeight: '800', paddingBottom: '10px' }}
+                                        iconSize={10}
+                                        wrapperStyle={{ fontSize: '8px', fontWeight: '800', paddingBottom: '8px', lineHeight: '1.6' }}
                                     />
                                     <Bar
                                         yAxisId="rain"
@@ -1155,7 +1157,7 @@ export default function OperationDashboard({ lakeId }) {
                                 </ComposedChart>
                             </ResponsiveContainer>
                         )}
-                    </div>
+                    </FullscreenChartWrapper>
                 </div>
             </div>
 
@@ -1279,17 +1281,17 @@ export default function OperationDashboard({ lakeId }) {
                             </div>
 
                             {/* Flow indicator */}
-                            <div className="flex items-center gap-3 mb-5 text-sm font-bold text-slate-500">
+                            <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 sm:gap-3 mb-5 text-sm font-bold text-slate-500">
                                 <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
                                     <div className="text-amber-700 text-xs mb-0.5">{t('operation.qInCurrent')}</div>
                                     <div className="text-amber-800 text-lg font-black">{latestHydro.qvao.toFixed(1)} <span className="text-xs font-normal">m³/s</span></div>
                                 </div>
-                                <ArrowRight size={20} className="text-slate-400 shrink-0" />
+                                <ArrowRight size={20} className="hidden sm:block text-slate-400 shrink-0" />
                                 <div className="flex-1 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
                                     <div className="text-red-600 text-xs mb-0.5">{t('operation.qOutCurrent')}</div>
                                     <div className="text-red-700 text-lg font-black">{latestHydro.luuluongxa.toFixed(1)} <span className="text-xs font-normal">m³/s</span></div>
                                 </div>
-                                <ArrowRight size={20} className="text-slate-400 shrink-0" />
+                                <ArrowRight size={20} className="hidden sm:block text-slate-400 shrink-0" />
                                 <div className="flex-1 border-2 rounded-lg p-3 text-center" style={{ borderColor: recColor, background: `${recColor}10` }}>
                                     <div className="text-xs mb-0.5 font-bold" style={{ color: recColor }}>{t('operation.suggestDischarge')}</div>
                                     <div className="text-lg font-black" style={{ color: recColor }}>{rec.qRec.toFixed(0)} <span className="text-xs font-normal">m³/s</span></div>

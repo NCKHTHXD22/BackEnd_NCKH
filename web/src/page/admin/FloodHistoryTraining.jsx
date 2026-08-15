@@ -667,10 +667,10 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
     return (
         <div className="flex flex-col h-full bg-slate-50">
             {/* Sub-tab bar */}
-            <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-slate-100">
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-white border-b border-slate-100 overflow-x-auto">
                 {subTabs.map(t => (
                     <button key={t.id} onClick={() => setSubTab(t.id)}
-                        className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all ${subTab === t.id ? t.active : t.inactive}`}>
+                        className={`shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap ${subTab === t.id ? t.active : t.inactive}`}>
                         <span>{t.icon}</span>
                         <span>{t.label}</span>
                     </button>

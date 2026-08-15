@@ -4,6 +4,7 @@ import { formatLakeName } from '../../utils/lakeName';
 import OperationDashboard from '../../page/admin/OperationDashboard';
 import { getAdminToken } from '../../services/auth';
 import FloodHistoryTraining from '../../page/admin/FloodHistoryTraining';
+import FullscreenChartWrapper from '../Admin/AdminPage/FullscreenChartWrapper';
 import {
     X,
     Droplet,
@@ -321,12 +322,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="bg-white px-6 py-3 border-b border-slate-100 flex items-center gap-2 overflow-x-auto shrink-0">
+                <div className="bg-white px-3 sm:px-6 py-2 sm:py-3 border-b border-slate-100 flex items-center gap-1.5 sm:gap-2 overflow-x-auto shrink-0">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? tab.active : tab.inactive}`}
+                            className={`shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? tab.active : tab.inactive}`}
                         >
                             {tab.icon} {tab.label}
                         </button>
@@ -551,7 +552,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <p className="text-sm text-slate-400 mb-6 italic">
                                         {t('lakeModal.forecast.chartSubtitle')}
                                     </p>
-                                    <div className="h-[450px] w-full">
+                                    <FullscreenChartWrapper className="h-[450px] w-full" label="Toàn màn hình biểu đồ">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <ComposedChart data={unifiedData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
                                                 <defs>
@@ -612,7 +613,13 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     }
                                                     return null;
                                                 }} />
-                                                <Legend verticalAlign="top" height={40} align="right" iconType="circle" />
+                                                <Legend
+                                                    verticalAlign="top"
+                                                    align="center"
+                                                    iconType="circle"
+                                                    iconSize={8}
+                                                    wrapperStyle={{ fontSize: '9px', fontWeight: 600, lineHeight: '1.6', paddingBottom: 6 }}
+                                                />
                                                 <ReferenceLine 
                                                     x={unifiedData.find((d, i) => i > 0 && d.isFuture && !unifiedData[i-1].isFuture)?.time || unifiedData[36]?.time} 
                                                     stroke="#ef4444" 
@@ -670,7 +677,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
                                             </ComposedChart>
                                         </ResponsiveContainer>
-                                    </div>
+                                    </FullscreenChartWrapper>
                                 </div>
 
                                 {/* Results Table Integration */}
