@@ -3,8 +3,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SOURCE_URI = "mongodb+srv://vonguyenan1304:NCKH2026@cluster0.kjwdaqy.mongodb.net/fw_db?retryWrites=true&w=majority&appName=Cluster0";
-const TARGET_URI = "mongodb+srv://annguyen14032004_db_user:rf3IE3SUW0iw27tW@cluster0.ugvzdvo.mongodb.net/NCKH?appName=Cluster0";
+const SOURCE_URI = process.env.MIGRATE_SOURCE_URI;
+const TARGET_URI = process.env.MIGRATE_TARGET_URI;
+
+if (!SOURCE_URI || !TARGET_URI) {
+    console.error("Missing MIGRATE_SOURCE_URI or MIGRATE_TARGET_URI in environment (.env). Aborting.");
+    process.exit(1);
+}
 
 const collectionsToMigrate = ['users', 'posts', 'alerts', 'notifications', 'helps', 'admins'];
 
