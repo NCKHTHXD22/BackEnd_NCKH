@@ -87,6 +87,31 @@ export const rejectPost = async (req, res) => {
     }
 };
 
+export const updatePostAdmin = async (req, res) => {
+    try {
+        const allowed = ["description", "floodLevel", "areaType", "floodTime", "location"];
+        const updateData = {};
+        for (const key of allowed) {
+            if (req.body[key] !== undefined) updateData[key] = req.body[key];
+        }
+        const post = await postRepo.update(req.params.id, updateData);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+        res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const deletePostAdmin = async (req, res) => {
+    try {
+        const post = await postRepo.delete(req.params.id);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+        res.json({ message: "Post deleted" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 /* USERS */
 export const getAllUsersAdmin = async (req, res) => {
     try {
@@ -124,6 +149,31 @@ export const unbanUser = async (req, res) => {
         const user = await userRepo.update(req.params.id, { status: "active" });
         if (!user) return res.status(404).json({ error: "User not found" });
         res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const updateUserAdmin = async (req, res) => {
+    try {
+        const allowed = ["name", "email", "phone"];
+        const updateData = {};
+        for (const key of allowed) {
+            if (req.body[key] !== undefined) updateData[key] = req.body[key];
+        }
+        const user = await userRepo.update(req.params.id, updateData);
+        if (!user) return res.status(404).json({ error: "User not found" });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const deleteUserAdmin = async (req, res) => {
+    try {
+        const user = await userRepo.delete(req.params.id);
+        if (!user) return res.status(404).json({ error: "User not found" });
+        res.json({ message: "User deleted" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

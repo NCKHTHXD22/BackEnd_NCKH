@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Search, Users } from "lucide-react";
+import { Search, Users, Pencil, Trash2 } from "lucide-react";
 
-export default function DataTableUser({ data = [], onToggleRole, onToggleBan }) {
+export default function DataTableUser({ data = [], onToggleRole, onToggleBan, onEdit, onDelete }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10; // số user mỗi trang
@@ -76,23 +76,43 @@ export default function DataTableUser({ data = [], onToggleRole, onToggleBan }) 
                     </span>
                   </td>
                   <td className="px-3 py-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition-colors text-xs font-bold"
-                        onClick={() => onToggleRole && onToggleRole(u._id, u.role)}
-                      >
-                        {u.role === "admin" ? "Giảm quyền" : "Nâng quyền"}
-                      </button>
-                      <button
-                        className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-bold ${
-                          u.status === "active"
-                            ? "bg-red-50 hover:bg-red-100 text-red-600"
-                            : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
-                        }`}
-                        onClick={() => onToggleBan && onToggleBan(u._id, u.status)}
-                      >
-                        {u.status === "active" ? "Khóa" : "Mở"}
-                      </button>
+                    <div className="flex flex-col items-stretch gap-1.5 min-w-[190px]">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          className="flex-1 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition-colors text-xs font-bold"
+                          onClick={() => onToggleRole && onToggleRole(u._id, u.role)}
+                        >
+                          {u.role === "admin" ? "Giảm quyền" : "Nâng quyền"}
+                        </button>
+                        <button
+                          className={`flex-1 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold ${
+                            u.status === "active"
+                              ? "bg-red-50 hover:bg-red-100 text-red-600"
+                              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
+                          }`}
+                          onClick={() => onToggleBan && onToggleBan(u._id, u.status)}
+                        >
+                          {u.status === "active" ? "Khóa" : "Mở"}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-center gap-1.5">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(u)}
+                            className="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 px-2 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                          >
+                            <Pencil size={12} /> Sửa
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(u)}
+                            className="flex-1 flex items-center justify-center gap-1 bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 px-2 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                          >
+                            <Trash2 size={12} /> Xóa
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>

@@ -3,12 +3,15 @@ import { Search } from "lucide-react";
 import { FaCheckCircle } from "react-icons/fa";
 import adminApi from "../../api/adminApi";
 import DataTable from "../../components/Admin/AdminPage/DataTableApproved";
+import PostDetailModal from "../../components/Admin/AdminPage/PostDetailModal";
 
 export default function Approved() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filteredPosts, setFilteredPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [startEditing, setStartEditing] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -53,6 +56,28 @@ export default function Approved() {
     );
   };
 
+  const handleSave = async (id, body) => {
+    try {
+      const updated = await adminApi.updatePost(id, body);
+      const merge = (p) => (p._id === id ? { ...p, ...updated } : p);
+      setPosts((prev) => prev.map(merge));
+      setFilteredPosts((prev) => prev.map(merge));
+      setSelectedPost((prev) => (prev && prev._id === id ? { ...prev, ...updated } : prev));
+    } catch (err) {
+      alert("Cập nhật thất bại");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await adminApi.deletePost(id);
+      setPosts((prev) => prev.filter((p) => p._id !== id));
+      setFilteredPosts((prev) => prev.filter((p) => p._id !== id));
+    } catch (err) {
+      alert("Xóa thất bại");
+    }
+  };
+
   return (
     <div className="w-full flex flex-col px-4 pt-6 pb-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -88,8 +113,23 @@ export default function Approved() {
       {loading ? (
         <div className="flex items-center justify-center py-16 text-slate-400 text-sm font-medium">Đang tải...</div>
       ) : (
-        <DataTable data={filteredPosts} />
+        <DataTable
+          data={filteredPosts}
+          onRowClick={(p) => { setSelectedPost(p); setStartEditing(false); }}
+          onEdit={(p) => { setSelectedPost(p); setStartEditing(true); }}
+          onDelete={(p) => {
+            if (window.confirm("Xóa bài viết này? Hành động không thể hoàn tác.")) handleDelete(p._id);
+          }}
+        />
       )}
+
+      <PostDetailModal
+        post={selectedPost}
+        startEditing={startEditing}
+        onClose={() => setSelectedPost(null)}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

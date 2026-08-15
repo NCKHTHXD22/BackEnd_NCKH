@@ -12,8 +12,8 @@ import {
   FaChevronRight,
   FaClipboardList,
   FaUsersCog,
-  FaWater,
 } from "react-icons/fa";
+import logoImg from "../../../assets/images/Logo_V1_transparent.png";
 
 const link = (isActive) =>
   `flex items-center gap-3 rounded-xl p-3 pl-8 text-sm font-medium transition-all duration-200 ${
@@ -44,8 +44,8 @@ export default function Sidebar() {
 
       {/* Brand */}
       <div className="relative flex items-center gap-3 px-5 py-5 border-b border-white/8">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 shadow-lg shadow-blue-900/40 ring-2 ring-white/15">
-          <FaWater className="text-white text-lg" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full overflow-hidden bg-white shadow-lg shadow-blue-900/40 ring-2 ring-white/15">
+          <img src={logoImg} alt="Logo" className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0">
           <h3 className="text-white text-sm font-bold leading-tight uppercase tracking-wider truncate">

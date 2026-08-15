@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Search, Inbox, Check, X } from "lucide-react";
+import { Search, Inbox, Check, X, Pencil, Trash2 } from "lucide-react";
 
-export default function DataTable({ data, onApprove, onReject }) {
+export default function DataTable({ data, onApprove, onReject, onRowClick, onEdit, onDelete }) {
   const [searchLocation, setSearchLocation] = useState("");
   const [searchAreaType, setSearchAreaType] = useState("");
   const [searchTime, setSearchTime] = useState("");
@@ -65,7 +65,11 @@ export default function DataTable({ data, onApprove, onReject }) {
           <tbody className="divide-y divide-slate-50">
             {filteredData.length > 0 ? (
               filteredData.map((p) => (
-                <tr key={p._id} className="hover:bg-slate-50/70 transition-colors">
+                <tr
+                  key={p._id}
+                  onClick={() => onRowClick && onRowClick(p)}
+                  className={`hover:bg-slate-50/70 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
+                >
                   <td className="px-3 py-3">
                     {p.imageUrls?.[0] ? (
                       <img
@@ -103,7 +107,7 @@ export default function DataTable({ data, onApprove, onReject }) {
                     <div className="flex flex-col items-stretch gap-1.5 min-w-[92px]">
                       {onApprove && (
                         <button
-                          onClick={() => onApprove(p._id)}
+                          onClick={(e) => { e.stopPropagation(); onApprove(p._id); }}
                           className="flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                         >
                           <Check size={13} /> Duyệt
@@ -111,12 +115,30 @@ export default function DataTable({ data, onApprove, onReject }) {
                       )}
                       {onReject && (
                         <button
-                          onClick={() => onReject(p._id)}
+                          onClick={(e) => { e.stopPropagation(); onReject(p._id); }}
                           className="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                         >
                           <X size={13} /> Từ chối
                         </button>
                       )}
+                      <div className="flex gap-1.5">
+                        {onEdit && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onEdit(p); }}
+                            className="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 px-2 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                          >
+                            <Pencil size={12} /> Sửa
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(p); }}
+                            className="flex-1 flex items-center justify-center gap-1 bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 px-2 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                          >
+                            <Trash2 size={12} /> Xóa
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>

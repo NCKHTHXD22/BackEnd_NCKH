@@ -21,6 +21,11 @@ const adminApi = {
   getRejectedPosts: () =>
     axiosClient.get("/admin/posts/rejected").then((res) => res.data),  // ✅ sửa lại
 
+  updatePost: (id, body) =>
+    axiosClient.put(`/admin/posts/${id}`, body).then((res) => res.data),
+  deletePost: (id) =>
+    axiosClient.delete(`/admin/posts/${id}`).then((res) => res.data),
+
   // Users
   getUsers: () => axiosClient.get("/admin/users").then(res => res.data),
   getUserStats: () => axiosClient.get("/admin/users/stats").then(res => res.data),
@@ -28,6 +33,10 @@ const adminApi = {
     axiosClient.patch(`/admin/users/${id}/role`, body).then(res => res.data),
   banUser: (id) => axiosClient.patch(`/admin/users/${id}/ban`).then(res => res.data),
   unbanUser: (id) => axiosClient.patch(`/admin/users/${id}/unban`).then(res => res.data),
+  updateUser: (id, body) =>
+    axiosClient.put(`/admin/users/${id}`, body).then((res) => res.data),
+  deleteUser: (id) =>
+    axiosClient.delete(`/admin/users/${id}`).then((res) => res.data),
 
   // Admin management
   listAdmins: () => axiosClient.get("/admin/admins").then(res => res.data),
