@@ -1,4 +1,4 @@
-import { FaBell, FaSignOutAlt, FaSearch } from "react-icons/fa";
+import { FaBell, FaSignOutAlt, FaSearch, FaBars } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 function LangToggle() {
@@ -22,7 +22,7 @@ function LangToggle() {
     );
 }
 
-export default function Navbar({ title, onLogout }) {
+export default function Navbar({ title, onLogout, onMenuClick }) {
     const { t } = useTranslation();
 
     return (
@@ -31,14 +31,21 @@ export default function Navbar({ title, onLogout }) {
             <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/5" />
             <div className="pointer-events-none absolute bottom-0 right-32 h-20 w-20 rounded-full bg-cyan-400/10" />
 
-            <div className="relative p-3 flex justify-between items-center">
-                {/* Logo / Title */}
-                <div className="flex items-center gap-2 px-4">
-                    <span className="text-base font-semibold text-white">{title || t('adminNavbar.title')}</span>
+            <div className="relative p-3 flex justify-between items-center gap-2">
+                {/* Menu toggle (mobile) + Title */}
+                <div className="flex items-center gap-2 px-1 sm:px-4 min-w-0">
+                    <button
+                        onClick={onMenuClick}
+                        className="lg:hidden shrink-0 text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                        title="Menu"
+                    >
+                        <FaBars size={18} />
+                    </button>
+                    <span className="text-sm sm:text-base font-semibold text-white truncate">{title || t('adminNavbar.title')}</span>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-4 px-4">
+                <div className="flex items-center gap-2 sm:gap-4 px-1 sm:px-4 shrink-0">
                     {/* Search bar */}
                     <div className="relative hidden sm:block">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-sm" />
@@ -60,7 +67,7 @@ export default function Navbar({ title, onLogout }) {
                     {/* Logout */}
                     <button
                         onClick={onLogout}
-                        className="flex items-center gap-2 bg-white/15 hover:bg-white/22 border border-white/20 px-3 py-1.5 rounded-full text-white text-sm font-semibold transition-all"
+                        className="flex items-center gap-2 bg-white/15 hover:bg-white/22 border border-white/20 px-2.5 sm:px-3 py-1.5 rounded-full text-white text-sm font-semibold transition-all"
                         title={t('adminNavbar.logout')}
                     >
                         <FaSignOutAlt />

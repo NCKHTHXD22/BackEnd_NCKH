@@ -47,7 +47,7 @@ export default function NavbarPublic() {
     };
 
     return (
-        <div className="relative top-0 left-0 w-full z-[1000] text-white shadow-lg flex items-center justify-between px-4 py-2 bg-header">
+        <div className="relative top-0 left-0 w-full z-[1600] text-white shadow-lg flex items-center justify-between px-4 py-2 bg-header">
             {/* Decorative blobs (clipped to header only, doesn't affect dropdowns below) */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/5" />
@@ -155,7 +155,7 @@ export default function NavbarPublic() {
 
             {/* Mobile Menu Dropdown */}
             {isMobileMenuOpen && (
-                <div className="absolute top-full left-0 w-full border-t border-white/15 md:hidden p-4 flex flex-col gap-4 shadow-xl z-[1000] bg-header">
+                <div className="absolute top-full left-0 w-full border-t border-white/15 md:hidden p-4 flex flex-col gap-4 shadow-xl z-[1500] bg-header max-h-[calc(100vh-56px)] overflow-y-auto">
                     <div className="relative w-full">
                         <input
                             type="text"
