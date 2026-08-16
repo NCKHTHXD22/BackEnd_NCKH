@@ -20,7 +20,8 @@ import {
     Play,
     Zap,
     Database,
-    TrendingUp
+    TrendingUp,
+    Trees
 } from 'lucide-react';
 import {
     LineChart,
@@ -54,6 +55,7 @@ const RAIN_SOURCES = [
 const MODELS = [
     { id: 'arimax', label: 'ARIMAX', color: '#7c3aed', icon: <TrendingUp size={14} /> },
     { id: 'lstm', label: 'LSTM', color: '#2563eb', icon: <Zap size={14} /> },
+    { id: 'rf', label: 'Random Forest', color: '#ea580c', icon: <Trees size={14} /> },
     { id: 'hec', label: 'HEC-HMS', color: '#059669', icon: <BarChart3 size={14} /> },
 ];
 
@@ -102,6 +104,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             const lstm = await mapApi.getForecastLstm(lakeId).catch(() => null);
             if (!lstm) return [];
             return Array.isArray(lstm) ? lstm : (lstm.predictions || []);
+        }
+        if (model === 'rf') {
+            // Cung shape voi LSTM (forecastTime/qvao_forecast/p10/p90), repo da loc san
+            // tu 1h truoc tro di nen dung thang.
+            const rf = await mapApi.getForecastRf(lakeId).catch(() => null);
+            return Array.isArray(rf) ? rf : [];
         }
         if (model === 'arimax') {
             const docs = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);
