@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { formatLakeName } from "../../utils/lakeName";
+import useIsMobile from "../../hooks/useIsMobile";
 import mapApi from "../../api/mapApi";
 import { fetchRainForecast, buildRainLabelMap, RAIN_SOURCES } from "../../api/openMeteoApi";
 import FullscreenChartWrapper from "../../components/Admin/AdminPage/FullscreenChartWrapper";
@@ -12,7 +13,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
     ReferenceLine,
     Area,
@@ -408,6 +408,7 @@ function LiveClock() {
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function OperationDashboard({ lakeId }) {
     const { t, i18n } = useTranslation();
+    const isMobile = useIsMobile();
     const [reservoirs, setReservoirs] = useState([]);
     const [selectedReservoir, setSelectedReservoir] = useState(lakeId || "");
     const [chartData, setChartData] = useState([]);
@@ -763,6 +764,18 @@ export default function OperationDashboard({ lakeId }) {
         return last?.fullLabel;
     }, [chartData]);
 
+    // ─── Chart legend (rendered outside the SVG so it never overlaps the plot) ──
+    const chartLegend = useMemo(() => ([
+        { key: 'rainBest', name: t('operation.legend_rain'), color: '#0ea5e9', swatch: 'bar' },
+        { key: 'band', name: t('operation.legend_band'), color: '#8b5cf6', swatch: 'area' },
+        { key: 'waterLevel', name: t('operation.legend_wl'), color: '#3b82f6', swatch: 'line' },
+        { key: 'qIn', name: t('operation.legend_qin'), color: '#f59e0b', swatch: 'dot' },
+        { key: 'qOut', name: t('operation.legend_qout'), color: '#ef4444', swatch: 'dash' },
+        { key: 'p50', name: t('operation.legend_p50'), color: '#8b5cf6', swatch: 'dash' },
+        { key: 'p90', name: t('operation.legend_p90'), color: '#dc2626', swatch: 'dashThin' },
+        { key: 'p10', name: t('operation.legend_p10'), color: '#6366f1', swatch: 'dashThin' },
+    ]), [i18n.language]);
+
     // ─── Colour helpers ────────────────────────────────────────────────────────
     const recColor = rec.level === "danger" ? "#ef4444" : rec.level === "warning" ? "#f59e0b" : "#10b981";
     const recBg    = rec.level === "danger" ? "bg-red-50 border-red-200" : rec.level === "warning" ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200";
@@ -1027,14 +1040,31 @@ export default function OperationDashboard({ lakeId }) {
                         </div>
                     </div>
                     
-                    <FullscreenChartWrapper className="w-full p-4 h-[520px]" label="Toàn màn hình biểu đồ">
+                    {/* Custom legend — rendered as normal DOM so it wraps cleanly and never overlaps the plot/reference-line label */}
+                    {unifiedData.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 px-4 pt-3 pb-1 border-b border-slate-50">
+                            {chartLegend.map(item => (
+                                <div key={item.key} className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-600">
+                                    {item.swatch === 'bar' && <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color, opacity: 0.7 }} />}
+                                    {item.swatch === 'area' && <span className="w-3 h-2 rounded-sm shrink-0" style={{ backgroundColor: item.color, opacity: 0.25, border: `1px solid ${item.color}` }} />}
+                                    {item.swatch === 'line' && <span className="w-3.5 h-0 border-t-[3px] rounded-full shrink-0" style={{ borderColor: item.color }} />}
+                                    {item.swatch === 'dot' && <span className="w-3.5 h-0 border-t-2 rounded-full shrink-0" style={{ borderColor: item.color }} />}
+                                    {item.swatch === 'dash' && <span className="w-3.5 h-0 border-t-2 border-dashed shrink-0" style={{ borderColor: item.color }} />}
+                                    {item.swatch === 'dashThin' && <span className="w-3.5 h-0 border-t border-dashed shrink-0" style={{ borderColor: item.color }} />}
+                                    <span>{item.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <FullscreenChartWrapper className="w-full p-4 h-[480px]" label="Toàn màn hình biểu đồ">
                         {unifiedData.length === 0 ? (
                             <div className="flex items-center justify-center h-full text-slate-400 text-xs italic">
                                 {t('operation.processingChart')}
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={unifiedData} margin={{ top: 10, right: 40, left: 10, bottom: 50 }} barCategoryGap="10%">
+                                <ComposedChart data={unifiedData} margin={{ top: 16, right: 40, left: 10, bottom: isMobile ? 60 : 50 }} barCategoryGap="10%">
                                     <defs>
                                         <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.3} />
@@ -1049,18 +1079,18 @@ export default function OperationDashboard({ lakeId }) {
                                     <XAxis
                                         dataKey="fullLabel"
                                         stroke="#94a3b8"
-                                        fontSize={9}
+                                        fontSize={isMobile ? 8 : 9}
                                         fontWeight="700"
                                         axisLine={false}
                                         tickLine={false}
-                                        interval={Math.max(1, Math.floor(unifiedData.length / 10))}
-                                        height={55}
-                                        angle={-35}
+                                        interval={isMobile ? Math.max(2, Math.ceil(unifiedData.length / 5)) : Math.max(1, Math.floor(unifiedData.length / 10))}
+                                        height={isMobile ? 62 : 55}
+                                        angle={-45}
                                         textAnchor="end"
                                         tickFormatter={val => {
                                             if (!val || typeof val !== 'string') return val;
-                                            const [d, t] = val.split(' ');
-                                            return `${t} ${d.substring(0, 5)}`;
+                                            const [d, time] = val.split(' ');
+                                            return isMobile ? time : `${time} ${d.substring(0, 5)}`;
                                         }}
                                     />
                                     <YAxis
@@ -1111,13 +1141,6 @@ export default function OperationDashboard({ lakeId }) {
                                                 </div>
                                             );
                                         }}
-                                    />
-                                    <Legend
-                                        verticalAlign="top"
-                                        align="center"
-                                        iconType="plainline"
-                                        iconSize={10}
-                                        wrapperStyle={{ fontSize: '8px', fontWeight: '800', paddingBottom: '8px', lineHeight: '1.6' }}
                                     />
                                     <Bar
                                         yAxisId="rain"

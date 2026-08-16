@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatLakeName } from '../../utils/lakeName';
+import useIsMobile from '../../hooks/useIsMobile';
 import OperationDashboard from '../../page/admin/OperationDashboard';
 import { getAdminToken } from '../../services/auth';
 import FloodHistoryTraining from '../../page/admin/FloodHistoryTraining';
@@ -30,7 +31,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip as RechartsTooltip,
-    Legend,
     ResponsiveContainer,
     Area,
     AreaChart,
@@ -59,8 +59,25 @@ const MODELS = [
     { id: 'hec', label: 'HEC-HMS', color: '#059669', icon: <BarChart3 size={14} /> },
 ];
 
+// Legend chip — plain DOM so it wraps to multiple lines cleanly instead of
+// overlapping the chart (recharts' built-in <Legend> clips/overlaps when it
+// has to wrap many items in a narrow, mobile-width chart).
+function LegendChip({ color, label, swatch = 'line' }) {
+    return (
+        <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-600">
+            {swatch === 'bar' && <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color, opacity: 0.7 }} />}
+            {swatch === 'barFaint' && <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color, opacity: 0.4 }} />}
+            {swatch === 'line' && <span className="w-3.5 h-0 border-t-[3px] rounded-full shrink-0" style={{ borderColor: color }} />}
+            {swatch === 'dash' && <span className="w-3.5 h-0 border-t-2 border-dashed shrink-0" style={{ borderColor: color }} />}
+            {swatch === 'dashThin' && <span className="w-3.5 h-0 border-t border-dashed shrink-0" style={{ borderColor: color }} />}
+            <span>{label}</span>
+        </div>
+    );
+}
+
 export default function LakeModal({ lakeId, lakeData, onClose }) {
     const { t, i18n } = useTranslation();
+    const isMobile = useIsMobile();
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedRainSource, setSelectedRainSource] = useState('station');
     const [selectedModel, setSelectedModel] = useState('lstm');
@@ -420,14 +437,17 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 </h3>
                                 <div className="h-64 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={realLevelData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                        <LineChart data={realLevelData} margin={{ top: 20, right: 30, left: 20, bottom: isMobile ? 40 : 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                            <XAxis 
-                                                dataKey="time" 
-                                                axisLine={false} 
-                                                tickLine={false} 
-                                                tick={{ fontSize: 10, fill: '#6B7280' }} 
-                                                interval={3}
+                                            <XAxis
+                                                dataKey="time"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fontSize: isMobile ? 8 : 10, fill: '#6B7280' }}
+                                                interval={isMobile ? Math.max(5, Math.ceil(realLevelData.length / 4)) : 3}
+                                                angle={isMobile ? -40 : 0}
+                                                textAnchor={isMobile ? 'end' : 'middle'}
+                                                height={isMobile ? 40 : 25}
                                             />
                                             <YAxis 
                                                 domain={['auto', 'auto']} 
@@ -562,12 +582,43 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <h3 className="text-blue-800 font-bold mb-1 flex items-center gap-2">
                                         <Activity size={20} /> {t('lakeModal.forecast.chartTitle')}
                                     </h3>
-                                    <p className="text-sm text-slate-400 mb-6 italic">
+                                    <p className="text-sm text-slate-400 mb-4 italic">
                                         {t('lakeModal.forecast.chartSubtitle')}
                                     </p>
-                                    <FullscreenChartWrapper className="h-[450px] w-full" label="Toàn màn hình biểu đồ">
+
+                                    {/* Custom legend — rendered as normal DOM so it wraps cleanly and never overlaps the plot */}
+                                    <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mb-3 px-1">
+                                        {selectedRainSource === 'bestmatch' ? (
+                                            <>
+                                                {RAIN_SOURCES.filter(s => s.id !== 'bestmatch' && s.id !== 'station').map(src => (
+                                                    <LegendChip key={`legend_rain_${src.id}`} color={src.color} swatch="barFaint" label={`${t('lakeModal.forecast.rainPrefix')} ${src.label}`} />
+                                                ))}
+                                                <LegendChip color="#2563eb" swatch="bar" label={t('lakeModal.forecast.stationRain')} />
+                                                <LegendChip color="#7c3aed" swatch="bar" label={t('lakeModal.forecast.bestMatchRain')} />
+                                            </>
+                                        ) : (
+                                            <LegendChip
+                                                color={RAIN_SOURCES.find(s => s.id === selectedRainSource)?.color || '#2563eb'}
+                                                swatch="bar"
+                                                label={`${t('lakeModal.forecast.rainPrefix')} (${RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label || selectedRainSource})`}
+                                            />
+                                        )}
+                                        <LegendChip color="#3b82f6" swatch="line" label={t('lakeModal.forecast.surveyActual')} />
+                                        <LegendChip color="#ef4444" swatch="dashThin" label={t('lakeModal.forecast.p90Label')} />
+                                        <LegendChip color="#6366f1" swatch="dashThin" label={t('lakeModal.forecast.p10Label')} />
+                                        {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map(src => (
+                                            <LegendChip key={`legend_p50_${src.id}`} color={src.color} swatch="dashThin" label={`${t('lakeModal.forecast.forecastSource')} ${src.label}`} />
+                                        ))}
+                                        <LegendChip
+                                            color={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'}
+                                            swatch="dash"
+                                            label={selectedRainSource === 'bestmatch' ? t('lakeModal.forecast.bestMatchAvg') : t('lakeModal.forecast.forecastExpected', { model: MODELS.find(m => m.id === selectedModel)?.label })}
+                                        />
+                                    </div>
+
+                                    <FullscreenChartWrapper className="h-[420px] w-full" label="Toàn màn hình biểu đồ">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <ComposedChart data={unifiedData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+                                            <ComposedChart data={unifiedData} margin={{ top: 16, right: 30, left: 20, bottom: isMobile ? 45 : 5 }}>
                                                 <defs>
                                                     <linearGradient id="colorBand" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor={MODELS.find(m => m.id === selectedModel)?.color || '#3b82f6'} stopOpacity={0.2} />
@@ -575,12 +626,15 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     </linearGradient>
                                                 </defs>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                                <XAxis 
-                                                    dataKey="time" 
-                                                    axisLine={false} 
-                                                    tickLine={false} 
-                                                    tick={{ fontSize: 10, fill: '#6B7280' }} 
-                                                    interval={6} 
+                                                <XAxis
+                                                    dataKey="time"
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fontSize: isMobile ? 8 : 10, fill: '#6B7280' }}
+                                                    interval={isMobile ? Math.max(4, Math.ceil(unifiedData.length / 5)) : 6}
+                                                    angle={isMobile ? -40 : 0}
+                                                    textAnchor={isMobile ? 'end' : 'middle'}
+                                                    height={isMobile ? 45 : 30}
                                                 />
                                                 <YAxis 
                                                     yAxisId="flow"
@@ -626,14 +680,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     }
                                                     return null;
                                                 }} />
-                                                <Legend
-                                                    verticalAlign="top"
-                                                    align="center"
-                                                    iconType="circle"
-                                                    iconSize={8}
-                                                    wrapperStyle={{ fontSize: '9px', fontWeight: 600, lineHeight: '1.6', paddingBottom: 6 }}
-                                                />
-                                                <ReferenceLine 
+                                                <ReferenceLine
                                                     x={unifiedData.find((d, i) => i > 0 && d.isFuture && !unifiedData[i-1].isFuture)?.time || unifiedData[36]?.time} 
                                                     stroke="#ef4444" 
                                                     strokeDasharray="5 5" 
