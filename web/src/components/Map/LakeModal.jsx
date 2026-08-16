@@ -65,8 +65,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const [isRunning, setIsRunning] = useState(false);
     const [forecastResults, setForecastResults] = useState(null);
     const [rainData, setRainData] = useState([]);
-    const [forecastHistory, setForecastHistory] = useState([]);
-    const [realLstmData, setRealLstmData] = useState([]);
+    const [realForecastData, setRealForecastData] = useState([]);
     const [realHistoryData, setRealHistoryData] = useState([]);
     const [rainLakeHistory, setRainLakeHistory] = useState([]);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -91,6 +90,26 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         }
     };
 
+    // ARIMAX lưu mỗi giờ một lượt dự báo 24h — chỉ giữ lượt createdAt mới nhất
+    const latestArimaxBatch = (docs) => {
+        if (!Array.isArray(docs) || docs.length === 0) return [];
+        const newest = docs.reduce((max, d) => (d.createdAt > max ? d.createdAt : max), docs[0].createdAt);
+        return docs.filter(d => d.createdAt === newest);
+    };
+
+    const fetchForecastFor = async (model) => {
+        if (model === 'lstm') {
+            const lstm = await mapApi.getForecastLstm(lakeId).catch(() => null);
+            if (!lstm) return [];
+            return Array.isArray(lstm) ? lstm : (lstm.predictions || []);
+        }
+        if (model === 'arimax') {
+            const docs = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);
+            return latestArimaxBatch(docs);
+        }
+        return [];
+    };
+
     // Fetch real data on load and when switching to forecast
     useEffect(() => {
         const fetchData = async () => {
@@ -103,21 +122,15 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 setRealHistoryData(history);
                 setRainLakeHistory(Array.isArray(rainHistory) ? rainHistory : []);
 
-                if (activeTab === 'forecast' && selectedModel === 'lstm') {
-                    const lstm = await mapApi.getForecastLstm(lakeId).catch(() => null);
-                    if (lstm) {
-                        const predictions = Array.isArray(lstm) ? lstm : (lstm.predictions || []);
-                        setRealLstmData(predictions);
-                    } else {
-                        setRealLstmData([]);
-                    }
+                if (activeTab === 'forecast') {
+                    setRealForecastData(await fetchForecastFor(selectedModel));
                 }
             } catch (err) {
                 console.error("❌ Error fetching real data:", err);
             }
         };
         fetchData();
-    }, [lakeId, activeTab, selectedModel]);
+    }, [lakeId, activeTab, selectedModel, selectedRainSource]);
 
     if (!lakeId || !lakeData) return null;
 
@@ -185,9 +198,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             // 1. Historical data — match by hour key
             const realPoint = realHistoryData.find(d => hourKey(new Date(d.timestamp)) === targetKey);
 
-            // 2. LSTM forecast — match by hour key
-            const realPred = Array.isArray(realLstmData)
-                ? realLstmData.find(d => {
+            // 2. Model forecast (LSTM / ARIMAX) — match by hour key
+            const realPred = Array.isArray(realForecastData)
+                ? realForecastData.find(d => {
                     const dTime = d.targetTime || d.forecastTime || d.time;
                     return dTime && hourKey(new Date(dTime)) === targetKey;
                 })
@@ -212,16 +225,17 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 isFuture,
                 // Extend actual line through hours where gov data hasn't arrived yet
                 qActual: !isFuture ? (actualQvao ?? lastKnownActual) : null,
-                // Bridge LSTM forecast to last known actual at "now"
+                // Bridge model forecast to last known actual at "now"
+                // ARIMAX trả điểm đơn ở field `value` (không có p10/p90)
                 p50: isNow
                     ? bridgeVal
-                    : (realPred ? (realPred.p50 || realPred.qvao_forecast) : null),
+                    : (realPred ? (realPred.p50 ?? realPred.qvao_forecast ?? realPred.value ?? null) : null),
                 p10: isNow
                     ? bridgeVal
-                    : (realPred ? realPred.p10 : null),
+                    : (realPred ? (realPred.p10 ?? null) : null),
                 p90: isNow
                     ? bridgeVal
-                    : (realPred ? realPred.p90 : null),
+                    : (realPred ? (realPred.p90 ?? null) : null),
                 rain: rainVal,
                 rain_station: stationRain,
                 rain_bestmatch: rainVal,
@@ -244,18 +258,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         setIsRunning(true);
         try {
             // Try to fetch real forecast data
-            if (mapApi.getForecastLstm && selectedModel === 'lstm') {
-                const result = await mapApi.getForecastLstm(lakeId).catch(() => null);
-                if (result) {
-                    const predictions = Array.isArray(result) ? result : (result.predictions || []);
-                    setRealLstmData(predictions); // Update the state used by unifiedData
-                    setForecastResults(result);
-                }
-            }
-            if (mapApi.getForecastHistory) {
-                const history = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);
-                if (history) setForecastHistory(Array.isArray(history) ? history : []);
-            }
+            const predictions = await fetchForecastFor(selectedModel);
+            setRealForecastData(predictions); // Update the state used by unifiedData
+            setForecastResults(predictions.length > 0 ? predictions : null);
         } catch (err) {
             console.error("Error running model:", err);
         }
