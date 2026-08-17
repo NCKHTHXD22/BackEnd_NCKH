@@ -253,9 +253,13 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             // Bridge value: actual Q if available, else last known (for gap hours)
             const bridgeVal = actualQvao ?? lastKnownActual;
 
-            // Ensemble: mỗi mô hình một chuỗi p50 riêng trên cùng lưới giờ
+            // Ensemble: mỗi mô hình một chuỗi p50 riêng trên cùng lưới giờ.
+            // Chỉ dựng cho phần tương lai (và điểm "bây giờ" để nối liền): endpoint
+            // /forecast-lstm còn giữ cả dự báo cũ của những giờ đã qua, vẽ lên thì dải
+            // P10–P90 phủ kín vùng quan trắc và đường trung bình bị kéo theo thành
+            // "trung bình" của mỗi mình LSTM.
             const ensembleSeries = {};
-            for (const m of MODELS) {
+            for (const m of (isFuture || isNow ? MODELS : [])) {
                 const arr = ensembleData[m.id];
                 if (!Array.isArray(arr) || arr.length === 0) continue;
                 const hit = arr.find(d => {
@@ -266,9 +270,24 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 ensembleSeries[`p50_${m.id}`] = isNow
                     ? bridgeVal
                     : (hit ? (hit.p50 ?? hit.qvao_forecast ?? hit.value ?? null) : null);
-                ensembleSeries[`p10_${m.id}`] = hit ? (hit.p10 ?? null) : null;
-                ensembleSeries[`p90_${m.id}`] = hit ? (hit.p90 ?? null) : null;
+                const lo = hit ? (hit.p10 ?? null) : null;
+                const hi = hit ? (hit.p90 ?? null) : null;
+                ensembleSeries[`p10_${m.id}`] = lo;
+                ensembleSeries[`p90_${m.id}`] = hi;
+                // Recharts ve dai bang mot Area co gia tri dang [thap, cao].
+                // Dung cach nay thay vi thu thuat to trang de nhieu dai chong nhau
+                // van nhin xuyen qua duoc.
+                ensembleSeries[`band_${m.id}`] = (lo !== null && hi !== null) ? [lo, hi] : null;
             }
+
+            // Duong dong thuan giua cac mo hinh co so tai gio do
+            const ensVals = Object.keys(ensembleSeries)
+                .filter(k => k.startsWith('p50_'))
+                .map(k => ensembleSeries[k])
+                .filter(v => v !== null && v !== undefined && !Number.isNaN(v));
+            ensembleSeries.p50_mean = isNow
+                ? bridgeVal
+                : (ensVals.length ? ensVals.reduce((a, b) => a + b, 0) / ensVals.length : null);
 
             const dataPoint = {
                 time: label,
@@ -306,6 +325,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const unifiedData = generateUnifiedData();
     // Chỉ vẽ/liệt kê mô hình thực sự trả về dữ liệu — HEC-HMS chưa nối nên tự vắng mặt
     const availableModels = MODELS.filter(m => (ensembleData[m.id] || []).length > 0);
+    // Mo hinh co phan vi moi ve duoc dai P10-P90 (ARIMAX la du bao diem nen khong co)
+    const quantileModels = availableModels.filter(m =>
+        (ensembleData[m.id] || []).some(d => d.p10 !== null && d.p10 !== undefined && d.p90 !== null && d.p90 !== undefined));
     const ensembleRows = unifiedData.filter(d => d.isFuture).slice(0, 12);
 
     // Run model simulation
@@ -658,6 +680,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                         {forecastView === 'ensemble' && availableModels.map(m => (
                                             <LegendChip key={`legend_ens_${m.id}`} color={m.color} swatch="dash" label={m.label} />
                                         ))}
+                                        {forecastView === 'ensemble' && quantileModels.map(m => (
+                                            <LegendChip key={`legend_band_${m.id}`} color={m.color} swatch="bar" label={`${m.label} ${t('lakeModal.forecast.bandLabel')}`} />
+                                        ))}
+                                        {forecastView === 'ensemble' && availableModels.length > 1 && (
+                                            <LegendChip color="#0f172a" swatch="line" label={t('lakeModal.forecast.meanLine')} />
+                                        )}
                                         {forecastView === 'single' && <LegendChip color="#ef4444" swatch="dashThin" label={t('lakeModal.forecast.p90Label')} />}
                                         {forecastView === 'single' && <LegendChip color="#6366f1" swatch="dashThin" label={t('lakeModal.forecast.p10Label')} />}
                                         {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map(src => (
@@ -771,13 +799,29 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
                                                 
                                                 {forecastView === 'ensemble' ? (
-                                                    /* Tong hop: moi mo hinh mot duong, bo dai phan vi cho khoi roi */
-                                                    availableModels.map(m => (
-                                                        <Line key={`ens_${m.id}`} yAxisId="flow" type="monotone"
-                                                            dataKey={`p50_${m.id}`} stroke={m.color}
-                                                            strokeWidth={2.5} strokeDasharray="8 5" dot={{ r: 2.5 }}
-                                                            name={m.label} connectNulls={true} />
-                                                    ))
+                                                    <>
+                                                        {/* Dai P10-P90: ve truoc de nam duoi cac duong */}
+                                                        {quantileModels.map(m => (
+                                                            <Area key={`band_${m.id}`} yAxisId="flow" type="monotone"
+                                                                dataKey={`band_${m.id}`} stroke="none"
+                                                                fill={m.color} fillOpacity={0.13}
+                                                                name={`${m.label} ${t('lakeModal.forecast.bandLabel')}`}
+                                                                activeDot={false} connectNulls={true} />
+                                                        ))}
+                                                        {/* Duong ky vong tung mo hinh */}
+                                                        {availableModels.map(m => (
+                                                            <Line key={`ens_${m.id}`} yAxisId="flow" type="monotone"
+                                                                dataKey={`p50_${m.id}`} stroke={m.color}
+                                                                strokeWidth={2.5} strokeDasharray="8 5" dot={{ r: 2.5 }}
+                                                                name={m.label} connectNulls={true} />
+                                                        ))}
+                                                        {/* Duong dong thuan: dam va lien net de noi bat */}
+                                                        {availableModels.length > 1 && (
+                                                            <Line yAxisId="flow" type="monotone" dataKey="p50_mean"
+                                                                stroke="#0f172a" strokeWidth={3} dot={{ r: 3 }}
+                                                                name={t('lakeModal.forecast.meanLine')} connectNulls={true} />
+                                                        )}
+                                                    </>
                                                 ) : (
                                                     <>
                                                         {/* P90 — upper bound line + fill band from top */}
