@@ -110,7 +110,17 @@
       "bestMatchAvg": "Dự báo Best Match (Trung bình)",
       "forecastExpected": "Dự báo {{model}} (Kỳ vọng)",
       "rainPrefix": "Mưa",
-      "forecastSource": "Dự báo nguồn"
+      "forecastSource": "Dự báo nguồn",
+      "viewSingle": "Từng mô hình",
+      "viewEnsemble": "Tổng hợp mô hình",
+      "ensembleTitle": "SO SÁNH DỰ BÁO GIỮA CÁC MÔ HÌNH",
+      "ensembleSubtitle": "Chồng đường dự báo của tất cả mô hình có dữ liệu lên cùng một trục thời gian",
+      "ensembleTableTitle": "BẢNG DỰ BÁO CHI TIẾT — TẤT CẢ MÔ HÌNH",
+      "ensembleTableHint": "Giá trị kỳ vọng (P50); dòng nhỏ bên dưới là khoảng P10–P90 nếu mô hình có phân vị",
+      "mean": "Trung bình",
+      "spread": "Độ phân tán",
+      "noModelData": "Chưa có mô hình nào trả về dữ liệu cho hồ này",
+      "modelsAvailable": "Mô hình có dữ liệu"
     }
   },
   "operation": {

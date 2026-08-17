@@ -85,6 +85,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const [forecastResults, setForecastResults] = useState(null);
     const [rainData, setRainData] = useState([]);
     const [realForecastData, setRealForecastData] = useState([]);
+    // 'single' = xem từng mô hình một; 'ensemble' = chồng tất cả mô hình lên cùng biểu đồ
+    const [forecastView, setForecastView] = useState('single');
+    const [ensembleData, setEnsembleData] = useState({});
     const [realHistoryData, setRealHistoryData] = useState([]);
     const [rainLakeHistory, setRainLakeHistory] = useState([]);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -148,14 +151,20 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 setRainLakeHistory(Array.isArray(rainHistory) ? rainHistory : []);
 
                 if (activeTab === 'forecast') {
-                    setRealForecastData(await fetchForecastFor(selectedModel));
+                    if (forecastView === 'ensemble') {
+                        // Nạp song song mọi mô hình để so sánh trên cùng trục thời gian
+                        const results = await Promise.all(MODELS.map(m => fetchForecastFor(m.id)));
+                        setEnsembleData(Object.fromEntries(MODELS.map((m, i) => [m.id, results[i]])));
+                    } else {
+                        setRealForecastData(await fetchForecastFor(selectedModel));
+                    }
                 }
             } catch (err) {
                 console.error("❌ Error fetching real data:", err);
             }
         };
         fetchData();
-    }, [lakeId, activeTab, selectedModel, selectedRainSource]);
+    }, [lakeId, activeTab, selectedModel, selectedRainSource, forecastView]);
 
     if (!lakeId || !lakeData) return null;
 
@@ -244,6 +253,23 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             // Bridge value: actual Q if available, else last known (for gap hours)
             const bridgeVal = actualQvao ?? lastKnownActual;
 
+            // Ensemble: mỗi mô hình một chuỗi p50 riêng trên cùng lưới giờ
+            const ensembleSeries = {};
+            for (const m of MODELS) {
+                const arr = ensembleData[m.id];
+                if (!Array.isArray(arr) || arr.length === 0) continue;
+                const hit = arr.find(d => {
+                    const dt = d.targetTime || d.forecastTime || d.time;
+                    return dt && hourKey(new Date(dt)) === targetKey;
+                });
+                // Nối vào đường thực đo tại "bây giờ" để không hở giữa quan trắc và dự báo
+                ensembleSeries[`p50_${m.id}`] = isNow
+                    ? bridgeVal
+                    : (hit ? (hit.p50 ?? hit.qvao_forecast ?? hit.value ?? null) : null);
+                ensembleSeries[`p10_${m.id}`] = hit ? (hit.p10 ?? null) : null;
+                ensembleSeries[`p90_${m.id}`] = hit ? (hit.p90 ?? null) : null;
+            }
+
             const dataPoint = {
                 time: label,
                 fullTime: targetTime.getHours().toString().padStart(2, '0') + ':00',
@@ -268,6 +294,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 rain_gfs: null,
                 rain_jma: null,
                 rain_icon: null,
+                ...ensembleSeries,
             };
 
             result.push(dataPoint);
@@ -277,6 +304,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     };
 
     const unifiedData = generateUnifiedData();
+    // Chỉ vẽ/liệt kê mô hình thực sự trả về dữ liệu — HEC-HMS chưa nối nên tự vắng mặt
+    const availableModels = MODELS.filter(m => (ensembleData[m.id] || []).length > 0);
+    const ensembleRows = unifiedData.filter(d => d.isFuture).slice(0, 12);
 
     // Run model simulation
     const handleRunModel = async () => {
@@ -488,6 +518,25 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     {/* MERGED FORECAST TAB (Dự báo = old forecast + research) */}
                     {activeTab === 'forecast' && (
                         <div className="space-y-6">
+                            {/* Sub-tab: từng mô hình  ↔  tổng hợp mọi mô hình */}
+                            <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+                                {[
+                                    { id: 'single', label: t('lakeModal.forecast.viewSingle'), icon: <Activity size={14} /> },
+                                    { id: 'ensemble', label: t('lakeModal.forecast.viewEnsemble'), icon: <BarChart3 size={14} /> },
+                                ].map(v => (
+                                    <button
+                                        key={v.id}
+                                        onClick={() => setForecastView(v.id)}
+                                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${forecastView === v.id
+                                            ? 'bg-white text-blue-700 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700'
+                                            }`}
+                                    >
+                                        {v.icon} {v.label}
+                                    </button>
+                                ))}
+                            </div>
+
                             {/* Controls Panel */}
                             <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100 text-sm space-y-4">
                                 {/* Rain Source Selector */}
@@ -513,8 +562,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     </div>
                                 </div>
 
-                                {/* Model Selector */}
-                                <div className="border-t pt-4">
+                                {/* Model Selector — chỉ có nghĩa khi xem từng mô hình */}
+                                <div className={`border-t pt-4 ${forecastView === 'ensemble' ? 'hidden' : ''}`}>
                                     <div className="flex items-center gap-2 mb-3">
                                         <Zap size={16} className="text-purple-600" />
                                         <span className="font-bold text-slate-600">{t('lakeModal.forecast.modelLabel')}</span>
@@ -568,7 +617,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <div className="flex-1 flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                                         <span className="text-xs text-slate-400">
-                                            Mô hình: <strong className="text-slate-600">{MODELS.find(m => m.id === selectedModel)?.label}</strong> | 
+                                            {forecastView === 'ensemble'
+                                                ? <>{t('lakeModal.forecast.modelsAvailable')}: <strong className="text-slate-600">{availableModels.map(m => m.label).join(', ') || '—'}</strong></>
+                                                : <>Mô hình: <strong className="text-slate-600">{MODELS.find(m => m.id === selectedModel)?.label}</strong></>} | 
                                             Nguồn: <strong className="text-slate-600">{RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label}</strong>
                                         </span>
                                     </div>
@@ -578,12 +629,12 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                             {/* Unified Forecast Visualization */}
                             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                                 {/* Large Combined Chart */}
-                                <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                                <div className={`${forecastView === 'ensemble' ? 'lg:col-span-4' : 'lg:col-span-3'} bg-white p-6 rounded-lg shadow-sm border border-slate-100`}>
                                     <h3 className="text-blue-800 font-bold mb-1 flex items-center gap-2">
-                                        <Activity size={20} /> {t('lakeModal.forecast.chartTitle')}
+                                        <Activity size={20} /> {forecastView === 'ensemble' ? t('lakeModal.forecast.ensembleTitle') : t('lakeModal.forecast.chartTitle')}
                                     </h3>
                                     <p className="text-sm text-slate-400 mb-4 italic">
-                                        {t('lakeModal.forecast.chartSubtitle')}
+                                        {forecastView === 'ensemble' ? t('lakeModal.forecast.ensembleSubtitle') : t('lakeModal.forecast.chartSubtitle')}
                                     </p>
 
                                     {/* Custom legend — rendered as normal DOM so it wraps cleanly and never overlaps the plot */}
@@ -604,16 +655,21 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             />
                                         )}
                                         <LegendChip color="#3b82f6" swatch="line" label={t('lakeModal.forecast.surveyActual')} />
-                                        <LegendChip color="#ef4444" swatch="dashThin" label={t('lakeModal.forecast.p90Label')} />
-                                        <LegendChip color="#6366f1" swatch="dashThin" label={t('lakeModal.forecast.p10Label')} />
+                                        {forecastView === 'ensemble' && availableModels.map(m => (
+                                            <LegendChip key={`legend_ens_${m.id}`} color={m.color} swatch="dash" label={m.label} />
+                                        ))}
+                                        {forecastView === 'single' && <LegendChip color="#ef4444" swatch="dashThin" label={t('lakeModal.forecast.p90Label')} />}
+                                        {forecastView === 'single' && <LegendChip color="#6366f1" swatch="dashThin" label={t('lakeModal.forecast.p10Label')} />}
                                         {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map(src => (
                                             <LegendChip key={`legend_p50_${src.id}`} color={src.color} swatch="dashThin" label={`${t('lakeModal.forecast.forecastSource')} ${src.label}`} />
                                         ))}
-                                        <LegendChip
-                                            color={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'}
-                                            swatch="dash"
-                                            label={selectedRainSource === 'bestmatch' ? t('lakeModal.forecast.bestMatchAvg') : t('lakeModal.forecast.forecastExpected', { model: MODELS.find(m => m.id === selectedModel)?.label })}
-                                        />
+                                        {forecastView === 'single' && (
+                                            <LegendChip
+                                                color={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'}
+                                                swatch="dash"
+                                                label={selectedRainSource === 'bestmatch' ? t('lakeModal.forecast.bestMatchAvg') : t('lakeModal.forecast.forecastExpected', { model: MODELS.find(m => m.id === selectedModel)?.label })}
+                                            />
+                                        )}
                                     </div>
 
                                     <FullscreenChartWrapper className="h-[420px] w-full" label="Toàn màn hình biểu đồ">
@@ -714,34 +770,46 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 {/* Actual Flow */}
                                                 <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
                                                 
-                                                {/* P90 — upper bound line + fill band from top */}
-                                                <Area yAxisId="flow" type="monotone" dataKey="p90"
-                                                    stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3"
-                                                    fill="url(#colorBand)" fillOpacity={1}
-                                                    name={t('lakeModal.forecast.p90Label')}
-                                                    dot={false} connectNulls={true} />
-                                                {/* P10 — lower bound line + white fill to erase below */}
-                                                <Area yAxisId="flow" type="monotone" dataKey="p10"
-                                                    stroke="#6366f1" strokeWidth={1.5} strokeDasharray="6 3"
-                                                    fill="#fff" fillOpacity={1}
-                                                    name={t('lakeModal.forecast.p10Label')}
-                                                    dot={false} connectNulls={true} />
+                                                {forecastView === 'ensemble' ? (
+                                                    /* Tong hop: moi mo hinh mot duong, bo dai phan vi cho khoi roi */
+                                                    availableModels.map(m => (
+                                                        <Line key={`ens_${m.id}`} yAxisId="flow" type="monotone"
+                                                            dataKey={`p50_${m.id}`} stroke={m.color}
+                                                            strokeWidth={2.5} strokeDasharray="8 5" dot={{ r: 2.5 }}
+                                                            name={m.label} connectNulls={true} />
+                                                    ))
+                                                ) : (
+                                                    <>
+                                                        {/* P90 — upper bound line + fill band from top */}
+                                                        <Area yAxisId="flow" type="monotone" dataKey="p90"
+                                                            stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3"
+                                                            fill="url(#colorBand)" fillOpacity={1}
+                                                            name={t('lakeModal.forecast.p90Label')}
+                                                            dot={false} connectNulls={true} />
+                                                        {/* P10 — lower bound line + white fill to erase below */}
+                                                        <Area yAxisId="flow" type="monotone" dataKey="p10"
+                                                            stroke="#6366f1" strokeWidth={1.5} strokeDasharray="6 3"
+                                                            fill="#fff" fillOpacity={1}
+                                                            name={t('lakeModal.forecast.p10Label')}
+                                                            dot={false} connectNulls={true} />
 
-                                                {/* Specific Sources Lines (Only in Best Match) */}
-                                                {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
-                                                    <Line key={`p50_${src.id}`} yAxisId="flow" type="monotone" dataKey={`p50_${src.id}`} stroke={src.color} strokeWidth={1} strokeDasharray="4 4" dot={false} name={`${t('lakeModal.forecast.forecastSource')} ${src.label}`} opacity={0.8} />
-                                                ))}
+                                                        {/* Specific Sources Lines (Only in Best Match) */}
+                                                        {selectedRainSource === 'bestmatch' && RAIN_SOURCES.filter(s => s.id !== 'bestmatch').map((src) => (
+                                                            <Line key={`p50_${src.id}`} yAxisId="flow" type="monotone" dataKey={`p50_${src.id}`} stroke={src.color} strokeWidth={1} strokeDasharray="4 4" dot={false} name={`${t('lakeModal.forecast.forecastSource')} ${src.label}`} opacity={0.8} />
+                                                        ))}
 
-                                                {/* Forecast Scenario Line (Primary) */}
-                                                <Line yAxisId="flow" type="monotone" dataKey="p50" stroke={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'} strokeWidth={3} strokeDasharray="8 5" dot={{ r: 3 }} name={selectedRainSource === 'bestmatch' ? t('lakeModal.forecast.bestMatchAvg') : t('lakeModal.forecast.forecastExpected', { model: MODELS.find(m => m.id === selectedModel)?.label })} connectNulls={true} />
+                                                        {/* Forecast Scenario Line (Primary) */}
+                                                        <Line yAxisId="flow" type="monotone" dataKey="p50" stroke={MODELS.find(m => m.id === selectedModel)?.color || '#ef4444'} strokeWidth={3} strokeDasharray="8 5" dot={{ r: 3 }} name={selectedRainSource === 'bestmatch' ? t('lakeModal.forecast.bestMatchAvg') : t('lakeModal.forecast.forecastExpected', { model: MODELS.find(m => m.id === selectedModel)?.label })} connectNulls={true} />
+                                                    </>
+                                                )}
 
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </FullscreenChartWrapper>
                                 </div>
 
-                                {/* Results Table Integration */}
-                                <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100 flex flex-col h-full">
+                                {/* Results Table Integration — chi o che do xem tung mo hinh */}
+                                <div className={`bg-white p-5 rounded-lg shadow-sm border border-slate-100 flex-col h-full ${forecastView === 'ensemble' ? 'hidden' : 'flex'}`}>
                                     <h3 className="text-slate-700 font-bold mb-1 flex items-center gap-2">
                                         <Clock size={18} /> {t('lakeModal.forecast.tableTitle')}
                                     </h3>
@@ -783,6 +851,78 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Bang du bao chi tiet — tat ca mo hinh */}
+                            {forecastView === 'ensemble' && (
+                                <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100">
+                                    <h3 className="text-slate-700 font-bold mb-1 flex items-center gap-2">
+                                        <Clock size={18} /> {t('lakeModal.forecast.ensembleTableTitle')}
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mb-4 italic">{t('lakeModal.forecast.ensembleTableHint')}</p>
+
+                                    {availableModels.length === 0 ? (
+                                        <div className="py-10 text-center text-sm text-slate-400">{t('lakeModal.forecast.noModelData')}</div>
+                                    ) : (
+                                        <div className="overflow-x-auto border border-slate-100 rounded-lg">
+                                            <table className="w-full text-sm text-left min-w-[640px]">
+                                                <thead className="bg-[#f8fafc] text-slate-500 font-bold border-b text-[10px] uppercase tracking-wider">
+                                                    <tr>
+                                                        <th className="px-3 py-3">{t('lakeModal.forecast.hour')}</th>
+                                                        <th className="px-2 py-3 text-center text-cyan-600">{t('lakeModal.forecast.rain')}</th>
+                                                        {availableModels.map(m => (
+                                                            <th key={`th_${m.id}`} className="px-3 py-3 text-center" style={{ color: m.color }}>{m.label}</th>
+                                                        ))}
+                                                        <th className="px-3 py-3 text-center text-slate-700">{t('lakeModal.forecast.mean')}</th>
+                                                        <th className="px-3 py-3 text-center text-slate-500">{t('lakeModal.forecast.spread')}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {ensembleRows.map((d, i) => {
+                                                        const vals = availableModels
+                                                            .map(m => d[`p50_${m.id}`])
+                                                            .filter(v => v !== null && v !== undefined && !Number.isNaN(v));
+                                                        const mean = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+                                                        const spread = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
+                                                        return (
+                                                            <tr key={i} className={`border-b border-slate-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-slate-50/40' : ''}`}>
+                                                                <td className="px-3 py-3 font-bold text-slate-600 whitespace-nowrap">{d.fullTime}</td>
+                                                                <td className="px-2 py-3 text-center text-cyan-600 font-medium">
+                                                                    {(d.rain_bestmatch || d.rain || 0) > 0
+                                                                        ? `${(d.rain_bestmatch || d.rain || 0).toFixed(1)}`
+                                                                        : <span className="text-slate-300">—</span>}
+                                                                </td>
+                                                                {availableModels.map(m => {
+                                                                    const v = d[`p50_${m.id}`];
+                                                                    const lo = d[`p10_${m.id}`];
+                                                                    const hi = d[`p90_${m.id}`];
+                                                                    return (
+                                                                        <td key={`td_${m.id}_${i}`} className="px-3 py-2 text-center">
+                                                                            {v === null || v === undefined
+                                                                                ? <span className="text-slate-300">—</span>
+                                                                                : <>
+                                                                                    <div className="font-bold" style={{ color: m.color }}>{v.toFixed(1)}</div>
+                                                                                    {lo !== null && lo !== undefined && hi !== null && hi !== undefined && (
+                                                                                        <div className="text-[10px] text-slate-400 leading-tight">{lo.toFixed(1)}–{hi.toFixed(1)}</div>
+                                                                                    )}
+                                                                                </>}
+                                                                        </td>
+                                                                    );
+                                                                })}
+                                                                <td className="px-3 py-3 text-center font-bold text-slate-700">
+                                                                    {mean === null ? <span className="text-slate-300">—</span> : mean.toFixed(1)}
+                                                                </td>
+                                                                <td className="px-3 py-3 text-center text-slate-500">
+                                                                    {spread === null ? <span className="text-slate-300">—</span> : `±${(spread / 2).toFixed(1)}`}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Info cards */}
                             <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-100">

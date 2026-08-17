@@ -110,7 +110,17 @@
       "bestMatchAvg": "Best Match Forecast (Average)",
       "forecastExpected": "{{model}} Forecast (Expected)",
       "rainPrefix": "Rain",
-      "forecastSource": "Forecast from"
+      "forecastSource": "Forecast from",
+      "viewSingle": "Single model",
+      "viewEnsemble": "All models",
+      "ensembleTitle": "FORECAST COMPARISON ACROSS MODELS",
+      "ensembleSubtitle": "Overlays the forecast line of every model that has data on one time axis",
+      "ensembleTableTitle": "DETAILED FORECAST TABLE — ALL MODELS",
+      "ensembleTableHint": "Expected value (P50); the small line below is the P10–P90 range when the model provides quantiles",
+      "mean": "Mean",
+      "spread": "Spread",
+      "noModelData": "No model has returned data for this reservoir yet",
+      "modelsAvailable": "Models with data"
     }
   },
   "operation": {
