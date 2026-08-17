@@ -81,3 +81,17 @@ button {
   width: 100% !important;
   height: 100% !important;
 }
+
+/* Brighter, rounder Leaflet popups to match the redesigned UI */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+}

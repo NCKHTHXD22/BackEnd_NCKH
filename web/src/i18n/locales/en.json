@@ -11,8 +11,8 @@
   },
   "sidebar": {
     "title": "FW Admin",
-    "home": "Home",
-    "adminStats": "Admin Statistics",
+    "home": "Map",
+    "adminStats": "Home",
     "userStatus": "User Reports",
     "pending": "Pending",
     "approved": "Approved",

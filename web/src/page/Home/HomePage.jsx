@@ -28,29 +28,48 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom Icon for Rain Stations
-const rainIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/1164/1164961.png',
-    iconSize: [25, 25],
-    iconAnchor: [12, 25],
-    popupAnchor: [0, -25],
-});
-
-// Custom Icon for Reservoirs
-const reservoirIcon = new L.Icon({
-    iconUrl: hydroDamImg,
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
+// Custom Icon for Rain Stations — bright white pin with a sky-blue raindrop
+const rainIcon = new L.DivIcon({
+    className: '',
+    html: `<div style="width:30px;height:38px;filter:drop-shadow(0 3px 5px rgba(2,132,199,0.45))">
+        <div style="width:30px;height:30px;background:#ffffff;border:2.5px solid #38bdf8;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#0ea5e9" style="transform:rotate(45deg)">
+                <path d="M12 2.5s6.8 7.6 6.8 12.3A6.8 6.8 0 1 1 5.2 14.8C5.2 10.1 12 2.5 12 2.5Z"/>
+            </svg>
+        </div>
+    </div>`,
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
     popupAnchor: [0, -36],
 });
 
-// Custom Icon for Community Posts
-const postIcon = new L.DivIcon({
-    html: `<div style="width:28px;height:28px;background:#f59e0b;border:2px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.4)"><span style="display:block;transform:rotate(45deg);text-align:center;line-height:24px;font-size:13px">🌊</span></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -30],
+// Custom Icon for Reservoirs — bright white pin with the dam pictogram inside
+const reservoirIcon = new L.DivIcon({
     className: '',
+    html: `<div style="width:34px;height:42px;filter:drop-shadow(0 3px 6px rgba(15,23,42,0.45))">
+        <div style="width:34px;height:34px;background:#ffffff;border:2.5px solid #0284c7;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img src="${hydroDamImg}" style="width:22px;height:22px;object-fit:contain;transform:rotate(45deg);" />
+        </div>
+    </div>`,
+    iconSize: [34, 42],
+    iconAnchor: [17, 42],
+    popupAnchor: [0, -40],
+});
+
+// Custom Icon for Community Posts — bright amber pin with a wave glyph
+const postIcon = new L.DivIcon({
+    className: '',
+    html: `<div style="width:30px;height:38px;filter:drop-shadow(0 3px 5px rgba(217,119,6,0.5))">
+        <div style="width:30px;height:30px;background:#f59e0b;border:2.5px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(45deg)">
+                <path d="M2 15c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0"/>
+                <path d="M2 19.5c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0"/>
+            </svg>
+        </div>
+    </div>`,
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
+    popupAnchor: [0, -36],
 });
 
 // Component to handle map resizing dynamically
@@ -98,21 +117,21 @@ const vietnamStyle = {
 };
 
 // Right sidebar icon button component
-function SidebarIcon({ icon, label, active, onClick, color }) {
+function SidebarIcon({ icon, label, active, onClick, activeClass }) {
     return (
         <div className="relative group">
             <button
                 onClick={onClick}
-                className={`p-2.5 rounded-lg transition-all duration-200 flex items-center justify-center
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200
                     ${active
-                        ? 'bg-white text-blue-700 shadow-md'
-                        : `${color || 'text-white'} hover:bg-white/20`
+                        ? (activeClass || 'bg-blue-600 text-white')
+                        : 'bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50'
                     }`}
                 title={label}
             >
                 {icon}
             </button>
-            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-md z-50">
+            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md z-50">
                 {label}
             </div>
         </div>
@@ -136,7 +155,7 @@ export default function HomePage() {
     const [showWarningPanel, setShowWarningPanel] = useState(false);
 
     // Map state
-    const [activeBaseMap, setActiveBaseMap] = useState('google');
+    const [activeBaseMap, setActiveBaseMap] = useState('admin');
     const [showVietnamBorder, setShowVietnamBorder] = useState(true);
     const [showSurface, setShowSurface] = useState(false);
 
@@ -230,7 +249,7 @@ export default function HomePage() {
             <div className="absolute top-[52px] left-0 w-full h-[calc(100vh-52px)] z-0">
                 <MapContainer
                     center={position}
-                    zoom={6}
+                    zoom={12}
                     scrollWheelZoom={true}
                     style={{ height: '100%', width: '100%' }}
                     zoomControl={false}
@@ -251,13 +270,6 @@ export default function HomePage() {
                     )}
 
                     <MapResizer />
-
-                    {/* Default Center Marker */}
-                    <Marker position={position}>
-                        <Popup>
-                            {t('map.dssCenter')}
-                        </Popup>
-                    </Marker>
 
                     {/* Rendering Rain Stations */}
                     {showRainLayer && rainStations.map((station, index) => {
@@ -369,30 +381,44 @@ export default function HomePage() {
 
             {/* --- FLOATING UI CONTROLS --- */}
 
-            {/* Left Sidebar */}
-            <div className="absolute left-2 top-20 z-[1000] flex flex-col gap-1 bg-[#0c1a42]/85 backdrop-blur-sm rounded-xl text-blue-100 shadow-lg border border-white/10">
-                <button className="hover:bg-white/10 hover:text-white p-2.5 transition-colors rounded-t-lg" title="Cài đặt"><FaCog /></button>
-                <button className="hover:bg-white/10 hover:text-white p-2.5 transition-colors" title="Định vị"><FaCrosshairs /></button>
-                <div className="relative group inline-block">
-                    <button
-                        className={`p-2.5 transition-colors w-full flex justify-center ${showNewsPanel ? 'bg-red-600 text-white' : 'text-red-400 hover:bg-white/10'}`}
-                        onClick={() => { setShowNewsPanel(!showNewsPanel); setShowWarningPanel(false); setShowCommunityPanel(false); }}
-                    >
-                        <FaExclamationTriangle />
-                    </button>
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-md">
-                        Sự kiện thiên tai
-                    </div>
-                </div>
+            {/* Left Sidebar - floating tool buttons */}
+            <div className="absolute left-3 top-20 z-[1000] flex flex-col gap-2">
                 <button
-                    className={`p-2.5 transition-colors ${showWarningPanel ? 'bg-orange-600 text-white' : 'hover:bg-white/10 hover:text-white text-orange-400'}`}
-                    title="Cảnh báo thiên tai"
-                    onClick={() => { setShowWarningPanel(!showWarningPanel); setShowNewsPanel(false); setShowCommunityPanel(false); }}
+                    className="w-10 h-10 rounded-xl bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 hover:text-blue-600 flex items-center justify-center transition-all duration-200"
+                    title="Cài đặt"
                 >
-                    <MdWarning />
+                    <FaCog />
                 </button>
                 <button
-                    className={`p-2.5 transition-colors rounded-b-lg ${showBaseMapPanel ? 'bg-white text-blue-700' : 'hover:bg-white/10 hover:text-white'}`}
+                    className="w-10 h-10 rounded-xl bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 hover:text-blue-600 flex items-center justify-center transition-all duration-200"
+                    title="Định vị"
+                >
+                    <FaCrosshairs />
+                </button>
+
+                <div className="flex flex-col gap-2">
+                    <div className="relative group">
+                        <button
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showNewsPanel ? 'bg-red-500 text-white' : 'bg-white text-red-500 hover:bg-red-50'}`}
+                            onClick={() => { setShowNewsPanel(!showNewsPanel); setShowWarningPanel(false); setShowCommunityPanel(false); }}
+                        >
+                            <FaExclamationTriangle />
+                        </button>
+                        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md">
+                            Sự kiện thiên tai
+                        </div>
+                    </div>
+                    <button
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showWarningPanel ? 'bg-orange-500 text-white' : 'bg-white text-orange-500 hover:bg-orange-50'}`}
+                        title="Cảnh báo thiên tai"
+                        onClick={() => { setShowWarningPanel(!showWarningPanel); setShowNewsPanel(false); setShowCommunityPanel(false); }}
+                    >
+                        <MdWarning size={18} />
+                    </button>
+                </div>
+
+                <button
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showBaseMapPanel ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50'}`}
                     title="Lớp bản đồ"
                     onClick={() => setShowBaseMapPanel(!showBaseMapPanel)}
                 >
@@ -401,9 +427,9 @@ export default function HomePage() {
             </div>
 
             {/* Right Sidebar */}
-            <div className="absolute right-2 top-20 z-[1000] flex flex-col gap-1.5">
+            <div className="absolute right-3 top-20 z-[1000] flex flex-col gap-2">
                 {/* Functional icons group */}
-                <div className="flex flex-col gap-1 bg-[#0c1a42]/90 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white/10">
+                <div className="flex flex-col gap-2">
                     <SidebarIcon
                         icon={<FaGlobeAsia size={16} />}
                         label="Bản đồ nền"
@@ -423,7 +449,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Zoom controls */}
-                <div className="flex flex-col gap-1 bg-[#0c1a42]/90 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-white/10">
+                <div className="flex flex-col gap-2">
                     <SidebarIcon icon={<FaPlus size={14} />} label="Phóng to" />
                     <SidebarIcon icon={<FaMinus size={14} />} label="Thu nhỏ" />
                     <SidebarIcon icon={<FaExpand size={14} />} label="Toàn màn hình" />
@@ -432,10 +458,10 @@ export default function HomePage() {
 
             {/* Base Map Panel */}
             {showBaseMapPanel && (
-                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-lg shadow-2xl overflow-hidden text-sm border border-gray-200 animate-in slide-in-from-right">
-                    <div className="bg-gray-50 p-3 border-b font-semibold flex justify-between items-center text-gray-700">
+                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100 animate-in slide-in-from-right">
+                    <div className="bg-gradient-to-r from-blue-50 to-sky-50 p-3 border-b border-blue-100 font-semibold flex justify-between items-center text-slate-700">
                         <span className="flex items-center gap-2"><FaLayerGroup className="text-blue-600" /> Bản đồ nền</span>
-                        <button onClick={() => setShowBaseMapPanel(false)} className="text-gray-400 hover:text-gray-600 text-lg">❯</button>
+                        <button onClick={() => setShowBaseMapPanel(false)} className="text-slate-400 hover:text-slate-600 text-lg">❯</button>
                     </div>
                     <div className="p-3 space-y-2">
                         {Object.entries(TILE_LAYERS).map(([key, layer]) => (
@@ -486,10 +512,10 @@ export default function HomePage() {
 
             {/* Community Info Panel (Thông tin cộng đồng) */}
             {showCommunityPanel && (
-                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-lg shadow-2xl overflow-hidden text-sm border border-gray-200">
-                    <div className="bg-gray-50 p-3 border-b font-semibold flex justify-between items-center text-gray-700">
+                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100">
+                    <div className="bg-gradient-to-r from-blue-50 to-sky-50 p-3 border-b border-blue-100 font-semibold flex justify-between items-center text-slate-700">
                         <span className="flex items-center gap-2"><FaUsers className="text-blue-600" /> Thông tin cộng đồng</span>
-                        <button onClick={() => setShowCommunityPanel(false)} className="text-gray-400 hover:text-gray-600 text-lg">❯</button>
+                        <button onClick={() => setShowCommunityPanel(false)} className="text-slate-400 hover:text-slate-600 text-lg">❯</button>
                     </div>
                     <div className="p-3 space-y-2">
                         <label
@@ -539,8 +565,8 @@ export default function HomePage() {
 
             {/* Disaster Warning Panel (Cảnh báo thiên tai) */}
             {showWarningPanel && (
-                <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[360px] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col text-sm">
-                    <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white p-3 font-bold flex justify-between items-center">
+                <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[360px] bg-white rounded-2xl shadow-2xl shadow-orange-900/20 overflow-hidden flex flex-col text-sm border border-orange-100">
+                    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 font-bold flex justify-between items-center">
                         <span className="flex items-center gap-2"><MdWarning /> Cảnh báo thiên tai</span>
                         <button onClick={() => setShowWarningPanel(false)} className="text-white/70 hover:text-white">
                             <FaChevronLeft />
@@ -603,15 +629,15 @@ export default function HomePage() {
 
             {/* Public News Panel (Sự kiện thiên tai) */}
             {showNewsPanel && (
-                <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[350px] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col text-sm transition-transform duration-300">
-                    <div className="bg-white text-gray-800 p-3 font-bold flex justify-between items-center shadow-sm border-b">
-                        <span className="text-base text-gray-900">Sự kiện thiên tai</span>
-                        <button onClick={() => setShowNewsPanel(false)} className="text-gray-500 hover:text-gray-800">
+                <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[350px] bg-white rounded-2xl shadow-2xl shadow-slate-900/20 overflow-hidden flex flex-col text-sm border border-slate-200 transition-transform duration-300">
+                    <div className="bg-gradient-to-r from-blue-50 to-sky-50 text-slate-800 p-3 font-bold flex justify-between items-center border-b border-blue-100">
+                        <span className="text-base text-slate-900">Sự kiện thiên tai</span>
+                        <button onClick={() => setShowNewsPanel(false)} className="text-slate-500 hover:text-slate-800">
                             <FaChevronLeft />
                         </button>
                     </div>
 
-                    <div className="bg-gray-200 text-gray-700 text-xs px-3 py-2 font-medium">
+                    <div className="bg-blue-50 text-blue-700 text-xs px-3 py-2 font-medium">
                         {publicPosts.length} thiên tai đang diễn ra / {publicPosts.length} thiên tai
                     </div>
 
@@ -666,7 +692,6 @@ export default function HomePage() {
                     </div>
                 </div>
             )}
-
 
             {/* Lake Modal Overlay */}
             <LakeModal

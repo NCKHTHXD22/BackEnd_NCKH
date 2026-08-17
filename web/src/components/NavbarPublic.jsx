@@ -69,9 +69,9 @@ export default function NavbarPublic() {
                     <input
                         type="text"
                         placeholder={t('navbar.search')}
-                        className="w-full bg-white/15 text-white border border-white/20 rounded-full py-1.5 px-4 pl-10 placeholder-white/50 focus:outline-none focus:bg-white/22 focus:border-white/40 text-sm h-8 transition-all"
+                        className="w-full bg-white text-slate-700 border border-white/60 rounded-full py-1.5 px-4 pl-10 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white/60 text-sm h-9 shadow-sm transition-all"
                     />
-                    <FaSearch className="absolute left-3 top-2 text-white/50 text-sm" />
+                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
                 </div>
             </div>
 
@@ -146,7 +146,7 @@ export default function NavbarPublic() {
                 ) : (
                     <button
                         onClick={() => navigate('/admin/login')}
-                        className="hidden md:flex items-center gap-2 bg-white/15 hover:bg-white/22 border border-white/20 hover:border-white/40 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
+                        className="hidden md:flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 border border-white/60 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm transition-all"
                     >
                         <FaUserCircle /> {t('navbar.login')}
                     </button>
@@ -160,9 +160,9 @@ export default function NavbarPublic() {
                         <input
                             type="text"
                             placeholder={t('navbar.search')}
-                            className="w-full bg-white/15 text-white border border-white/20 rounded-full py-2 px-4 pl-10 placeholder-white/50 focus:outline-none focus:border-white/40 text-sm"
+                            className="w-full bg-white text-slate-700 border border-white/60 rounded-full py-2 px-4 pl-10 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white/60 text-sm shadow-sm"
                         />
-                        <FaSearch className="absolute left-3 top-3 text-white/50" />
+                        <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     </div>
 
                     {/* Mobile Lang Toggle */}
@@ -193,7 +193,7 @@ export default function NavbarPublic() {
                     ) : (
                         <button
                             onClick={() => navigate('/admin/login')}
-                            className="flex items-center justify-center gap-2 bg-white/15 border border-white/20 py-2 rounded-md font-medium"
+                            className="flex items-center justify-center gap-2 bg-white text-blue-700 border border-white/60 py-2 rounded-full font-semibold shadow-sm"
                         >
                             <FaUserCircle /> {t('navbar.login')}
                         </button>

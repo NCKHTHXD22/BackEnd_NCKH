@@ -11,8 +11,8 @@
   },
   "sidebar": {
     "title": "FW Admin",
-    "home": "Trang chủ",
-    "adminStats": "Thống kê Admin",
+    "home": "Bản đồ",
+    "adminStats": "Trang chủ",
     "userStatus": "Trạng thái người dùng",
     "pending": "Bài chờ",
     "approved": "Đã duyệt",
