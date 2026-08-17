@@ -122,7 +122,9 @@
       "noModelData": "Chưa có mô hình nào trả về dữ liệu cho hồ này",
       "modelsAvailable": "Mô hình có dữ liệu",
       "bandLabel": "(dải P10–P90)",
-      "meanLine": "Trung bình các mô hình"
+      "meanLine": "Trung bình các mô hình",
+      "historyToggleLabel": "Dự báo lịch sử:",
+      "historyToggleHint": "Bật/tắt phần dự báo quá khứ của {{model}}"
     }
   },
   "operation": {

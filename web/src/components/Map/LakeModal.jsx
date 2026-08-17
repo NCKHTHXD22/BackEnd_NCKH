@@ -96,6 +96,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     // 'single' = xem từng mô hình một; 'ensemble' = chồng tất cả mô hình lên cùng biểu đồ
     const [forecastView, setForecastView] = useState('single');
     const [ensembleData, setEnsembleData] = useState({});
+    // { [modelId]: true } = tắt phần lịch sử của mô hình đó; phần dự báo vẫn giữ
+    const [historyOff, setHistoryOff] = useState({});
     const [realHistoryData, setRealHistoryData] = useState([]);
     const [rainLakeHistory, setRainLakeHistory] = useState([]);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -274,6 +276,8 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             for (const m of MODELS) {
                 const arr = ensembleData[m.id];
                 if (!Array.isArray(arr) || arr.length === 0) continue;
+                // Tắt lịch sử của mô hình này → chỉ dựng từ mốc hiện tại trở đi
+                if (historyOff[m.id] && !isFuture && !isNow) continue;
                 const hit = arr.find(d => {
                     const dt = d.targetTime || d.forecastTime || d.time;
                     return dt && hourKey(new Date(dt)) === targetKey;
@@ -685,6 +689,33 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <p className="text-sm text-slate-400 mb-4 italic">
                                         {forecastView === 'ensemble' ? t('lakeModal.forecast.ensembleSubtitle') : t('lakeModal.forecast.chartSubtitle')}
                                     </p>
+
+                                    {/* Bật/tắt phần lịch sử của từng mô hình — biểu đồ 48h với 3 đường
+                                        và 2 dải rất dễ rối, đây là cách lọc nhanh mà không mất phần dự báo */}
+                                    {forecastView === 'ensemble' && availableModels.length > 0 && (
+                                        <div className="flex flex-wrap items-center gap-2 mb-3 pb-3 border-b border-slate-100">
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                {t('lakeModal.forecast.historyToggleLabel')}
+                                            </span>
+                                            {availableModels.map(m => {
+                                                const on = !historyOff[m.id];
+                                                return (
+                                                    <button
+                                                        key={`hist_${m.id}`}
+                                                        onClick={() => setHistoryOff(prev => ({ ...prev, [m.id]: on }))}
+                                                        title={t('lakeModal.forecast.historyToggleHint', { model: m.label })}
+                                                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border-2 transition-all ${on
+                                                            ? 'text-white shadow-sm'
+                                                            : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                                                            }`}
+                                                        style={on ? { backgroundColor: m.color, borderColor: m.color } : {}}
+                                                    >
+                                                        {m.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
 
                                     {/* Custom legend — rendered as normal DOM so it wraps cleanly and never overlaps the plot */}
                                     <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mb-3 px-1">

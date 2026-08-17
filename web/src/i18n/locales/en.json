@@ -122,7 +122,9 @@
       "noModelData": "No model has returned data for this reservoir yet",
       "modelsAvailable": "Models with data",
       "bandLabel": "(P10–P90 band)",
-      "meanLine": "Model mean"
+      "meanLine": "Model mean",
+      "historyToggleLabel": "Past forecasts:",
+      "historyToggleHint": "Toggle the past forecast of {{model}}"
     }
   },
   "operation": {
