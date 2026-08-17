@@ -6,8 +6,11 @@ class PostRepository extends BaseRepository {
         super(FloodPost);
     }
 
-    async findWithPopulate(filter, populate = "user") {
-        return FloodPost.find(filter).populate(populate);
+    async findWithPopulate(filter, populate = "user", { limit, skip } = {}) {
+        let query = FloodPost.find(filter).populate(populate).sort({ createdAt: -1 });
+        if (skip) query = query.skip(skip);
+        if (limit) query = query.limit(limit);
+        return query;
     }
 }
 

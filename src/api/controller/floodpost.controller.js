@@ -1,12 +1,20 @@
+import fs from "fs";
 import { postRepo } from "../../infrastructure/repositories/post.repo.js";
 import { notificationRepo } from "../../infrastructure/repositories/notification.repo.js";
 import cloudinary from "../config/cloudinary.js";
 import { analyzeFloodImage, determinePostStatus } from "../../services/aiInference.service.js";
 import { sendExpoPush } from "../../services/expoPush.service.js";
+import { FLOOD_LEVEL_TYPES } from "../../core/entities/FloodPost.js";
+
+const DEFAULT_LIST_LIMIT = 200;
+// Tên field honeypot — không hiển thị ở UI thật, bot điền form thường tự động điền vào.
+const HONEYPOT_FIELD = "website";
 
 export const getAllFloodPosts = async (req, res) => {
     try {
-        const posts = await postRepo.findWithPopulate({ status: "approved" }, "user");
+        const limit = Math.min(Number(req.query.limit) || DEFAULT_LIST_LIMIT, DEFAULT_LIST_LIMIT);
+        const skip = Math.max(Number(req.query.skip) || 0, 0);
+        const posts = await postRepo.findWithPopulate({ status: "approved" }, "user", { limit, skip });
         res.status(200).json(posts);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -36,43 +44,71 @@ export const getFloodPostById = async (req, res) => {
     }
 };
 
+// Xoá các file tạm mà multer đã ghi ra đĩa (không chặn response nếu unlink lỗi)
+function cleanupTempFiles(files) {
+    for (const file of files || []) {
+        fs.unlink(file.path, (err) => {
+            if (err) console.warn(`⚠️  Không xoá được file tạm ${file.path}:`, err.message);
+        });
+    }
+}
+
 export const createFloodPost = async (req, res) => {
     try {
-        // ── 1. Phân tích AI với ảnh đầu tiên (nếu có) ─────────────
+        // ── 0. Honeypot chống spam ─────────────────────────────────
+        // Field ẩn ở form thật; nếu có giá trị nghĩa là bot tự điền form → âm thầm "giả vờ" thành công
+        // mà không tạo bài, không tốn quota AI/Cloudinary, không lộ cho bot biết bị phát hiện.
+        if (req.body[HONEYPOT_FIELD]) {
+            console.warn(`🍯 Honeypot triggered — bỏ qua submit (ip=${req.ip})`);
+            cleanupTempFiles(req.files);
+            return res.status(201).json({ message: "Đã ghi nhận, cảm ơn bạn." });
+        }
+
+        const reportType = req.body.reportType || "flood_point";
+        const runsAI = FLOOD_LEVEL_TYPES.includes(reportType);
+
+        // ── 1. Phân tích AI với ảnh đầu tiên (chỉ với Điểm ngập/Đường ngập) ──
         let aiResult = { success: false, label: null, floodLevel: null, score: null, warnable: false };
 
-        if (req.files?.length > 0) {
+        if (runsAI && req.files?.length > 0) {
             const firstImagePath = req.files[0].path;
             console.log(`🤖 Bắt đầu phân tích AI: ${firstImagePath}`);
             aiResult = await analyzeFloodImage(firstImagePath);
         }
 
-        // ── 2. Xác định status dựa trên kết quả AI ────────────────
-        const status = determinePostStatus(aiResult);
+        // ── 2. Xác định status ──────────────────────────────────────
+        // Cây ngã đổ / Khu vực sạt lở không có AI đánh giá ảnh → luôn cần Admin duyệt tay.
+        const status = runsAI ? determinePostStatus(aiResult) : "pending";
         const isAutoApproved = (status === "approved");
-        console.log(`📋 AI → label=${aiResult.label}, flood=${aiResult.floodLevel}cm, status=${status}`);
+        if (runsAI) console.log(`📋 AI → label=${aiResult.label}, flood=${aiResult.floodLevel}cm, status=${status}`);
 
-        // ── 3. Upload ảnh lên Cloudinary ───────────────────────────
+        // ── 3. Upload ảnh lên Cloudinary rồi dọn file tạm trên đĩa ───
         let imageUrls = [];
         if (req.files?.length > 0) {
             for (const file of req.files) {
                 const result = await cloudinary.uploader.upload(file.path, { folder: "flood-posts" });
                 imageUrls.push(result.secure_url);
             }
+            cleanupTempFiles(req.files);
         }
 
         // ── 4. Lưu vào DB (kèm kết quả AI) ────────────────────────
         const newPost = await postRepo.create({
-            user: req.user._id,
+            reportType,
+            user: req.user?._id ?? null,
             location: typeof req.body.location === "string" ? JSON.parse(req.body.location) : req.body.location,
+            fromAddress: req.body.fromAddress,
+            toAddress: req.body.toAddress,
             floodLevel: req.body.floodLevel,
             areaType: req.body.areaType,
+            landslideStatus: req.body.landslideStatus,
             floodTime: req.body.floodTime,
+            eventEndTime: req.body.eventEndTime || undefined,
             description: req.body.description,
             imageUrls,
-            isFrequentFlood: req.body.isFrequentFlood || false,
+            isFrequentFlood: req.body.isFrequentFlood === "true" || req.body.isFrequentFlood === true,
             // AI fields
-            aiProcessed:    aiResult.success !== undefined,
+            aiProcessed:    runsAI && aiResult.success !== undefined,
             aiLabel:        aiResult.label        ?? null,
             aiFloodLevel:   aiResult.floodLevel   ?? null,
             aiScore:        aiResult.score        ?? null,
@@ -80,27 +116,29 @@ export const createFloodPost = async (req, res) => {
             status,
         });
 
-        // ── 5. Gửi thông báo cho user ──────────────────────────────
-        const notifContent = isAutoApproved
-            ? `✅ Bài đăng của bạn đã được duyệt tự động (AI phát hiện mức ngập ~${aiResult.floodLevel?.toFixed(0)} cm).`
-            : aiResult.label === "UNDETECTED" || !aiResult.success
-                ? `⏳ Bài đăng của bạn đang chờ Admin xét duyệt (AI không nhận diện được mức ngập).`
-                : `⏳ Bài đăng của bạn đang chờ Admin xét duyệt.`;
+        // ── 5. Gửi thông báo cho user (chỉ khi có tài khoản — bài ẩn danh không có ai để báo) ──
+        if (req.user) {
+            const notifContent = isAutoApproved
+                ? `✅ Bài đăng của bạn đã được duyệt tự động (AI phát hiện mức ngập ~${aiResult.floodLevel?.toFixed(0)} cm).`
+                : runsAI && (aiResult.label === "UNDETECTED" || !aiResult.success)
+                    ? `⏳ Bài đăng của bạn đang chờ Admin xét duyệt (AI không nhận diện được mức ngập).`
+                    : `⏳ Bài đăng của bạn đang chờ Admin xét duyệt.`;
 
-        await notificationRepo.create({
-            user: req.user._id,
-            type: "post_moderation",
-            title: isAutoApproved ? "Bài đăng đã được duyệt" : "Bài đăng đang chờ duyệt",
-            content: notifContent,
-            priority: isAutoApproved ? 2 : 1,
-        });
-
-        if (req.user.expoPushToken) {
-            sendExpoPush(req.user.expoPushToken, {
-                title: isAutoApproved ? "Bài đăng đã được duyệt ✅" : "Bài đăng đang chờ duyệt ⏳",
-                body: notifContent,
-                data: { type: "post_moderation", postId: newPost._id?.toString() },
+            await notificationRepo.create({
+                user: req.user._id,
+                type: "post_moderation",
+                title: isAutoApproved ? "Bài đăng đã được duyệt" : "Bài đăng đang chờ duyệt",
+                content: notifContent,
+                priority: isAutoApproved ? 2 : 1,
             });
+
+            if (req.user.expoPushToken) {
+                sendExpoPush(req.user.expoPushToken, {
+                    title: isAutoApproved ? "Bài đăng đã được duyệt ✅" : "Bài đăng đang chờ duyệt ⏳",
+                    body: notifContent,
+                    data: { type: "post_moderation", postId: newPost._id?.toString() },
+                });
+            }
         }
 
         res.status(201).json({
@@ -114,10 +152,18 @@ export const createFloodPost = async (req, res) => {
         });
     } catch (error) {
         console.error("❌ createFloodPost error:", error);
+        cleanupTempFiles(req.files);
         res.status(500).json({ error: error.message });
     }
 };
 
+
+// Chỉ các field nội dung mới được chủ bài/admin sửa qua route này — không cho ghi đè
+// status/aiScore/aiAutoApproved/rejectReason/user (tránh mass-assignment).
+const OWNER_EDITABLE_FIELDS = [
+    "description", "floodLevel", "areaType", "floodTime", "eventEndTime",
+    "location", "fromAddress", "toAddress", "landslideStatus", "isFrequentFlood",
+];
 
 export const updateFloodPost = async (req, res) => {
     try {
@@ -132,7 +178,12 @@ export const updateFloodPost = async (req, res) => {
             return res.status(403).json({ message: "Unauthorized to update this post" });
         }
 
-        const updated = await postRepo.update(req.params.id, req.body);
+        const updateData = {};
+        for (const key of OWNER_EDITABLE_FIELDS) {
+            if (req.body[key] !== undefined) updateData[key] = req.body[key];
+        }
+
+        const updated = await postRepo.update(req.params.id, updateData);
         res.status(200).json(updated);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -159,42 +210,3 @@ export const deleteFloodPost = async (req, res) => {
     }
 };
 
-export const moderateFloodPost = async (req, res) => {
-    try {
-        if (!req.user || req.user.role !== "admin") {
-            return res.status(403).json({ message: "Only admin can moderate posts" });
-        }
-
-        const { status, rejectReason } = req.body;
-        const updated = await postRepo.update(req.params.id, {
-            status,
-            rejectReason: status === "rejected" ? rejectReason : ""
-        });
-
-        if (!updated) return res.status(404).json({ message: "Post not found" });
-
-        await updated.populate("user", "name email clerkId expoPushToken");
-
-        const moderateContent = status === "approved"
-            ? "Bài đăng của bạn đã được duyệt"
-            : `Bài đăng của bạn đã bị từ chối. Lý do: ${rejectReason || "Không rõ"}`;
-
-        await notificationRepo.create({
-            user: updated.user._id,
-            type: "post_moderation",
-            content: moderateContent,
-        });
-
-        if (updated.user.expoPushToken) {
-            sendExpoPush(updated.user.expoPushToken, {
-                title: status === "approved" ? "Bài đăng được duyệt ✅" : "Bài đăng bị từ chối ❌",
-                body: moderateContent,
-                data: { type: "post_moderation", postId: updated._id?.toString() },
-            });
-        }
-
-        res.status(200).json(updated);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};

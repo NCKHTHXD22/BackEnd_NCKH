@@ -7,7 +7,7 @@ import L from 'leaflet';
 import NavbarPublic from '../../components/NavbarPublic';
 import {
     FaCog, FaCrosshairs, FaExclamationTriangle, FaLayerGroup, FaTrash,
-    FaPlus, FaMinus, FaExpand, FaEdit,
+    FaPlus, FaMinus, FaExpand, FaEdit, FaPaperPlane,
     FaBell, FaMapMarkedAlt, FaProjectDiagram, FaSearchLocation, FaBook,
     FaChevronLeft, FaSearch, FaFilter, FaChevronRight,
     FaMountain, FaUsers, FaGlobeAsia, FaMap, FaWater,
@@ -18,6 +18,8 @@ import mapApi from '../../api/mapApi';
 import { RESERVOIRS } from '../../utils/reservoirs';
 import hydroDamImg from '../../assets/images/hydro-dam.png';
 import LakeModal from '../../components/Map/LakeModal';
+import SubmitFloodReportModal from '../../components/Map/SubmitFloodReportModal';
+import { getReportTypeLabel, FLOOD_LEVEL_TYPES as REPORT_FLOOD_LEVEL_TYPES } from '../../utils/reportTypes';
 import vietnamBoundary from '../../utils/vietnamBoundary.json';
 
 // Fix for default marker icons in react-leaflet
@@ -163,6 +165,18 @@ export default function HomePage() {
     const [showRainLayer, setShowRainLayer] = useState(true);
     const [showReservoirLayer, setShowReservoirLayer] = useState(true);
     const [showPostsLayer, setShowPostsLayer] = useState(false);
+
+    // Gửi thông tin ngập
+    const [showSubmitModal, setShowSubmitModal] = useState(false);
+
+    const refreshPublicPosts = async () => {
+        try {
+            const postData = await mapApi.getPublicPosts();
+            setPublicPosts(Array.isArray(postData) ? postData.filter(p => p.status === 'approved') : []);
+        } catch (error) {
+            console.error("Error refreshing public posts:", error);
+        }
+    };
 
     useEffect(() => {
         const fetchMapData = async () => {
@@ -341,25 +355,29 @@ export default function HomePage() {
                         )
                     })}
 
-                    {/* Rendering Approved Community Posts */}
+                    {/* Rendering Approved Community Posts (Điểm ngập / Cây ngã đổ — 2 loại có toạ độ điểm) */}
                     {showPostsLayer && publicPosts.map((post, index) => {
                         const lat = post.location?.latitude;
                         const lng = post.location?.longitude;
                         if (!lat || !lng) return null;
+                        const reportType = post.reportType || 'flood_point';
+                        const hasFloodLevel = REPORT_FLOOD_LEVEL_TYPES.includes(reportType);
                         const aiColor = post.aiLabel === 'DANGEROUS' ? '#ef4444' : post.aiLabel === 'DEEP' ? '#f97316' : post.aiLabel === 'HIGH' ? '#f59e0b' : '#10b981';
                         return (
                             <Marker key={`post-${index}`} position={[lat, lng]} icon={postIcon}>
                                 <Popup>
-                                    <div className="font-bold border-b pb-1 mb-2 text-amber-700">🌊 Báo lũ cộng đồng</div>
+                                    <div className="font-bold border-b pb-1 mb-2 text-amber-700">🌊 {getReportTypeLabel(reportType)}</div>
                                     <div className="text-xs space-y-1">
                                         <p><strong>Địa điểm:</strong> {post.location?.address ? `${post.location.address}, ` : ''}{post.location?.district}, {post.location?.province}</p>
-                                        <p><strong>Mức lũ (báo cáo):</strong> <span className="font-bold text-blue-600">{post.floodLevel} cm</span></p>
-                                        {post.aiFloodLevel != null && (
+                                        {hasFloodLevel && (
+                                            <p><strong>Mức lũ (báo cáo):</strong> <span className="font-bold text-blue-600">{post.floodLevel} cm</span></p>
+                                        )}
+                                        {hasFloodLevel && post.aiFloodLevel != null && (
                                             <p><strong>Mức ngập (AI):</strong> <span className="font-bold" style={{ color: aiColor }}>{post.aiFloodLevel} cm</span></p>
                                         )}
-                                        <p><strong>Khu vực:</strong> {post.areaType}</p>
+                                        {hasFloodLevel && <p><strong>Khu vực:</strong> {post.areaType}</p>}
                                         {post.description && <p><strong>Mô tả:</strong> {post.description}</p>}
-                                        {post.aiLabel && (
+                                        {hasFloodLevel && post.aiLabel && (
                                             <p><strong>Phân loại AI:</strong> <span className="font-bold px-1.5 py-0.5 rounded text-white text-[10px]" style={{ backgroundColor: aiColor }}>{post.aiLabel}</span>
                                             {post.aiScore != null && <span className="text-gray-400 ml-1">({Math.round(post.aiScore * 100)}%)</span>}
                                             </p>
@@ -371,7 +389,10 @@ export default function HomePage() {
                                     )}
                                 </Popup>
                                 <Tooltip direction="top" offset={[0, -30]} opacity={1}>
-                                    <span className="text-xs font-semibold">{post.location?.district} · {post.floodLevel}cm</span>
+                                    <span className="text-xs font-semibold">
+                                        {post.location?.district ? `${post.location.district} · ` : ''}
+                                        {hasFloodLevel ? `${post.floodLevel}cm` : getReportTypeLabel(reportType)}
+                                    </span>
                                 </Tooltip>
                             </Marker>
                         );
@@ -424,6 +445,18 @@ export default function HomePage() {
                 >
                     <FaLayerGroup />
                 </button>
+
+                <div className="relative group">
+                    <button
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 bg-gradient-to-br from-blue-600 to-sky-500 text-white"
+                        onClick={() => setShowSubmitModal(true)}
+                    >
+                        <FaPaperPlane size={14} />
+                    </button>
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md">
+                        Gửi thông tin ngập
+                    </div>
+                </div>
             </div>
 
             {/* Right Sidebar */}
@@ -698,6 +731,13 @@ export default function HomePage() {
                 lakeId={activeLake?.id}
                 lakeData={activeLake?.data}
                 onClose={() => setActiveLake(null)}
+            />
+
+            {/* Gửi thông tin ngập */}
+            <SubmitFloodReportModal
+                open={showSubmitModal}
+                onClose={() => setShowSubmitModal(false)}
+                onSubmitted={refreshPublicPosts}
             />
         </div>
     );

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from "cors";
+import multer from "multer";
 
 
 import { ENV } from './api/config/env.js';
@@ -400,6 +401,23 @@ app.get('/api/buildings', async (req, res) => {
     }
 
     res.json(buildings);
+});
+
+// Error-handling middleware (4 tham số, BẮT BUỘC đặt sau tất cả routes) — trả JSON thay vì
+// trang HTML mặc định của Express, đặc biệt cho lỗi Multer (sai định dạng ảnh, vượt quá 5 ảnh)
+// vốn trước đây phá luồng try/catch JSON-based ở cả web lẫn mobile.
+app.use((err, req, res, next) => {
+    if (res.headersSent) return next(err);
+
+    if (err instanceof multer.MulterError) {
+        const message = err.code === "LIMIT_UNEXPECTED_FILE"
+            ? "Chỉ được gửi tối đa 5 ảnh."
+            : err.message;
+        return res.status(400).json({ error: message });
+    }
+
+    console.error("❌ Unhandled error:", err);
+    res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
 // Start Server

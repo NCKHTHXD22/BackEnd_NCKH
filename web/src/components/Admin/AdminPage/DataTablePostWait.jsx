@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Search, Inbox, Check, X, Pencil, Trash2 } from "lucide-react";
+import { FLOOD_LEVEL_TYPES, RANGE_TYPES, getReportTypeLabel } from "../../../utils/reportTypes";
 
 export default function DataTable({ data, onApprove, onReject, onRowClick, onEdit, onDelete }) {
   const [searchLocation, setSearchLocation] = useState("");
@@ -53,6 +54,7 @@ export default function DataTable({ data, onApprove, onReject, onRowClick, onEdi
           <thead>
             <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
               <th className="px-3 py-2.5 text-left font-bold rounded-l-lg">Ảnh</th>
+              <th className="px-3 py-2.5 text-left font-bold">Loại báo cáo</th>
               <th className="px-3 py-2.5 text-left font-bold">Địa điểm</th>
               <th className="px-3 py-2.5 text-left font-bold">Mô tả</th>
               <th className="px-3 py-2.5 text-left font-bold">Mức lũ</th>
@@ -64,7 +66,11 @@ export default function DataTable({ data, onApprove, onReject, onRowClick, onEdi
           </thead>
           <tbody className="divide-y divide-slate-50">
             {filteredData.length > 0 ? (
-              filteredData.map((p) => (
+              filteredData.map((p) => {
+                const reportType = p.reportType || "flood_point";
+                const hasFloodLevel = FLOOD_LEVEL_TYPES.includes(reportType);
+                const hasRange = RANGE_TYPES.includes(reportType);
+                return (
                 <tr
                   key={p._id}
                   onClick={() => onRowClick && onRowClick(p)}
@@ -83,20 +89,33 @@ export default function DataTable({ data, onApprove, onReject, onRowClick, onEdi
                       </div>
                     )}
                   </td>
+                  <td className="px-3 py-3">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 whitespace-nowrap">
+                      {getReportTypeLabel(reportType)}
+                    </span>
+                  </td>
                   <td className="px-3 py-3 text-slate-700">
-                    {p.location?.province} - {p.location?.district}
+                    {hasRange
+                      ? `${p.fromAddress || "?"} → ${p.toAddress || "?"}`
+                      : `${p.location?.province || ""} - ${p.location?.district || ""}`}
                   </td>
                   <td className="px-3 py-3 text-slate-600 max-w-[220px] truncate">{p.description || "-"}</td>
                   <td className="px-3 py-3">
-                    <div className="font-bold text-slate-800">{p.floodLevel} cm</div>
-                    {p.aiProcessed && (
-                      <div className="text-[11px] mt-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-md px-1.5 py-0.5 inline-block font-medium">
-                        🤖 AI đo: {p.aiFloodLevel !== null ? `${p.aiFloodLevel} cm` : "Không rõ"}
-                        {p.aiScore && ` (${Math.round(p.aiScore * 100)}%)`}
-                      </div>
+                    {hasFloodLevel ? (
+                      <>
+                        <div className="font-bold text-slate-800">{p.floodLevel} cm</div>
+                        {p.aiProcessed && (
+                          <div className="text-[11px] mt-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-md px-1.5 py-0.5 inline-block font-medium">
+                            🤖 AI đo: {p.aiFloodLevel !== null ? `${p.aiFloodLevel} cm` : "Không rõ"}
+                            {p.aiScore && ` (${Math.round(p.aiScore * 100)}%)`}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-slate-600">{p.areaType}</td>
+                  <td className="px-3 py-3 text-slate-600">{hasFloodLevel ? p.areaType : (p.landslideStatus || "—")}</td>
                   <td className="px-3 py-3 text-slate-500 text-xs whitespace-nowrap">
                     {new Date(p.floodTime).toLocaleString()}
                   </td>
@@ -142,10 +161,11 @@ export default function DataTable({ data, onApprove, onReject, onRowClick, onEdi
                     </div>
                   </td>
                 </tr>
-              ))
+              );
+              })
             ) : (
               <tr>
-                <td colSpan={8} className="text-center py-12">
+                <td colSpan={9} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2 text-slate-400">
                     <Inbox size={28} className="text-slate-300" />
                     <span className="text-sm font-medium">Không có dữ liệu</span>

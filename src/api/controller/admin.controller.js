@@ -89,7 +89,11 @@ export const rejectPost = async (req, res) => {
 
 export const updatePostAdmin = async (req, res) => {
     try {
-        const allowed = ["description", "floodLevel", "areaType", "floodTime", "location"];
+        // Không cho sửa reportType — đổi loại giữa chừng sẽ để lại field không còn khớp với loại mới.
+        const allowed = [
+            "description", "floodLevel", "areaType", "floodTime", "location",
+            "fromAddress", "toAddress", "landslideStatus", "eventEndTime",
+        ];
         const updateData = {};
         for (const key of allowed) {
             if (req.body[key] !== undefined) updateData[key] = req.body[key];

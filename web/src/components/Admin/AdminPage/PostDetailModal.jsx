@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { X, Pencil, Trash2, Save, XCircle, MapPin, Calendar } from "lucide-react";
-
-const AREA_TYPES = ["Trong nhà", "Ngoài đường", "Khu vực khác"];
+import {
+  AREA_TYPES,
+  LANDSLIDE_STATUS,
+  FLOOD_LEVEL_TYPES,
+  RANGE_TYPES,
+  getReportTypeLabel,
+} from "../../../utils/reportTypes";
 
 const STATUS_CFG = {
   approved: { label: "Đã duyệt", cls: "bg-emerald-100 text-emerald-700" },
   rejected: { label: "Đã từ chối", cls: "bg-red-100 text-red-700" },
   pending: { label: "Chờ duyệt", cls: "bg-amber-100 text-amber-700" },
 };
+
+const toLocalInput = (d) => (d ? new Date(d).toISOString().slice(0, 16) : "");
 
 export default function PostDetailModal({ post, onClose, onSave, onDelete, startEditing = false }) {
   const [editing, setEditing] = useState(startEditing);
@@ -21,7 +28,11 @@ export default function PostDetailModal({ post, onClose, onSave, onDelete, start
         description: post.description || "",
         floodLevel: post.floodLevel ?? 0,
         areaType: post.areaType || AREA_TYPES[0],
-        floodTime: post.floodTime ? new Date(post.floodTime).toISOString().slice(0, 16) : "",
+        floodTime: toLocalInput(post.floodTime),
+        eventEndTime: toLocalInput(post.eventEndTime),
+        fromAddress: post.fromAddress || "",
+        toAddress: post.toAddress || "",
+        landslideStatus: post.landslideStatus || LANDSLIDE_STATUS[0],
         location: {
           province: post.location?.province || "",
           district: post.location?.district || "",
@@ -37,18 +48,34 @@ export default function PostDetailModal({ post, onClose, onSave, onDelete, start
 
   if (!post || !form) return null;
 
+  const reportType = post.reportType || "flood_point";
+  const hasFloodLevel = FLOOD_LEVEL_TYPES.includes(reportType);
+  const hasRange = RANGE_TYPES.includes(reportType);
+  const isLandslide = reportType === "landslide";
   const statusCfg = STATUS_CFG[post.status] || { label: post.status, cls: "bg-slate-100 text-slate-600" };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(post._id, {
+      const payload = {
         description: form.description,
-        floodLevel: Number(form.floodLevel) || 0,
-        areaType: form.areaType,
         floodTime: form.floodTime ? new Date(form.floodTime).toISOString() : post.floodTime,
-        location: form.location,
-      });
+      };
+      if (hasFloodLevel) {
+        payload.floodLevel = Number(form.floodLevel) || 0;
+        payload.areaType = form.areaType;
+      }
+      if (hasRange) {
+        payload.fromAddress = form.fromAddress;
+        payload.toAddress = form.toAddress;
+      } else {
+        payload.location = form.location;
+      }
+      if (isLandslide) {
+        payload.landslideStatus = form.landslideStatus;
+        payload.eventEndTime = form.eventEndTime ? new Date(form.eventEndTime).toISOString() : post.eventEndTime;
+      }
+      await onSave(post._id, payload);
       setEditing(false);
     } finally {
       setSaving(false);
@@ -66,6 +93,8 @@ export default function PostDetailModal({ post, onClose, onSave, onDelete, start
     }
   };
 
+  const inputCls = "w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none";
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
       <div
@@ -76,14 +105,21 @@ export default function PostDetailModal({ post, onClose, onSave, onDelete, start
         <div className="relative text-white p-5 flex items-start justify-between overflow-hidden bg-header shrink-0">
           <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/5" />
           <div className="relative min-w-0">
-            <span className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-full mb-2 ${statusCfg.cls}`}>
-              {statusCfg.label}
-            </span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`inline-block text-[11px] font-bold px-2.5 py-1 rounded-full ${statusCfg.cls}`}>
+                {statusCfg.label}
+              </span>
+              <span className="inline-block text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/15 text-white">
+                {getReportTypeLabel(reportType)}
+              </span>
+            </div>
             <h2 className="text-lg font-black truncate">
-              {post.location?.province} - {post.location?.district}
+              {hasRange
+                ? `${post.fromAddress || "?"} → ${post.toAddress || "?"}`
+                : `${post.location?.province || ""} - ${post.location?.district || ""}`}
             </h2>
             <p className="text-blue-100/70 text-sm mt-0.5 truncate">
-              {post.user?.name || post.user?.email || "Ẩn danh"}
+              {post.user?.name || post.user?.email || "Ẩn danh (gửi từ web)"}
             </p>
           </div>
           <button
@@ -108,66 +144,124 @@ export default function PostDetailModal({ post, onClose, onSave, onDelete, start
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   rows={3}
-                  className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
+                  className={inputCls}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Mức lũ (cm)</label>
-                  <input
-                    type="number"
-                    value={form.floodLevel}
-                    onChange={(e) => setForm((f) => ({ ...f, floodLevel: e.target.value }))}
-                    className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
-                  />
+
+              {hasFloodLevel && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Mức lũ (cm)</label>
+                    <input
+                      type="number"
+                      value={form.floodLevel}
+                      onChange={(e) => setForm((f) => ({ ...f, floodLevel: e.target.value }))}
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Loại khu vực</label>
+                    <select
+                      value={form.areaType}
+                      onChange={(e) => setForm((f) => ({ ...f, areaType: e.target.value }))}
+                      className={inputCls}
+                    >
+                      {AREA_TYPES.map((a) => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+              )}
+
+              {hasRange ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Từ địa chỉ</label>
+                    <input
+                      value={form.fromAddress}
+                      onChange={(e) => setForm((f) => ({ ...f, fromAddress: e.target.value }))}
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Đến địa chỉ</label>
+                    <input
+                      value={form.toAddress}
+                      onChange={(e) => setForm((f) => ({ ...f, toAddress: e.target.value }))}
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 uppercase">Tỉnh/Thành</label>
+                      <input
+                        value={form.location.province}
+                        onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, province: e.target.value } }))}
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 uppercase">Quận/Huyện</label>
+                      <input
+                        value={form.location.district}
+                        onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, district: e.target.value } }))}
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Địa chỉ</label>
+                    <input
+                      value={form.location.address}
+                      onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, address: e.target.value } }))}
+                      className={inputCls}
+                    />
+                  </div>
+                </>
+              )}
+
+              {isLandslide && (
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Loại khu vực</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">Loại sạt lở</label>
                   <select
-                    value={form.areaType}
-                    onChange={(e) => setForm((f) => ({ ...f, areaType: e.target.value }))}
-                    className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
+                    value={form.landslideStatus}
+                    onChange={(e) => setForm((f) => ({ ...f, landslideStatus: e.target.value }))}
+                    className={inputCls}
                   >
-                    {AREA_TYPES.map((a) => (
-                      <option key={a} value={a}>{a}</option>
+                    {LANDSLIDE_STATUS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
                 </div>
-              </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Tỉnh/Thành</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">
+                    {isLandslide ? "Thời gian bắt đầu" : "Thời gian"}
+                  </label>
                   <input
-                    value={form.location.province}
-                    onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, province: e.target.value } }))}
-                    className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
+                    type="datetime-local"
+                    value={form.floodTime}
+                    onChange={(e) => setForm((f) => ({ ...f, floodTime: e.target.value }))}
+                    className={inputCls}
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Quận/Huyện</label>
-                  <input
-                    value={form.location.district}
-                    onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, district: e.target.value } }))}
-                    className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase">Địa chỉ</label>
-                <input
-                  value={form.location.address}
-                  onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, address: e.target.value } }))}
-                  className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase">Thời gian</label>
-                <input
-                  type="datetime-local"
-                  value={form.floodTime}
-                  onChange={(e) => setForm((f) => ({ ...f, floodTime: e.target.value }))}
-                  className="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400/20 focus:border-blue-400 outline-none"
-                />
+                {isLandslide && (
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">Thời gian kết thúc</label>
+                    <input
+                      type="datetime-local"
+                      value={form.eventEndTime}
+                      onChange={(e) => setForm((f) => ({ ...f, eventEndTime: e.target.value }))}
+                      className={inputCls}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -175,24 +269,44 @@ export default function PostDetailModal({ post, onClose, onSave, onDelete, start
               <div className="flex items-start gap-2">
                 <MapPin size={15} className="text-blue-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-semibold text-slate-700">{post.location?.province} - {post.location?.district}</p>
-                  {post.location?.address && <p className="text-slate-500 text-xs mt-0.5">{post.location.address}</p>}
+                  {hasRange ? (
+                    <p className="font-semibold text-slate-700">{post.fromAddress} → {post.toAddress}</p>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-slate-700">{post.location?.province} - {post.location?.district}</p>
+                      {post.location?.address && <p className="text-slate-500 text-xs mt-0.5">{post.location.address}</p>}
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <Calendar size={15} className="text-blue-500 mt-0.5 shrink-0" />
-                <p className="text-slate-600">{post.floodTime ? new Date(post.floodTime).toLocaleString("vi-VN") : "-"}</p>
+                <p className="text-slate-600">
+                  {post.floodTime ? new Date(post.floodTime).toLocaleString("vi-VN") : "-"}
+                  {isLandslide && post.eventEndTime && ` → ${new Date(post.eventEndTime).toLocaleString("vi-VN")}`}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase">Mức lũ</p>
-                  <p className="text-base font-black text-slate-800 mt-0.5">{post.floodLevel} cm</p>
+
+              {hasFloodLevel && (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">Mức lũ</p>
+                    <p className="text-base font-black text-slate-800 mt-0.5">{post.floodLevel} cm</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase">Loại khu vực</p>
+                    <p className="text-base font-black text-slate-800 mt-0.5">{post.areaType || "-"}</p>
+                  </div>
                 </div>
+              )}
+
+              {isLandslide && (
                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase">Loại khu vực</p>
-                  <p className="text-base font-black text-slate-800 mt-0.5">{post.areaType || "-"}</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase">Loại sạt lở</p>
+                  <p className="text-base font-black text-slate-800 mt-0.5">{post.landslideStatus || "-"}</p>
                 </div>
-              </div>
+              )}
+
               <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Mô tả</p>
                 <p className="text-slate-600 bg-slate-50 rounded-xl p-3 border border-slate-100">

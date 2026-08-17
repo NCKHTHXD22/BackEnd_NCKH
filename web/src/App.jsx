@@ -30,8 +30,6 @@ import ManageUsers from "./page/admin/ManageUser";
 import ManageAdmins from "./page/admin/ManageAdmin";
 import ReportsPublic from "./page/Home/Reports";
 import HomePage from "./page/Home/HomePage";
-import SubmitReport from "./page/Home/SubmitReport";
-import MyReports from "./page/Home/MyReport";
 import AdminDashboard from "./page/admin/AdminDashboard";
 
 function RequireAdmin({ children }) {
@@ -55,8 +53,6 @@ function App() {
             {/* Public routes — bản đồ tại root */}
             <Route path="/" element={<HomePage />} />
             <Route path="/reports" element={<ReportsPublic />} />
-            <Route path="/submit" element={<SubmitReport />} />
-            <Route path="/my-report" element={<MyReports />} />
 
             {/* Admin protected routes */}
             <Route

@@ -1,5 +1,6 @@
 import React from "react";
 import { Inbox, Pencil, Trash2 } from "lucide-react";
+import { RANGE_TYPES, getReportTypeLabel } from "../../../utils/reportTypes";
 
 export default function DataTableRejected({ data = [], onRowClick, onEdit, onDelete }) {
   return (
@@ -9,6 +10,7 @@ export default function DataTableRejected({ data = [], onRowClick, onEdit, onDel
           <thead>
             <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
               <th className="px-3 py-3 text-left font-bold rounded-tl-2xl">Ảnh</th>
+              <th className="px-3 py-3 text-left font-bold">Loại báo cáo</th>
               <th className="px-3 py-3 text-left font-bold">Địa điểm</th>
               <th className="px-3 py-3 text-left font-bold">Mô tả</th>
               <th className="px-3 py-3 text-left font-bold">Mức lũ</th>
@@ -22,7 +24,10 @@ export default function DataTableRejected({ data = [], onRowClick, onEdit, onDel
           </thead>
           <tbody className="divide-y divide-slate-50">
             {data.length > 0 ? (
-              data.map((p) => (
+              data.map((p) => {
+                const reportType = p.reportType || "flood_point";
+                const hasRange = RANGE_TYPES.includes(reportType);
+                return (
                 <tr
                   key={p._id || Math.random()}
                   onClick={() => onRowClick && onRowClick(p)}
@@ -43,9 +48,18 @@ export default function DataTableRejected({ data = [], onRowClick, onEdit, onDel
                     )}
                   </td>
 
+                  {/* Loại báo cáo */}
+                  <td className="px-3 py-3">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 whitespace-nowrap">
+                      {getReportTypeLabel(reportType)}
+                    </span>
+                  </td>
+
                   {/* Địa điểm */}
                   <td className="px-3 py-3 text-slate-700">
-                    {p.location?.province || "-"} - {p.location?.district || "-"}
+                    {hasRange
+                      ? `${p.fromAddress || "-"} → ${p.toAddress || "-"}`
+                      : `${p.location?.province || "-"} - ${p.location?.district || "-"}`}
                   </td>
 
                   {/* Mô tả */}
@@ -57,7 +71,7 @@ export default function DataTableRejected({ data = [], onRowClick, onEdit, onDel
                   </td>
 
                   {/* Loại khu vực */}
-                  <td className="px-3 py-3 text-slate-600">{p.areaType || "-"}</td>
+                  <td className="px-3 py-3 text-slate-600">{p.areaType || p.landslideStatus || "-"}</td>
 
                   {/* Thời gian */}
                   <td className="px-3 py-3 text-slate-500 text-xs whitespace-nowrap">
@@ -105,10 +119,11 @@ export default function DataTableRejected({ data = [], onRowClick, onEdit, onDel
                     </div>
                   </td>
                 </tr>
-              ))
+              );
+              })
             ) : (
               <tr>
-                <td colSpan={10} className="text-center py-12">
+                <td colSpan={11} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2 text-slate-400">
                     <Inbox size={28} className="text-slate-300" />
                     <span className="text-sm font-medium">Không có dữ liệu</span>
