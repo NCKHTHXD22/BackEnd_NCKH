@@ -120,11 +120,18 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         }
     };
 
-    // ARIMAX lưu mỗi giờ một lượt dự báo 24h — chỉ giữ lượt createdAt mới nhất
-    const latestArimaxBatch = (docs) => {
+    // ARIMAX chạy mỗi giờ một lượt, nhiều lượt cùng dự báo cho một mốc giờ.
+    // Giữ bản mới nhất cho TỪNG mốc — đúng ngữ nghĩa với cách /forecast-lstm upsert
+    // theo (Id_Lake, forecastTime), nhờ vậy chuỗi ARIMAX cũng trải dài qua quá khứ
+    // và xem lại được mô hình đã dự báo gì cho những giờ đã trôi qua.
+    const newestPerTarget = (docs) => {
         if (!Array.isArray(docs) || docs.length === 0) return [];
-        const newest = docs.reduce((max, d) => (d.createdAt > max ? d.createdAt : max), docs[0].createdAt);
-        return docs.filter(d => d.createdAt === newest);
+        const best = new Map();
+        for (const d of docs) {
+            const cur = best.get(d.targetTime);
+            if (!cur || d.createdAt > cur.createdAt) best.set(d.targetTime, d);
+        }
+        return [...best.values()].sort((a, b) => (a.targetTime < b.targetTime ? -1 : 1));
     };
 
     const fetchForecastFor = async (model) => {
@@ -141,7 +148,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         }
         if (model === 'arimax') {
             const docs = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);
-            return latestArimaxBatch(docs);
+            return newestPerTarget(docs);
         }
         return [];
     };
@@ -262,12 +269,9 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             const bridgeVal = actualQvao ?? lastKnownActual;
 
             // Ensemble: mỗi mô hình một chuỗi p50 riêng trên cùng lưới giờ.
-            // Chỉ dựng cho phần tương lai (và điểm "bây giờ" để nối liền): endpoint
-            // /forecast-lstm còn giữ cả dự báo cũ của những giờ đã qua, vẽ lên thì dải
-            // P10–P90 phủ kín vùng quan trắc và đường trung bình bị kéo theo thành
-            // "trung bình" của mỗi mình LSTM.
+            // Vẽ cả phần quá khứ để đối chiếu dự báo cũ với thực đo, giống tab LSTM.
             const ensembleSeries = {};
-            for (const m of (isFuture || isNow ? MODELS : [])) {
+            for (const m of MODELS) {
                 const arr = ensembleData[m.id];
                 if (!Array.isArray(arr) || arr.length === 0) continue;
                 const hit = arr.find(d => {
@@ -295,7 +299,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 .filter(v => v !== null && v !== undefined && !Number.isNaN(v));
             ensembleSeries.p50_mean = isNow
                 ? bridgeVal
-                : (ensVals.length ? ensVals.reduce((a, b) => a + b, 0) / ensVals.length : null);
+                : (ensVals.length >= 2 ? ensVals.reduce((a, b) => a + b, 0) / ensVals.length : null);
 
             const dataPoint = {
                 time: label,
@@ -336,7 +340,11 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     // Mo hinh co phan vi moi ve duoc dai P10-P90 (ARIMAX la du bao diem nen khong co)
     const quantileModels = availableModels.filter(m =>
         (ensembleData[m.id] || []).some(d => d.p10 !== null && d.p10 !== undefined && d.p90 !== null && d.p90 !== undefined));
-    const ensembleRows = unifiedData.filter(d => d.isFuture).slice(0, 12);
+    // Chỉ giữ những giờ có ít nhất một mô hình cho số; các mô hình có tầm dự báo
+    // khác nhau (ARIMAX/RF 6h, LSTM dài hơn) nên phần đuôi hay rỗng trơn.
+    const ensembleRows = unifiedData
+        .filter(d => d.isFuture && MODELS.some(m => d[`p50_${m.id}`] !== null && d[`p50_${m.id}`] !== undefined))
+        .slice(0, 12);
 
     // Truc mua truoc day co dinh [0, 80] — thang do danh cho dieu kien lu, nen nhung
     // ngay mua nho (0–2 mm) cot gan nhu vo hinh. Cho bien tren bam theo du lieu,
@@ -950,7 +958,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                         const vals = availableModels
                                                             .map(m => d[`p50_${m.id}`])
                                                             .filter(v => v !== null && v !== undefined && !Number.isNaN(v));
-                                                        const mean = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+                                                        const mean = vals.length >= 2 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
                                                         const spread = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
                                                         return (
                                                             <tr key={i} className={`border-b border-slate-50 hover:bg-blue-50/50 transition-colors ${i % 2 ? 'bg-slate-50/40' : ''}`}>
