@@ -15,6 +15,7 @@ import {
     Tooltip,
     ResponsiveContainer,
     ReferenceLine,
+    ReferenceArea,
     Area,
 } from "recharts";
 import {
@@ -35,7 +36,19 @@ import {
     Activity,
     Shield,
     ArrowRight,
+    Trees,
 } from "lucide-react";
+
+// ─── Forecast models available in the Operation tab's chart/table ───────────
+const FORECAST_MODELS = [
+    { id: 'lstm', label: 'LSTM', color: '#2563eb', icon: <Zap size={13} /> },
+    { id: 'arimax', label: 'ARIMAX', color: '#7c3aed', icon: <TrendingUp size={13} /> },
+    { id: 'rf', label: 'Random Forest', color: '#ea580c', icon: <Trees size={13} /> },
+];
+
+// Hours of past data kept in the combined chart/table — the redesign favors
+// the forecast horizon over a long history trail.
+const HISTORY_WINDOW_HOURS = 5;
 
 // ─── Heuristic: recommend discharge (per-lake thresholds) ─────────────────────
 // Nhận lakeConst để dùng đúng MNC/MNDBT/MNGC/crest theo từng hồ
@@ -413,7 +426,8 @@ export default function OperationDashboard({ lakeId }) {
     const [selectedReservoir, setSelectedReservoir] = useState(lakeId || "");
     const [chartData, setChartData] = useState([]);
     const [latestHydro, setLatestHydro] = useState({ qvao: 0, luuluongxa: 0, htl: 0 });
-    const [forecastData, setForecastData] = useState([]);   // LSTM forecast
+    const [selectedModel, setSelectedModel] = useState('lstm'); // lstm | arimax | rf
+    const [forecastData, setForecastData] = useState([]);   // forecast for the selected model
     const [showExplain, setShowExplain] = useState(true);
     const [showRec, setShowRec]       = useState(true);
 
@@ -586,20 +600,36 @@ export default function OperationDashboard({ lakeId }) {
         return () => clearInterval(timer);
     }, [selectedReservoir, lakeId]);
 
-    // ─── Fetch LSTM forecast — refresh every 1 hour ────────────────────────────
+    // ─── Fetch forecast for the selected model — refresh every 1 hour ─────────
+    // ARIMAX stores one 24h forecast batch per run — keep only the newest createdAt.
+    const latestArimaxBatch = (docs) => {
+        if (!Array.isArray(docs) || docs.length === 0) return [];
+        const newest = docs.reduce((max, d) => (d.createdAt > max ? d.createdAt : max), docs[0].createdAt);
+        return docs.filter(d => d.createdAt === newest);
+    };
+
+    const fetchRawForecast = async (id, model) => {
+        if (model === 'rf') {
+            const rf = await mapApi.getForecastRf(id).catch(() => null);
+            return Array.isArray(rf) ? rf : [];
+        }
+        if (model === 'arimax') {
+            // "station" — same default rain source used when the Forecast tab first loads.
+            const docs = await mapApi.getForecastHistory(id, 'station').catch(() => null);
+            return latestArimaxBatch(docs);
+        }
+        const lstm = await mapApi.getForecastLstm(id).catch(() => null);
+        if (!lstm) return [];
+        return Array.isArray(lstm) ? lstm : (lstm.predictions || []);
+    };
+
     useEffect(() => {
         const id = lakeId || selectedReservoir;
         if (!id) return;
 
         const fetchForecast = async () => {
             try {
-                const raw = await mapApi.getForecastLstm(id);
-                const arr = Array.isArray(raw)
-                    ? raw
-                    : Array.isArray(raw?.predictions)
-                    ? raw.predictions
-                    : [];
-
+                const arr = await fetchRawForecast(id, selectedModel);
                 const mapped = arr.map(d => {
                     const dt = new Date(d.forecastTime || d.targetTime || d.time);
                     return {
@@ -613,9 +643,9 @@ export default function OperationDashboard({ lakeId }) {
                             " " +
                             dt.getHours().toString().padStart(2, "0") +
                             ":00",
-                        p50: d.qvao_forecast || d.p50 || null,
-                        p10: d.p10 || null,
-                        p90: d.p90 || null,
+                        p50: d.qvao_forecast ?? d.p50 ?? d.value ?? null,
+                        p10: d.p10 ?? null,
+                        p90: d.p90 ?? null,
                         isForecast: true,
                     };
                 });
@@ -628,7 +658,7 @@ export default function OperationDashboard({ lakeId }) {
         fetchForecast(); // initial load
         const timer = setInterval(fetchForecast, 60 * 60 * 1000); // refresh every 1 hour
         return () => clearInterval(timer);
-    }, [selectedReservoir, lakeId]);
+    }, [selectedReservoir, lakeId, selectedModel]);
 
     // ─── Fetch lake spec từ DB (thay LAKE_CONSTANTS hard-code) ────────────────
     useEffect(() => {
@@ -704,8 +734,10 @@ export default function OperationDashboard({ lakeId }) {
         // Build a map: fullLabel → point
         const map = new Map();
 
-        // Historical points
-        chartData.forEach(d => {
+        // Historical points — keep only the last HISTORY_WINDOW_HOURS so the chart
+        // stays focused on the forecast horizon instead of a long history trail.
+        const recentHistory = chartData.slice(-HISTORY_WINDOW_HOURS);
+        recentHistory.forEach(d => {
             map.set(d.fullLabel, { ...d });
         });
 
@@ -763,6 +795,22 @@ export default function OperationDashboard({ lakeId }) {
         const last = chartData[chartData.length - 1];
         return last?.fullLabel;
     }, [chartData]);
+
+    // Label of the last point — used to shade the forecast zone from "now" to the end
+    const lastLabel = unifiedData.length ? unifiedData[unifiedData.length - 1].fullLabel : null;
+
+    // Rows for the detailed forecast table — next 12 forecast hours of the selected model
+    const forecastRows = useMemo(() =>
+        unifiedData
+            .filter(d => d.isForecast)
+            .slice(0, 12)
+            .map(d => ({
+                ...d,
+                hourLabel: d._ts.getHours().toString().padStart(2, '0') + ':00',
+            })),
+    [unifiedData]);
+
+    const selectedModelInfo = FORECAST_MODELS.find(m => m.id === selectedModel) || FORECAST_MODELS[0];
 
     // ─── Chart legend (rendered outside the SVG so it never overlaps the plot) ──
     const chartLegend = useMemo(() => ([
@@ -1022,165 +1070,237 @@ export default function OperationDashboard({ lakeId }) {
                     </div>
                 </div>
 
-                {/* ── Row 2: Full Width Chart ── */}
-                <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-4 bg-slate-50 border-b border-slate-100">
-                        <div className="flex items-center gap-3 text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                {/* ── Row 2: Forecast-focused chart + detailed forecast table ── */}
+                <div className="flex flex-col gap-3">
+                    {/* Header: title, model picker, live status */}
+                    <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4">
+                        <div className="flex items-center gap-3 text-[10px] text-slate-500 font-black uppercase tracking-widest shrink-0">
                             <Activity size={14} className="text-blue-500 shrink-0" />
                             <span>{t('operation.chartHeader')}</span>
                         </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider mr-1">{t('operation.modelSelectorLabel')}</span>
+                            {FORECAST_MODELS.map(m => (
+                                <button
+                                    key={m.id}
+                                    onClick={() => setSelectedModel(m.id)}
+                                    className={`px-2.5 py-1.5 text-[10px] rounded-lg font-black flex items-center gap-1.5 transition-all border ${selectedModel === m.id
+                                        ? 'text-white shadow-sm border-transparent'
+                                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                                        }`}
+                                    style={selectedModel === m.id ? { backgroundColor: m.color } : {}}
+                                >
+                                    {m.icon} {m.label}
+                                </button>
+                            ))}
+                        </div>
+
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                                 <Clock size={14} className="text-slate-400" />
                                 <span>{t('operation.updatedAt')} <LiveClock /></span>
                             </div>
                             {forecastData.length > 0 && (
-                                <span className="text-[9px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-black">LSTM FORECAST ACTIVE</span>
+                                <span className="text-[9px] px-2 py-0.5 rounded font-black text-white" style={{ backgroundColor: selectedModelInfo.color }}>
+                                    {t('operation.forecastActive', { model: selectedModelInfo.label })}
+                                </span>
                             )}
                         </div>
                     </div>
-                    
-                    {/* Custom legend — rendered as normal DOM so it wraps cleanly and never overlaps the plot/reference-line label */}
-                    {unifiedData.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 px-4 pt-3 pb-1 border-b border-slate-50">
-                            {chartLegend.map(item => (
-                                <div key={item.key} className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-600">
-                                    {item.swatch === 'bar' && <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color, opacity: 0.7 }} />}
-                                    {item.swatch === 'area' && <span className="w-3 h-2 rounded-sm shrink-0" style={{ backgroundColor: item.color, opacity: 0.25, border: `1px solid ${item.color}` }} />}
-                                    {item.swatch === 'line' && <span className="w-3.5 h-0 border-t-[3px] rounded-full shrink-0" style={{ borderColor: item.color }} />}
-                                    {item.swatch === 'dot' && <span className="w-3.5 h-0 border-t-2 rounded-full shrink-0" style={{ borderColor: item.color }} />}
-                                    {item.swatch === 'dash' && <span className="w-3.5 h-0 border-t-2 border-dashed shrink-0" style={{ borderColor: item.color }} />}
-                                    {item.swatch === 'dashThin' && <span className="w-3.5 h-0 border-t border-dashed shrink-0" style={{ borderColor: item.color }} />}
-                                    <span>{item.name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
 
-                    <FullscreenChartWrapper className="w-full p-4 h-[480px]" label="Toàn màn hình biểu đồ">
-                        {unifiedData.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-slate-400 text-xs italic">
-                                {t('operation.processingChart')}
-                            </div>
-                        ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={unifiedData} margin={{ top: 16, right: 40, left: 10, bottom: isMobile ? 60 : 50 }} barCategoryGap="10%">
-                                    <defs>
-                                        <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
-                                        </linearGradient>
-                                        <linearGradient id="rainBarGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%"  stopColor="#0ea5e9" stopOpacity={0.8} />
-                                            <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.2} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                    <XAxis
-                                        dataKey="fullLabel"
-                                        stroke="#94a3b8"
-                                        fontSize={isMobile ? 8 : 9}
-                                        fontWeight="700"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        interval={isMobile ? Math.max(2, Math.ceil(unifiedData.length / 5)) : Math.max(1, Math.floor(unifiedData.length / 10))}
-                                        height={isMobile ? 62 : 55}
-                                        angle={-45}
-                                        textAnchor="end"
-                                        tickFormatter={val => {
-                                            if (!val || typeof val !== 'string') return val;
-                                            const [d, time] = val.split(' ');
-                                            return isMobile ? time : `${time} ${d.substring(0, 5)}`;
-                                        }}
-                                    />
-                                    <YAxis
-                                        yAxisId="left"
-                                        stroke="#64748b"
-                                        fontSize={9}
-                                        fontWeight="800"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        domain={['auto', 'auto']}
-                                        tickFormatter={v => v.toLocaleString()}
-                                    />
-                                    <YAxis
-                                        yAxisId="rain"
-                                        orientation="right"
-                                        reversed={true}
-                                        stroke="#0ea5e9"
-                                        fontSize={9}
-                                        fontWeight="800"
-                                        domain={[0, 100]}
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tickFormatter={v => `${v}mm`}
-                                    />
-                                    <Tooltip
-                                        content={({ active, payload, label }) => {
-                                            if (!active || !payload?.length) return null;
-                                            const pt = payload[0].payload;
-                                            return (
-                                                <div className="bg-white/95 backdrop-blur shadow-xl border border-slate-100 rounded-xl p-3 text-[11px] min-w-[180px]">
-                                                    <div className="border-b border-slate-100 pb-1.5 mb-2 flex justify-between items-center">
-                                                        <span className="font-black text-slate-500">{label}</span>
-                                                        <span className={`px-1.5 py-0.5 rounded-[4px] text-[8px] font-black ${pt.isForecast ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'}`}>
-                                                            {pt.isForecast ? t('operation.forecastBadge') : t('operation.actualBadge')}
-                                                        </span>
-                                                    </div>
-                                                    <div className="space-y-1.5">
-                                                        {payload.map((e, i) => e.value != null && (
-                                                            <div key={i} className="flex justify-between items-center">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: e.color }} />
-                                                                    <span className="font-bold text-slate-500 uppercase text-[9px]">{e.name}</span>
-                                                                </div>
-                                                                <span className="font-black text-slate-800">{Number(e.value).toFixed(1)}</span>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+                        {/* Chart card */}
+                        <div className="lg:col-span-3 w-full bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                            {/* Custom legend — rendered as normal DOM so it wraps cleanly and never overlaps the plot/reference-line label */}
+                            {unifiedData.length > 0 && (
+                                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 px-4 pt-3 pb-1 border-b border-slate-50">
+                                    {chartLegend.map(item => (
+                                        <div key={item.key} className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-600">
+                                            {item.swatch === 'bar' && <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color, opacity: 0.7 }} />}
+                                            {item.swatch === 'area' && <span className="w-3 h-2 rounded-sm shrink-0" style={{ backgroundColor: item.color, opacity: 0.25, border: `1px solid ${item.color}` }} />}
+                                            {item.swatch === 'line' && <span className="w-3.5 h-0 border-t-[3px] rounded-full shrink-0" style={{ borderColor: item.color }} />}
+                                            {item.swatch === 'dot' && <span className="w-3.5 h-0 border-t-2 rounded-full shrink-0" style={{ borderColor: item.color }} />}
+                                            {item.swatch === 'dash' && <span className="w-3.5 h-0 border-t-2 border-dashed shrink-0" style={{ borderColor: item.color }} />}
+                                            {item.swatch === 'dashThin' && <span className="w-3.5 h-0 border-t border-dashed shrink-0" style={{ borderColor: item.color }} />}
+                                            <span>{item.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <FullscreenChartWrapper className="w-full p-4 h-[480px]" label="Toàn màn hình biểu đồ">
+                                {unifiedData.length === 0 ? (
+                                    <div className="flex items-center justify-center h-full text-slate-400 text-xs italic">
+                                        {t('operation.processingChart')}
+                                    </div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={unifiedData} margin={{ top: 16, right: 40, left: 10, bottom: isMobile ? 60 : 50 }} barCategoryGap="10%">
+                                            <defs>
+                                                <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
+                                                </linearGradient>
+                                                <linearGradient id="rainBarGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%"  stopColor="#0ea5e9" stopOpacity={0.8} />
+                                                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.2} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                            {/* Shade the forecast horizon so the chart reads as forecast-first */}
+                                            {nowLabel && lastLabel && (
+                                                <ReferenceArea yAxisId="left" x1={nowLabel} x2={lastLabel} fill="#8b5cf6" fillOpacity={0.045} />
+                                            )}
+                                            <XAxis
+                                                dataKey="fullLabel"
+                                                stroke="#94a3b8"
+                                                fontSize={isMobile ? 8 : 9}
+                                                fontWeight="700"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                interval={isMobile ? Math.max(1, Math.ceil(unifiedData.length / 6)) : Math.max(1, Math.floor(unifiedData.length / 12))}
+                                                height={isMobile ? 62 : 55}
+                                                angle={-45}
+                                                textAnchor="end"
+                                                tickFormatter={val => {
+                                                    if (!val || typeof val !== 'string') return val;
+                                                    const [d, time] = val.split(' ');
+                                                    return isMobile ? time : `${time} ${d.substring(0, 5)}`;
+                                                }}
+                                            />
+                                            <YAxis
+                                                yAxisId="left"
+                                                stroke="#64748b"
+                                                fontSize={9}
+                                                fontWeight="800"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                domain={['auto', 'auto']}
+                                                tickFormatter={v => v.toLocaleString()}
+                                            />
+                                            <YAxis
+                                                yAxisId="rain"
+                                                orientation="right"
+                                                reversed={true}
+                                                stroke="#0ea5e9"
+                                                fontSize={9}
+                                                fontWeight="800"
+                                                domain={[0, 100]}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tickFormatter={v => `${v}mm`}
+                                            />
+                                            <Tooltip
+                                                content={({ active, payload, label }) => {
+                                                    if (!active || !payload?.length) return null;
+                                                    const pt = payload[0].payload;
+                                                    return (
+                                                        <div className="bg-white/95 backdrop-blur shadow-xl border border-slate-100 rounded-xl p-3 text-[11px] min-w-[180px]">
+                                                            <div className="border-b border-slate-100 pb-1.5 mb-2 flex justify-between items-center">
+                                                                <span className="font-black text-slate-500">{label}</span>
+                                                                <span className={`px-1.5 py-0.5 rounded-[4px] text-[8px] font-black ${pt.isForecast ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'}`}>
+                                                                    {pt.isForecast ? t('operation.forecastBadge') : t('operation.actualBadge')}
+                                                                </span>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        }}
-                                    />
-                                    <Bar
-                                        yAxisId="rain"
-                                        dataKey="rainBest"
-                                        name={t('operation.legend_rain')}
-                                        fill="url(#rainBarGrad)"
-                                        maxBarSize={25}
-                                        radius={[0, 0, 4, 4]}
-                                        isAnimationActive={false}
-                                    />
-                                    <Area
-                                        yAxisId="left"
-                                        type="monotone"
-                                        dataKey="p90"
-                                        stroke="none"
-                                        fill="url(#forecastBand)"
-                                        name={t('operation.legend_band')}
-                                        connectNulls
-                                        isAnimationActive={false}
-                                    />
-                                    <Line yAxisId="left" type="monotone" dataKey="waterLevel" name={t('operation.legend_wl')} stroke="#3b82f6" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
-                                    <Line yAxisId="left" type="monotone" dataKey="qIn" name={t('operation.legend_qin')} stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: '#f59e0b' }} connectNulls isAnimationActive={false} />
-                                    <Line yAxisId="left" type="monotone" dataKey="qOut" name={t('operation.legend_qout')} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} connectNulls isAnimationActive={false} />
-                                    <Line yAxisId="left" type="monotone" dataKey="p50" name={t('operation.legend_p50')} stroke="#8b5cf6" strokeWidth={3} strokeDasharray="8 4" dot={false} connectNulls isAnimationActive={false} />
-                                    <Line yAxisId="left" type="monotone" dataKey="p90" name={t('operation.legend_p90')} stroke="#dc2626" strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls isAnimationActive={false} />
-                                    <Line yAxisId="left" type="monotone" dataKey="p10" name={t('operation.legend_p10')} stroke="#6366f1" strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls isAnimationActive={false} />
-                                    {nowLabel && (
-                                        <ReferenceLine
-                                            yAxisId="left"
-                                            x={nowLabel}
-                                            stroke="#ef4444"
-                                            strokeWidth={2}
-                                            strokeDasharray="4 4"
-                                            label={{ value: t('operation.currentRef'), position: "top", fill: "#ef4444", fontSize: 9, fontWeight: "900" }}
-                                        />
-                                    )}
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        )}
-                    </FullscreenChartWrapper>
+                                                            <div className="space-y-1.5">
+                                                                {payload.map((e, i) => e.value != null && (
+                                                                    <div key={i} className="flex justify-between items-center">
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: e.color }} />
+                                                                            <span className="font-bold text-slate-500 uppercase text-[9px]">{e.name}</span>
+                                                                        </div>
+                                                                        <span className="font-black text-slate-800">{Number(e.value).toFixed(1)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }}
+                                            />
+                                            <Bar
+                                                yAxisId="rain"
+                                                dataKey="rainBest"
+                                                name={t('operation.legend_rain')}
+                                                fill="url(#rainBarGrad)"
+                                                maxBarSize={25}
+                                                radius={[0, 0, 4, 4]}
+                                                isAnimationActive={false}
+                                            />
+                                            <Area
+                                                yAxisId="left"
+                                                type="monotone"
+                                                dataKey="p90"
+                                                stroke="none"
+                                                fill="url(#forecastBand)"
+                                                name={t('operation.legend_band')}
+                                                connectNulls
+                                                isAnimationActive={false}
+                                            />
+                                            <Line yAxisId="left" type="monotone" dataKey="waterLevel" name={t('operation.legend_wl')} stroke="#3b82f6" strokeWidth={3} dot={false} connectNulls isAnimationActive={false} />
+                                            <Line yAxisId="left" type="monotone" dataKey="qIn" name={t('operation.legend_qin')} stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: '#f59e0b' }} connectNulls isAnimationActive={false} />
+                                            <Line yAxisId="left" type="monotone" dataKey="qOut" name={t('operation.legend_qout')} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} connectNulls isAnimationActive={false} />
+                                            <Line yAxisId="left" type="monotone" dataKey="p50" name={t('operation.legend_p50')} stroke={selectedModelInfo.color} strokeWidth={3} strokeDasharray="8 4" dot={false} connectNulls isAnimationActive={false} />
+                                            <Line yAxisId="left" type="monotone" dataKey="p90" name={t('operation.legend_p90')} stroke="#dc2626" strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls isAnimationActive={false} />
+                                            <Line yAxisId="left" type="monotone" dataKey="p10" name={t('operation.legend_p10')} stroke="#6366f1" strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls isAnimationActive={false} />
+                                            {nowLabel && (
+                                                <ReferenceLine
+                                                    yAxisId="left"
+                                                    x={nowLabel}
+                                                    stroke="#ef4444"
+                                                    strokeWidth={2}
+                                                    strokeDasharray="4 4"
+                                                    label={{ value: t('operation.currentRef'), position: "top", fill: "#ef4444", fontSize: 9, fontWeight: "900" }}
+                                                />
+                                            )}
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                )}
+                            </FullscreenChartWrapper>
+                        </div>
+
+                        {/* Detailed forecast table */}
+                        <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col">
+                            <h3 className="text-slate-700 font-black text-[11px] uppercase tracking-wide mb-0.5 flex items-center gap-1.5">
+                                <Clock size={14} className="text-slate-400" /> {t('operation.forecastTableTitle')}
+                            </h3>
+                            <p className="text-[10px] text-slate-400 mb-3 italic">
+                                {t('operation.forecastTableSubtitle', { model: selectedModelInfo.label })}
+                            </p>
+                            {forecastRows.length === 0 ? (
+                                <div className="flex-1 flex items-center justify-center text-center text-slate-300 text-[11px] italic py-8">
+                                    {t('operation.noForecastRows')}
+                                </div>
+                            ) : (
+                                <div className="flex-1 overflow-auto border border-slate-100 rounded-lg max-h-[440px]">
+                                    <table className="w-full text-xs text-left">
+                                        <thead className="bg-slate-50 text-slate-500 font-black border-b text-[9px] uppercase tracking-wider sticky top-0">
+                                            <tr>
+                                                <th className="px-2 py-2">{t('operation.colHour')}</th>
+                                                <th className="px-1.5 py-2 text-center text-cyan-600">{t('operation.colRain')}</th>
+                                                <th className="px-1.5 py-2 text-center text-indigo-500">{t('operation.colMin')}</th>
+                                                <th className="px-1.5 py-2 text-center">{t('operation.colAvg')}</th>
+                                                <th className="px-1.5 py-2 text-center text-red-600">{t('operation.colMax')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {forecastRows.map((d, i) => (
+                                                <tr key={i} className={`border-b border-slate-50 hover:bg-purple-50/50 transition-colors ${i % 2 ? 'bg-slate-50/40' : ''}`}>
+                                                    <td className="px-2 py-2 font-bold text-slate-600">{d.hourLabel}</td>
+                                                    <td className="px-1.5 py-2 text-center text-cyan-600 font-medium">
+                                                        {d.rainBest > 0 ? d.rainBest.toFixed(1) : <span className="text-slate-300">—</span>}
+                                                    </td>
+                                                    <td className="px-1.5 py-2 text-center text-indigo-500 font-medium">{d.p10 != null ? d.p10.toFixed(1) : '—'}</td>
+                                                    <td className="px-1.5 py-2 text-center font-black text-slate-700">{d.p50 != null ? d.p50.toFixed(1) : '—'}</td>
+                                                    <td className="px-1.5 py-2 text-center text-red-500 font-medium">{d.p90 != null ? d.p90.toFixed(1) : '—'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
