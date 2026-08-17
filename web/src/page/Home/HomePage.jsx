@@ -9,7 +9,7 @@ import {
     FaCog, FaCrosshairs, FaExclamationTriangle, FaLayerGroup, FaTrash,
     FaPlus, FaMinus, FaExpand, FaEdit,
     FaBell, FaMapMarkedAlt, FaProjectDiagram, FaSearchLocation, FaBook,
-    FaPlay, FaChevronLeft, FaSearch, FaFilter, FaChevronRight,
+    FaChevronLeft, FaSearch, FaFilter, FaChevronRight,
     FaMountain, FaUsers, FaGlobeAsia, FaMap, FaWater,
     FaCloudRain, FaTint, FaThermometerHalf
 } from 'react-icons/fa';
@@ -667,53 +667,6 @@ export default function HomePage() {
                 </div>
             )}
 
-            {/* Bottom Slider & Legend */}
-            <div className="absolute bottom-4 left-0 right-0 z-[1000] flex flex-col md:flex-row justify-between items-end px-2 md:px-10 pointer-events-none gap-2">
-                {/* Play & Timeline */}
-                <div className="w-full md:flex-1 max-w-4xl flex items-center gap-2 pointer-events-auto">
-                    <button className="bg-white text-red-600 rounded-full w-10 h-10 shadow-md border border-gray-300 hover:bg-gray-100 flex items-center justify-center shrink-0">
-                        <FaPlay className="ml-1" />
-                    </button>
-                    <div className="flex-1 bg-[#0c1a42]/85 backdrop-blur-sm p-2 md:p-3 rounded-xl text-white shadow-md text-xs border border-white/10">
-                        <div className="relative pt-6 px-1">
-                            <div className="absolute top-0 left-0 bg-[#E09022] text-white px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold whitespace-nowrap">
-                                {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                            <input type="range" className="w-full h-1 bg-white appearance-none outline-none cursor-pointer mt-1" defaultValue={0} />
-                            <div className="flex justify-between mt-2 text-[8px] sm:text-[10px] text-gray-200">
-                                {[0, 2, 5, 7, 10].map(d => {
-                                    const date = new Date();
-                                    date.setDate(date.getDate() + d);
-                                    return (
-                                        <div key={d} className="flex flex-col items-center">
-                                            <div className="h-1 w-[1px] bg-white mb-1"></div>
-                                            <span>{date.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Legend */}
-                <div className="bg-[#0c1a42]/85 backdrop-blur-sm text-white rounded-xl p-2 text-[10px] w-full md:w-80 shadow-md pointer-events-auto mt-2 md:mt-0 border border-white/10">
-                    <div className="font-bold mb-1 ml-1 text-xs">TỐC ĐỘ GIÓ</div>
-                    <div className="flex justify-between mb-1 text-[9px] px-1">
-                        <span className="w-10">Cấp gió</span>
-                        {[0, 2, 3, 4, 7, 8, 11].map(v => <span key={v} className="flex-1 text-center">{v}</span>)}
-                    </div>
-                    <div className="flex h-3 w-full rounded overflow-hidden mb-1 ml-1 border border-gray-600">
-                        {['bg-blue-800', 'bg-blue-500', 'bg-cyan-400', 'bg-green-400', 'bg-yellow-400', 'bg-[#D17647]', 'bg-[#9A508E]'].map((c, i) => (
-                            <div key={i} className={`flex-1 ${c}`}></div>
-                        ))}
-                    </div>
-                    <div className="flex justify-between text-gray-300 text-[9px] px-1">
-                        <span className="w-10">km/h</span>
-                        {[0, 10, 20, 35, 55, 70, 100].map(v => <span key={v} className="flex-1 text-center">{v}</span>)}
-                    </div>
-                </div>
-            </div>
 
             {/* Lake Modal Overlay */}
             <LakeModal
