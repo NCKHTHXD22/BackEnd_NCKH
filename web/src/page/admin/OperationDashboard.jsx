@@ -41,9 +41,9 @@ import {
 
 // ─── Forecast models available in the Operation tab's chart/table ───────────
 const FORECAST_MODELS = [
-    { id: 'lstm', label: 'LSTM', color: '#2563eb', icon: <Zap size={13} /> },
-    { id: 'arimax', label: 'ARIMAX', color: '#7c3aed', icon: <TrendingUp size={13} /> },
-    { id: 'rf', label: 'Random Forest', color: '#ea580c', icon: <Trees size={13} /> },
+    { id: 'lstm', label: 'LSTM', color: '#2a78d6', icon: <Zap size={13} /> },
+    { id: 'arimax', label: 'ARIMAX', color: '#4a3aa7', icon: <TrendingUp size={13} /> },
+    { id: 'rf', label: 'Random Forest', color: '#eb6834', icon: <Trees size={13} /> },
 ];
 
 // Hours of past data kept in the combined chart/table — the redesign favors

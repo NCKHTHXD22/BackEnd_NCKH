@@ -52,12 +52,20 @@ const RAIN_SOURCES = [
 ];
 
 // Model configs
+// Mau dinh danh mo hinh — cac slot da chay qua scripts/validate_palette.js
+// (--pairs all, light): CVD deutan dE 13.0, mat thuong dE 16.3, contrast dat.
+// Bo mau cu #2563eb/#7c3aed vi hai mau do gan nhu trung nhau voi nguoi mu mau do-luc.
 const MODELS = [
-    { id: 'arimax', label: 'ARIMAX', color: '#7c3aed', icon: <TrendingUp size={14} /> },
-    { id: 'lstm', label: 'LSTM', color: '#2563eb', icon: <Zap size={14} /> },
-    { id: 'rf', label: 'Random Forest', color: '#ea580c', icon: <Trees size={14} /> },
-    { id: 'hec', label: 'HEC-HMS', color: '#059669', icon: <BarChart3 size={14} /> },
+    { id: 'arimax', label: 'ARIMAX', color: '#4a3aa7', icon: <TrendingUp size={14} /> },
+    { id: 'lstm', label: 'LSTM', color: '#2a78d6', icon: <Zap size={14} /> },
+    { id: 'rf', label: 'Random Forest', color: '#eb6834', icon: <Trees size={14} /> },
+    { id: 'hec', label: 'HEC-HMS', color: '#008300', icon: <BarChart3 size={14} /> },
 ];
+
+// Muc do (quan trac / trung binh) khong phai mot "mo hinh" nen deo mau chu,
+// khong tieu ton mot slot dinh danh nao.
+const INK = '#0b0b0b';
+const INK_MUTED = '#52514e';
 
 // Legend chip — plain DOM so it wraps to multiple lines cleanly instead of
 // overlapping the chart (recharts' built-in <Legend> clips/overlaps when it
@@ -329,6 +337,17 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const quantileModels = availableModels.filter(m =>
         (ensembleData[m.id] || []).some(d => d.p10 !== null && d.p10 !== undefined && d.p90 !== null && d.p90 !== undefined));
     const ensembleRows = unifiedData.filter(d => d.isFuture).slice(0, 12);
+
+    // Truc mua truoc day co dinh [0, 80] — thang do danh cho dieu kien lu, nen nhung
+    // ngay mua nho (0–2 mm) cot gan nhu vo hinh. Cho bien tren bam theo du lieu,
+    // co san 10 mm de mua nhe van doc duoc ma khong phong dai thanh bao.
+    const maxRainValue = unifiedData.reduce((mx, d) => Math.max(
+        mx,
+        d.rain_station || 0,
+        d.rain_bestmatch || 0,
+        d.rain || 0,
+    ), 0);
+    const rainAxisMax = Math.max(10, Math.ceil((maxRainValue * 1.25) / 5) * 5);
 
     // Run model simulation
     const handleRunModel = async () => {
@@ -676,7 +695,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 label={`${t('lakeModal.forecast.rainPrefix')} (${RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label || selectedRainSource})`}
                                             />
                                         )}
-                                        <LegendChip color="#3b82f6" swatch="line" label={t('lakeModal.forecast.surveyActual')} />
+                                        <LegendChip color={INK_MUTED} swatch="line" label={t('lakeModal.forecast.surveyActual')} />
                                         {forecastView === 'ensemble' && availableModels.map(m => (
                                             <LegendChip key={`legend_ens_${m.id}`} color={m.color} swatch="dash" label={m.label} />
                                         ))}
@@ -684,7 +703,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                             <LegendChip key={`legend_band_${m.id}`} color={m.color} swatch="bar" label={`${m.label} ${t('lakeModal.forecast.bandLabel')}`} />
                                         ))}
                                         {forecastView === 'ensemble' && availableModels.length > 1 && (
-                                            <LegendChip color="#0f172a" swatch="line" label={t('lakeModal.forecast.meanLine')} />
+                                            <LegendChip color={INK} swatch="line" label={t('lakeModal.forecast.meanLine')} />
                                         )}
                                         {forecastView === 'single' && <LegendChip color="#ef4444" swatch="dashThin" label={t('lakeModal.forecast.p90Label')} />}
                                         {forecastView === 'single' && <LegendChip color="#6366f1" swatch="dashThin" label={t('lakeModal.forecast.p10Label')} />}
@@ -709,7 +728,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                         <stop offset="95%" stopColor={MODELS.find(m => m.id === selectedModel)?.color || '#3b82f6'} stopOpacity={0.05} />
                                                     </linearGradient>
                                                 </defs>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                                <CartesianGrid vertical={false} stroke="#EEF0F2" />
                                                 <XAxis
                                                     dataKey="time"
                                                     axisLine={false}
@@ -732,7 +751,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     yAxisId="rain"
                                                     orientation="right"
                                                     reversed={true}
-                                                    domain={[0, 80]}
+                                                    domain={[0, rainAxisMax]}
                                                     axisLine={false}
                                                     tickLine={false}
                                                     tick={{ fontSize: 10, fill: '#0891b2' }}
@@ -790,21 +809,23 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                         dataKey={`rain_${selectedRainSource}`}
                                                         fill={RAIN_SOURCES.find(s => s.id === selectedRainSource)?.color || '#2563eb'}
                                                         name={`${t('lakeModal.forecast.rainPrefix')} (${RAIN_SOURCES.find(s => s.id === selectedRainSource)?.label || selectedRainSource}) (mm)`}
-                                                        barSize={12}
-                                                        opacity={0.7}
+                                                        barSize={10}
+                                                        radius={[2, 2, 0, 0]}
+                                                        opacity={0.45}
                                                     />
                                                 )}
 
                                                 {/* Actual Flow */}
-                                                <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke="#3b82f6" strokeWidth={3} dot={false} name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
+                                                <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke={INK_MUTED} strokeWidth={2} dot={false} name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
                                                 
                                                 {forecastView === 'ensemble' ? (
                                                     <>
                                                         {/* Dai P10-P90: ve truoc de nam duoi cac duong */}
                                                         {quantileModels.map(m => (
                                                             <Area key={`band_${m.id}`} yAxisId="flow" type="monotone"
-                                                                dataKey={`band_${m.id}`} stroke="none"
-                                                                fill={m.color} fillOpacity={0.13}
+                                                                dataKey={`band_${m.id}`}
+                                                                stroke={m.color} strokeOpacity={0.3} strokeWidth={1}
+                                                                fill={m.color} fillOpacity={0.12}
                                                                 name={`${m.label} ${t('lakeModal.forecast.bandLabel')}`}
                                                                 activeDot={false} connectNulls={true} />
                                                         ))}
@@ -812,13 +833,17 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                         {availableModels.map(m => (
                                                             <Line key={`ens_${m.id}`} yAxisId="flow" type="monotone"
                                                                 dataKey={`p50_${m.id}`} stroke={m.color}
-                                                                strokeWidth={2.5} strokeDasharray="8 5" dot={{ r: 2.5 }}
+                                                                strokeWidth={2} strokeDasharray="7 4"
+                                                                dot={{ r: 3, fill: m.color, stroke: '#fff', strokeWidth: 2 }}
+                                                                activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }}
                                                                 name={m.label} connectNulls={true} />
                                                         ))}
                                                         {/* Duong dong thuan: dam va lien net de noi bat */}
                                                         {availableModels.length > 1 && (
                                                             <Line yAxisId="flow" type="monotone" dataKey="p50_mean"
-                                                                stroke="#0f172a" strokeWidth={3} dot={{ r: 3 }}
+                                                                stroke={INK} strokeWidth={2.5}
+                                                                dot={{ r: 3.5, fill: INK, stroke: '#fff', strokeWidth: 2 }}
+                                                                activeDot={{ r: 5.5, stroke: '#fff', strokeWidth: 2 }}
                                                                 name={t('lakeModal.forecast.meanLine')} connectNulls={true} />
                                                         )}
                                                     </>
