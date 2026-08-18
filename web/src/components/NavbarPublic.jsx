@@ -54,9 +54,9 @@ export default function NavbarPublic() {
                 <div className="absolute bottom-0 right-24 h-16 w-16 rounded-full bg-cyan-400/10" />
             </div>
 
-            {/* Left: Logo & Title — logo is intentionally larger than the bar itself (self-start
-                so the extra height overflows downward only, never clipped by the page's top edge) */}
-            <div className="relative flex items-center gap-3 min-w-0 self-start">
+            {/* Left: Logo & Title — logo is intentionally larger than the bar itself, centered
+                vertically (overflows evenly above/below) so it lines up with the title text */}
+            <div className="relative flex items-center gap-3 min-w-0">
                 <img src={logoImg} alt="DSS Logo" className="w-20 h-20 object-contain shrink-0" />
                 <div className="flex flex-col min-w-0">
                     <h1 className="text-xs sm:text-sm font-bold m-0 leading-tight truncate">{t('navbar.title')}</h1>
