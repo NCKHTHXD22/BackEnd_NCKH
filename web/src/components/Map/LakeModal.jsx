@@ -332,6 +332,15 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 ...ensembleSeries,
             };
 
+            // Dải P10–P90 dạng [thấp, cao] để Recharts vẽ range area.
+            // Trước đây dải được giả lập bằng cách vẽ P90 rồi tô TRẮNG đè phần dưới
+            // P10 — lớp trắng đó sơn đè lên cả đường quan trắc, nên đoạn nào Q thực tế
+            // thấp hơn P10 thì bị xoá mất khỏi biểu đồ.
+            dataPoint.band = (dataPoint.p10 !== null && dataPoint.p10 !== undefined
+                && dataPoint.p90 !== null && dataPoint.p90 !== undefined)
+                ? [dataPoint.p10, dataPoint.p90]
+                : null;
+
             result.push(dataPoint);
         }
 
@@ -854,8 +863,6 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     />
                                                 )}
 
-                                                {/* Actual Flow */}
-                                                <Line yAxisId="flow" type="monotone" dataKey="qActual" stroke={INK_MUTED} strokeWidth={2} dot={false} name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
                                                 
                                                 {forecastView === 'ensemble' ? (
                                                     <>
@@ -888,16 +895,18 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        {/* P90 — upper bound line + fill band from top */}
-                                                        <Area yAxisId="flow" type="monotone" dataKey="p90"
+                                                        {/* Dải P10–P90: một range area, không tô đè lên gì cả */}
+                                                        <Area yAxisId="flow" type="monotone" dataKey="band"
+                                                            stroke="none" fill="url(#colorBand)" fillOpacity={1}
+                                                            name={t('lakeModal.forecast.bandLabel')}
+                                                            activeDot={false} connectNulls={true} />
+                                                        {/* Viền trên/dưới của dải */}
+                                                        <Line yAxisId="flow" type="monotone" dataKey="p90"
                                                             stroke="#ef4444" strokeWidth={1.5} strokeDasharray="6 3"
-                                                            fill="url(#colorBand)" fillOpacity={1}
                                                             name={t('lakeModal.forecast.p90Label')}
                                                             dot={false} connectNulls={true} />
-                                                        {/* P10 — lower bound line + white fill to erase below */}
-                                                        <Area yAxisId="flow" type="monotone" dataKey="p10"
+                                                        <Line yAxisId="flow" type="monotone" dataKey="p10"
                                                             stroke="#6366f1" strokeWidth={1.5} strokeDasharray="6 3"
-                                                            fill="#fff" fillOpacity={1}
                                                             name={t('lakeModal.forecast.p10Label')}
                                                             dot={false} connectNulls={true} />
 
@@ -911,6 +920,11 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     </>
                                                 )}
 
+
+                                                {/* Đường quan trắc vẽ sau cùng để luôn nằm trên mọi lớp khác */}
+                                                <Line yAxisId="flow" type="monotone" dataKey="qActual"
+                                                    stroke={INK_MUTED} strokeWidth={2} dot={false}
+                                                    name={t('lakeModal.forecast.surveyActual')} connectNulls={true} />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </FullscreenChartWrapper>
