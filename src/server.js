@@ -17,6 +17,9 @@ import inflowLakeHistoryRoutes from "./api/routes/inflowLakeHistory.routes.js";
 import rainlakeHistory from "./api/routes/rainLakeHistories.routes.js";
 import rainLake_QLake from "./api/routes/rainLakeQLake.routes.js";
 import forecastLstmRoutes from "./api/routes/forecastLstm.routes.js";
+// forecastRf.routes.js: đang được phát triển trực tiếp trên VPS (chưa có trong git tính đến
+// thời điểm này) — giữ lại import/mount này khi deploy để không làm gãy route đang chạy thật.
+import forecastRfRoutes from "./api/routes/forecastRf.routes.js";
 
 // Backend Integration Routes
 import userRoutes from "./api/routes/user.routes.js";
@@ -71,6 +74,7 @@ app.use("/api/forecast-history", forecastHistoryRoutes);
 app.use("/api/lake-specs", lakeSpecRoutes);
 app.use("/api/reservoir-alerts", reservoirAlertRoutes);
 app.use("/api/forecast-lstm", forecastLstmRoutes);
+app.use("/api/forecast-rf", forecastRfRoutes);
 
 // Backend Integration Endpoints
 app.use("/api/users", userRoutes);
