@@ -90,22 +90,22 @@ const TILE_LAYERS = {
     vietnam: {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        label: 'Bản đồ Việt Nam',
+        labelKey: 'mapPanel.tileVietnam',
     },
     admin: {
         url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
         attribution: '&copy; Google Maps',
-        label: 'Hành chính Việt Nam',
+        labelKey: 'mapPanel.tileAdmin',
     },
     google: {
         url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
         attribution: '&copy; Google Maps',
-        label: 'Google',
+        labelKey: 'mapPanel.tileGoogle',
     },
     sea: {
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
         attribution: '&copy; Esri Ocean',
-        label: 'Phân định biển',
+        labelKey: 'mapPanel.tileSea',
     },
 };
 
@@ -213,14 +213,14 @@ export default function HomePage() {
     const generateWarnings = () => {
         const warnings = [];
         reservoirs.forEach(res => {
-            const lakeName = res.name || res.Lake_Name || 'Không tên';
+            const lakeName = res.name || res.Lake_Name || t('mapPanel.unnamedLake');
             if (res.Q_to_Lake > 100) {
                 warnings.push({
                     id: `high-inflow-${res.Id_Lake}`,
                     type: 'inflow',
                     level: res.Q_to_Lake > 200 ? 'danger' : 'warning',
-                    title: `Lưu lượng đến hồ ${lakeName} cao`,
-                    detail: `Q đến: ${res.Q_to_Lake} m³/s`,
+                    title: t('mapPanel.warnHighInflowTitle', { lake: lakeName }),
+                    detail: t('mapPanel.warnInflowDetail', { value: res.Q_to_Lake }),
                     time: res.lastUpdate,
                 });
             }
@@ -229,8 +229,8 @@ export default function HomePage() {
                     id: `high-discharge-${res.Id_Lake}`,
                     type: 'discharge',
                     level: res.Q_discharge > 150 ? 'danger' : 'warning',
-                    title: `Xả lũ hồ ${lakeName}`,
-                    detail: `Q xả: ${res.Q_discharge} m³/s | MN: ${res.WaterLevel_Upstream}m`,
+                    title: t('mapPanel.warnDischargeTitle', { lake: lakeName }),
+                    detail: t('mapPanel.warnDischargeDetail', { value: res.Q_discharge, level: res.WaterLevel_Upstream }),
                     time: res.lastUpdate,
                 });
             }
@@ -242,8 +242,8 @@ export default function HomePage() {
                     id: `heavy-rain-${st.uuid || st.name}`,
                     type: 'rain',
                     level: st.sumDepth > 100 ? 'danger' : 'warning',
-                    title: `Mưa lớn tại ${st.name || 'trạm đo'}`,
-                    detail: `Lượng mưa: ${st.sumDepth} mm`,
+                    title: t('mapPanel.warnHeavyRainTitle', { station: st.name || t('mapPanel.unnamedStation') }),
+                    detail: t('mapPanel.warnRainDetail', { value: st.sumDepth }),
                     time: st.lastUpdate,
                 });
             }
@@ -366,7 +366,7 @@ export default function HomePage() {
                         return (
                             <Marker key={`post-${index}`} position={[lat, lng]} icon={postIcon}>
                                 <Popup>
-                                    <div className="font-bold border-b pb-1 mb-2 text-amber-700">🌊 {getReportTypeLabel(reportType)}</div>
+                                    <div className="font-bold border-b pb-1 mb-2 text-amber-700">🌊 {getReportTypeLabel(reportType, t)}</div>
                                     <div className="text-xs space-y-1">
                                         <p><strong>Địa điểm:</strong> {post.location?.address ? `${post.location.address}, ` : ''}{post.location?.district}, {post.location?.province}</p>
                                         {hasFloodLevel && (
@@ -391,7 +391,7 @@ export default function HomePage() {
                                 <Tooltip direction="top" offset={[0, -30]} opacity={1}>
                                     <span className="text-xs font-semibold">
                                         {post.location?.district ? `${post.location.district} · ` : ''}
-                                        {hasFloodLevel ? `${post.floodLevel}cm` : getReportTypeLabel(reportType)}
+                                        {hasFloodLevel ? `${post.floodLevel}cm` : getReportTypeLabel(reportType, t)}
                                     </span>
                                 </Tooltip>
                             </Marker>
@@ -406,13 +406,13 @@ export default function HomePage() {
             <div className="absolute left-3 top-20 z-[1000] flex flex-col gap-2">
                 <button
                     className="w-10 h-10 rounded-xl bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 hover:text-blue-600 flex items-center justify-center transition-all duration-200"
-                    title="Cài đặt"
+                    title={t('mapPanel.settings')}
                 >
                     <FaCog />
                 </button>
                 <button
                     className="w-10 h-10 rounded-xl bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 hover:text-blue-600 flex items-center justify-center transition-all duration-200"
-                    title="Định vị"
+                    title={t('mapPanel.locate')}
                 >
                     <FaCrosshairs />
                 </button>
@@ -426,12 +426,12 @@ export default function HomePage() {
                             <FaExclamationTriangle />
                         </button>
                         <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md">
-                            Sự kiện thiên tai
+                            {t('mapPanel.disasterEvents')}
                         </div>
                     </div>
                     <button
                         className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showWarningPanel ? 'bg-orange-500 text-white' : 'bg-white text-orange-500 hover:bg-orange-50'}`}
-                        title="Cảnh báo thiên tai"
+                        title={t('mapPanel.disasterWarning')}
                         onClick={() => { setShowWarningPanel(!showWarningPanel); setShowNewsPanel(false); setShowCommunityPanel(false); }}
                     >
                         <MdWarning size={18} />
@@ -440,7 +440,7 @@ export default function HomePage() {
 
                 <button
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showBaseMapPanel ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50'}`}
-                    title="Lớp bản đồ"
+                    title={t('mapPanel.baseMapLayer')}
                     onClick={() => setShowBaseMapPanel(!showBaseMapPanel)}
                 >
                     <FaLayerGroup />
@@ -454,7 +454,7 @@ export default function HomePage() {
                         <FaPaperPlane size={14} />
                     </button>
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md">
-                        Gửi thông tin ngập
+                        {t('mapPanel.submitFlood')}
                     </div>
                 </div>
             </div>
@@ -465,27 +465,27 @@ export default function HomePage() {
                 <div className="flex flex-col gap-2">
                     <SidebarIcon
                         icon={<FaGlobeAsia size={16} />}
-                        label="Bản đồ nền"
+                        label={t('mapPanel.baseMapLayer')}
                         active={showBaseMapPanel}
                         onClick={() => setShowBaseMapPanel(!showBaseMapPanel)}
                     />
                     <SidebarIcon
                         icon={<FaUsers size={16} />}
-                        label="Thông tin cộng đồng"
+                        label={t('mapPanel.communityInfo')}
                         active={showCommunityPanel}
                         onClick={() => { setShowCommunityPanel(!showCommunityPanel); setShowNewsPanel(false); setShowWarningPanel(false); }}
                     />
                     <SidebarIcon
                         icon={<FaSearchLocation size={16} />}
-                        label="Tìm kiếm"
+                        label={t('mapPanel.search')}
                     />
                 </div>
 
                 {/* Zoom controls */}
                 <div className="flex flex-col gap-2">
-                    <SidebarIcon icon={<FaPlus size={14} />} label="Phóng to" />
-                    <SidebarIcon icon={<FaMinus size={14} />} label="Thu nhỏ" />
-                    <SidebarIcon icon={<FaExpand size={14} />} label="Toàn màn hình" />
+                    <SidebarIcon icon={<FaPlus size={14} />} label={t('mapPanel.zoomIn')} />
+                    <SidebarIcon icon={<FaMinus size={14} />} label={t('mapPanel.zoomOut')} />
+                    <SidebarIcon icon={<FaExpand size={14} />} label={t('mapPanel.fullscreen')} />
                 </div>
             </div>
 
@@ -493,7 +493,7 @@ export default function HomePage() {
             {showBaseMapPanel && (
                 <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100 animate-in slide-in-from-right">
                     <div className="bg-gradient-to-r from-blue-50 to-sky-50 p-3 border-b border-blue-100 font-semibold flex justify-between items-center text-slate-700">
-                        <span className="flex items-center gap-2"><FaLayerGroup className="text-blue-600" /> Bản đồ nền</span>
+                        <span className="flex items-center gap-2"><FaLayerGroup className="text-blue-600" /> {t('mapPanel.baseMapTitle')}</span>
                         <button onClick={() => setShowBaseMapPanel(false)} className="text-slate-400 hover:text-slate-600 text-lg">❯</button>
                     </div>
                     <div className="p-3 space-y-2">
@@ -514,7 +514,7 @@ export default function HomePage() {
                                     onChange={() => setActiveBaseMap(key)}
                                     className="accent-blue-600"
                                 />
-                                <span className="font-medium">{layer.label}</span>
+                                <span className="font-medium">{t(layer.labelKey)}</span>
                             </label>
                         ))}
 
@@ -526,12 +526,12 @@ export default function HomePage() {
                                     onChange={(e) => setShowVietnamBorder(e.target.checked)}
                                     className="accent-blue-600"
                                 />
-                                <span className="text-gray-600 font-medium">Biên giới Việt Nam</span>
+                                <span className="text-gray-600 font-medium">{t('mapPanel.vietnamBorder')}</span>
                             </label>
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t mt-2">
-                            <span className="text-gray-600 font-medium">Bề mặt</span>
+                            <span className="text-gray-600 font-medium">{t('mapPanel.surface')}</span>
                             <button
                                 onClick={() => setShowSurface(!showSurface)}
                                 className={`relative w-10 h-5 rounded-full transition-colors ${showSurface ? 'bg-blue-600' : 'bg-gray-300'}`}
@@ -547,7 +547,7 @@ export default function HomePage() {
             {showCommunityPanel && (
                 <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100">
                     <div className="bg-gradient-to-r from-blue-50 to-sky-50 p-3 border-b border-blue-100 font-semibold flex justify-between items-center text-slate-700">
-                        <span className="flex items-center gap-2"><FaUsers className="text-blue-600" /> Thông tin cộng đồng</span>
+                        <span className="flex items-center gap-2"><FaUsers className="text-blue-600" /> {t('mapPanel.communityInfo')}</span>
                         <button onClick={() => setShowCommunityPanel(false)} className="text-slate-400 hover:text-slate-600 text-lg">❯</button>
                     </div>
                     <div className="p-3 space-y-2">
@@ -560,7 +560,7 @@ export default function HomePage() {
                                 onChange={e => setShowRainLayer(e.target.checked)}
                                 className="accent-blue-600"
                             />
-                            <span className="font-medium flex items-center gap-1.5"><FaCloudRain className="text-blue-400" /> Trạm mưa</span>
+                            <span className="font-medium flex items-center gap-1.5"><FaCloudRain className="text-blue-400" /> {t('mapPanel.rainStationLayer')}</span>
                         </label>
 
                         <label
@@ -572,7 +572,7 @@ export default function HomePage() {
                                 onChange={e => setShowReservoirLayer(e.target.checked)}
                                 className="accent-blue-600"
                             />
-                            <span className="font-medium flex items-center gap-1.5"><FaWater className="text-cyan-500" /> Trạm hồ chứa</span>
+                            <span className="font-medium flex items-center gap-1.5"><FaWater className="text-cyan-500" /> {t('mapPanel.reservoirStationLayer')}</span>
                         </label>
 
                         <label
@@ -584,12 +584,12 @@ export default function HomePage() {
                                 onChange={e => setShowPostsLayer(e.target.checked)}
                                 className="accent-amber-500"
                             />
-                            <span className="font-medium flex items-center gap-1.5"><FaUsers className="text-amber-500" /> Báo lũ cộng đồng</span>
+                            <span className="font-medium flex items-center gap-1.5"><FaUsers className="text-amber-500" /> {t('mapPanel.communityFloodLayer')}</span>
                         </label>
 
                         {showPostsLayer && (
                             <div className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
-                                🌊 {publicPosts.filter(p => p.location?.latitude).length} điểm báo lũ đang hiển thị
+                                🌊 {t('mapPanel.floodPointsShown', { count: publicPosts.filter(p => p.location?.latitude).length })}
                             </div>
                         )}
                     </div>
@@ -600,14 +600,14 @@ export default function HomePage() {
             {showWarningPanel && (
                 <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[360px] bg-white rounded-2xl shadow-2xl shadow-orange-900/20 overflow-hidden flex flex-col text-sm border border-orange-100">
                     <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 font-bold flex justify-between items-center">
-                        <span className="flex items-center gap-2"><MdWarning /> Cảnh báo thiên tai</span>
+                        <span className="flex items-center gap-2"><MdWarning /> {t('mapPanel.disasterWarning')}</span>
                         <button onClick={() => setShowWarningPanel(false)} className="text-white/70 hover:text-white">
                             <FaChevronLeft />
                         </button>
                     </div>
 
                     <div className="bg-orange-50 text-orange-800 text-xs px-3 py-2 font-medium border-b">
-                        {warnings.length} cảnh báo đang hoạt động
+                        {t('mapPanel.activeWarnings', { count: warnings.length })}
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
@@ -623,36 +623,36 @@ export default function HomePage() {
                                         <h3 className={`font-bold text-[13px] leading-tight mb-1 ${w.level === 'danger' ? 'text-red-700' : 'text-orange-700'}`}>{w.title}</h3>
                                         <div className="text-[11px] text-gray-600 space-y-0.5">
                                             <p>{w.detail}</p>
-                                            {w.time && <p className="text-gray-400">Cập nhật: {new Date(w.time).toLocaleString('vi-VN')}</p>}
+                                            {w.time && <p className="text-gray-400">{t('mapPanel.updatedAt')} {new Date(w.time).toLocaleString(i18n.language === 'en' ? 'en-US' : 'vi-VN')}</p>}
                                         </div>
                                     </div>
                                     <div className={`self-center px-2 py-0.5 rounded text-[10px] font-bold ${w.level === 'danger' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                                        {w.level === 'danger' ? 'NGUY HIỂM' : 'CẢNH BÁO'}
+                                        {w.level === 'danger' ? t('mapPanel.dangerLevel') : t('mapPanel.warningLevel')}
                                     </div>
                                 </div>
                             ))
                         ) : (
                             <div className="p-6 text-center text-gray-500 text-xs mt-10">
                                 <MdWarning className="mx-auto text-4xl mb-3 text-gray-300" />
-                                Không có cảnh báo thiên tai nào đang hoạt động.
+                                {t('mapPanel.noActiveWarnings')}
                             </div>
                         )}
 
                         {/* Summary section */}
                         <div className="p-3 bg-gray-50 border-t">
-                            <h4 className="font-bold text-gray-700 text-xs mb-2">TỔNG HỢP DỮ LIỆU</h4>
+                            <h4 className="font-bold text-gray-700 text-xs mb-2">{t('mapPanel.dataSummary')}</h4>
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="bg-white p-2 rounded border text-center">
                                     <div className="text-blue-600 font-bold text-sm">{rainStations.length}</div>
-                                    <div className="text-[10px] text-gray-500">Trạm mưa</div>
+                                    <div className="text-[10px] text-gray-500">{t('mapPanel.rainStationsLabel')}</div>
                                 </div>
                                 <div className="bg-white p-2 rounded border text-center">
                                     <div className="text-green-600 font-bold text-sm">{reservoirs.length}</div>
-                                    <div className="text-[10px] text-gray-500">Hồ chứa</div>
+                                    <div className="text-[10px] text-gray-500">{t('mapPanel.reservoirsLabel')}</div>
                                 </div>
                                 <div className="bg-white p-2 rounded border text-center">
                                     <div className="text-red-600 font-bold text-sm">{warnings.length}</div>
-                                    <div className="text-[10px] text-gray-500">Cảnh báo</div>
+                                    <div className="text-[10px] text-gray-500">{t('mapPanel.warningsLabel')}</div>
                                 </div>
                             </div>
                         </div>
@@ -664,14 +664,14 @@ export default function HomePage() {
             {showNewsPanel && (
                 <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[350px] bg-white rounded-2xl shadow-2xl shadow-slate-900/20 overflow-hidden flex flex-col text-sm border border-slate-200 transition-transform duration-300">
                     <div className="bg-gradient-to-r from-blue-50 to-sky-50 text-slate-800 p-3 font-bold flex justify-between items-center border-b border-blue-100">
-                        <span className="text-base text-slate-900">Sự kiện thiên tai</span>
+                        <span className="text-base text-slate-900">{t('mapPanel.disasterEvents')}</span>
                         <button onClick={() => setShowNewsPanel(false)} className="text-slate-500 hover:text-slate-800">
                             <FaChevronLeft />
                         </button>
                     </div>
 
                     <div className="bg-blue-50 text-blue-700 text-xs px-3 py-2 font-medium">
-                        {publicPosts.length} thiên tai đang diễn ra / {publicPosts.length} thiên tai
+                        {t('mapPanel.ongoingDisasters', { count: publicPosts.length })}
                     </div>
 
                     <div className="p-2 border-b flex gap-2">
@@ -679,7 +679,7 @@ export default function HomePage() {
                             <FaSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Tìm kiếm"
+                                placeholder={t('mapPanel.searchPlaceholder')}
                                 className="w-full border rounded pl-8 pr-2 py-1 text-xs focus:outline-blue-500"
                             />
                         </div>
@@ -702,13 +702,13 @@ export default function HomePage() {
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="font-bold text-gray-800 text-[13px] leading-tight mb-1">{post.title || "Cảnh báo thiên tai"}</h3>
+                                        <h3 className="font-bold text-gray-800 text-[13px] leading-tight mb-1">{post.title || t('mapPanel.defaultDisasterTitle')}</h3>
                                         <div className="text-[11px] text-gray-600 space-y-0.5">
-                                            <p><span className="font-medium text-gray-700">Thời gian bắt đầu:</span> {new Date(post.createdAt || new Date()).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-                                            <p><span className="font-medium text-gray-700">Thời gian kết thúc:</span> Đang cập nhật</p>
-                                            <p className="line-clamp-1"><span className="font-medium text-gray-700">Vị trí:</span> {post.location || "Toàn khu vực"}</p>
-                                            <p className="line-clamp-1"><span className="font-medium text-gray-700">Vùng ảnh hưởng:</span> {post.affectedArea || "Miền Trung"}</p>
-                                            <p><span className="font-medium text-gray-700">Cấp độ rủi ro thiên tai:</span> {post.riskLevel || "Cấp 2"}</p>
+                                            <p><span className="font-medium text-gray-700">{t('mapPanel.startTime')}</span> {new Date(post.createdAt || new Date()).toLocaleString(i18n.language === 'en' ? 'en-US' : 'vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
+                                            <p><span className="font-medium text-gray-700">{t('mapPanel.endTime')}</span> {t('mapPanel.updatingValue')}</p>
+                                            <p className="line-clamp-1"><span className="font-medium text-gray-700">{t('mapPanel.location')}</span> {post.location || t('mapPanel.wholeArea')}</p>
+                                            <p className="line-clamp-1"><span className="font-medium text-gray-700">{t('mapPanel.affectedArea')}</span> {post.affectedArea || t('mapPanel.centralRegion')}</p>
+                                            <p><span className="font-medium text-gray-700">{t('mapPanel.riskLevel')}</span> {post.riskLevel || t('mapPanel.level2')}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -719,7 +719,7 @@ export default function HomePage() {
                         ) : (
                             <div className="p-6 text-center text-gray-500 text-xs mt-10">
                                 <FaExclamationTriangle className="mx-auto text-4xl mb-3 text-gray-300" />
-                                Không có thông tin sự kiện thiên tai nào đang diễn ra.
+                                {t('mapPanel.noOngoingDisasters')}
                             </div>
                         )}
                     </div>

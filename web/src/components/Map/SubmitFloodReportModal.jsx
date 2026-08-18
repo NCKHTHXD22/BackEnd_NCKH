@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { X, Image as ImageIcon, Loader2, Trash2, MapPin } from "lucide-react";
 import postsApi from "../../api/postsApi";
@@ -45,6 +46,7 @@ function LocationPicker({ position, onPick }) {
 }
 
 export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
+  const { t } = useTranslation();
   const [reportType, setReportType] = useState("flood_point");
   const [form, setForm] = useState(initialForm);
   const [images, setImages] = useState([]);
@@ -91,7 +93,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
     if (!open || !isPointType || position) return;
     if (!navigator.geolocation) {
       setPosition(DANANG_CENTER);
-      setLocationError("Trình duyệt không hỗ trợ định vị — vui lòng bấm chọn vị trí trên bản đồ.");
+      setLocationError(t('submitReport.locationErrorUnsupported'));
       return;
     }
     setLocating(true);
@@ -103,7 +105,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
       },
       () => {
         setPosition(DANANG_CENTER);
-        setLocationError("Không lấy được vị trí — vui lòng bấm chọn vị trí chính xác trên bản đồ.");
+        setLocationError(t('submitReport.locationErrorDenied'));
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 8000 }
@@ -129,20 +131,20 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
   const validate = () => {
     const errs = {};
     if (isPointType) {
-      if (!form.address.trim()) errs.address = "Vui lòng nhập địa chỉ.";
-      if (!position) errs.location = "Vui lòng chọn vị trí trên bản đồ.";
+      if (!form.address.trim()) errs.address = t('submitReport.addressRequired');
+      if (!position) errs.location = t('submitReport.locationRequired');
     }
     if (isRangeType) {
-      if (!form.fromAddress.trim()) errs.fromAddress = "Bắt buộc.";
-      if (!form.toAddress.trim()) errs.toAddress = "Bắt buộc.";
+      if (!form.fromAddress.trim()) errs.fromAddress = t('submitReport.fieldRequired');
+      if (!form.toAddress.trim()) errs.toAddress = t('submitReport.fieldRequired');
     }
     if (isFloodLevelType) {
-      if (!form.floodLevel || Number(form.floodLevel) < 0) errs.floodLevel = "Nhập mức ngập hợp lệ (cm).";
+      if (!form.floodLevel || Number(form.floodLevel) < 0) errs.floodLevel = t('submitReport.floodLevelInvalid');
     }
     if (isLandslide && !form.eventEndTime) {
-      errs.eventEndTime = "Vui lòng chọn thời gian kết thúc.";
+      errs.eventEndTime = t('submitReport.landslideEndRequired');
     }
-    if (!form.floodTime) errs.floodTime = "Vui lòng chọn thời gian.";
+    if (!form.floodTime) errs.floodTime = t('submitReport.timeRequired');
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -201,7 +203,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
     } catch (err) {
       console.error(err);
       setSubmitError(
-        err.response?.data?.error || "Gửi thông tin thất bại — vui lòng thử lại sau."
+        err.response?.data?.error || t('submitReport.genericError')
       );
     } finally {
       setSubmitting(false);
@@ -230,7 +232,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-5">
-          <h2 className="text-lg font-black text-slate-800">Gửi thông tin ngập</h2>
+          <h2 className="text-lg font-black text-slate-800">{t('submitReport.title')}</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl p-1.5 transition-colors"
@@ -240,14 +242,14 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
         </div>
 
         <div className="px-5 pt-4 flex flex-wrap gap-2">
-          {REPORT_TYPES.map((t) => (
+          {REPORT_TYPES.map((rt) => (
             <button
-              key={t.value}
+              key={rt.value}
               type="button"
-              className={tabBtnClass(t.value)}
-              onClick={() => setReportType(t.value)}
+              className={tabBtnClass(rt.value)}
+              onClick={() => setReportType(rt.value)}
             >
-              {t.label}
+              {t(rt.i18nKey)}
             </button>
           ))}
         </div>
@@ -257,15 +259,15 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
             <div className="mx-auto w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-3">
               ✓
             </div>
-            <p className="font-bold text-slate-800">Gửi thành công!</p>
+            <p className="font-bold text-slate-800">{t('submitReport.successTitle')}</p>
             <p className="text-sm text-slate-500 mt-1">
-              Cảm ơn bạn đã đóng góp thông tin — báo cáo sẽ được xem xét sớm.
+              {t('submitReport.successDetail')}
             </p>
             <button
               onClick={onClose}
               className="mt-5 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold px-5 py-2 rounded-xl shadow-md shadow-blue-900/20"
             >
-              Đóng
+              {t('submitReport.close')}
             </button>
           </div>
         ) : (
@@ -285,11 +287,11 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
             {isPointType && (
               <div>
                 <label className="text-xs font-semibold text-slate-500 uppercase">
-                  {isTree ? "Địa chỉ cây ngã đổ" : "Địa chỉ điểm ngập"} <span className="text-red-500">*</span>
+                  {isTree ? t('submitReport.addressTreeLabel') : t('submitReport.addressPointLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={inputClass(fieldErrors.address) + " mt-1"}
-                  placeholder={isTree ? "Địa chỉ cây ngã đổ" : "Địa chỉ điểm ngập"}
+                  placeholder={isTree ? t('submitReport.addressTreeLabel') : t('submitReport.addressPointLabel')}
                   value={form.address}
                   onChange={(e) => setField("address", e.target.value)}
                 />
@@ -297,7 +299,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
 
                 <div className="mt-2">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase mb-1">
-                    <MapPin size={12} /> Chọn vị trí chính xác trên bản đồ
+                    <MapPin size={12} /> {t('submitReport.pickLocation')}
                     {locating && <Loader2 size={12} className="animate-spin text-blue-500" />}
                   </div>
                   <div
@@ -328,11 +330,11 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-500 uppercase">
-                    {isLandslide ? "Địa chỉ bắt đầu sạt lở" : "Ngập từ địa chỉ"} <span className="text-red-500">*</span>
+                    {isLandslide ? t('submitReport.fromLandslide') : t('submitReport.fromRoad')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     className={inputClass(fieldErrors.fromAddress) + " mt-1"}
-                    placeholder={isLandslide ? "Địa chỉ bắt đầu sạt lở" : "Ngập từ địa chỉ"}
+                    placeholder={isLandslide ? t('submitReport.fromLandslide') : t('submitReport.fromRoad')}
                     value={form.fromAddress}
                     onChange={(e) => setField("fromAddress", e.target.value)}
                   />
@@ -340,11 +342,11 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-500 uppercase">
-                    {isLandslide ? "Địa chỉ kết thúc sạt lở" : "Đến địa chỉ"} <span className="text-red-500">*</span>
+                    {isLandslide ? t('submitReport.toLandslide') : t('submitReport.toRoad')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     className={inputClass(fieldErrors.toAddress) + " mt-1"}
-                    placeholder={isLandslide ? "Địa chỉ kết thúc sạt lở" : "Đến địa chỉ"}
+                    placeholder={isLandslide ? t('submitReport.toLandslide') : t('submitReport.toRoad')}
                     value={form.toAddress}
                     onChange={(e) => setField("toAddress", e.target.value)}
                   />
@@ -355,10 +357,10 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
 
             {isFloodLevelType && (
               <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                <p className="text-xs font-bold text-slate-600 uppercase mb-2">Mức ngập</p>
+                <p className="text-xs font-bold text-slate-600 uppercase mb-2">{t('submitReport.floodLevelSection')}</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500">Chọn kiểu ngập</label>
+                    <label className="text-[11px] font-semibold text-slate-500">{t('submitReport.chooseAreaType')}</label>
                     <select
                       className={inputClass(false) + " mt-1 bg-white"}
                       value={form.areaType}
@@ -370,7 +372,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500">Mức ngập (cm)</label>
+                    <label className="text-[11px] font-semibold text-slate-500">{t('submitReport.floodLevelCm')}</label>
                     <input
                       type="number"
                       min="0"
@@ -381,7 +383,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                     {fieldErrors.floodLevel && <p className="text-xs text-red-500 mt-1">{fieldErrors.floodLevel}</p>}
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-500">Thời gian ngập</label>
+                    <label className="text-[11px] font-semibold text-slate-500">{t('submitReport.floodTimeLabel')}</label>
                     <input
                       type="datetime-local"
                       className={inputClass(fieldErrors.floodTime) + " mt-1 bg-white"}
@@ -396,7 +398,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
             {isTree && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Thời gian cây ngã đổ</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">{t('submitReport.treeFallTimeLabel')}</label>
                   <input
                     type="datetime-local"
                     className={inputClass(fieldErrors.floodTime) + " mt-1"}
@@ -405,11 +407,11 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Mô tả ảnh hưởng</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">{t('submitReport.impactDescription')}</label>
                   <textarea
                     rows={2}
                     className={inputClass(false) + " mt-1"}
-                    placeholder="Ảnh hưởng đến giao thông, ngã vào đường dây điện..."
+                    placeholder={t('submitReport.impactPlaceholder')}
                     value={form.description}
                     onChange={(e) => setField("description", e.target.value)}
                   />
@@ -420,7 +422,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
             {isLandslide && (
               <>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Loại sạt lở</label>
+                  <label className="text-xs font-semibold text-slate-500 uppercase">{t('submitReport.landslideTypeLabel')}</label>
                   <select
                     className={inputClass(false) + " mt-1"}
                     value={form.landslideStatus}
@@ -433,7 +435,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Thời gian bắt đầu sạt lở</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">{t('submitReport.landslideStartLabel')}</label>
                     <input
                       type="datetime-local"
                       className={inputClass(fieldErrors.floodTime) + " mt-1"}
@@ -442,7 +444,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Thời gian kết thúc sạt lở</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">{t('submitReport.landslideEndLabel')}</label>
                     <input
                       type="datetime-local"
                       className={inputClass(fieldErrors.eventEndTime) + " mt-1"}
@@ -456,7 +458,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
             )}
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Hình ảnh</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">{t('submitReport.images')}</label>
               <div className="flex flex-wrap gap-2">
                 {imagePreviews.map((p, i) => (
                   <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
@@ -477,7 +479,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                   </label>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Tối đa {MAX_IMAGES} ảnh.</p>
+              <p className="text-[11px] text-slate-400 mt-1">{t('submitReport.maxImages', { count: MAX_IMAGES })}</p>
             </div>
 
             {(reportType === "flood_point" || reportType === "flood_road" || isLandslide) && (
@@ -489,9 +491,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
                   onChange={(e) => setField("isFrequentFlood", e.target.checked)}
                 />
                 <span className="text-xs text-amber-800">
-                  <strong>{isLandslide ? "Sạt lở thường xuyên" : "Thường xuyên ngập"}</strong> — Địa điểm thường
-                  xuyên xảy ra tình trạng {isLandslide ? "sạt lở" : "ngập"}, gây khó khăn trong các hoạt động giao
-                  thông và sinh hoạt của người dân.
+                  <strong>{isLandslide ? t('submitReport.frequentLandslideLabel') : t('submitReport.frequentFloodLabel')}</strong> — {isLandslide ? t('submitReport.frequentLandslideDesc') : t('submitReport.frequentFloodDesc')}
                 </span>
               </label>
             )}
@@ -508,7 +508,7 @@ export default function SubmitFloodReportModal({ open, onClose, onSubmitted }) {
               className="w-full bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-2.5 rounded-xl shadow-md shadow-blue-900/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {submitting && <Loader2 size={16} className="animate-spin" />}
-              {submitting ? "Đang gửi..." : "Gửi thông tin"}
+              {submitting ? t('submitReport.submitting') : t('submitReport.submitBtn')}
             </button>
           </form>
         )}

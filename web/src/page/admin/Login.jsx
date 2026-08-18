@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, Lock, User, ShieldAlert, Waves, AlertTriangle, Radio } from "lucide-react";
 import adminApi from "../../api/adminApi";
 import { setAdminToken } from "../../services/auth";
 import authBg from "../../assets/images/auth_bg.svg";
 
 export default function AdminLogin() {
+    const { t } = useTranslation();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPw, setShowPw] = useState(false);
@@ -23,7 +25,7 @@ export default function AdminLogin() {
             setAdminToken(data.token);
             navigate("/admin/pending");
         } catch (err) {
-            setError(err.response?.data?.error || "Tên đăng nhập hoặc mật khẩu không đúng");
+            setError(err.response?.data?.error || t('adminLogin.defaultError'));
         } finally {
             setLoading(false);
         }
@@ -49,26 +51,25 @@ export default function AdminLogin() {
                             </div>
                             <div>
                                 <p className="text-blue-300 text-xs font-bold uppercase tracking-widest">NCKH System</p>
-                                <p className="text-white text-sm font-black leading-tight">Quản lý Hồ chứa</p>
+                                <p className="text-white text-sm font-black leading-tight">{t('adminLogin.brandTagline')}</p>
                             </div>
                         </div>
 
                         <h1 className="text-3xl font-black text-white leading-tight mb-3">
-                            Hệ thống<br />
-                            <span className="text-blue-400">Cảnh báo Lũ lụt</span>
+                            {t('adminLogin.heroTitle1')}<br />
+                            <span className="text-blue-400">{t('adminLogin.heroTitle2')}</span>
                         </h1>
                         <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                            Nền tảng giám sát và dự báo thủy văn thông minh tích hợp
-                            mô hình LSTM, phục vụ vận hành hồ chứa và phòng chống thiên tai.
+                            {t('adminLogin.heroDesc')}
                         </p>
 
                         {/* Stats */}
                         <div className="grid grid-cols-2 gap-3 mb-8">
                             {[
-                                { icon: <Radio size={16} />, val: "16", label: "Hồ chứa", color: "text-cyan-400" },
-                                { icon: <Waves size={16} />, val: "28", label: "Trạm đo mưa", color: "text-blue-400" },
-                                { icon: <AlertTriangle size={16} />, val: "24/7", label: "Giám sát liên tục", color: "text-amber-400" },
-                                { icon: <ShieldAlert size={16} />, val: "LSTM", label: "Mô hình AI", color: "text-emerald-400" },
+                                { icon: <Radio size={16} />, val: "16", label: t('adminLogin.statReservoirs'), color: "text-cyan-400" },
+                                { icon: <Waves size={16} />, val: "28", label: t('adminLogin.statRainStations'), color: "text-blue-400" },
+                                { icon: <AlertTriangle size={16} />, val: "24/7", label: t('adminLogin.statMonitoring'), color: "text-amber-400" },
+                                { icon: <ShieldAlert size={16} />, val: "LSTM", label: t('adminLogin.statAiModel'), color: "text-emerald-400" },
                             ].map(({ icon, val, label, color }) => (
                                 <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
                                     <span className={color}>{icon}</span>
@@ -84,13 +85,13 @@ export default function AdminLogin() {
                         <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
                             <AlertTriangle size={16} className="text-amber-400 shrink-0" />
                             <p className="text-amber-300 text-xs font-semibold leading-relaxed">
-                                Khu vực miền Trung — Đang theo dõi mùa lũ 2025. Cập nhật mỗi giờ.
+                                {t('adminLogin.seasonNotice')}
                             </p>
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <p className="text-slate-600 text-xs">© 2025 NCKH — Đại học Đà Nẵng</p>
+                    <p className="text-slate-600 text-xs">{t('adminLogin.footer')}</p>
                 </div>
 
                 {/* ── Right panel: form ── */}
@@ -101,10 +102,10 @@ export default function AdminLogin() {
                             <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
                                 <Waves size={18} className="text-white" />
                             </div>
-                            <p className="text-white font-black text-sm">Cảnh báo Lũ lụt</p>
+                            <p className="text-white font-black text-sm">{t('adminLogin.mobileBrand')}</p>
                         </div>
-                        <h2 className="text-2xl font-black text-white">Đăng nhập</h2>
-                        <p className="text-slate-400 text-sm mt-1">Đăng nhập vào cổng quản trị hệ thống</p>
+                        <h2 className="text-2xl font-black text-white">{t('adminLogin.signInTitle')}</h2>
+                        <p className="text-slate-400 text-sm mt-1">{t('adminLogin.signInSubtitle')}</p>
                     </div>
 
                     {error && (
@@ -118,13 +119,13 @@ export default function AdminLogin() {
                         {/* Username */}
                         <div>
                             <label className="block text-slate-300 text-xs font-bold uppercase tracking-wide mb-2">
-                                Tên đăng nhập
+                                {t('adminLogin.usernameLabel')}
                             </label>
                             <div className="relative">
                                 <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                     type="text" value={username} onChange={e => setUsername(e.target.value)}
-                                    placeholder="Nhập tên đăng nhập"
+                                    placeholder={t('adminLogin.usernamePlaceholder')}
                                     required
                                     className="w-full bg-slate-800/70 border border-slate-700 hover:border-slate-500 focus:border-blue-500 rounded-xl pl-10 pr-4 py-3 text-white text-sm placeholder-slate-500 outline-none transition-colors"
                                 />
@@ -134,14 +135,14 @@ export default function AdminLogin() {
                         {/* Password */}
                         <div>
                             <label className="block text-slate-300 text-xs font-bold uppercase tracking-wide mb-2">
-                                Mật khẩu
+                                {t('adminLogin.passwordLabel')}
                             </label>
                             <div className="relative">
                                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                     type={showPw ? "text" : "password"} value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    placeholder="Nhập mật khẩu"
+                                    placeholder={t('adminLogin.passwordPlaceholder')}
                                     required
                                     className="w-full bg-slate-800/70 border border-slate-700 hover:border-slate-500 focus:border-blue-500 rounded-xl pl-10 pr-11 py-3 text-white text-sm placeholder-slate-500 outline-none transition-colors"
                                 />
@@ -157,11 +158,11 @@ export default function AdminLogin() {
                             <label className="flex items-center gap-2 cursor-pointer select-none">
                                 <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
                                     className="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-blue-500" />
-                                <span className="text-slate-400 text-sm">Ghi nhớ đăng nhập</span>
+                                <span className="text-slate-400 text-sm">{t('adminLogin.rememberMe')}</span>
                             </label>
                             <Link to="/admin/forgot-password"
                                 className="text-blue-400 hover:text-blue-300 text-sm font-semibold transition-colors">
-                                Quên mật khẩu?
+                                {t('adminLogin.forgotPassword')}
                             </Link>
                         </div>
 
@@ -174,18 +175,18 @@ export default function AdminLogin() {
                                 color: "white",
                             }}>
                             {loading ? (
-                                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Đang xử lý...</>
+                                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t('adminLogin.processing')}</>
                             ) : (
-                                <><ShieldAlert size={16} /> Đăng nhập</>
+                                <><ShieldAlert size={16} /> {t('adminLogin.signIn')}</>
                             )}
                         </button>
                     </form>
 
                     {/* Register link */}
                     <p className="text-center text-slate-500 text-sm mt-6">
-                        Chưa có tài khoản?{" "}
+                        {t('adminLogin.noAccount')}{" "}
                         <Link to="/admin/register" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-                            Đăng ký ngay
+                            {t('adminLogin.registerNow')}
                         </Link>
                     </p>
                 </div>
