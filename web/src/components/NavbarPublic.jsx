@@ -47,15 +47,16 @@ export default function NavbarPublic() {
     };
 
     return (
-        <div className="relative top-0 left-0 w-full h-24 z-[1600] text-white shadow-lg flex items-center justify-between px-4 bg-header">
+        <div className="relative top-0 left-0 w-full h-16 z-[1600] text-white shadow-lg flex items-center justify-between px-4 bg-header">
             {/* Decorative blobs (clipped to header only, doesn't affect dropdowns below) */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/5" />
                 <div className="absolute bottom-0 right-24 h-16 w-16 rounded-full bg-cyan-400/10" />
             </div>
 
-            {/* Left: Logo & Title */}
-            <div className="relative flex items-center gap-3 min-w-0">
+            {/* Left: Logo & Title — logo is intentionally larger than the bar itself (self-start
+                so the extra height overflows downward only, never clipped by the page's top edge) */}
+            <div className="relative flex items-center gap-3 min-w-0 self-start">
                 <img src={logoImg} alt="DSS Logo" className="w-20 h-20 object-contain shrink-0" />
                 <div className="flex flex-col min-w-0">
                     <h1 className="text-xs sm:text-sm font-bold m-0 leading-tight truncate">{t('navbar.title')}</h1>
@@ -155,7 +156,7 @@ export default function NavbarPublic() {
 
             {/* Mobile Menu Dropdown */}
             {isMobileMenuOpen && (
-                <div className="absolute top-full left-0 w-full border-t border-white/15 md:hidden p-4 flex flex-col gap-4 shadow-xl z-[1500] bg-header max-h-[calc(100vh-6rem)] overflow-y-auto">
+                <div className="absolute top-full left-0 w-full border-t border-white/15 md:hidden p-4 flex flex-col gap-4 shadow-xl z-[1500] bg-header max-h-[calc(100vh-4rem)] overflow-y-auto">
                     <div className="relative w-full">
                         <input
                             type="text"
