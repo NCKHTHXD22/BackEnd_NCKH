@@ -260,7 +260,7 @@ export default function HomePage() {
             <NavbarPublic />
 
             {/* Map Area */}
-            <div className="absolute top-[52px] left-0 w-full h-[calc(100vh-52px)] z-0">
+            <div className="absolute top-16 left-0 w-full h-[calc(100vh-4rem)] z-0">
                 <MapContainer
                     center={position}
                     zoom={12}
