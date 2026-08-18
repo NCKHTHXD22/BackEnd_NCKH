@@ -260,7 +260,7 @@ export default function HomePage() {
             <NavbarPublic />
 
             {/* Map Area */}
-            <div className="absolute top-16 left-0 w-full h-[calc(100vh-4rem)] z-0">
+            <div className="absolute top-24 left-0 w-full h-[calc(100vh-6rem)] z-0">
                 <MapContainer
                     center={position}
                     zoom={12}
@@ -403,7 +403,7 @@ export default function HomePage() {
             {/* --- FLOATING UI CONTROLS --- */}
 
             {/* Left Sidebar - floating tool buttons */}
-            <div className="absolute left-3 top-20 z-[1000] flex flex-col gap-2">
+            <div className="absolute left-3 top-28 z-[1000] flex flex-col gap-2">
                 <button
                     className="w-10 h-10 rounded-xl bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 hover:text-blue-600 flex items-center justify-center transition-all duration-200"
                     title="Cài đặt"
@@ -460,7 +460,7 @@ export default function HomePage() {
             </div>
 
             {/* Right Sidebar */}
-            <div className="absolute right-3 top-20 z-[1000] flex flex-col gap-2">
+            <div className="absolute right-3 top-28 z-[1000] flex flex-col gap-2">
                 {/* Functional icons group */}
                 <div className="flex flex-col gap-2">
                     <SidebarIcon
@@ -491,7 +491,7 @@ export default function HomePage() {
 
             {/* Base Map Panel */}
             {showBaseMapPanel && (
-                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100 animate-in slide-in-from-right">
+                <div className="absolute right-16 top-28 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100 animate-in slide-in-from-right">
                     <div className="bg-gradient-to-r from-blue-50 to-sky-50 p-3 border-b border-blue-100 font-semibold flex justify-between items-center text-slate-700">
                         <span className="flex items-center gap-2"><FaLayerGroup className="text-blue-600" /> Bản đồ nền</span>
                         <button onClick={() => setShowBaseMapPanel(false)} className="text-slate-400 hover:text-slate-600 text-lg">❯</button>
@@ -545,7 +545,7 @@ export default function HomePage() {
 
             {/* Community Info Panel (Thông tin cộng đồng) */}
             {showCommunityPanel && (
-                <div className="absolute right-16 top-20 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100">
+                <div className="absolute right-16 top-28 z-[1000] w-64 bg-white rounded-2xl shadow-2xl shadow-blue-900/20 overflow-hidden text-sm border border-blue-100">
                     <div className="bg-gradient-to-r from-blue-50 to-sky-50 p-3 border-b border-blue-100 font-semibold flex justify-between items-center text-slate-700">
                         <span className="flex items-center gap-2"><FaUsers className="text-blue-600" /> Thông tin cộng đồng</span>
                         <button onClick={() => setShowCommunityPanel(false)} className="text-slate-400 hover:text-slate-600 text-lg">❯</button>
@@ -598,7 +598,7 @@ export default function HomePage() {
 
             {/* Disaster Warning Panel (Cảnh báo thiên tai) */}
             {showWarningPanel && (
-                <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[360px] bg-white rounded-2xl shadow-2xl shadow-orange-900/20 overflow-hidden flex flex-col text-sm border border-orange-100">
+                <div className="absolute left-14 top-28 bottom-32 z-[1000] w-[360px] bg-white rounded-2xl shadow-2xl shadow-orange-900/20 overflow-hidden flex flex-col text-sm border border-orange-100">
                     <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 font-bold flex justify-between items-center">
                         <span className="flex items-center gap-2"><MdWarning /> Cảnh báo thiên tai</span>
                         <button onClick={() => setShowWarningPanel(false)} className="text-white/70 hover:text-white">
@@ -662,7 +662,7 @@ export default function HomePage() {
 
             {/* Public News Panel (Sự kiện thiên tai) */}
             {showNewsPanel && (
-                <div className="absolute left-14 top-20 bottom-32 z-[1000] w-[350px] bg-white rounded-2xl shadow-2xl shadow-slate-900/20 overflow-hidden flex flex-col text-sm border border-slate-200 transition-transform duration-300">
+                <div className="absolute left-14 top-28 bottom-32 z-[1000] w-[350px] bg-white rounded-2xl shadow-2xl shadow-slate-900/20 overflow-hidden flex flex-col text-sm border border-slate-200 transition-transform duration-300">
                     <div className="bg-gradient-to-r from-blue-50 to-sky-50 text-slate-800 p-3 font-bold flex justify-between items-center border-b border-blue-100">
                         <span className="text-base text-slate-900">Sự kiện thiên tai</span>
                         <button onClick={() => setShowNewsPanel(false)} className="text-slate-500 hover:text-slate-800">
