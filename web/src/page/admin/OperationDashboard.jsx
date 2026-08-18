@@ -1136,7 +1136,7 @@ export default function OperationDashboard({ lakeId }) {
                                     </div>
                                 ) : (
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <ComposedChart data={unifiedData} margin={{ top: 16, right: 40, left: 10, bottom: isMobile ? 60 : 50 }} barCategoryGap="10%">
+                                        <ComposedChart data={unifiedData} margin={{ top: 16, right: isMobile ? 8 : 40, left: isMobile ? 0 : 10, bottom: isMobile ? 60 : 50 }} barCategoryGap="10%">
                                             <defs>
                                                 <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.3} />
@@ -1171,6 +1171,7 @@ export default function OperationDashboard({ lakeId }) {
                                             />
                                             <YAxis
                                                 yAxisId="left"
+                                                width={isMobile ? 32 : 60}
                                                 stroke="#64748b"
                                                 fontSize={9}
                                                 fontWeight="800"
@@ -1183,6 +1184,7 @@ export default function OperationDashboard({ lakeId }) {
                                                 yAxisId="rain"
                                                 orientation="right"
                                                 reversed={true}
+                                                width={isMobile ? 28 : 45}
                                                 stroke="#0ea5e9"
                                                 fontSize={9}
                                                 fontWeight="800"

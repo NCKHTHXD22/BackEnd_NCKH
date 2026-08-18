@@ -529,7 +529,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                 </h3>
                                 <div className="h-64 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={realLevelData} margin={{ top: 20, right: 30, left: 20, bottom: isMobile ? 40 : 5 }}>
+                                        <LineChart data={realLevelData} margin={{ top: 20, right: isMobile ? 4 : 30, left: isMobile ? 0 : 20, bottom: isMobile ? 40 : 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                             <XAxis
                                                 dataKey="time"
@@ -541,12 +541,13 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                 textAnchor={isMobile ? 'end' : 'middle'}
                                                 height={isMobile ? 40 : 25}
                                             />
-                                            <YAxis 
-                                                domain={['auto', 'auto']} 
-                                                axisLine={false} 
-                                                tickLine={false} 
-                                                tick={{ fontSize: 11, fill: '#6B7280' }} 
-                                                label={{ value: 'MN (m)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 11, fontWeight: 'bold' } }}
+                                            <YAxis
+                                                width={isMobile ? 30 : 55}
+                                                domain={['auto', 'auto']}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fontSize: isMobile ? 9 : 11, fill: '#6B7280' }}
+                                                label={isMobile ? undefined : { value: 'MN (m)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 11, fontWeight: 'bold' } }}
                                             />
                                             <RechartsTooltip content={({ active, payload, label }) => {
                                                 if (active && payload && payload.length) {
@@ -767,9 +768,16 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                         )}
                                     </div>
 
+                                    {isMobile && (
+                                        <div className="flex items-center justify-between text-[9px] font-bold px-1">
+                                            <span className="text-blue-600">← {t('lakeModal.forecast.flowAxis')}</span>
+                                            <span className="text-cyan-600">{t('lakeModal.forecast.rainAxis')} →</span>
+                                        </div>
+                                    )}
+
                                     <FullscreenChartWrapper className="h-[420px] w-full" label="Toàn màn hình biểu đồ">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <ComposedChart data={unifiedData} margin={{ top: 16, right: 30, left: 20, bottom: isMobile ? 45 : 5 }}>
+                                            <ComposedChart data={unifiedData} margin={{ top: 16, right: isMobile ? 4 : 30, left: isMobile ? 0 : 20, bottom: isMobile ? 45 : 5 }}>
                                                 <defs>
                                                     <linearGradient id="colorBand" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor={MODELS.find(m => m.id === selectedModel)?.color || '#3b82f6'} stopOpacity={0.2} />
@@ -787,23 +795,25 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                                     textAnchor={isMobile ? 'end' : 'middle'}
                                                     height={isMobile ? 45 : 30}
                                                 />
-                                                <YAxis 
+                                                <YAxis
                                                     yAxisId="flow"
-                                                    domain={['auto', 'auto']} 
-                                                    axisLine={false} 
-                                                    tickLine={false} 
-                                                    tick={{ fontSize: 12, fill: '#6B7280' }} 
-                                                    label={{ value: t('lakeModal.forecast.flowAxis'), angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 13, fontWeight: 'bold' } }}
+                                                    width={isMobile ? 28 : 55}
+                                                    domain={['auto', 'auto']}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fontSize: isMobile ? 9 : 12, fill: '#6B7280' }}
+                                                    label={isMobile ? undefined : { value: t('lakeModal.forecast.flowAxis'), angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#3b82f6', fontSize: 13, fontWeight: 'bold' } }}
                                                 />
                                                 <YAxis
                                                     yAxisId="rain"
                                                     orientation="right"
                                                     reversed={true}
+                                                    width={isMobile ? 26 : 50}
                                                     domain={[0, rainAxisMax]}
                                                     axisLine={false}
                                                     tickLine={false}
-                                                    tick={{ fontSize: 10, fill: '#0891b2' }}
-                                                    label={{ value: t('lakeModal.forecast.rainAxis'), angle: 90, position: 'insideRight', offset: 12, style: { textAnchor: 'middle', fill: '#0891b2', fontSize: 11, fontWeight: 'bold' } }}
+                                                    tick={{ fontSize: isMobile ? 8 : 10, fill: '#0891b2' }}
+                                                    label={isMobile ? undefined : { value: t('lakeModal.forecast.rainAxis'), angle: 90, position: 'insideRight', offset: 12, style: { textAnchor: 'middle', fill: '#0891b2', fontSize: 11, fontWeight: 'bold' } }}
                                                 />
                                                 <RechartsTooltip content={({ active, payload, label }) => {
                                                     if (active && payload && payload.length) {
