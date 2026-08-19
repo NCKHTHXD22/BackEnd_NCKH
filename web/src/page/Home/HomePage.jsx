@@ -418,17 +418,6 @@ export default function HomePage() {
                 </button>
 
                 <div className="flex flex-col gap-2">
-                    <div className="relative group">
-                        <button
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showNewsPanel ? 'bg-red-500 text-white' : 'bg-white text-red-500 hover:bg-red-50'}`}
-                            onClick={() => { setShowNewsPanel(!showNewsPanel); setShowWarningPanel(false); setShowCommunityPanel(false); }}
-                        >
-                            <FaExclamationTriangle />
-                        </button>
-                        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md">
-                            {t('mapPanel.disasterEvents')}
-                        </div>
-                    </div>
                     <button
                         className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 ${showWarningPanel ? 'bg-orange-500 text-white' : 'bg-white text-orange-500 hover:bg-orange-50'}`}
                         title={t('mapPanel.disasterWarning')}
