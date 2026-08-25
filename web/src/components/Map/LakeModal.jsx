@@ -59,6 +59,7 @@ const MODELS = [
     { id: 'arimax', label: 'ARIMAX', color: '#4a3aa7', icon: <TrendingUp size={14} /> },
     { id: 'lstm', label: 'LSTM', color: '#2a78d6', icon: <Zap size={14} /> },
     { id: 'rf', label: 'Random Forest', color: '#eb6834', icon: <Trees size={14} /> },
+    { id: 'xgboost', label: 'XGBoost', color: '#c026d3', icon: <Activity size={14} /> },
     { id: 'hec', label: 'HEC-HMS', color: '#008300', icon: <BarChart3 size={14} /> },
 ];
 

@@ -40,9 +40,6 @@ pack_*.py
 make_*.py
 README_COLAB.md
 
-# ─── Training modules (not needed for inference) ──────────────────────────────
-training/
-
 # ─── Artifacts: Model weights ARE committed (needed for inference) ─────────────
 # artifacts/ is NOT ignored — models must be in repo
 # Use Git LFS for *.pt files:

@@ -11,6 +11,9 @@ scikit-learn
 joblib
 openpyxl
 
+# ─── XGBoost (tabular model — reg:quantileerror cần >=2.0) ───────────────────
+xgboost>=2.0
+
 # ─── HTTP requests ────────────────────────────────────────────────────────────
 requests
 httpx

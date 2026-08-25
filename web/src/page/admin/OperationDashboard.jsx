@@ -613,6 +613,10 @@ export default function OperationDashboard({ lakeId }) {
             const rf = await mapApi.getForecastRf(id).catch(() => null);
             return Array.isArray(rf) ? rf : [];
         }
+        if (model === 'xgboost') {
+            const xgb = await mapApi.getForecastXgb(id).catch(() => null);
+            return Array.isArray(xgb) ? xgb : [];
+        }
         if (model === 'arimax') {
             // "station" — same default rain source used when the Forecast tab first loads.
             const docs = await mapApi.getForecastHistory(id, 'station').catch(() => null);

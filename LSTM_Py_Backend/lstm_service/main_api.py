@@ -1,6 +1,7 @@
 import os
 import torch
 import numpy as np
+import xgboost as xgb
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import timedelta
@@ -25,6 +26,7 @@ from features.feature_engineering import (
     add_reservoir_features,
     add_meteo_features,
 )
+from data.dataset_builder import FEATURES as XGB_FEATURES
 from operation import get_operation_calculator
 import requests
 
@@ -97,6 +99,31 @@ def load_model_for_reservoir(res_idx: int) -> InflowForecastModel:
     model.eval()
     _model_cache[res_idx] = model
     return model
+
+
+# ─── XGBOOST (global model, tabular, không cần GPU/scaler) ────────────────────
+XGB_ARTIFACT_DIR = "artifacts/xgb"
+_xgb_model_cache: dict = {}   # (horizon_idx, quantile) -> xgb.Booster
+
+
+def load_xgb_models() -> dict:
+    """Load 72 booster (24 horizon x 3 quantile) — cache sau lần load đầu.
+    Model GLOBAL (không key theo reservoir) nên chỉ load 1 lần duy nhất,
+    khác với LSTM (load_model_for_reservoir load theo từng res_idx)."""
+    if _xgb_model_cache:
+        return _xgb_model_cache
+    for h in range(HORIZON):
+        for q in QUANTILES:
+            path = f"{XGB_ARTIFACT_DIR}/h{h+1:02d}_q{int(q*100):02d}.json"
+            if not os.path.exists(path):
+                raise FileNotFoundError(
+                    f"Missing XGBoost artifact: {path}. Chạy training/train_xgb.py trước."
+                )
+            bst = xgb.Booster()
+            bst.load_model(path)
+            _xgb_model_cache[(h, q)] = bst
+    print(f"[OK] Loaded {len(_xgb_model_cache)} XGBoost boosters ({HORIZON} horizon x {len(QUANTILES)} quantile).")
+    return _xgb_model_cache
 
 
 class PredictRequest(BaseModel):
@@ -307,7 +334,125 @@ async def get_prediction(req: PredictRequest):
         error_msg = traceback.format_exc()
         print(f"❌ [CRASH] Reservoir {rid} Error:\n{error_msg}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
+            detail={
+                "error": str(e),
+                "type": type(e).__name__,
+                "reservoirId": rid
+            }
+        )
+
+
+@app.post("/predict-xgb")
+async def get_prediction_xgb(req: PredictRequest):
+    """Tương đương /predict nhưng dùng XGBoost (tabular, global model).
+    Dùng lại NGUYÊN VẸN bước fetch dữ liệu + feature engineering của /predict —
+    chỉ khác 2 chỗ: (1) lấy 1 dòng feature cuối thay vì chuỗi SEQ_LENGTH,
+    không cần scaler; (2) inference bằng 72 booster XGBoost thay vì forward LSTM."""
+    rid = req.rid
+    if rid not in RESERVOIRS:
+        raise HTTPException(status_code=404, detail=f"Reservoir {rid} not found")
+
+    info = RESERVOIRS[rid]
+    res_idx = info["idx"]
+
+    try:
+        print(f"\n[>>] [XGB] Predicting for Reservoir {rid} ({info['name']})...")
+
+        if req.reference_time:
+            try:
+                ref_dt = pd.to_datetime(req.reference_time).tz_convert("Asia/Ho_Chi_Minh").tz_localize(None).floor("h")
+                reference_time = ref_dt.to_pydatetime()
+            except Exception as e:
+                print(f"  [Ref] Error parsing reference_time '{req.reference_time}': {e}. Using current time.")
+                reference_time = _vn_now().replace(minute=0, second=0, microsecond=0)
+        else:
+            reference_time = _vn_now().replace(minute=0, second=0, microsecond=0)
+
+        # ── 1. Fetch hydro + rain + meteo (giống hệt /predict) ────────────────
+        hydro = fetch_hydro_data(rid, days=11, end_time=reference_time)
+        if hydro.empty:
+            raise HTTPException(status_code=400, detail=f"No hydro data for reservoir {rid}")
+
+        reference_time = hydro["time"].max()
+        print(f"  [XGB] Reference time (from hydro): {reference_time}")
+
+        rain_all   = fetch_rain_data(rid, info["lat"], info["lon"],
+                                     reference_time=reference_time, days=11)
+        meteo_hist = fetch_meteo_history(info["lat"], info["lon"], days=11)
+
+        if rain_all.empty:
+            df = hydro.copy()
+            df["rain"] = 0.0
+        else:
+            rain_past = rain_all[rain_all["time"] <= reference_time]
+            df = pd.merge(hydro, rain_past, on="time", how="left")
+            df["rain"] = df["rain"].fillna(0.0)
+
+        if not meteo_hist.empty:
+            df = pd.merge(df, meteo_hist, on="time", how="left")
+
+        df["inflow"] = np.sqrt(df["inflow"].clip(0))
+        for col in ("water_level", "outflow"):
+            if col not in df.columns:
+                df[col] = np.nan
+
+        df = add_time_features(df)
+        df = add_rain_features(df)
+        df = add_inflow_features(df)
+        df = add_reservoir_features(df)
+        df = add_meteo_features(df)
+        df = df.fillna(0.0)
+
+        # ── 2. Chỉ cần 1 dòng cuối (đã chứa lag/rolling nén lịch sử) ──────────
+        for f in XGB_FEATURES:
+            if f not in df.columns:
+                df[f] = 0.0
+        last_row = df[XGB_FEATURES].iloc[-1].values.astype(np.float32)
+        last_row = np.nan_to_num(last_row, nan=0.0, posinf=0.0, neginf=0.0)
+
+        rid_onehot = np.eye(NUM_RESERVOIRS, dtype=np.float32)[res_idx]
+        row_full = np.concatenate([last_row, rid_onehot])[None, :]
+        dmat = xgb.DMatrix(row_full)
+
+        # ── 3. Inference: 24 horizon x 3 quantile ──────────────────────────────
+        models = load_xgb_models()
+        preds = np.zeros((HORIZON, len(QUANTILES)), dtype=np.float32)
+        for h in range(HORIZON):
+            for qi, q in enumerate(QUANTILES):
+                preds[h, qi] = models[(h, q)].predict(dmat)[0]
+        preds = np.sort(preds, axis=1)                 # chống quantile-crossing, giống /predict
+        preds = np.clip(preds, 0.0, 500.0) ** 2         # inverse sqrt transform
+
+        results = []
+        for i, (p10, p50, p90) in enumerate(preds):
+            target_time = reference_time + timedelta(hours=i + 1)
+            results.append({
+                "targetTime": target_time.isoformat(),
+                "p10": round(max(float(p10), 0.0), 2),
+                "p50": round(max(float(p50), 0.0), 2),
+                "p90": round(max(float(p90), 0.0), 2),
+            })
+
+        print(f"  [OK] [XGB] Generated {len(results)} forecast steps")
+
+        return {
+            "reservoirId": rid,
+            "reservoirName": info["name"],
+            "referenceTime": reference_time.isoformat(),
+            "warning": None,
+            "modelUsed": "xgboost_global",
+            "predictions": results
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        print(f"❌ [XGB CRASH] Reservoir {rid} Error:\n{error_msg}")
+        raise HTTPException(
+            status_code=500,
             detail={
                 "error": str(e),
                 "type": type(e).__name__,
