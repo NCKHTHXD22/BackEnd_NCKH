@@ -1,0 +1,16 @@
+# ─── Core ML ────────────────────────────────────────────────────────────────
+numpy
+pandas
+xgboost>=2.0
+openpyxl
+
+# ─── Serving (FastAPI, tự chứa /predict-xgb — không dùng chung container LSTM) ─
+fastapi
+uvicorn[standard]
+pydantic
+requests
+httpx
+python-dotenv
+
+# ─── Data source fallback (Hugging Face Hub) ─────────────────────────────────
+huggingface_hub

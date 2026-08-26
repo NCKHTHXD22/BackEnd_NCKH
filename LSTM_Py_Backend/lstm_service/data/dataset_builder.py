@@ -11,6 +11,13 @@
 # Cấu trúc file CŨ (tự động phát hiện — tương thích ngược):
 #   - Lưu lượng đến (m3/s) : cột 1-24
 #   - Mưa lưu vực IDW (mm) : cột 25-48
+#
+# LƯU Ý (2026-08-26): Data_Tung_Ho_Ma_Tran_Rong/ đã bị xoá khỏi máy local, nên
+# build_global_dataset() bên dưới hiện KHÔNG chạy được cho tới khi Excel được
+# khôi phục (xem LSTM_Py_Backend_v2/data/legacy_v1_recover.py). Việc training
+# XGBoost/RF đã chuyển hẳn sang XGBoost_Py_Backend/ và RF_Py_Backend/, dùng
+# dataset đã build sẵn của LSTM_Py_Backend_v2 (backup trên Hugging Face
+# 'Anvo2004/dataset_all_lake') thay vì phụ thuộc lại Excel này.
 
 import numpy as np
 import pandas as pd
@@ -69,7 +76,7 @@ FEATURES = [
     "et0", "wind_speed",
     # Thời gian (6)
     "hour_sin", "hour_cos", "doy_sin", "doy_cos", "month_sin", "month_cos",
-]  # Tổng: 18 + 12 + 6 + 4 + 6 = 46 features
+]  # Tổng: 44 features (18 rain + 12 inflow + 6 reservoir + 2 meteo + 6 time)
 
 # Features tùy chọn — điền 0 nếu không có trong data (sẽ được model học skip)
 OPTIONAL_FEATURES = [
@@ -248,150 +255,6 @@ def build_global_dataset(
     print(f"  dataset_timestamps.npy   {ts_arr.shape}  [{ts_arr.min()} to {ts_arr.max()}]")
     print(f"  artifacts/global_scaler.pkl")
     print("\nDone! Run: python main_build_dataset.py then upload to Kaggle.")
-
-
-def build_tabular_dataset(
-    start_date: str = "2022-01-01",
-    end_date: str   = "2025-12-31",
-):
-    """
-    Xây dựng dataset TABULAR cho mô hình cây (XGBoost) từ cùng nguồn Excel
-    và cùng feature engineering với build_global_dataset() — chỉ khác ở bước
-    cuối: KHÔNG windowing SEQ_LENGTH (240h) vì lag/rolling features (rain_168h,
-    inflow_48h_avg, ...) đã "nén" lịch sử vào 1 dòng. Mỗi dòng feat_arr[i] dự
-    báo trực tiếp (direct multi-horizon) 24 giá trị inflow tại i+1..i+HORIZON.
-
-    Không cần GlobalScaler — tree-based model bất biến với scale của feature.
-
-    Lưu 4 file .npy:
-      dataset_X_tabular.npy   — (N, n_features)
-      dataset_y_tabular.npy   — (N, HORIZON)          [sqrt space]
-      dataset_rid_tabular.npy — (N,)                   [idx 0..NUM_RESERVOIRS-1]
-      dataset_ts_tabular.npy  — (N,)                   [datetime64[s], mốc bắt đầu dự báo]
-    """
-    start_dt = pd.Timestamp(start_date)
-    end_dt   = pd.Timestamp(end_date)
-
-    print("=" * 70)
-    print(f"BUILD TABULAR DATASET (XGBoost): {start_date} to {end_date}")
-    print(f"HORIZON={HORIZON}h  (direct multi-horizon, khong windowing)")
-    print("=" * 70)
-
-    X_list, y_list, rid_list, ts_list = [], [], [], []
-
-    for rid, info in RESERVOIRS.items():
-        name    = info["name"]
-        res_idx = info["idx"]
-        print(f"\n  [{rid:>2}] {name}")
-
-        # ── 1. Load từ Excel matrix ──────────────────────────────────────────
-        df = load_inflow_rain_matrix(rid, start_date=start_dt, end_date=end_dt)
-        if df.empty:
-            print(f"       SKIP - khong co du lieu Excel.")
-            continue
-
-        # ── 2. Backbone hourly liên tục (tránh lỗ thời gian) ─────────────────
-        full_idx = pd.date_range(start=start_dt, end=end_dt, freq="h")
-        df = (
-            df.set_index("time")
-              .reindex(full_idx)
-              .rename_axis("time")
-              .reset_index()
-        )
-
-        # ── 3. Nội suy inflow, Z, Q_out (tuyến tính, tối đa 6h) ─────────────
-        df["inflow"] = (
-            df["inflow"]
-              .interpolate(method="linear", limit=6, limit_direction="both")
-        )
-        df["rain"] = df["rain"].fillna(0.0)
-
-        for col in ("water_level", "outflow"):
-            if col in df.columns:
-                df[col] = df[col].interpolate(
-                    method="linear", limit=6, limit_direction="both"
-                )
-
-        # ── 4. Kiểm tra coverage ─────────────────────────────────────────────
-        valid_pct = df["inflow"].notna().mean() * 100
-        print(f"       Hourly rows: {len(df):,}  |  Inflow coverage: {valid_pct:.1f}%")
-        if valid_pct < 30:
-            print(f"       SKIP - coverage qua thap ({valid_pct:.1f}%)")
-            continue
-
-        # ── 5. Clip outlier ───────────────────────────────────────────────────
-        cap = INFLOW_CAPS_M3S.get(rid)
-        if cap:
-            before_max = df["inflow"].max()
-            df["inflow"] = df["inflow"].clip(upper=cap)
-            if before_max > cap:
-                print(f"       Clip inflow: {before_max:.0f} -> {cap} m3/s")
-
-        # ── 6. sqrt transform ─────────────────────────────────────────────────
-        df["inflow"] = np.sqrt(df["inflow"].clip(lower=0))
-
-        # ── 7. Feature engineering (giống hệt LSTM) ───────────────────────────
-        df = add_time_features(df)
-        df = add_rain_features(df)
-        df = add_inflow_features(df)
-        df = add_reservoir_features(df)
-        df = add_meteo_features(df)
-
-        df = df.fillna(0.0)
-
-        # ── 8. Ép đủ cột FEATURES (46) cho MỌI hồ ─────────────────────────────
-        # Một số Excel định dạng CŨ không có water_level/outflow -> thiếu cột.
-        # Phải ép đủ & cùng THỨ TỰ cho tất cả hồ, nếu không np.array(X_list) sẽ
-        # ragged (các hồ có số cột khác nhau) và vỡ ở bước np.array() cuối cùng.
-        missing_required = [f for f in REQUIRED_FEATURES if f not in df.columns]
-        if missing_required:
-            print(f"       [WARN] Missing required features: {missing_required}")
-            continue
-        for f in FEATURES:
-            if f not in df.columns:
-                df[f] = 0.0
-
-        # ── 9. Direct multi-horizon: 1 dòng -> 24 target, KHÔNG windowing ────
-        feat_arr   = df[FEATURES].values.astype(np.float32)
-        inflow_arr = df["inflow"].values.astype(np.float32)
-        time_arr   = df["time"].values
-
-        n_samples_before = len(X_list)
-        for i in range(len(df) - HORIZON):
-            target = inflow_arr[i + 1 : i + 1 + HORIZON]
-            if len(target) < HORIZON or np.any(np.isnan(target)):
-                continue
-
-            X_list.append(feat_arr[i])
-            y_list.append(target)
-            rid_list.append(res_idx)
-            ts_list.append(time_arr[i])
-
-        n_added = len(X_list) - n_samples_before
-        print(f"       Samples: {n_added:,}  (features={len(FEATURES)})")
-
-    if not X_list:
-        print("\nERROR: No samples created!")
-        return
-
-    X   = np.array(X_list,   dtype=np.float32)
-    y   = np.array(y_list,   dtype=np.float32)
-    rid_arr = np.array(rid_list, dtype=np.int64)
-    ts_arr  = np.array(ts_list,  dtype="datetime64[s]")
-
-    print(f"\nTotal: {len(X):,} samples | X={X.shape} | y={y.shape}")
-
-    np.save("dataset_X_tabular.npy",   X)
-    np.save("dataset_y_tabular.npy",   y)
-    np.save("dataset_rid_tabular.npy", rid_arr)
-    np.save("dataset_ts_tabular.npy",  ts_arr)
-
-    print("\nSaved:")
-    print(f"  dataset_X_tabular.npy    {X.shape}")
-    print(f"  dataset_y_tabular.npy    {y.shape}")
-    print(f"  dataset_rid_tabular.npy  {rid_arr.shape}")
-    print(f"  dataset_ts_tabular.npy   {ts_arr.shape}  [{ts_arr.min()} to {ts_arr.max()}]")
-    print("\nDone! Run: python training/train_xgb.py")
 
 
 if __name__ == "__main__":

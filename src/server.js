@@ -39,6 +39,7 @@ import "./jobs/inflowLake.job.js";
 import "./jobs/rainLakeHistory.job.js";
 import "./jobs/lstmForecast.job.js";
 import "./jobs/xgbForecast.job.js";
+import "./jobs/rfForecast.job.js";
 import "./jobs/inflowLakeHistory.job.js";
 import "./jobs/floodAlert.job.js";
 

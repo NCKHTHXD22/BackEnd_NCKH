@@ -1,0 +1,18 @@
+# ─── Core ML ────────────────────────────────────────────────────────────────
+numpy
+pandas
+scikit-learn
+quantile-forest
+joblib
+openpyxl
+
+# ─── Serving (FastAPI, tự chứa /predict-rf) ───────────────────────────────────
+fastapi
+uvicorn[standard]
+pydantic
+requests
+httpx
+python-dotenv
+
+# ─── Data source fallback (Hugging Face Hub) ─────────────────────────────────
+huggingface_hub
