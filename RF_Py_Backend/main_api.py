@@ -25,8 +25,10 @@ if sys.stdout.encoding is not None and sys.stdout.encoding.lower() != "utf-8":
 
 from config.reservoirs import RESERVOIRS, NUM_RESERVOIRS
 from config.settings import HORIZON, QUANTILES
-from data.tabular_dataset import FEATURES
-from data.data_fetcher import fetch_hydro_data, fetch_rain_data, fetch_meteo_history, _vn_now
+from data.tabular_dataset import FEATURES, FUTURE_FEATURES
+from data.data_fetcher import (
+    fetch_hydro_data, fetch_rain_data, fetch_meteo_history, fetch_nwp_forecast, _vn_now,
+)
 from features.feature_engineering import (
     add_time_features, add_rain_features, add_inflow_features,
     add_reservoir_features, add_meteo_features,
@@ -131,8 +133,14 @@ async def predict_rf(req: PredictRequest):
         last_row = df[FEATURES].iloc[-1].values.astype(np.float32)
         last_row = np.nan_to_num(last_row, nan=0.0, posinf=0.0, neginf=0.0)
 
+        # Du bao Open-Meteo thay the 6 "future feature" oracle luc train --
+        # xem data/data_fetcher.py::fetch_nwp_forecast().
+        nwp = fetch_nwp_forecast(info["lat"], info["lon"], reference_time)
+        future_row = np.array([nwp[f] for f in FUTURE_FEATURES], dtype=np.float32)
+        future_row = np.nan_to_num(future_row, nan=0.0, posinf=0.0, neginf=0.0)
+
         rid_onehot = np.eye(NUM_RESERVOIRS, dtype=np.float32)[res_idx]
-        row_full = np.concatenate([last_row, rid_onehot])[None, :]
+        row_full = np.concatenate([last_row, future_row, rid_onehot])[None, :]
 
         models = load_models()
         preds = np.zeros((HORIZON, len(QUANTILES)), dtype=np.float32)

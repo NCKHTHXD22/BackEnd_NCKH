@@ -2,42 +2,40 @@
 """
 Doc du lieu tabular tu dataset LSTM_Py_Backend_v2 da build san (sliding-window
 hindcast, xem LSTM_Py_Backend_v2/data/dataset_builder.py) -- KHONG con phu
-thuoc Data_Tung_Ho_Ma_Tran_Rong/ (Excel goc, da bi xoa khoi may local).
+thuoc Data_Tung_Ho_Ma_Tran_Rong/ (Excel goc) truc tiep.
 
-Chien luoc: lay dong CUOI CUNG cua moi hindcast window (= "hien tai", da chua
-day du lag/rolling feature nen cua 240h qua khu) lam 1 dong tabular, target la
-24 buoc inflow (sqrt-space) tiep theo -- direct multi-horizon, KHONG dung
-X_nwp (mua du bao oracle) lam input:
+Feature vector = dong CUOI CUNG cua hindcast window (= "hien tai", da chua
+day du lag/rolling feature nen cua 240h qua khu) + oracle mua/khi tuong
+tuong lai (X_nwp buoc dau tien) + one-hot reservoir.
 
-  Ly do KHONG dung X_nwp: X_nwp trong dataset build tu inflow/rain THUC TE
-  cua chinh khoang thoi gian tuong lai (oracle), trong khi luc serving thuc te
-  chi co du bao Open-Meteo (co sai so) -- gay train/serve mismatch. Bo X_nwp
-  giup RF/XGBoost khong gap mismatch nay (doi lai la khong tan dung duoc tin
-  hieu mua du bao, nhung cac dac trung rain_*h/inflow_*h_avg tich luy toi 7
-  ngay qua khu da nam bat phan lon dieu kien am dat/xu huong dong chay).
+Oracle rain (theo yeu cau phuong phap cua du an): "mua du bao" dua vao model
+LA du lieu mua THUC TE da xay ra trong khoang tuong lai (khong phai du bao
+that) -- model hoc quy luat mua->lu tu du lieu hoan chinh. Luc serving (xem
+main_api.py), phan nay duoc thay bang du bao Open-Meteo that (khong con la
+oracle nua, co sai so du bao thuc te) -- day la cach lam CHU DICH, giong het
+LSTM_Py_Backend/v2 dang dung (X_future/X_nwp), khong phai loi train/serve
+mismatch nhu ghi chu cu cua file nay tung noi.
 
 Tim nguon du lieu theo thu tu uu tien:
   1. Local dev: ../LSTM_Py_Backend_v2/datasets/<Ten_Ho>/v2_*.npy
   2. Kaggle: /kaggle/input/**/v2_X_hindcast.npy (dataset da attach vao notebook)
-  3. Hugging Face Hub: Anvo2004/dataset_all_lake (fallback tu dong, cung nguon
-     LSTM_Py_Backend_v2/kaggle/generate_notebook_all.py dang dung)
+  3. Hugging Face Hub: Anvo2004/dataset_all_lake (LUU Y: repo nay hien TRONG,
+     khong co file zip that -- xem README.md. Fallback nay se loi neu ca local
+     lan Kaggle input deu khong co, phai tu Add Input Dataset tren Kaggle.)
 """
 import os
 import numpy as np
 
 from config.reservoirs import RESERVOIRS, NUM_RESERVOIRS
-from config.settings import TRAIN_END, VAL_START, VAL_END, TEST_START, HF_REPO_ID, HF_ZIP_FILENAME
+from config.settings import HF_REPO_ID, HF_ZIP_FILENAME
 
 _LOCAL_CANDIDATES = [
     os.path.join("..", "LSTM_Py_Backend_v2", "datasets"),
     os.path.join("LSTM_Py_Backend_v2", "datasets"),
 ]
 
-# Danh sach 47 feature (thu tu CHINH XAC khop cot cuoi cung cua v2_X_hindcast.npy
-# -- xem LSTM_Py_Backend_v2/data/dataset_builder.py::FEATURES). Dung o day de
-# main_api.py (serving) build dung 1 dong feature-vector tu du lieu live, khop
-# chinh xac voi cot da train -- neu lech thu tu/lech feature se sai ket qua
-# ma khong bao loi (silent bug).
+# Danh sach 47 feature hindcast (thu tu CHINH XAC khop cot cuoi cung cua
+# v2_X_hindcast.npy -- xem LSTM_Py_Backend_v2/data/dataset_builder.py::FEATURES).
 FEATURES = [
     "rain", "rain_3h", "rain_6h", "rain_12h", "rain_24h",
     "rain_48h", "rain_72h", "rain_96h", "rain_120h", "rain_168h",
@@ -51,6 +49,16 @@ FEATURES = [
     "temperature", "relative_humidity", "pressure", "et0", "wind_speed",
     "hour_sin", "hour_cos", "doy_sin", "doy_cos", "month_sin", "month_cos",
 ]  # 47 features
+
+# 6 feature "tuong lai" (oracle luc train, du bao Open-Meteo luc serving) --
+# lay dung buoc dau tien (t+1h) cua v2_X_nwp.npy, xem
+# LSTM_Py_Backend_v2/data/dataset_builder.py::_build_nwp_window() /
+# NWP_FEATURES. rain_fc_24h la tich luy mua tu t+1 den t+24 (ca cua so du
+# bao), nen dung chung cho ca 24 model horizon (h+1..h+24) khong sai logic --
+# giong cach LSTM dung 1 X_future cho ca 24 buoc output.
+FUTURE_FEATURES = ["rain_fc", "rain_fc_3h", "rain_fc_6h", "rain_fc_24h", "temp_fc", "wind_fc"]
+
+ALL_FEATURES = FEATURES + FUTURE_FEATURES  # 53 feature co so (chua tinh one-hot ho)
 
 
 def _find_dataset_dirs() -> dict:
@@ -90,7 +98,9 @@ def _find_dataset_dirs() -> dict:
             found[os.path.basename(root)] = root
     if not found:
         raise FileNotFoundError(
-            "Khong tim thay v2_X_hindcast.npy o local, Kaggle input, lan Hugging Face."
+            "Khong tim thay v2_X_hindcast.npy o local, Kaggle input, lan Hugging Face "
+            "(repo Anvo2004/dataset_all_lake hien khong co file zip that -- phai tu Add "
+            "Input Dataset tren Kaggle, xem README.md)."
         )
     print(f"[data] Da tai va giai nen tu Hugging Face ({len(found)} ho)")
     return found
@@ -99,10 +109,10 @@ def _find_dataset_dirs() -> dict:
 def build_tabular_dataset():
     """
     Tra ve:
-      X   (N, n_base_features + NUM_RESERVOIRS)  float32 -- da gom one-hot reservoir
-      y   (N, HORIZON)                            float32 -- sqrt-space, da cap outlier
-      rid (N,)                                    int64   -- reservoir idx (0..15)
-      ts  (N,)                                     datetime64[s]
+      X   (N, 47 hindcast + 6 oracle-future + NUM_RESERVOIRS one-hot) float32
+      y   (N, HORIZON)                                                 float32, sqrt-space
+      rid (N,)                                                         int64, reservoir idx (0..15)
+      ts  (N,)                                                         datetime64[s]
     """
     dirs = _find_dataset_dirs()
     key_to_idx = {info["name"].replace(" ", "_"): info["idx"] for _, info in RESERVOIRS.items()}
@@ -114,14 +124,16 @@ def build_tabular_dataset():
             continue
         idx = key_to_idx[key]
         X_hind = np.load(os.path.join(path, "v2_X_hindcast.npy"), mmap_mode="r")
+        X_nwp = np.load(os.path.join(path, "v2_X_nwp.npy"), mmap_mode="r")
         y = np.load(os.path.join(path, "v2_y.npy"))
         ts = np.load(os.path.join(path, "v2_timestamps.npy"))
 
-        X_last = np.asarray(X_hind[:, -1, :], dtype=np.float32)  # dong cuoi = "hien tai"
+        X_last = np.asarray(X_hind[:, -1, :], dtype=np.float32)   # dong cuoi hindcast = "hien tai"
+        X_future = np.asarray(X_nwp[:, 0, :], dtype=np.float32)   # buoc dau tien cua cua so du bao (t+1h)
         onehot = np.zeros((len(X_last), NUM_RESERVOIRS), dtype=np.float32)
         onehot[:, idx] = 1.0
 
-        X_list.append(np.concatenate([X_last, onehot], axis=1))
+        X_list.append(np.concatenate([X_last, X_future, onehot], axis=1))
         y_list.append(np.asarray(y, dtype=np.float32))
         rid_list.append(np.full(len(X_last), idx, dtype=np.int64))
         ts_list.append(ts)
@@ -134,20 +146,35 @@ def build_tabular_dataset():
     y = np.concatenate(y_list, axis=0)
     rid = np.concatenate(rid_list, axis=0)
     ts = np.concatenate(ts_list, axis=0)
-    print(f"Total: {len(X):,} samples | X={X.shape} | y={y.shape}")
+    print(f"Total: {len(X):,} samples | X={X.shape} (47 hindcast + 6 oracle-future + "
+          f"{NUM_RESERVOIRS} one-hot) | y={y.shape}")
     return X, y, rid, ts
 
 
-def split_by_date(ts: np.ndarray):
-    """Fixed-date split -- xem config/settings.py, giong het LSTM_Py_Backend_v2
-    (ReservoirLSTMConfig) va LSTM_Py_Backend/lstm_service (train_global.py) de
-    so NSE cong bang giua ca 3 model tren cung 1 khoang test."""
-    train_end_dt = np.datetime64(TRAIN_END, "s") + np.timedelta64(23, "h")
-    val_start_dt = np.datetime64(VAL_START, "s")
-    val_end_dt = np.datetime64(VAL_END, "s")
-    test_start_dt = np.datetime64(TEST_START, "s")
+def split_60_20_20(ts: np.ndarray):
+    """
+    Split 60% train / 20% validation / 20% test THEO THOI GIAN (chronological,
+    khong phai random) -- tranh data leakage (khong de mau tuong lai lot vao
+    tap train khi mau qua khu nam trong test).
 
-    train_idx = np.where(ts <= train_end_dt)[0]
-    val_idx = np.where((ts >= val_start_dt) & (ts < val_end_dt))[0]
-    test_idx = np.where(ts >= test_start_dt)[0]
+    Cutoff tinh theo % THOI GIAN da troi qua (khong phai % SO MAU), vi so mau
+    khong deu tuyet doi giua cac thang (thang du/thang thieu ngay) -- % thoi
+    gian moi la thu dung 60/20/20 theo dung nghia "60% khoang thoi gian dau
+    dung de train".
+    """
+    t_min, t_max = ts.min(), ts.max()
+    span = (t_max - t_min).astype("timedelta64[s]").astype(np.int64)
+    cutoff_60 = t_min + np.timedelta64(int(span * 0.60), "s")
+    cutoff_80 = t_min + np.timedelta64(int(span * 0.80), "s")
+
+    train_idx = np.where(ts < cutoff_60)[0]
+    val_idx = np.where((ts >= cutoff_60) & (ts < cutoff_80))[0]
+    test_idx = np.where(ts >= cutoff_80)[0]
+    print(f"[split 60/20/20] train <{cutoff_60} | val [{cutoff_60}, {cutoff_80}) | test >={cutoff_80}")
     return train_idx, val_idx, test_idx
+
+
+# Mua lu Vu Gia - Thu Bon: thang 9 nam nay -> thang 1 nam sau (yeu cau uu tien
+# bat dinh lu cua du an). Dung o training/train_rf.py, train_xgb.py de tang
+# trong so mau trong mua lu, cong them trong so theo bien do dinh lu da co.
+RAINY_SEASON_MONTHS = {9, 10, 11, 12, 1}

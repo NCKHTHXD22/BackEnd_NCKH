@@ -27,15 +27,19 @@ PyTorch nên container rất nhẹ (không tốn nhiều tài nguyên như lo ng
 
 Training trước đây nằm trong `LSTM_Py_Backend/lstm_service/training/train_xgb.py`
 (dùng Excel gốc qua `data/dataset_builder.py`) — đã chuyển hẳn sang đây, đọc
-dữ liệu từ `LSTM_Py_Backend_v2/datasets/` (đã build sẵn, backup trên Hugging
-Face `Anvo2004/dataset_all_lake`).
+dữ liệu từ `LSTM_Py_Backend_v2/datasets/` (đã build sẵn).
+
+**Lưu ý**: backup Hugging Face `Anvo2004/dataset_all_lake` hiện KHÔNG có file
+zip thật (đã verify) — xem `RF_Py_Backend/README.md` để biết cách dùng file
+zip local thay thế.
 
 ## Thiết kế mô hình
 
 Xem `RF_Py_Backend/README.md` — cùng logic (global model, direct
-multi-horizon, không dùng mưa dự báo oracle, fixed-date split), chỉ khác thuật
-toán: 72 booster XGBoost (`objective="reg:quantileerror"`, 1 booster/quantile/
-horizon) thay vì Quantile Regression Forest.
+multi-horizon, **có dùng mưa dự báo dạng oracle**, split 60/20/20 theo thời
+gian, ưu tiên mùa lũ Sep→Jan), chỉ khác thuật toán: 72 booster XGBoost
+(`objective="reg:quantileerror"`, 1 booster/quantile/horizon) thay vì Quantile
+Regression Forest.
 
 ## Chạy local
 
@@ -51,8 +55,9 @@ python main_api.py         # -> serve tại http://localhost:8001 (POST /predict
 ```bash
 python kaggle/generate_notebook.py   # -> kaggle/train_xgb.ipynb
 ```
-Upload lên Kaggle, **không cần bật GPU**. Không cần attach Dataset — tự tải từ
-Hugging Face `Anvo2004/dataset_all_lake` nếu không thấy `/kaggle/input`.
+Upload lên Kaggle, **không cần bật GPU**. **Phải tự Add Input**
+`LSTM_Py_Backend_v2/datasets_all_reservoirs.zip` làm Kaggle Dataset trước khi
+Run All (fallback Hugging Face hiện không hoạt động).
 
 ## Deploy serving (VPS)
 

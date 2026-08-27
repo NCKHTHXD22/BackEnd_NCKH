@@ -27,7 +27,7 @@ from training.event_metrics import (
     nse_per_horizon, flood_event_diagnostics, extract_lead_time_series,
 )
 from training.train_xgb import ARTIFACT_DIR
-from data.tabular_dataset import build_tabular_dataset, split_by_date
+from data.tabular_dataset import build_tabular_dataset, split_60_20_20
 
 
 def load_boosters():
@@ -54,7 +54,7 @@ def predict_all(models: dict, X: np.ndarray) -> np.ndarray:
 
 def evaluate():
     X, y, rid, ts = build_tabular_dataset()
-    _, _, test_idx = split_by_date(ts)
+    _, _, test_idx = split_60_20_20(ts)
     if len(test_idx) == 0:
         raise RuntimeError("Test set rong -- kiem tra du lieu >= TEST_START.")
 

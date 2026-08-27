@@ -499,3 +499,65 @@ def fetch_meteo_history(lat, lon, days=11) -> pd.DataFrame:
     except Exception as e:
         print(f"  [WARN] fetch_meteo_history: {e}")
         return pd.DataFrame()
+
+
+# ================= NWP FORECAST (oracle luc train -> du bao that luc serving) =====
+_FUTURE_FEATURES_ZERO = {
+    "rain_fc": 0.0, "rain_fc_3h": 0.0, "rain_fc_6h": 0.0,
+    "rain_fc_24h": 0.0, "temp_fc": 0.0, "wind_fc": 0.0,
+}
+
+
+def fetch_nwp_forecast(lat, lon, reference_time) -> dict:
+    """
+    Du bao Open-Meteo tai buoc dau tien (t+1h) cua cua so 24h tuong lai --
+    dung de thay the 6 "future feature" luc serving (rain_fc, rain_fc_3h,
+    rain_fc_6h, rain_fc_24h, temp_fc, wind_fc) ma luc TRAIN la gia tri THUC
+    TE da xay ra (oracle, xem data/tabular_dataset.py::FUTURE_FEATURES va
+    LSTM_Py_Backend_v2/data/dataset_builder.py::_build_nwp_window()). Luc
+    serving day la du bao that (co sai so), khong con la oracle nua -- dung
+    y thiet ke, khong phai loi.
+    """
+    try:
+        r = _get_with_retry(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": "precipitation,temperature_2m,windspeed_10m",
+                "forecast_days": 2,
+                "timezone": "UTC",
+            },
+            timeout=30,
+        )
+        if r is None:
+            return dict(_FUTURE_FEATURES_ZERO)
+
+        data = r.json()["hourly"]
+        times = (
+            pd.to_datetime(data["time"], utc=True)
+            .tz_convert("Asia/Ho_Chi_Minh")
+            .tz_localize(None)
+            .floor("h")
+        )
+        rain = np.array(data["precipitation"], dtype=np.float32)
+        temp = np.array(data["temperature_2m"], dtype=np.float32)
+        wind = np.array(data["windspeed_10m"], dtype=np.float32)
+
+        start = reference_time + timedelta(hours=1)
+        idx = np.where((times >= start).values)[0]
+        if len(idx) == 0:
+            return dict(_FUTURE_FEATURES_ZERO)
+        i0 = int(idx[0])
+
+        return {
+            "rain_fc": float(rain[i0]),
+            "rain_fc_3h": float(rain[i0:i0 + 3].sum()),
+            "rain_fc_6h": float(rain[i0:i0 + 6].sum()),
+            "rain_fc_24h": float(rain[i0:i0 + 24].sum()),
+            "temp_fc": float(temp[i0]),
+            "wind_fc": float(wind[i0]),
+        }
+    except Exception as e:
+        print(f"  [WARN] fetch_nwp_forecast: {e}")
+        return dict(_FUTURE_FEATURES_ZERO)

@@ -29,21 +29,28 @@ if sys.stdout.encoding is not None and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-from config.settings import HORIZON
-from data.tabular_dataset import build_tabular_dataset, split_by_date
+from config.settings import HORIZON, RAINY_SEASON_WEIGHT
+from data.tabular_dataset import build_tabular_dataset, split_60_20_20, RAINY_SEASON_MONTHS
 
 ARTIFACT_DIR = "artifacts/rf"
 
 
-def flood_sample_weight(y_train: np.ndarray) -> np.ndarray:
-    """Oversampling lu dinh qua sample_weight (khong duplicate row) -- top 5%
-    peak -> weight x2, top 1% -> weight x3. Giong train_global.py/train_xgb.py."""
+def flood_sample_weight(y_train: np.ndarray, ts_train: np.ndarray) -> np.ndarray:
+    """Trong so mau, khong duplicate row:
+      - Bien do dinh lu: top 5% peak -> x2, top 1% -> x3 (giong train_global.py/train_xgb.py)
+      - Mua lu Vu Gia - Thu Bon (thang 9 -> thang 1 nam sau): nhan them
+        RAINY_SEASON_WEIGHT -- theo yeu cau uu tien bat dinh lu tap trung mua
+        mua cua du an, cong don voi trong so bien do dinh lu o tren."""
     peak = y_train.max(axis=1)
     w = np.ones(len(y_train), dtype=np.float32)
     thr_95 = np.percentile(peak, 95)
     thr_99 = np.percentile(peak, 99)
     w[peak >= thr_95] = 2.0
     w[peak >= thr_99] = 3.0
+
+    months = ts_train.astype("datetime64[M]").astype(int) % 12 + 1
+    is_rainy = np.isin(months, list(RAINY_SEASON_MONTHS))
+    w[is_rainy] *= RAINY_SEASON_WEIGHT
     return w
 
 
@@ -53,15 +60,15 @@ def train():
     print("=" * 70)
 
     X, y, rid, ts = build_tabular_dataset()
-    train_idx, val_idx, test_idx = split_by_date(ts)
-    print(f"Train : {len(train_idx):,}")
-    print(f"Val   : {len(val_idx):,}  (khong dung de early-stop -- RF khong co early stopping "
+    train_idx, val_idx, test_idx = split_60_20_20(ts)
+    print(f"Train : {len(train_idx):,}  (60%)")
+    print(f"Val   : {len(val_idx):,}  (20%, khong dung de early-stop -- RF khong co early stopping "
           f"native nhu XGBoost/LSTM; giu val_idx de doi chieu/tune n_estimators thu cong)")
-    print(f"Test  : {len(test_idx):,}")
+    print(f"Test  : {len(test_idx):,}  (20%)")
     if len(train_idx) == 0:
         raise RuntimeError("Train set rong -- kiem tra lai dataset_ts trong LSTM_Py_Backend_v2/datasets/.")
 
-    sample_weight = flood_sample_weight(y[train_idx])
+    sample_weight = flood_sample_weight(y[train_idx], ts[train_idx])
     os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
     t0 = time.time()

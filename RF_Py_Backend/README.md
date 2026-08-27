@@ -16,11 +16,16 @@ cron) gọi endpoint này mỗi giờ, ghi kết quả vào MongoDB `forecast_RF
 ## Vì sao thư mục này tồn tại
 
 `LSTM_Project/Data_Tung_Ho_Ma_Tran_Rong/` (Excel gốc) đã bị xoá khỏi máy local
-(2026-08-26). Thay vì phụ thuộc lại Excel, thư mục này lấy dữ liệu trực tiếp từ
-dataset **đã build sẵn** của `LSTM_Py_Backend_v2/datasets/<Tên_Hồ>/v2_*.npy`
-(16 hồ, ~2022–2025), dataset này **đã được backup trên Hugging Face**
-(`Anvo2004/dataset_all_lake`) nên không còn phụ thuộc 1 điểm lỗi (Excel local)
-nữa — xem `data/tabular_dataset.py`.
+(2026-08-26, sau đó phục hồi lại ở `DataSet/`). Thư mục này lấy dữ liệu trực
+tiếp từ dataset **đã build sẵn** của `LSTM_Py_Backend_v2/datasets/<Tên_Hồ>/v2_*.npy`
+(16 hồ, ~2022–2025) thay vì đọc lại Excel — xem `data/tabular_dataset.py`.
+
+**Lưu ý quan trọng**: repo Hugging Face `Anvo2004/dataset_all_lake` (dùng làm
+fallback tự động khi chạy trên Kaggle) **hiện KHÔNG có file zip thật** — đã
+verify (2026-08-26), repo chỉ có `.gitattributes`. Dùng file zip local đã
+verify CRC OK thay thế: `LSTM_Py_Backend_v2/datasets_all_reservoirs.zip`
+(25.5GB) — **phải tự Add Input Dataset này lên Kaggle thủ công**, đừng dựa
+vào fallback tự động.
 
 ## Thiết kế
 
@@ -33,17 +38,20 @@ nữa — xem `data/tabular_dataset.py`.
   P10/P50/P90 cùng lúc (dùng thư viện `quantile-forest`, không cần train 3 lần
   như XGBoost vì RF không có objective quantile native — QRF lấy quantile thực
   nghiệm từ phân phối giá trị tại các leaf node).
-- **KHÔNG dùng mưa dự báo (oracle rain) làm input**: dataset gốc có `X_nwp`
-  (mưa/nhiệt độ dự báo cho 24h tới) nhưng được build từ dữ liệu THỰC TẾ đã xảy
-  ra (oracle), trong khi lúc serving thực tế chỉ có dự báo Open-Meteo (có sai
-  số) — gây train/serve mismatch. RF/XGBoost ở đây bỏ hẳn `X_nwp`, chỉ dùng
-  đặc trưng từ quá khứ (lag/rolling mưa tới 7 ngày, lưu lượng, mực nước) tại
-  thời điểm hiện tại để dự báo 24h tới — không có mismatch, đơn giản hơn, và
-  đặc trưng tích lũy mưa dài hạn (`rain_168h`...) đã nắm phần lớn tín hiệu độ
-  ẩm đất/xu hướng dòng chảy mà mưa dự báo mang lại.
-- **Fixed-date split** giống hệt `LSTM_Py_Backend_v2`/`train_global.py` để so
-  NSE công bằng giữa 3 model: train `<2024-09-01`, val `2024-09-01..2025-01-01`
-  (mùa lũ 2024), test `>=2025-09-01` (mùa lũ 2025, holdout).
+- **CÓ dùng mưa dự báo dạng oracle** (theo đúng phương pháp của dự án): input
+  gồm 47 feature quá khứ (mưa/lưu lượng/mực nước — dòng cuối hindcast window)
+  **+ 6 feature "tương lai"** (`rain_fc, rain_fc_3h, rain_fc_6h, rain_fc_24h,
+  temp_fc, wind_fc`, lấy từ `v2_X_nwp.npy`). Lúc TRAIN, phần "tương lai" này
+  là dữ liệu THỰC TẾ đã xảy ra (oracle) — model học quy luật mưa→lũ từ dữ liệu
+  hoàn chỉnh, chủ đích, giống hệt cách LSTM đang dùng `X_future`/`X_nwp`. Lúc
+  SERVING (`main_api.py`), phần này được thay bằng dự báo Open-Meteo thật (có
+  sai số dự báo thực tế) qua `data/data_fetcher.py::fetch_nwp_forecast()`.
+- **Split 60% train / 20% validation / 20% test theo thời gian** (chronological,
+  không random — tránh rò rỉ dữ liệu tương lai vào tập train). Xem
+  `data/tabular_dataset.py::split_60_20_20()`.
+- **Ưu tiên mùa lũ (tháng 9 → tháng 1 năm sau)**: trọng số mẫu (`sample_weight`)
+  nhân thêm `RAINY_SEASON_WEIGHT` (mặc định 1.5×) cho mẫu rơi vào mùa lũ, cộng
+  dồn với trọng số theo biên độ đỉnh lũ đã có (top 5% → ×2, top 1% → ×3).
 
 ## Chạy local
 
@@ -69,8 +77,9 @@ Node backend cần biến môi trường `RF_API_URL=http://<vps-ip>:8002/predic
 python kaggle/generate_notebook.py   # -> kaggle/train_rf.ipynb
 ```
 Upload `train_rf.ipynb` lên Kaggle, **không cần bật GPU** (RF chạy CPU thuần).
-Không cần attach Dataset — notebook tự tải dữ liệu từ Hugging Face
-`Anvo2004/dataset_all_lake` nếu không thấy `/kaggle/input`.
+**Phải tự Add Input** `LSTM_Py_Backend_v2/datasets_all_reservoirs.zip` làm
+Kaggle Dataset trước khi Run All (fallback Hugging Face hiện không hoạt động
+— xem cảnh báo ở trên).
 
 ## Sau khi train xong
 
