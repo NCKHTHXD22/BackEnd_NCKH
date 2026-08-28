@@ -1,4 +1,4 @@
-import * as forecastRfService from '../../services/forecastRf.service.js';
+import * as forecastRfService from './forecastRf.service.js';
 
 export const getForecasts = async (req, res) => {
     try {

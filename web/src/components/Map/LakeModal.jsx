@@ -149,6 +149,10 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
             const rf = await mapApi.getForecastRf(lakeId).catch(() => null);
             return Array.isArray(rf) ? rf : [];
         }
+        if (model === 'xgboost') {
+            const xgb = await mapApi.getForecastXgb(lakeId).catch(() => null);
+            return Array.isArray(xgb) ? xgb : [];
+        }
         if (model === 'arimax') {
             const docs = await mapApi.getForecastHistory(lakeId, selectedRainSource).catch(() => null);
             return newestPerTarget(docs);

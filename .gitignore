@@ -12,4 +12,19 @@ dataset_*.npy
 LSTM_Py_Backend/lstm_service/train_4_lake/data/
 
 # Raw input spreadsheets, not code
-LSTM_Hue/Data_Lake_Rain/
+LSTM_Hue/Data_Lake_Rain/
+
+# Regenerable per-reservoir v2 datasets (run main_build_dataset.py --all --legacy-v1, ~25GB)
+LSTM_Py_Backend_v2/datasets/
+LSTM_Py_Backend_v2/datasets_all_reservoirs.zip
+
+# Kaggle CLI upload staging (hardlink to the zip above, same 25GB content -- see
+# _kaggle_upload/dataset-metadata.json)
+_kaggle_upload/
+
+# Large archives and tree-based model JSON/pkl weights (deployed via SCP / direct storage)
+XGBoost_Py_Backend/result_xgboots.zip
+XGBoost_Py_Backend/artifacts/
+RF_Py_Backend/artifacts/
+
+

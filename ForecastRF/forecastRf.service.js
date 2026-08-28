@@ -1,4 +1,4 @@
-import forecastRfRepo from '../infrastructure/repositories/forecastRf.repo.js';
+import forecastRfRepo from './forecastRf.repo.js';
 
 export const getForecastsByLakeId = async (id_lake) => {
     if (!id_lake) {

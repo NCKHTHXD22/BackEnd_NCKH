@@ -44,6 +44,7 @@ def md(src: str):
 def read_source(rel_path: str) -> str:
     with open(os.path.join(ROOT, rel_path), "r", encoding="utf-8") as f:
         src = f.read()
+    src = re.sub(r"^from (models|config|data|training)\.\w+ import \([^)]*\)\n?", "", src, flags=re.MULTILINE)
     src = re.sub(r"^from (models|config|data|training)\.\w+ import .*$", "", src, flags=re.MULTILINE)
     src = re.sub(r"^from \.\w+ import .*$", "", src, flags=re.MULTILINE)
     src = re.sub(r"^if __name__ == .__main__.:\n(?:^\s{4}.*\n?)*", "", src, flags=re.MULTILINE)

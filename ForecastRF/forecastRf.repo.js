@@ -1,5 +1,5 @@
-import { BaseRepository } from './base.repo.js';
-import ForecastRF from '../../core/entities/ForecastRF.js';
+import { BaseRepository } from '../src/infrastructure/repositories/base.repo.js';
+import ForecastRF from './ForecastRF.js';
 
 export class ForecastRfRepository extends BaseRepository {
     constructor() {

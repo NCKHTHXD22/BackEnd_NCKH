@@ -44,6 +44,7 @@ const FORECAST_MODELS = [
     { id: 'lstm', label: 'LSTM', color: '#2a78d6', icon: <Zap size={13} /> },
     { id: 'arimax', label: 'ARIMAX', color: '#4a3aa7', icon: <TrendingUp size={13} /> },
     { id: 'rf', label: 'Random Forest', color: '#eb6834', icon: <Trees size={13} /> },
+    { id: 'xgboost', label: 'XGBoost', color: '#c026d3', icon: <Activity size={13} /> },
 ];
 
 // Hours of past data kept in the combined chart/table — the redesign favors
