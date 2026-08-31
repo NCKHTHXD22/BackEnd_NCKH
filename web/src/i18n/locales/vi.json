@@ -90,7 +90,7 @@
       "current": "Hiện tại",
       "modelSource": "Mô hình: {{model}} | Nguồn: {{source}}",
       "tableTitle": "KẾT QUẢ DỰ BÁO CHI TIẾT",
-      "next12h": "12 giờ tiếp theo (LSTM)",
+      "next12h": "12 giờ tiếp theo ({{model}})",
       "hour": "Giờ",
       "rain": "Mưa",
       "min": "Min",

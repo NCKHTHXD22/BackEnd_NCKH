@@ -950,7 +950,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <h3 className="text-slate-700 font-bold mb-1 flex items-center gap-2">
                                         <Clock size={18} /> {t('lakeModal.forecast.tableTitle')}
                                     </h3>
-                                    <p className="text-xs text-slate-400 mb-4 italic">{t('lakeModal.forecast.next12h')}</p>
+                                    <p className="text-xs text-slate-400 mb-4 italic">{t('lakeModal.forecast.next12h', { model: MODELS.find(m => m.id === selectedModel)?.label })}</p>
                                     <div className="flex-1 overflow-auto border border-slate-100 rounded-lg">
                                         <table className="w-full text-sm text-left">
                                             <thead className="bg-[#f8fafc] text-slate-500 font-bold border-b text-[10px] uppercase tracking-wider">

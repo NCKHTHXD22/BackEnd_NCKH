@@ -90,7 +90,7 @@
       "current": "Current",
       "modelSource": "Model: {{model}} | Source: {{source}}",
       "tableTitle": "DETAILED FORECAST RESULTS",
-      "next12h": "Next 12 Hours (LSTM)",
+      "next12h": "Next 12 Hours ({{model}})",
       "hour": "Hour",
       "rain": "Rain",
       "min": "Min",
