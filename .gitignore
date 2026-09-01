@@ -13,6 +13,7 @@ LSTM_Py_Backend/lstm_service/train_4_lake/data/
 
 # Raw input spreadsheets, not code
 LSTM_Hue/Data_Lake_Rain/
+DataSet/
 
 # Regenerable per-reservoir v2 datasets (run main_build_dataset.py --all --legacy-v1, ~25GB)
 LSTM_Py_Backend_v2/datasets/

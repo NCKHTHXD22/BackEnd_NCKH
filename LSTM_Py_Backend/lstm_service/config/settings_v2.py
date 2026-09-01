@@ -32,6 +32,16 @@ class FloodLSTMv2Config:
     # ── Reservoir ──────────────────────────────────────────────────────────────
     n_reservoirs: int = 20          # 16 hiện tại + padding cho mở rộng
 
+    # ── Học trọng số trạm mưa (thay IDW cứng) ────────────────────────────────────
+    # Lấy cảm hứng từ AttenCLSTM (CNN-LSTM-Attention-Model-for-Runoff-Prediction):
+    # thay vì gộp cứng mưa nhiều trạm thành 1 scalar bằng IDW trước khi model
+    # nhìn thấy dữ liệu, để attention học trọng số (khởi tạo từ IDW làm prior).
+    # Mặc định TẮT — chỉ bật sau khi build v2_station_rain.npy/v2_station_mask.npy
+    # (xem data/idw_calculator.py + models/station_attention.py). CHỈ áp dụng cho
+    # FloodLSTMv2 (R&D), không đụng tới InflowForecastModel v1 đang production.
+    use_station_attention: bool = False
+    max_stations: int = 7            # số trạm mưa tối đa gắn với 1 hồ (xem RESERVOIR_TO_STATIONS)
+
     # ── Quantile output ────────────────────────────────────────────────────────
     quantiles: list = field(
         default_factory=lambda: [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]

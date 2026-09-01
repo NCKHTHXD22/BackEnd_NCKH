@@ -1,4 +1,5 @@
 import os
+import random
 import torch
 import numpy as np
 import pandas as pd
@@ -9,6 +10,22 @@ import math
 from config.settings import *
 from models.inflow_model import InflowForecastModel
 from models.quantile_loss import quantile_loss
+from training.event_metrics import nse_per_horizon, flood_event_diagnostics, extract_lead_time_series
+
+
+SEED = 42
+
+
+def set_seed(seed: int = SEED):
+    """Cố định seed torch/numpy/random — trước đây pipeline không set seed nào,
+    nên mỗi lần train lại cho NSE/checkpoint khác nhau, khó so sánh baseline."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 # ====================== OUTLIER CAPS (sqrt space) ======================
@@ -127,6 +144,8 @@ def compute_metrics(preds, targets, rids, return_detailed=False):
 
 # ====================== TRAIN ======================
 def train():
+
+    set_seed(SEED)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
@@ -351,6 +370,36 @@ def train():
     # Also save training history
     pd.DataFrame(history).to_excel("lich_su_training.xlsx", index=False)
     print("Saved: lich_su_training.xlsx")
+
+    # ------- NSE theo lead-time + chẩn đoán từng trận lũ -------
+    print("\n" + "="*70)
+    print("CHẨN ĐOÁN BỔ SUNG: NSE THEO LEAD-TIME & TỪNG TRẬN LŨ")
+    print("="*70)
+
+    preds_np   = (all_preds[:, :, len(QUANTILES) // 2] ** 2).numpy()
+    targets_np = (all_targets ** 2).numpy()
+    rids_np    = all_rids.numpy()
+
+    horizon_rows = []
+    for rid_idx in sorted(nse_dict.keys()):
+        name = idx_to_name.get(rid_idx, f"Reservoir idx={rid_idx}")
+        mask = (rids_np == rid_idx)
+        p_r, t_r = preds_np[mask], targets_np[mask]
+
+        for h in nse_per_horizon(p_r, t_r, group_hours=6):
+            horizon_rows.append({"Reservoir": name, **h})
+
+        # Event-based peak diagnostics tại lead-time xa nhất (giờ HORIZON)
+        obs_series, pred_series = extract_lead_time_series(p_r, t_r, lead_idx=HORIZON - 1)
+        if len(obs_series) > 10 and obs_series.max() > 0:
+            thr = float(np.percentile(obs_series, 90))
+            diag = flood_event_diagnostics(obs_series, pred_series, threshold=thr)
+            print(f"  {name:.<30} [lead={HORIZON}h] n_events={diag['n_events']:>3}  "
+                  f"NSE_event={diag['mean_event_nse']}  peak_RE={diag['peak_re_mean']}  "
+                  f"QA={diag['qa_pass_rate']}")
+
+    pd.DataFrame(horizon_rows).to_excel("ket_qua_nse_theo_gio.xlsx", index=False)
+    print("\nSaved: ket_qua_nse_theo_gio.xlsx")
 
 if __name__ == "__main__":
     train()

@@ -22,6 +22,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .station_attention import StationRainAttention
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NWP Fusion Layer
@@ -142,10 +144,20 @@ class FloodLSTMv2(nn.Module):
         # ── Reservoir embedding (dùng chung 2 phase) ──────────────────────────
         self.res_embed = nn.Embedding(config.n_reservoirs, E)
 
+        # ── Học trọng số trạm mưa (tùy chọn, xem models/station_attention.py) ──
+        self.use_station_attention = getattr(config, "use_station_attention", False)
+        if self.use_station_attention:
+            self.station_attn = StationRainAttention(
+                n_reservoirs=config.n_reservoirs,
+                max_stations=config.max_stations,
+                res_embed_dim=E,
+            )
+        station_extra = 1 if self.use_station_attention else 0
+
         # ── Phase 1: Hindcast Encoder ──────────────────────────────────────────
-        # Input embedding: linear project + reservoir concat
+        # Input embedding: linear project + reservoir concat + [learned rain]
         self.hindcast_proj = nn.Sequential(
-            nn.Linear(config.n_hindcast_features + E, H),
+            nn.Linear(config.n_hindcast_features + station_extra + E, H),
             nn.LayerNorm(H),
             nn.GELU(),
         )
@@ -242,6 +254,8 @@ class FloodLSTMv2(nn.Module):
         nwp_availability: torch.Tensor,  # (B, n_sources) binary float/int
         teacher_forcing_ratio: float = 0.0,
         y_true_sqrt: torch.Tensor = None, # (B, 168) ground truth in sqrt space
+        station_rain: torch.Tensor = None,  # (B, 720, max_stations), chỉ dùng nếu use_station_attention
+        station_mask: torch.Tensor = None,  # (B, 720, max_stations) bool
     ) -> torch.Tensor:                    # (B, 168, n_quantiles)
 
         B = x_hindcast.size(0)
@@ -255,7 +269,11 @@ class FloodLSTMv2(nn.Module):
         # ── Phase 1: Hindcast Encoding ─────────────────────────────────────────
         T_h = x_hindcast.size(1)
         r_expand = r_emb.unsqueeze(1).expand(-1, T_h, -1)  # (B, T_h, E)
-        enc_input_raw = torch.cat([x_hindcast, r_expand], dim=-1)  # (B, T_h, 46+E)
+        if self.use_station_attention and station_rain is not None:
+            learned_rain, _ = self.station_attn(station_rain, station_mask, reservoir_idx, r_emb)
+            enc_input_raw = torch.cat([x_hindcast, learned_rain, r_expand], dim=-1)  # (B, T_h, 46+1+E)
+        else:
+            enc_input_raw = torch.cat([x_hindcast, r_expand], dim=-1)  # (B, T_h, 46+E)
         enc_input = self.hindcast_proj(enc_input_raw)               # (B, T_h, H)
 
         enc_out, (h_n, c_n) = self.hindcast_encoder(enc_input)

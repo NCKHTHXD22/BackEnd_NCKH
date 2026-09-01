@@ -9,6 +9,7 @@ from config.settings import *
 from config.reservoirs import RESERVOIRS
 from models.inflow_model import InflowForecastModel
 from training.train_global import FloodDataset
+from training.event_metrics import nse_per_horizon, flood_event_diagnostics, extract_lead_time_series
 
 def evaluate_finetuned_models():
     print("\n" + "="*70)
@@ -118,6 +119,24 @@ def evaluate_finetuned_models():
 
         print(f"  {reservoir_name:.<30} NSE={nse:.3f}  MAE={mae:.2f}  RMSE={rmse:.2f}  PeakTiming={peak_timing:.1f}h  Missed={missed*100:.1f}%  FHV={fhv*100:.1f}%")
 
+        # NSE theo từng nhóm 6h lead-time (HORIZON=24h → 4 nhóm) — cho biết
+        # độ chính xác suy giảm thế nào theo thời gian dự báo, thay vì chỉ
+        # 1 con số NSE gộp cả 24h.
+        for h in nse_per_horizon(p_2d, t_2d, group_hours=6):
+            print(f"      lead {h['hour_range']:>8}  NSE={h['nse']}")
+
+        # Chẩn đoán từng trận lũ riêng lẻ tại lead-time xa nhất (giờ HORIZON),
+        # thay vì chỉ nhìn Missed-Peaks/FHV gộp trên toàn bộ tập test.
+        obs_series, pred_series = extract_lead_time_series(p_2d, t_2d, lead_idx=HORIZON - 1)
+        if len(obs_series) > 10 and obs_series.max() > 0:
+            event_diag = flood_event_diagnostics(obs_series, pred_series, threshold=thr_95)
+            print(f"      [lead={HORIZON}h] n_events={event_diag['n_events']}  "
+                  f"NSE_event={event_diag['mean_event_nse']}  "
+                  f"peak_RE={event_diag['peak_re_mean']}  QA={event_diag['qa_pass_rate']}")
+        else:
+            event_diag = {"n_events": 0, "mean_event_nse": float("nan"),
+                          "peak_re_mean": float("nan"), "qa_pass_rate": float("nan")}
+
         results.append({
             "Reservoir_ID": rid,
             "Reservoir_Name": reservoir_name,
@@ -127,6 +146,10 @@ def evaluate_finetuned_models():
             "Peak_Timing (h)": round(float(peak_timing), 2),
             "Missed_Peaks (%)": round(float(missed * 100), 1),
             "FHV (%)": round(float(fhv * 100), 1),
+            "N_Flood_Events": event_diag["n_events"],
+            "Event_NSE": event_diag["mean_event_nse"],
+            "Event_Peak_RE": event_diag["peak_re_mean"],
+            "Event_QA_Pass_Rate": event_diag["qa_pass_rate"],
         })
 
         # Vẽ biểu đồ 500 giờ đầu tiên

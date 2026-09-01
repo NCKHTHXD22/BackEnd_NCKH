@@ -51,10 +51,16 @@ class HindcastDataset(Dataset):
     Dataset cho FloodLSTM v2.
 
     Load v2_*.npy files đã được build bởi HindcastDatasetV2Builder.
-    Mỗi sample = (x_hindcast, nwp_src0, nwp_src1, nwp_avail, y, rid).
+    Mỗi sample = (x_hindcast, nwp_src0, nwp_src1, nwp_avail, y, rid,
+                  station_rain, station_mask).
+
+    station_rain/station_mask CHỈ có ý nghĩa khi FloodLSTMv2Config.
+    use_station_attention=True; nếu không, FloodLSTMv2.forward() bỏ qua 2
+    tensor này. Luôn trả về đủ 8 phần tử (kể cả khi thiếu file
+    v2_station_rain.npy) để vòng lặp train/val/test không cần if/else riêng.
     """
 
-    def __init__(self, data_dir: str = "."):
+    def __init__(self, data_dir: str = ".", max_stations: int = 7):
         self.X_hind  = np.load(os.path.join(data_dir, "v2_X_hindcast.npy"),  mmap_mode="r")
         self.X_nwp0  = np.load(os.path.join(data_dir, "v2_X_nwp_src0.npy"), mmap_mode="r")
         self.X_nwp1  = np.load(os.path.join(data_dir, "v2_X_nwp_src1.npy"), mmap_mode="r")
@@ -65,8 +71,21 @@ class HindcastDataset(Dataset):
         ts_path = os.path.join(data_dir, "v2_timestamps.npy")
         self.timestamps = np.load(ts_path) if os.path.exists(ts_path) else None
 
+        rain_path = os.path.join(data_dir, "v2_station_rain.npy")
+        mask_path = os.path.join(data_dir, "v2_station_mask.npy")
+        self.has_station_data = os.path.exists(rain_path) and os.path.exists(mask_path)
+        if self.has_station_data:
+            self.station_rain = np.load(rain_path, mmap_mode="r")
+            self.station_mask = np.load(mask_path, mmap_mode="r")
+            self.max_stations = self.station_rain.shape[-1]
+        else:
+            self.station_rain = None
+            self.station_mask = None
+            self.max_stations = max_stations
+
         print(f"HindcastDataset: {len(self):,} samples | "
-              f"hindcast={self.X_hind.shape[1]}h | forecast={self.y.shape[1]}h")
+              f"hindcast={self.X_hind.shape[1]}h | forecast={self.y.shape[1]}h | "
+              f"station_attention_data={'ON' if self.has_station_data else 'OFF'}")
 
     def __len__(self) -> int:
         return len(self.y)
@@ -86,7 +105,15 @@ class HindcastDataset(Dataset):
         y_t    = torch.from_numpy(y).float()
         rid_t  = torch.tensor(rid_val, dtype=torch.long)
 
-        return x_hind, x_nwp0, x_nwp1, avail, y_t, rid_t
+        if self.has_station_data:
+            station_rain = torch.from_numpy(np.array(self.station_rain[idx], copy=False)).float()
+            station_mask = torch.from_numpy(np.array(self.station_mask[idx], copy=False)).bool()
+        else:
+            T_h = x_hind.shape[0]
+            station_rain = torch.zeros(T_h, self.max_stations, dtype=torch.float32)
+            station_mask = torch.zeros(T_h, self.max_stations, dtype=torch.bool)
+
+        return x_hind, x_nwp0, x_nwp1, avail, y_t, rid_t, station_rain, station_mask
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -131,6 +158,8 @@ class HindcastDatasetV2Builder:
         self._y: list       = []
         self._rid: list     = []
         self._ts: list      = []
+        self._station_rain: list = []
+        self._station_mask: list = []
 
     def add_reservoir(
         self,
@@ -140,11 +169,14 @@ class HindcastDatasetV2Builder:
         nwp_src0: np.ndarray,              # (T, n_nwp) oracle/forecast rain aligned
         nwp_src1: np.ndarray | None = None, # (T, n_nwp) optional backup
         timestamps: np.ndarray | None = None,
+        station_rain: np.ndarray | None = None,  # (T, max_stations) — xem idw_calculator.py
+        station_mask: np.ndarray | None = None,  # (T, max_stations) bool
     ):
         T = len(y_series)
         n_nwp = nwp_src0.shape[-1]
         _nwp1 = nwp_src1 if nwp_src1 is not None else np.zeros_like(nwp_src0)
         _avail1 = 1.0 if nwp_src1 is not None else 0.0
+        has_station = station_rain is not None and station_mask is not None
 
         n_added = 0
         for start in range(0, T - self._window_len + 1, self.stride):
@@ -161,9 +193,14 @@ class HindcastDatasetV2Builder:
             if timestamps is not None:
                 self._ts.append(timestamps[hind_end])
 
+            if has_station:
+                self._station_rain.append(station_rain[start:hind_end].astype(np.float32))
+                self._station_mask.append(station_mask[start:hind_end].astype(bool))
+
             n_added += 1
 
-        print(f"  rid={rid:2d}: T={T:,}h → {n_added:,} samples")
+        print(f"  rid={rid:2d}: T={T:,}h → {n_added:,} samples"
+              + ("  (+ station rain matrix)" if has_station else ""))
 
     def save(self, out_dir: str = "."):
         os.makedirs(out_dir, exist_ok=True)
@@ -190,5 +227,16 @@ class HindcastDatasetV2Builder:
             ts_arr = np.array(self._ts)
             np.save(os.path.join(out_dir, "v2_timestamps.npy"), ts_arr)
             print(f"  Saved v2_timestamps.npy: {ts_arr.shape}")
+
+        # Station rain matrix — chỉ lưu nếu MỌI reservoir đều cung cấp (tránh
+        # lệch số lượng sample so với v2_y.npy nếu chỉ 1 vài hồ có station_rain).
+        N = len(self._y)
+        if len(self._station_rain) == N and N > 0:
+            _stack_save("v2_station_rain.npy", self._station_rain)
+            _stack_save("v2_station_mask.npy", self._station_mask)
+        elif self._station_rain:
+            print(f"  WARNING: chỉ {len(self._station_rain):,}/{N:,} sample có station_rain "
+                  f"— bỏ qua, KHÔNG lưu v2_station_rain.npy (thiếu ở 1 vài hồ). "
+                  f"Cần cung cấp station_rain cho TẤT CẢ hồ để bật use_station_attention.")
 
         print(f"Done. Dataset saved to: {os.path.abspath(out_dir)}")
