@@ -27,4 +27,16 @@ XGBoost_Py_Backend/result_xgboots.zip
 XGBoost_Py_Backend/artifacts/
 RF_Py_Backend/artifacts/
 
+# Kaggle training run outputs (checkpoints + result archive) -- regenerable via
+# LSTM_Py_Backend_v2/kaggle/*.ipynb, same convention as XGBoost artifacts above
+LSTM_Py_Backend_v2/artifacts/
+LSTM_Py_Backend_v2/result_all_reservoirs.zip
+
+# Kaggle upload staging dirs -- SYMLINKS to datasets/ (per-lưu-vực grouping for
+# upload). On this Windows checkout (core.symlinks=false) `git add` follows
+# them as real directories and would stage the full ~25GB target content --
+# glob covers any future datasets_<ten>/ variant (vd datasets_a_vuong/).
+LSTM_Py_Backend_v2/datasets_*/
+LSTM_Py_Backend_v2/station_attention_bundle.zip
+
 

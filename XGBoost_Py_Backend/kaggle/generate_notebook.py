@@ -1,8 +1,14 @@
 # kaggle/generate_notebook.py
 """
-Tao 1 notebook Kaggle train XGBoost (global model 16 ho, direct multi-horizon
-quantile) tu chinh source .py that trong project (cung pattern voi
-LSTM_Py_Backend_v2/kaggle/generate_notebook_all.py va RF_Py_Backend/kaggle/).
+[Bản đơn giản, chỉ train 1 model global gộp 16 hồ] Tao 1 notebook Kaggle train
+XGBoost (global model 16 ho, direct multi-horizon quantile) tu chinh source
+.py that trong project (cung pattern voi LSTM_Py_Backend_v2/kaggle/ va
+RF_Py_Backend/kaggle/).
+
+Neu can so sanh du 5 phuong phap (Single/Nhanh/Luu vuc/Fine-tune x 3 mua) thi
+dung 4 notebook trong kaggle/generate_notebook_1_single.py ... _4_summary.py
+thay vi file nay -- file nay chi con la ban rut gon 1-model-global de tham
+khao/kiem tra nhanh.
 
 Chay:
     cd XGBoost_Py_Backend
@@ -95,12 +101,13 @@ def build_notebook() -> dict:
     cells.append(md("## training/evaluate_xgb.py"))
     cells.append(code(read_source("training/evaluate_xgb.py")))
 
-    cells.append(md("## Chạy train + evaluate"))
+    cells.append(md("## Chạy train + evaluate (model global, gộp cả 16 hồ, mùa cả năm)"))
     cells.append(code("""
-    train()
+    X_all, y_all, rid_all, ts_all = build_tabular_dataset()
+    train_xgb_dataset(X_all, y_all, ts_all, "artifacts/xgb", season="all")
     """))
     cells.append(code("""
-    evaluate()
+    evaluate(artifact_dir="artifacts/xgb", output_prefix="xgb")
     """))
 
     cells.append(md("""
