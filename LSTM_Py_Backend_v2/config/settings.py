@@ -117,12 +117,17 @@ class ReservoirLSTMConfig:
     # trống toàn bộ 2025-01-01..2025-09-01 (8 tháng, trọn mùa khô 2025) và khiến
     # tập test CHỈ còn tháng 9-12 (toàn mùa mưa) -- nse_dry_season/rainy_season
     # trong evaluate_model_on_reservoir() không bao giờ có đủ 2 mùa để so sánh.
-    # Dời test_start lên đầu năm để test bao trọn 12 tháng cuối (đủ cả mùa khô
-    # T1-8 và mùa mưa T9-12/2025), không còn khoảng trống dữ liệu.
-    train_end: str = "2024-06-01"
-    val_start: str = "2024-06-01"
-    val_end: str = "2025-01-01"
-    test_start: str = "2025-01-01"
+    #
+    # Cập nhật (theo yêu cầu dùng nhiều dữ liệu train hơn): train ~79% thời gian
+    # (2022-01-11 .. 2025-02-28, ~37.6/47.6 tháng), val thu gọn còn ~4 tháng chỉ
+    # để early-stopping (không báo cáo số liệu val), test vẫn giữ ~6 tháng
+    # (2025-06-24 .. 2025-12-30) BAO GỒM CẢ mùa khô (T6-8) lẫn mùa mưa (T9-12)
+    # để nse_dry_season/nse_rainy_season vẫn tính được đủ cả 2 mùa -- không rút
+    # gọn tập test xuống mức chỉ còn 1 mùa như bug cũ.
+    train_end: str = "2025-02-28"
+    val_start: str = "2025-02-28"
+    val_end: str = "2025-06-24"
+    test_start: str = "2025-06-24"
 
     # ── Paths ──────────────────────────────────────────────────────────────────
     data_dir: str = "."

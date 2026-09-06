@@ -153,24 +153,29 @@ def build_tabular_dataset():
 
 def split_60_20_20(ts: np.ndarray):
     """
-    Split 60% train / 20% validation / 20% test THEO THOI GIAN (chronological,
+    Split ~79% train / ~8% validation / ~13% test THEO THOI GIAN (chronological,
     khong phai random) -- tranh data leakage (khong de mau tuong lai lot vao
     tap train khi mau qua khu nam trong test).
 
+    Ten ham giu nguyen "60_20_20" cho khop cac noi da import/goi (train_xgb.py,
+    evaluate_xgb.py...) nhung ty le that su da doi (yeu cau dung nhieu du lieu
+    train hon) -- khop dung voi moc ngay co dinh ben LSTM_Py_Backend_v2
+    (config/settings.py: train_end=2025-02-28 ~79%, val_end=2025-06-24 ~87%)
+    de 2 backend so sanh tuong duong nhau. Tap test van du ~6 thang, bao gom ca
+    mua kho (T6-8) lan mua mua (T9-12) -- khong rut xuong muc chi con 1 mua.
+
     Cutoff tinh theo % THOI GIAN da troi qua (khong phai % SO MAU), vi so mau
-    khong deu tuyet doi giua cac thang (thang du/thang thieu ngay) -- % thoi
-    gian moi la thu dung 60/20/20 theo dung nghia "60% khoang thoi gian dau
-    dung de train".
+    khong deu tuyet doi giua cac thang (thang du/thang thieu ngay).
     """
     t_min, t_max = ts.min(), ts.max()
     span = (t_max - t_min).astype("timedelta64[s]").astype(np.int64)
-    cutoff_60 = t_min + np.timedelta64(int(span * 0.60), "s")
-    cutoff_80 = t_min + np.timedelta64(int(span * 0.80), "s")
+    cutoff_60 = t_min + np.timedelta64(int(span * 0.7895), "s")
+    cutoff_80 = t_min + np.timedelta64(int(span * 0.8696), "s")
 
     train_idx = np.where(ts < cutoff_60)[0]
     val_idx = np.where((ts >= cutoff_60) & (ts < cutoff_80))[0]
     test_idx = np.where(ts >= cutoff_80)[0]
-    print(f"[split 60/20/20] train <{cutoff_60} | val [{cutoff_60}, {cutoff_80}) | test >={cutoff_80}")
+    print(f"[split ~79/8/13] train <{cutoff_60} | val [{cutoff_60}, {cutoff_80}) | test >={cutoff_80}")
     return train_idx, val_idx, test_idx
 
 

@@ -47,17 +47,31 @@ def read_source(rel_path: str) -> str:
 
 BOOTSTRAP_CELL = """
 import shutil
+# Nhiều notebook Output cùng 1 tài khoản (Add Input -> Your Work) bị Kaggle
+# GỘP CHUNG dưới 1 thư mục theo tên tài khoản: /kaggle/input/notebooks/
+# <username>/ -- không thể giả định số cấp lồng cố định, nên quét đệ quy TOÀN
+# BỘ /kaggle/input, tìm TẤT CẢ thư mục có chứa 1 thư mục con khớp tiền tố
+# mong đợi (không dừng ở kết quả đầu tiên -- lỗi cũ chỉ gộp được đúng 1 trong
+# 3 notebook do dừng sớm).
+def _find_all_content_roots(base, dir_prefixes):
+    found = []
+    for r, dirs, _files in os.walk(base):
+        if any(d.startswith(p) for p in dir_prefixes for d in dirs):
+            found.append(r)
+            dirs[:] = []  # đã khớp -- khỏi cần đi sâu thêm dưới nhánh này
+    return found
+
+# Chỉ gộp eval_json/ (file metric nhỏ) -- BỎ QUA artifacts/ (chứa booster JSON
+# gốc, có thể hàng chục GB cộng dồn từ cả 3 notebook #1+#2+#3). Summary chỉ
+# đọc eval_json/, không cần model gốc -- copy cả artifacts/ vào đây từng làm
+# tràn quota đĩa 20GB của Kaggle ở notebook #3.
 n_merged = 0
-if os.path.isdir("/kaggle/input"):
-    for ds_name in os.listdir("/kaggle/input"):
-        ds_path = os.path.join("/kaggle/input", ds_name)
-        if not os.path.isdir(ds_path):
-            continue
-        has_raw_data = any("v2_X_hindcast.npy" in files for _, _, files in os.walk(ds_path))
-        if not has_raw_data:
-            print(f"[bootstrap] Gộp kết quả từ input dataset: {ds_name}")
-            shutil.copytree(ds_path, ".", dirs_exist_ok=True)
-            n_merged += 1
+for content_root in _find_all_content_roots("/kaggle/input", ("artifacts", "eval_json")):
+    eval_json_src = os.path.join(content_root, "eval_json")
+    if os.path.isdir(eval_json_src):
+        print(f"[bootstrap] Gộp eval_json từ: {eval_json_src} (bỏ qua artifacts/)")
+        shutil.copytree(eval_json_src, "eval_json", dirs_exist_ok=True)
+        n_merged += 1
 
 print(f"Đã gộp {n_merged} input dataset vào thư mục làm việc")
 if n_merged < 3:

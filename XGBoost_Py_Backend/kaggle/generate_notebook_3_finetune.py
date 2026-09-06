@@ -49,28 +49,40 @@ def read_source(rel_path: str) -> str:
 
 
 BOOTSTRAP_CELL = """
-import shutil
-# ── Nạp lại 72 booster Nhánh/Lưu vực từ output notebook #2 ─────────────────
-# Bất kỳ input dataset nào KHÔNG chứa v2_X_hindcast.npy (không phải dataset dữ
-# liệu hồ gốc) được coi là kết quả từ notebook trước, copy nguyên cây thư mục
-# vào thư mục làm việc hiện tại (mặc định /kaggle/working trên Kaggle).
-n_merged = 0
-if os.path.isdir("/kaggle/input"):
-    for ds_name in os.listdir("/kaggle/input"):
-        ds_path = os.path.join("/kaggle/input", ds_name)
-        if not os.path.isdir(ds_path):
-            continue
-        has_raw_data = any("v2_X_hindcast.npy" in files for _, _, files in os.walk(ds_path))
-        if not has_raw_data:
-            print(f"[bootstrap] Nạp lại kết quả từ input dataset: {ds_name}")
-            shutil.copytree(ds_path, ".", dirs_exist_ok=True)
-            n_merged += 1
+# ── Đọc trực tiếp booster Nhánh/Lưu vực từ output notebook #2 -- KHÔNG COPY ──
+# Trước đây copy nguyên cây artifacts/ (1728 file booster JSON, XGBoost lưu
+# JSON khá nặng do nhiều vòng boosting) vào /kaggle/working -- dễ tràn quota
+# đĩa 20GB của Kaggle khi cộng thêm output fine-tune mới ghi ra (đã từng gặp:
+# "OSError: No space left on device"). Giờ chỉ ĐỌC thẳng từ /kaggle/input
+# (input là read-only, không tính vào quota ghi) -- /kaggle/working chỉ chứa
+# phần MỚI (kết quả fine-tune, nhẹ hơn nhiều vì num_boost_round=300 thay vì
+# 2000 lúc train nhánh/lưu vực).
+# Nhiều notebook Output cùng 1 tài khoản (Add Input -> Your Work) bị Kaggle
+# GỘP CHUNG dưới 1 thư mục theo tên tài khoản: /kaggle/input/notebooks/
+# <username>/ -- không thể giả định số cấp lồng cố định, nên quét đệ quy TOÀN
+# BỘ /kaggle/input, tìm TẤT CẢ thư mục có chứa 1 thư mục con khớp tiền tố
+# mong đợi (không dừng ở kết quả đầu tiên).
+def _find_all_content_roots(base, dir_prefixes):
+    found = []
+    for r, dirs, _files in os.walk(base):
+        if any(d.startswith(p) for p in dir_prefixes for d in dirs):
+            found.append(r)
+            dirs[:] = []  # đã khớp -- khỏi cần đi sâu thêm dưới nhánh này
+    return found
+
+SOURCE_ROOT = None
+for content_root in _find_all_content_roots("/kaggle/input", ("artifacts", "eval_json")):
+    if os.path.isdir(os.path.join(content_root, "artifacts")):
+        SOURCE_ROOT = content_root
+        break
 
 n_boosters = 0
-if os.path.isdir("artifacts"):
-    for _r, _d, _f in os.walk("artifacts"):
+if SOURCE_ROOT:
+    src_artifacts = os.path.join(SOURCE_ROOT, "artifacts")
+    for _r, _d, _f in os.walk(src_artifacts):
         n_boosters += sum(1 for fn in _f if fn.endswith(".json") and fn.startswith("h"))
-print(f"Đã gộp {n_merged} input dataset | Tổng số file booster (.json) tìm thấy: {n_boosters}")
+    print(f"[bootstrap] Đọc trực tiếp (không copy) checkpoint từ: {src_artifacts}")
+print(f"Tổng số file booster (.json) tìm thấy: {n_boosters}")
 if n_boosters == 0:
     print("CẢNH BÁO: chưa thấy booster nào -- kiểm tra lại đã Add Input đúng output notebook #2 chưa.")
 """
@@ -159,8 +171,8 @@ def build_notebook() -> dict:
         for season in SEASONS:
             X_s, y_s, _, ts_s = filter_by_rids(X_all, y_all, rid_all, ts_all, [rid])
 
-            if b_own:
-                branch_art_dir = f"artifacts/xgb_branch/{season_group(b_own, season)}"
+            if b_own and SOURCE_ROOT:
+                branch_art_dir = f"{SOURCE_ROOT}/artifacts/xgb_branch/{season_group(b_own, season)}"
                 ft_art_dir = f"artifacts/xgb_finetune_branch/{season_group(key, season)}"
                 if is_done(branch_art_dir) and not (SKIP_IF_DONE and is_done(ft_art_dir)):
                     print(f"\\n>>> PHA 4 - FINE-TUNE {info['name']} từ nhánh {b_own} | MÙA {season.upper()}")
@@ -168,9 +180,9 @@ def build_notebook() -> dict:
                     train_xgb_dataset(X_s, y_s, ts_s, ft_art_dir, season=season,
                                        init_boosters=init_boosters, num_boost_round=300, early_stopping_rounds=30)
 
-            if basin_own:
+            if basin_own and SOURCE_ROOT:
                 bkey = BASIN_KEY[basin_own]
-                basin_art_dir = f"artifacts/xgb_basin/{season_group(bkey, season)}"
+                basin_art_dir = f"{SOURCE_ROOT}/artifacts/xgb_basin/{season_group(bkey, season)}"
                 ft_art_dir = f"artifacts/xgb_finetune_basin/{season_group(key, season)}"
                 if is_done(basin_art_dir) and not (SKIP_IF_DONE and is_done(ft_art_dir)):
                     print(f"\\n>>> PHA 4 - FINE-TUNE {info['name']} từ lưu vực {basin_own} | MÙA {season.upper()}")

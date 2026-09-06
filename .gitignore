@@ -25,6 +25,7 @@ _kaggle_upload/
 
 # Large archives and tree-based model JSON/pkl weights (deployed via SCP / direct storage)
 XGBoost_Py_Backend/result_xgboots.zip
+XGBoost_Py_Backend/XGBoots_Result.zip
 XGBoost_Py_Backend/artifacts/
 RF_Py_Backend/artifacts/
 

@@ -98,19 +98,22 @@ for k, v in sorted(RESERVOIR_DATA_DIRS.items()):
 
 BOOTSTRAP_CELL = """
 # ── Nạp lại checkpoint Nhánh/Lưu vực từ output notebook #2 ──────────────────
-# (Add Input -> chọn output của chính notebook #2 -- Kaggle mount ở
-# /kaggle/input/<slug-notebook-2>/). Bất kỳ input dataset nào KHÔNG chứa
-# v2_X_hindcast.npy (tức không phải dataset dữ liệu hồ gốc) sẽ được coi là kết
-# quả từ 1 notebook trước và copy nguyên cây thư mục vào /kaggle/working/.
-if os.path.isdir("/kaggle/input"):
-    for ds_name in os.listdir("/kaggle/input"):
-        ds_path = os.path.join("/kaggle/input", ds_name)
-        if not os.path.isdir(ds_path):
-            continue
-        has_raw_data = any("v2_X_hindcast.npy" in files for _, _, files in os.walk(ds_path))
-        if not has_raw_data:
-            print(f"[bootstrap] Nạp lại kết quả từ input dataset: {ds_name}")
-            shutil.copytree(ds_path, OUTPUT_ROOT, dirs_exist_ok=True)
+# Nhiều notebook Output cùng 1 tài khoản (Add Input -> Your Work) bị Kaggle
+# GỘP CHUNG dưới 1 thư mục theo tên tài khoản: /kaggle/input/notebooks/
+# <username>/ -- không thể giả định số cấp lồng cố định, nên quét đệ quy TOÀN
+# BỘ /kaggle/input, tìm TẤT CẢ thư mục có chứa 1 thư mục con khớp tiền tố
+# mong đợi (không dừng ở kết quả đầu tiên).
+def _find_all_content_roots(base, dir_prefixes):
+    found = []
+    for r, dirs, _files in os.walk(base):
+        if any(d.startswith(p) for p in dir_prefixes for d in dirs):
+            found.append(r)
+            dirs[:] = []  # đã khớp -- khỏi cần đi sâu thêm dưới nhánh này
+    return found
+
+for content_root in _find_all_content_roots("/kaggle/input", ("_BRANCH_", "_BASIN_")):
+    print(f"[bootstrap] Nạp lại kết quả từ: {content_root}")
+    shutil.copytree(content_root, OUTPUT_ROOT, dirs_exist_ok=True)
 
 n_ckpt = sum(1 for _r, _d, _f in os.walk(OUTPUT_ROOT) for fn in _f if fn.startswith("pretrain_pooled"))
 print(f"Tổng số checkpoint nhánh/lưu vực tìm thấy sau bootstrap: {n_ckpt}")

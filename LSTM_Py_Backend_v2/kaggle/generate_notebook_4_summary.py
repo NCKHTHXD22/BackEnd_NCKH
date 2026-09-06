@@ -50,20 +50,29 @@ BOOTSTRAP_CELL = """
 import os, shutil
 OUTPUT_ROOT = "/kaggle/working"
 
-# Gộp output của notebook #1 + #2 + #3 (mỗi cái là 1 input dataset đã Add Input)
-# vào /kaggle/working/ -- bỏ qua dataset dữ liệu hồ gốc (chứa v2_X_hindcast.npy)
-# nếu lỡ cũng được attach vào đây (không cần thiết cho notebook này).
+# Gộp output của notebook #1 + #2 + #3 vào /kaggle/working/. Nhiều notebook
+# Output cùng 1 tài khoản (Add Input -> Your Work) bị Kaggle GỘP CHUNG dưới 1
+# thư mục theo tên tài khoản: /kaggle/input/notebooks/<username>/ -- bên
+# trong đó mới có từng thư mục con riêng cho mỗi notebook đã gắn. Không thể
+# giả định số cấp lồng cố định (có thể thêm id phiên bản/id chạy ở giữa) nên
+# quét đệ quy TOÀN BỘ /kaggle/input, tìm TẤT CẢ thư mục có chứa 1 thư mục con
+# khớp tiền tố mong đợi (không dừng ở kết quả đầu tiên -- lỗi cũ chỉ gộp được
+# đúng 1 trong 3 notebook do dừng sớm).
+def _find_all_content_roots(base, dir_prefixes):
+    found = []
+    for r, dirs, _files in os.walk(base):
+        if any(d.startswith(p) for p in dir_prefixes for d in dirs):
+            found.append(r)
+            dirs[:] = []  # đã khớp -- khỏi cần đi sâu thêm dưới nhánh này
+    return found
+
+CONTENT_MARKERS = ("_BRANCH_", "_BASIN_", "standalone", "finetune_branch", "finetune_basin")
+
 n_merged = 0
-if os.path.isdir("/kaggle/input"):
-    for ds_name in os.listdir("/kaggle/input"):
-        ds_path = os.path.join("/kaggle/input", ds_name)
-        if not os.path.isdir(ds_path):
-            continue
-        has_raw_data = any("v2_X_hindcast.npy" in files for _, _, files in os.walk(ds_path))
-        if not has_raw_data:
-            print(f"[bootstrap] Gộp kết quả từ input dataset: {ds_name}")
-            shutil.copytree(ds_path, OUTPUT_ROOT, dirs_exist_ok=True)
-            n_merged += 1
+for content_root in _find_all_content_roots("/kaggle/input", CONTENT_MARKERS):
+    print(f"[bootstrap] Gộp kết quả từ: {content_root}")
+    shutil.copytree(content_root, OUTPUT_ROOT, dirs_exist_ok=True)
+    n_merged += 1
 
 print(f"Đã gộp {n_merged} input dataset vào {OUTPUT_ROOT}")
 if n_merged < 3:
