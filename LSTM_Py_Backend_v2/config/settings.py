@@ -111,22 +111,29 @@ class ReservoirLSTMConfig:
 
     target_noise_std: float = 0.005
 
-    # ── Training splits (fixed-date) ────────────────────────────────────────────
+    # ── Training splits (fixed-date, "val khoét giữa") ──────────────────────────
     # Dữ liệu thật trải dài 2022-01-11 -> 2025-12-30 (giống hệt nhau ở cả 16 hồ).
-    # Bộ mốc cũ (train<2024-08-31 / val 09-2024..01-2025 / test>=2025-09-01) bỏ
-    # trống toàn bộ 2025-01-01..2025-09-01 (8 tháng, trọn mùa khô 2025) và khiến
-    # tập test CHỈ còn tháng 9-12 (toàn mùa mưa) -- nse_dry_season/rainy_season
-    # trong evaluate_model_on_reservoir() không bao giờ có đủ 2 mùa để so sánh.
     #
-    # Cập nhật (theo yêu cầu dùng nhiều dữ liệu train hơn): train ~79% thời gian
-    # (2022-01-11 .. 2025-02-28, ~37.6/47.6 tháng), val thu gọn còn ~4 tháng chỉ
-    # để early-stopping (không báo cáo số liệu val), test vẫn giữ ~6 tháng
-    # (2025-06-24 .. 2025-12-30) BAO GỒM CẢ mùa khô (T6-8) lẫn mùa mưa (T9-12)
-    # để nse_dry_season/nse_rainy_season vẫn tính được đủ cả 2 mùa -- không rút
-    # gọn tập test xuống mức chỉ còn 1 mùa như bug cũ.
-    train_end: str = "2025-02-28"
-    val_start: str = "2025-02-28"
-    val_end: str = "2025-06-24"
+    # Val KHÔNG còn là khối liền ngay trước test -- val là 1 LÁT NGẮN cắt ra từ
+    # GIỮA khoảng train, đặt đúng ranh giới tháng 8->9 (mùa khô chuyển mùa mưa)
+    # để bản thân val luôn có cả 2 mùa. Train dùng TOÀN BỘ phần còn lại (trước
+    # VÀ sau lát val, miễn trước test) -- xem train_reservoir.py/pretrain_pooled.py:
+    #   train_idx = (ts < test_start) VÀ KHÔNG thuộc [val_start, val_end)
+    #   val_idx   = [val_start, val_end)
+    #   test_idx  = ts >= test_start
+    #
+    # Lý do đổi (thay vì val liền trước test như bản trước): val liền trước
+    # test buộc phải chọn 1 trong 2 -- hoặc val ngắn (dùng nhiều dữ liệu cho
+    # train) nhưng rơi trọn vào 1 mùa (rainy-season training crash vì val rỗng
+    # sau khi lọc mùa), hoặc val dài đủ bắc qua ranh giới mùa nhưng ăn mất nhiều
+    # dữ liệu lẽ ra dùng để train. Khoét 1 lát ngắn từ GIỮA train (không liền
+    # test) giải quyết được cả 2: val luôn có đủ mẫu mọi mùa, mà train vẫn dùng
+    # được gần hết toàn bộ dữ liệu (~82.7%, còn cao hơn bản liền-trước-test).
+    #
+    # test_start giữ nguyên 2025-06-24 -> test vẫn có cả mùa khô (T6-8) lẫn mùa
+    # mưa (T9-12) để nse_dry_season/nse_rainy_season tính đủ cả 2 mùa.
+    val_start: str = "2024-08-01"
+    val_end: str = "2024-10-01"
     test_start: str = "2025-06-24"
 
     # ── Paths ──────────────────────────────────────────────────────────────────

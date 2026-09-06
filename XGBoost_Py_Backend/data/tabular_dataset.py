@@ -153,29 +153,32 @@ def build_tabular_dataset():
 
 def split_60_20_20(ts: np.ndarray):
     """
-    Split ~79% train / ~8% validation / ~13% test THEO THOI GIAN (chronological,
-    khong phai random) -- tranh data leakage (khong de mau tuong lai lot vao
-    tap train khi mau qua khu nam trong test).
+    Split ~82.7% train / ~4.2% validation / ~13% test THEO THOI GIAN
+    (chronological, khong phai random) -- tranh data leakage.
 
     Ten ham giu nguyen "60_20_20" cho khop cac noi da import/goi (train_xgb.py,
-    evaluate_xgb.py...) nhung ty le that su da doi (yeu cau dung nhieu du lieu
-    train hon) -- khop dung voi moc ngay co dinh ben LSTM_Py_Backend_v2
-    (config/settings.py: train_end=2025-02-28 ~79%, val_end=2025-06-24 ~87%)
-    de 2 backend so sanh tuong duong nhau. Tap test van du ~6 thang, bao gom ca
-    mua kho (T6-8) lan mua mua (T9-12) -- khong rut xuong muc chi con 1 mua.
+    evaluate_xgb.py...) nhung ty le/co che that su da doi han: val KHONG con
+    la khoi lien ngay truoc test -- val la 1 LAT NGAN khoet ra tu GIUA khoang
+    train (2024-08-01 -> 2024-10-01, dung ranh gioi thang 8->9 mua kho chuyen
+    mua mua) de ban than val luon co ca 2 mua (val lien truoc test se rot tron
+    vao 1 mua tuy chon truoc bao nhieu % train, gay Train/Val rong khi loc rieng
+    bien the season="rainy"). Train dung TOAN BO phan con lai (truoc VA sau lat
+    val, mien truoc test) -- khop dung moc ngay co dinh ben LSTM_Py_Backend_v2
+    (config/settings.py) de 2 backend so sanh tuong duong nhau.
 
-    Cutoff tinh theo % THOI GIAN da troi qua (khong phai % SO MAU), vi so mau
-    khong deu tuyet doi giua cac thang (thang du/thang thieu ngay).
+    Dung moc ngay TUYET DOI (khong phai % thoi gian troi qua) vi ca 16 ho deu
+    chia se chinh xac cung 1 khung thoi gian (2022-01-11 -> 2025-12-30), nen
+    filter theo rid (branch/basin/single) khong lam doi min/max cua ts.
     """
-    t_min, t_max = ts.min(), ts.max()
-    span = (t_max - t_min).astype("timedelta64[s]").astype(np.int64)
-    cutoff_60 = t_min + np.timedelta64(int(span * 0.7895), "s")
-    cutoff_80 = t_min + np.timedelta64(int(span * 0.8696), "s")
+    val_start = np.datetime64("2024-08-01")
+    val_end = np.datetime64("2024-10-01")
+    test_start = np.datetime64("2025-06-24")
 
-    train_idx = np.where(ts < cutoff_60)[0]
-    val_idx = np.where((ts >= cutoff_60) & (ts < cutoff_80))[0]
-    test_idx = np.where(ts >= cutoff_80)[0]
-    print(f"[split ~79/8/13] train <{cutoff_60} | val [{cutoff_60}, {cutoff_80}) | test >={cutoff_80}")
+    in_val = (ts >= val_start) & (ts < val_end)
+    train_idx = np.where((ts < test_start) & ~in_val)[0]
+    val_idx = np.where(in_val)[0]
+    test_idx = np.where(ts >= test_start)[0]
+    print(f"[split khoet-giua] train <{test_start} tru [{val_start},{val_end}) | val [{val_start},{val_end}) | test >={test_start}")
     return train_idx, val_idx, test_idx
 
 

@@ -93,8 +93,9 @@ def pretrain_pooled(
     ts = np.concatenate([np.asarray(ds.timestamps) for ds in per_reservoir], axis=0)
     y_all = np.concatenate([np.asarray(ds.y) for ds in per_reservoir], axis=0)
 
-    val_start = np.datetime64(cfg.val_start, "s")
-    val_end   = np.datetime64(cfg.val_end, "s")
+    val_start  = np.datetime64(cfg.val_start, "s")
+    val_end    = np.datetime64(cfg.val_end, "s")
+    test_start = np.datetime64(cfg.test_start, "s")
 
     all_idx = np.arange(len(ts))
     months = ts.astype("datetime64[M]").astype(int) % 12 + 1
@@ -107,8 +108,11 @@ def pretrain_pooled(
     else:
         season_mask = np.ones(len(months), dtype=bool)
 
-    train_idx = all_idx[(ts < val_start) & season_mask].tolist()
-    val_idx   = all_idx[(ts >= val_start) & (ts < val_end) & season_mask].tolist()
+    # Val là 1 lát khoét ra từ GIỮA train (không liền trước test) -- xem giải
+    # thích ở config/settings.py. Train = mọi thứ trước test, TRỪ đúng lát val.
+    in_val = (ts >= val_start) & (ts < val_end)
+    train_idx = all_idx[(ts < test_start) & ~in_val & season_mask].tolist()
+    val_idx   = all_idx[in_val & season_mask].tolist()
     print(f"Pooled Train ({season}): {len(train_idx):,} | Val: {len(val_idx):,}")
 
     if len(train_idx) == 0:

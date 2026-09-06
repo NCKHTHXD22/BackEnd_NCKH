@@ -116,14 +116,16 @@ def train_reservoir(rid: int, cfg: ReservoirLSTMConfig = None, data_dir: str = N
         raise FileNotFoundError(f"{data_dir}/v2_timestamps.npy không tìm thấy.")
 
     ts = dataset.timestamps
-    train_end  = np.datetime64(cfg.train_end, "s")
     val_start  = np.datetime64(cfg.val_start, "s")
     val_end    = np.datetime64(cfg.val_end, "s")
     test_start = np.datetime64(cfg.test_start, "s")
 
     all_idx = np.arange(len(ts))
-    train_idx = all_idx[ts < val_start].tolist()
-    val_idx   = all_idx[(ts >= val_start) & (ts < val_end)].tolist()
+    # Val là 1 lát khoét ra từ GIỮA train (không liền trước test) -- xem giải
+    # thích ở config/settings.py. Train = mọi thứ trước test, TRỪ đúng lát val.
+    in_val = (ts >= val_start) & (ts < val_end)
+    train_idx = all_idx[(ts < test_start) & ~in_val].tolist()
+    val_idx   = all_idx[in_val].tolist()
     test_idx  = all_idx[ts >= test_start].tolist()  # LUÔN đủ 12 tháng, không lọc theo mùa
 
     if season != "all":
