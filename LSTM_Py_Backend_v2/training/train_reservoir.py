@@ -280,10 +280,18 @@ def train_reservoir(rid: int, cfg: ReservoirLSTMConfig = None, data_dir: str = N
                 all_preds.append(preds.cpu())
                 all_targets.append(y_b.cpu())
 
-        val_loss /= len(val_loader)
-        preds_cat   = torch.cat(all_preds)
-        targets_cat = torch.cat(all_targets)
-        m = compute_metrics(preds_cat, targets_cat, cfg.median_idx)
+        if len(val_loader) > 0:
+            val_loss /= len(val_loader)
+            preds_cat   = torch.cat(all_preds)
+            targets_cat = torch.cat(all_targets)
+            m = compute_metrics(preds_cat, targets_cat, cfg.median_idx)
+        else:
+            # Val rỗng sau khi lọc mùa (vd cửa sổ val không có tháng nào thuộc
+            # mùa mưa) -- dùng train_loss thay thế để early-stopping/scheduler
+            # không crash chia-cho-0. Chỉ ảnh hưởng tiêu chí dừng sớm, KHÔNG
+            # ảnh hưởng NSE/MAE báo cáo cuối cùng (luôn tính trên test_idx).
+            val_loss = train_loss
+            m = {"mae": float("nan"), "rmse": float("nan"), "nse": float("nan"), "r2": float("nan")}
         scheduler.step()
         lr_now = optimizer.param_groups[0]["lr"]
 

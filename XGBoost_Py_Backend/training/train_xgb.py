@@ -79,9 +79,16 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
         val_idx   = [i for i in val_idx if season_mask[i]]
 
     print(f"Dataset: Total={len(X):,} | Train={len(train_idx):,} | Val={len(val_idx):,} | Season={season.upper()}")
-    if len(train_idx) == 0 or len(val_idx) == 0:
-        print("  WARNING: Train/Val rong, bo qua.")
+    if len(train_idx) == 0:
+        print("  WARNING: Train rong, bo qua.")
         return
+    # Val co the rong khi cua so val (chi de early-stopping, khong tinh vao
+    # NSE/MAE bao cao) khong roi vao thang nao thuoc mua dang loc (vd val chi
+    # nam trong mua kho nhung dang train rieng bien the mua mua). Truoc day bo
+    # qua ca luot train nay -> thieu han booster cho to hop do trong bang tong
+    # hop. Gio van train du num_boost_round, chi tat early-stopping (khong co
+    # dval de theo doi).
+    has_val = len(val_idx) > 0
 
     sample_weight = flood_sample_weight(y[train_idx], ts[train_idx], season=season)
     os.makedirs(artifact_dir, exist_ok=True)
@@ -100,19 +107,20 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
     n_trained = 0
     for h in range(HORIZON):
         dtrain = xgb.DMatrix(X[train_idx], label=y[train_idx, h], weight=sample_weight)
-        dval = xgb.DMatrix(X[val_idx], label=y[val_idx, h])
+        dval = xgb.DMatrix(X[val_idx], label=y[val_idx, h]) if has_val else None
 
         for q in QUANTILES:
             params = {**params_base, "objective": "reg:quantileerror", "quantile_alpha": q}
             xgb_model = init_boosters.get((h, q)) if init_boosters else None
-            bst = xgb.train(
-                params, dtrain,
+            train_kwargs = dict(
                 num_boost_round=num_boost_round,
-                evals=[(dval, "val")],
-                early_stopping_rounds=early_stopping_rounds,
                 verbose_eval=False,
                 xgb_model=xgb_model,
             )
+            if has_val:
+                train_kwargs["evals"] = [(dval, "val")]
+                train_kwargs["early_stopping_rounds"] = early_stopping_rounds
+            bst = xgb.train(params, dtrain, **train_kwargs)
             bst.save_model(f"{artifact_dir}/h{h + 1:02d}_q{int(q * 100):02d}.json")
             n_trained += 1
 
