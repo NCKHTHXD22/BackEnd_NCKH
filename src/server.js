@@ -31,6 +31,7 @@ import notificationRoutes from "./api/routes/notification.routes.js";
 import forecastHistoryRoutes from "./api/routes/forecastHistory.routes.js";
 import lakeSpecRoutes from "./api/routes/lakeSpec.routes.js";
 import reservoirAlertRoutes from "./api/routes/reservoirAlert.routes.js";
+import weatherProxyRoutes from "./api/routes/weatherProxy.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
@@ -77,6 +78,7 @@ app.use("/api/reservoir-alerts", reservoirAlertRoutes);
 app.use("/api/forecast-lstm", forecastLstmRoutes);
 app.use("/api/forecast-rf", forecastRfRoutes);
 app.use("/api/forecast-xgb", forecastXgbRoutes);
+app.use("/api/weather", weatherProxyRoutes);
 
 // Backend Integration Endpoints
 app.use("/api/users", userRoutes);

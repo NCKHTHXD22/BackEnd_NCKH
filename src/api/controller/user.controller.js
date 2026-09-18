@@ -73,14 +73,39 @@ export const registerPushToken = async (req, res) => {
     try {
         const clerkId = req.auth.userId;
         const { token } = req.body;
-        if (!token || !token.startsWith("ExponentPushToken[")) {
+        // token === null -> người dùng tắt Push Notification trong Profile,
+        // xoá token để job gửi cảnh báo (floodAlert.job.js) bỏ qua user này.
+        if (token !== null && (!token || !token.startsWith("ExponentPushToken["))) {
             return res.status(400).json({ message: "Token không hợp lệ" });
         }
         const user = await userRepo.findByClerkId(clerkId);
         if (!user) return res.status(404).json({ message: "User not found" });
         user.expoPushToken = token;
         await user.save();
-        res.json({ message: "Push token đã được lưu" });
+        res.json({ message: token ? "Push token đã được lưu" : "Đã tắt push notification" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const setSafetyCheckin = async (req, res) => {
+    try {
+        const clerkId = req.auth.userId;
+        const { isSafe, lat, lon } = req.body;
+        if (typeof isSafe !== "boolean") {
+            return res.status(400).json({ message: "isSafe phải là true/false" });
+        }
+        const user = await userRepo.findByClerkId(clerkId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.safetyCheckin = {
+            isSafe,
+            checkedAt: new Date(),
+            lat: typeof lat === "number" ? lat : null,
+            lon: typeof lon === "number" ? lon : null,
+        };
+        await user.save();
+        res.json({ message: "Đã ghi nhận trạng thái an toàn", safetyCheckin: user.safetyCheckin });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
