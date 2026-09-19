@@ -22,7 +22,7 @@ const postSchema = new mongoose.Schema({
     },
     location: {
         province: { type: String, required: true },
-        district: { type: String, required: true },
+        district: { type: String, default: '' },
         address: { type: String },
         latitude: {
             type: Number,

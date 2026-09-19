@@ -32,6 +32,7 @@ import forecastHistoryRoutes from "./api/routes/forecastHistory.routes.js";
 import lakeSpecRoutes from "./api/routes/lakeSpec.routes.js";
 import reservoirAlertRoutes from "./api/routes/reservoirAlert.routes.js";
 import weatherProxyRoutes from "./api/routes/weatherProxy.routes.js";
+import chatbotRoutes from "./api/routes/chatbot.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
 // ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
@@ -45,6 +46,9 @@ import "./jobs/inflowLakeHistory.job.js";
 import "./jobs/floodAlert.job.js";
 
 const app = express();
+// Sau reverse proxy (nginx), nếu không set thì mọi người dùng chung 1 IP → rate limit
+// (5 báo cáo/phút) chặn oan cả hệ thống lúc đông người báo ngập.
+app.set("trust proxy", 1);
 
 // Middlewares
 app.use(cors());
@@ -79,6 +83,7 @@ app.use("/api/forecast-lstm", forecastLstmRoutes);
 app.use("/api/forecast-rf", forecastRfRoutes);
 app.use("/api/forecast-xgb", forecastXgbRoutes);
 app.use("/api/weather", weatherProxyRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 // Backend Integration Endpoints
 app.use("/api/users", userRoutes);
