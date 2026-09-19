@@ -53,11 +53,16 @@ app.set("trust proxy", 1);
 // Middlewares
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // 10MB cho batch upload forecast
-// Clerk middleware: Bắt buộc cấu hình fallback key nếu Render chưa set Environment Variable
+// Clerk middleware — secret key BẮT BUỘC lấy từ .env (trước đây có giá trị dự
+// phòng ghi cứng trong code → lộ trong git). Thiếu thì dừng ngay để không chạy
+// với xác thực hỏng âm thầm.
+if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error('Thiếu CLERK_SECRET_KEY trong .env — không thể khởi động xác thực Clerk.');
+}
 const { clerkMiddleware } = await import('@clerk/express');
 app.use(clerkMiddleware({
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY || 'pk_test_YmFsYW5jZWQtY2hpY2tlbi0zLmNsZXJrLmFjY291bnRzLmRldiQ',
-    secretKey: process.env.CLERK_SECRET_KEY || 'sk_test_5Hjv2P8a90Wv9HQjsAt85MWIEcrpszKWrJzX44xV2z'
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    secretKey: process.env.CLERK_SECRET_KEY,
 }));
 console.log('✅ Clerk middleware enabled');
 app.use(logger);

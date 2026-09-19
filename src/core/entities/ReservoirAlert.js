@@ -36,6 +36,10 @@ const ReservoirAlertSchema = new mongoose.Schema(
         is_active:  { type: Boolean, default: true, index: true },
         checked_at: { type: Date, default: Date.now },   // Lần cuối cron check
         resolved_at:{ type: Date, default: null },
+
+        // Chống spam push khi mức cảnh báo dao động quanh ngưỡng
+        last_notified_at:    { type: Date, default: null },
+        last_notified_level: { type: String, enum: ['normal', 'watch', 'warning', 'danger', null], default: null },
     },
     {
         versionKey: false,

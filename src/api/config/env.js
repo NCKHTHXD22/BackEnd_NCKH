@@ -13,8 +13,8 @@ export const ENV = {
     VRAIN_PASSWORD: process.env.VRAIN_PASSWORD,
 
     // Backend Integration
-    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || 'pk_test_YmFsYW5jZWQtY2hpY2tlbi0zLmNsZXJrLmFjY291bnRzLmRldiQ',
-    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || 'sk_test_5Hjv2P8a90Wv9HQjsAt85MWIEcrpszKWrJzX44xV2z',
+    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || 'deqfckk9y',
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '745627615581946',
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || 't5ZzrVsusmRjtd9wewpPJQUQEKc',

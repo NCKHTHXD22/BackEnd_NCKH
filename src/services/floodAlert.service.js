@@ -13,6 +13,9 @@ import { sendExpoPush } from './expoPush.service.js';
 
 // Thứ tự mức độ cảnh báo — dùng để phát hiện leo thang (escalate)
 const LEVEL_RANK = { normal: 0, watch: 1, warning: 2, danger: 3 };
+// Không gửi lại push cùng (hoặc thấp hơn) mức đã báo trong khoảng này — tránh
+// spam khi mực nước dao động quanh ngưỡng (watch→normal→watch...).
+const NOTIFY_COOLDOWN_MS = 3 * 60 * 60 * 1000;
 
 const LEVEL_LABEL_VI = {
     watch: 'Theo dõi',
@@ -69,7 +72,7 @@ class FloodAlertService {
                 // Xóa alert cũ (nếu có) để không hiển thị false alert
                 await ReservoirAlert.findOneAndUpdate(
                     { lake_id: lakeId },
-                    { $set: { alert_level: 'normal', is_active: false, reason: 'Dữ liệu cảm biến bất thường', detail: `HTL=${htl}m ngoài phạm vi hợp lệ`, checked_at: new Date() } },
+                    { $set: { alert_level: 'normal', is_active: false, reason: 'Mực nước đo ngoài phạm vi thông số thiết kế', detail: `HTL=${htl}m ngoài [${spec.MNC - 10}, ${spec.crest + 2}]m — kiểm tra thông số hồ (LakeSpec) hoặc cảm biến`, checked_at: new Date() } },
                     { upsert: true }
                 );
                 return null;
@@ -131,9 +134,12 @@ class FloodAlertService {
             }
 
             // 8b. Lấy mức cảnh báo TRƯỚC ĐÓ để phát hiện leo thang (normal→watch→warning→danger)
-            const prevAlert = await ReservoirAlert.findOne({ lake_id: lakeId }).select('alert_level').lean();
+            const prevAlert = await ReservoirAlert.findOne({ lake_id: lakeId }).select('alert_level last_notified_at last_notified_level').lean();
             const prevLevel = prevAlert?.alert_level || 'normal';
             const isEscalating = alert_level !== 'normal' && LEVEL_RANK[alert_level] > LEVEL_RANK[prevLevel];
+            const inCooldown = prevAlert?.last_notified_at
+                && (Date.now() - new Date(prevAlert.last_notified_at).getTime()) < NOTIFY_COOLDOWN_MS
+                && LEVEL_RANK[prevAlert.last_notified_level] >= LEVEL_RANK[alert_level];
 
             // 9. Upsert ReservoirAlert — 1 document active duy nhất per lake
             const alertData = {
@@ -160,8 +166,12 @@ class FloodAlertService {
             );
 
             // 9b. Gửi push notification nếu mức cảnh báo vừa leo thang
-            if (isEscalating) {
+            if (isEscalating && !inCooldown) {
                 await notifyAlertEscalation(spec.name, alert_level, rec.detail);
+                await ReservoirAlert.updateOne(
+                    { lake_id: lakeId },
+                    { $set: { last_notified_at: new Date(), last_notified_level: alert_level } }
+                );
             }
 
             // 10. Ghi OperationLog (chỉ khi có gì đáng log: watch trở lên hoặc mỗi 1h)

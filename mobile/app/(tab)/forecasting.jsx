@@ -128,7 +128,14 @@ export default function ForecastingScreen() {
                     if (typeof r.qvao === "number") byDay[key].qvao.push(r.qvao);
                     if (typeof r.luuluongxa === "number") byDay[key].qxa.push(r.luuluongxa);
                 });
-                const avg = (arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+                // Trung vị thay vì trung bình: dữ liệu quan trắc thỉnh thoảng có giá trị rác
+                // (vd. mực nước 5.999.400 m) — 1 điểm lỗi sẽ làm méo cả biểu đồ nếu lấy trung bình.
+                const avg = (arr) => {
+                    if (!arr.length) return null;
+                    const a = [...arr].sort((x, y) => x - y);
+                    const m = Math.floor(a.length / 2);
+                    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+                };
                 const days = Object.entries(byDay)
                     .sort(([a], [b]) => (a < b ? -1 : 1))
                     .slice(-7)
