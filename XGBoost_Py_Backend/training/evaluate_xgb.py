@@ -62,15 +62,22 @@ def evaluate(artifact_dir: str = "artifacts/xgb", output_prefix: str = "xgb", js
     main_generate_excel_summary.py gộp nhiều lần evaluate() (single/branch/
     basin x season) lại thành 1 bảng so sánh, không phải đọc lại từ Excel.
 
-    data: (X, y, rid, ts) đã build sẵn (build_tabular_dataset()) -- truyền vào
-    khi gọi evaluate() NHIỀU LẦN liên tiếp (vd notebook master train+eval tuần
-    tự single/nhánh/lưu vực/fine-tune x mùa, ~70 lần gọi) để khỏi build lại
-    dataset từ đĩa mỗi lần (rất tốn thời gian). None = tự build (dùng CLI)."""
+    data: (X, y, rid, ts, obs_mask) đã build sẵn (build_tabular_dataset()) --
+    truyền vào khi gọi evaluate() NHIỀU LẦN liên tiếp (vd notebook master
+    train+eval tuần tự single/nhánh/lưu vực/fine-tune x mùa, ~70 lần gọi) để
+    khỏi build lại dataset từ đĩa mỗi lần (rất tốn thời gian). None = tự build
+    (dùng CLI).
+
+    obs_mask (N, HORIZON) bool: True = nhãn quan trắc thật, xem
+    LSTM_Py_Backend_v2/data/dataset_builder.py::v2_obs_mask.npy. Mọi chỉ số
+    NSE/KGE/R2/MAE/RMSE/PICP/horizons dưới đây CHỈ tính trên cặp obs_mask=True
+    -- bỏ đoạn nội suy tuyến tính giả để không báo cáo điểm ảo.
+    """
     print("=" * 70)
     print(f"ĐÁNH GIÁ XGBOOST MODEL: {artifact_dir}")
     print("=" * 70)
 
-    X, y, rid, ts = data if data is not None else build_tabular_dataset()
+    X, y, rid, ts, obs_mask = data if data is not None else build_tabular_dataset()
     _, _, test_idx = split_60_20_20(ts)
     if len(test_idx) == 0:
         raise RuntimeError("Test set rong -- kiem tra du lieu >= TEST_START.")
@@ -90,6 +97,7 @@ def evaluate(artifact_dir: str = "artifacts/xgb", output_prefix: str = "xgb", js
     targets_raw = y[test_idx] ** 2
     rids_test   = rid[test_idx]
     ts_test     = ts[test_idx]
+    mask_test   = obs_mask[test_idx]   # (n_test, HORIZON) bool
 
     test_months = ts_test.astype("datetime64[M]").astype(int) % 12 + 1
     dry_mask_all = np.isin(test_months, [1, 2, 3, 4, 5, 6, 7, 8])
@@ -103,7 +111,8 @@ def evaluate(artifact_dir: str = "artifacts/xgb", output_prefix: str = "xgb", js
         mask = rids_test == r_idx
         if not mask.any():
             continue
-        p_r, t_r = preds_raw[mask].reshape(-1), targets_raw[mask].reshape(-1)
+        sel = mask[:, None] & mask_test   # (n_test, HORIZON) -- chi diem THAT cua dung ho nay
+        p_r, t_r = preds_raw[sel], targets_raw[sel]
         nse = nse_single(t_r, p_r)
         if np.isnan(nse):
             continue
@@ -112,25 +121,27 @@ def evaluate(artifact_dir: str = "artifacts/xgb", output_prefix: str = "xgb", js
         r2 = r2_single(t_r, p_r)
         mae = float(np.mean(np.abs(p_r - t_r)))
         rmse = float(np.sqrt(np.mean((p_r - t_r) ** 2)))
-        cov = picp(targets_raw[mask].reshape(-1), p10_raw[mask].reshape(-1), p90_raw[mask].reshape(-1))
+        cov = picp(targets_raw[sel], p10_raw[sel], p90_raw[sel])
 
         # Phân rã theo mùa
-        mask_dry = mask & dry_mask_all
-        mask_rainy = mask & rainy_mask_all
-        nse_dry = nse_single(targets_raw[mask_dry].reshape(-1), preds_raw[mask_dry].reshape(-1)) if mask_dry.any() else np.nan
-        nse_rainy = nse_single(targets_raw[mask_rainy].reshape(-1), preds_raw[mask_rainy].reshape(-1)) if mask_rainy.any() else np.nan
-        rmse_dry = float(np.sqrt(np.mean((preds_raw[mask_dry] - targets_raw[mask_dry]) ** 2))) if mask_dry.any() else np.nan
-        rmse_rainy = float(np.sqrt(np.mean((preds_raw[mask_rainy] - targets_raw[mask_rainy]) ** 2))) if mask_rainy.any() else np.nan
+        sel_dry = sel & dry_mask_all[:, None]
+        sel_rainy = sel & rainy_mask_all[:, None]
+        nse_dry = nse_single(targets_raw[sel_dry], preds_raw[sel_dry]) if sel_dry.any() else np.nan
+        nse_rainy = nse_single(targets_raw[sel_rainy], preds_raw[sel_rainy]) if sel_rainy.any() else np.nan
+        rmse_dry = float(np.sqrt(np.mean((preds_raw[sel_dry] - targets_raw[sel_dry]) ** 2))) if sel_dry.any() else np.nan
+        rmse_rainy = float(np.sqrt(np.mean((preds_raw[sel_rainy] - targets_raw[sel_rainy]) ** 2))) if sel_rainy.any() else np.nan
 
         # Phân rã theo mốc lead-time cụ thể (3h/6h/12h/24h)
         horizons = {}
         for hz in (3, 6, 12, 24):
             if hz > preds_raw.shape[1]:
                 continue
-            p_h, t_h = preds_raw[mask, hz - 1], targets_raw[mask, hz - 1]
+            sel_h = mask & mask_test[:, hz - 1]
+            p_h, t_h = preds_raw[sel_h, hz - 1], targets_raw[sel_h, hz - 1]
             nse_h = nse_single(t_h, p_h)
-            rmse_h = float(np.sqrt(np.mean((p_h - t_h) ** 2)))
-            horizons[f"{hz}h"] = {"nse": round(nse_h, 4) if not np.isnan(nse_h) else None, "rmse": round(rmse_h, 2)}
+            rmse_h = float(np.sqrt(np.mean((p_h - t_h) ** 2))) if len(t_h) else np.nan
+            horizons[f"{hz}h"] = {"nse": round(nse_h, 4) if not np.isnan(nse_h) else None,
+                                   "rmse": round(rmse_h, 2) if not np.isnan(rmse_h) else None}
 
         name = idx_to_name[r_idx]
         row_metrics = {

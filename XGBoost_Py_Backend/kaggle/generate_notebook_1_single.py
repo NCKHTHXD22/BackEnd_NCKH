@@ -88,8 +88,8 @@ def build_notebook() -> dict:
 
     cells.append(md("## Build dataset 1 lần duy nhất"))
     cells.append(code("""
-    X_all, y_all, rid_all, ts_all = build_tabular_dataset()
-    DATA_ALL = (X_all, y_all, rid_all, ts_all)
+    X_all, y_all, rid_all, ts_all, mask_all = build_tabular_dataset()
+    DATA_ALL = (X_all, y_all, rid_all, ts_all, mask_all)
 
     def season_group(base, season):
         return base if season == "all" else f"{base}_{season}"
@@ -108,8 +108,8 @@ def build_notebook() -> dict:
                 print(f"[SKIP/RESUME] Single {info['name']} ({season}) đã train.")
                 continue
             print(f"\\n>>> PHA 1 - TRAIN SINGLE: {info['name']} | MÙA {season.upper()}")
-            X_s, y_s, _, ts_s = filter_by_rids(X_all, y_all, rid_all, ts_all, [rid])
-            train_xgb_dataset(X_s, y_s, ts_s, art_dir, season=season)
+            X_s, y_s, _, ts_s, mask_s = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, [rid])
+            train_xgb_dataset(X_s, y_s, ts_s, art_dir, season=season, obs_mask=mask_s)
     """))
     cells.append(code("""
     for rid, info in RESERVOIRS.items():

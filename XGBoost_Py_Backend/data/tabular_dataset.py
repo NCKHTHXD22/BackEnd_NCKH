@@ -113,11 +113,16 @@ def build_tabular_dataset():
       y   (N, HORIZON)                                                 float32, sqrt-space
       rid (N,)                                                         int64, reservoir idx (0..15)
       ts  (N,)                                                         datetime64[s]
+      obs_mask (N, HORIZON)                                            bool -- True = nhan
+        quan trac THAT (khong phai doan noi suy tuyen tinh gia co san trong Excel
+        goc, xem LSTM_Py_Backend_v2/data/dataset_builder.py::v2_obs_mask.npy).
+        Ho nao chua co v2_obs_mask.npy (chua rebuild bang data_clean_source) ->
+        mac dinh True het (tuong thich nguoc).
     """
     dirs = _find_dataset_dirs()
     key_to_idx = {info["name"].replace(" ", "_"): info["idx"] for _, info in RESERVOIRS.items()}
 
-    X_list, y_list, rid_list, ts_list = [], [], [], []
+    X_list, y_list, rid_list, ts_list, mask_list = [], [], [], [], []
     for key, path in sorted(dirs.items()):
         if key not in key_to_idx:
             print(f"  [SKIP] {key}: khong co trong config/reservoirs.py")
@@ -127,6 +132,9 @@ def build_tabular_dataset():
         X_nwp = np.load(os.path.join(path, "v2_X_nwp.npy"), mmap_mode="r")
         y = np.load(os.path.join(path, "v2_y.npy"))
         ts = np.load(os.path.join(path, "v2_timestamps.npy"))
+        obs_mask_path = os.path.join(path, "v2_obs_mask.npy")
+        obs_mask = (np.load(obs_mask_path) if os.path.exists(obs_mask_path)
+                    else np.ones_like(y, dtype=bool))
 
         X_last = np.asarray(X_hind[:, -1, :], dtype=np.float32)   # dong cuoi hindcast = "hien tai"
         X_future = np.asarray(X_nwp[:, 0, :], dtype=np.float32)   # buoc dau tien cua cua so du bao (t+1h)
@@ -137,7 +145,8 @@ def build_tabular_dataset():
         y_list.append(np.asarray(y, dtype=np.float32))
         rid_list.append(np.full(len(X_last), idx, dtype=np.int64))
         ts_list.append(ts)
-        print(f"  [{key}] {len(X_last):,} samples")
+        mask_list.append(np.asarray(obs_mask, dtype=bool))
+        print(f"  [{key}] {len(X_last):,} samples | obs_mask: {100*obs_mask.mean():.1f}% nhan that")
 
     if not X_list:
         raise RuntimeError("Khong build duoc mau nao -- kiem tra lai thu muc dataset.")
@@ -146,9 +155,10 @@ def build_tabular_dataset():
     y = np.concatenate(y_list, axis=0)
     rid = np.concatenate(rid_list, axis=0)
     ts = np.concatenate(ts_list, axis=0)
+    obs_mask = np.concatenate(mask_list, axis=0)
     print(f"Total: {len(X):,} samples | X={X.shape} (47 hindcast + 6 oracle-future + "
-          f"{NUM_RESERVOIRS} one-hot) | y={y.shape}")
-    return X, y, rid, ts
+          f"{NUM_RESERVOIRS} one-hot) | y={y.shape} | obs_mask={100*obs_mask.mean():.1f}% nhan that")
+    return X, y, rid, ts, obs_mask
 
 
 def split_60_20_20(ts: np.ndarray):

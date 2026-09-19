@@ -118,7 +118,16 @@ def build_reservoir_dataset(
 
     raw_df: DataFrame time|inflow|rain|water_level|outflow đã có sẵn (bỏ qua
     load_inflow_rain_matrix/Excel) — dùng khi Data_Tung_Ho_Ma_Tran_Rong/ không
-    có, ví dụ khôi phục từ data/legacy_v1_recover.py::recover_raw_dataframe().
+    có, ví dụ khôi phục từ data/legacy_v1_recover.py::recover_raw_dataframe(),
+    hoặc data/clean_source_loader.py::load_clean_source() (dữ liệu đã QC).
+
+    Cột "inflow_is_real" trong raw_df (tùy chọn, bool): đánh dấu giờ nào là
+    quan trắc thật (không phải đoạn nội suy tuyến tính giả có sẵn trong Excel
+    gốc — xem ARIMAX/arimax_regional/qc.py). Nếu có, dataset sẽ xuất thêm
+    v2_obs_mask.npy (N, forecast_len) song song v2_y.npy, để train/eval sau
+    này có thể chỉ tính loss/metric trên nhãn thật. Không có cột này -> coi
+    mọi giờ là thật (hành vi cũ, tương thích ngược — mọi hồ build bằng Excel
+    trực tiếp sẽ không có v2_obs_mask.npy).
     """
     if rid not in RESERVOIRS:
         raise ValueError(f"rid={rid} không có trong config/reservoirs.py")
@@ -146,10 +155,15 @@ def build_reservoir_dataset(
         df = load_inflow_rain_matrix(rid, start_date=start_dt, end_date=end_dt)
     if df.empty:
         raise RuntimeError(f"Không có dữ liệu cho {name} (rid={rid}).")
+    has_obs_flag = "inflow_is_real" in df.columns
 
     # ── 2. Backbone hourly liên tục ──────────────────────────────────────────────
     full_idx = pd.date_range(start=start_dt, end=end_dt, freq="h")
     df = df.set_index("time").reindex(full_idx).rename_axis("time").reset_index()
+    if has_obs_flag:
+        # Gio khong co trong raw_df (bi reindex them) chac chan khong phai
+        # quan trac that.
+        df["inflow_is_real"] = df["inflow_is_real"].fillna(False).astype(bool)
 
     # ── 3. Nội suy inflow/Z/Q_out, fill rain ────────────────────────────────────
     df["inflow"] = df["inflow"].interpolate(method="linear", limit=6, limit_direction="both")
@@ -256,7 +270,9 @@ def build_reservoir_dataset(
     window_len = hindcast_len + forecast_len
     X_hind_list, X_nwp_list, y_list, ts_list = [], [], [], []
     station_rain_list, station_mask_list = [], []
+    obs_mask_list = []
     build_station = station_arr is not None
+    is_real_arr = df["inflow_is_real"].values if has_obs_flag else None
 
     for i in range(len(df) - window_len + 1):
         hind_end = i + hindcast_len
@@ -277,6 +293,9 @@ def build_reservoir_dataset(
             station_rain_list.append(station_arr[i:hind_end])
             station_mask_list.append(station_mask_arr[i:hind_end])
 
+        if has_obs_flag:
+            obs_mask_list.append(is_real_arr[hind_end:fc_end])
+
     if not X_hind_list:
         raise RuntimeError(f"Không tạo được sample nào cho {name} — kiểm tra hindcast_len/forecast_len.")
 
@@ -284,6 +303,7 @@ def build_reservoir_dataset(
     X_nwp  = np.stack(X_nwp_list,  axis=0)
     y      = np.stack(y_list,      axis=0)
     ts     = np.array(ts_list, dtype="datetime64[s]")
+    obs_mask = np.stack(obs_mask_list, axis=0) if has_obs_flag else None
 
     print(f"  Samples: {len(X_hind):,} | X_hind={X_hind.shape} | X_nwp={X_nwp.shape} | y={y.shape}")
 
@@ -300,6 +320,10 @@ def build_reservoir_dataset(
     np.save(os.path.join(out_dir, "v2_X_nwp.npy"),       X_nwp)
     np.save(os.path.join(out_dir, "v2_y.npy"),            y)
     np.save(os.path.join(out_dir, "v2_timestamps.npy"),  ts)
+    if obs_mask is not None:
+        np.save(os.path.join(out_dir, "v2_obs_mask.npy"), obs_mask)
+        pct_real = 100 * obs_mask.mean()
+        print(f"  Saved v2_obs_mask.npy: {obs_mask.shape}  ({pct_real:.1f}% nhãn là quan trắc thật)")
 
     if build_station and len(station_rain_list) == len(X_hind_list):
         station_rain_out = np.stack(station_rain_list, axis=0)
@@ -321,13 +345,27 @@ def build_reservoir_dataset(
 
 
 def build_all_reservoirs(start_date: str = "2022-01-01", end_date: str = "2025-12-31",
-                          fetch_nwp: bool = True, use_legacy_v1: bool = False):
-    """Loop build_reservoir_dataset() cho tất cả 16 hồ, bỏ qua hồ lỗi thay vì dừng cả loạt."""
+                          fetch_nwp: bool = True, use_legacy_v1: bool = False,
+                          use_clean_source: bool = False):
+    """Loop build_reservoir_dataset() cho tất cả 16 hồ, bỏ qua hồ lỗi thay vì dừng cả loạt.
+
+    use_clean_source=True: dùng data/clean_source_loader.py::load_clean_source()
+    (inflow đã QC spike/nội suy giả + rain đã sửa IDW, xem ARIMAX/arimax_regional)
+    thay vì Excel Data_Tung_Ho_Ma_Tran_Rong trực tiếp -- xuất thêm v2_obs_mask.npy.
+    Nếu hồ chưa có file trong data_clean_source/ (load_clean_source trả về rỗng),
+    tự động rơi về Excel như hành vi cũ.
+    """
     results = {}
     for rid, info in RESERVOIRS.items():
         try:
             raw_df = None
-            if use_legacy_v1:
+            if use_clean_source:
+                from data.clean_source_loader import load_clean_source
+                raw_df = load_clean_source(rid)
+                if raw_df.empty:
+                    print(f"  [{info['name']}] Chưa có trong data_clean_source/ -> dùng Excel gốc.")
+                    raw_df = None
+            elif use_legacy_v1:
                 from data.legacy_v1_recover import recover_raw_dataframe
                 raw_df = recover_raw_dataframe(info["idx"])
             results[rid] = build_reservoir_dataset(

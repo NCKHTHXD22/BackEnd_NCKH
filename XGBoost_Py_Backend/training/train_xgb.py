@@ -56,7 +56,8 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
                       artifact_dir: str, season: str = "all",
                       init_boosters: dict = None,
                       num_boost_round: int = 2000,
-                      early_stopping_rounds: int = 50):
+                      early_stopping_rounds: int = 50,
+                      obs_mask: np.ndarray = None):
     """Huấn luyện 72 booster cho 1 tập dữ liệu cụ thể.
 
     init_boosters: dict {(h, q): xgb.Booster} đã train sẵn (vd model nhánh/lưu
@@ -65,6 +66,13 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
     kịch bản 5 (transfer learning) áp dụng cho XGBoost: pretrain trên nhánh/lưu
     vực (init_boosters=None, num_boost_round lớn) rồi fine-tune riêng từng hồ
     (init_boosters=<72 booster nhánh>, num_boost_round nhỏ hơn -- ví dụ 300).
+
+    obs_mask: (N, HORIZON) bool hoặc None. True = nhãn quan trắc THẬT (không
+    phải đoạn nội suy tuyến tính giả có sẵn trong Excel gốc -- xem
+    LSTM_Py_Backend_v2/data/dataset_builder.py::v2_obs_mask.npy). Khi có, mỗi
+    horizon h chỉ train/eval trên các dòng có obs_mask[:, h]=True -- loại nhãn
+    nội suy giả khỏi cả loss lẫn early-stopping. None -> dùng mọi dòng (tương
+    thích ngược, dataset chưa có obs_mask).
     """
     train_idx, val_idx, test_idx = split_60_20_20(ts)
     months = ts.astype("datetime64[M]").astype(int) % 12 + 1
@@ -90,7 +98,6 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
     # dval de theo doi).
     has_val = len(val_idx) > 0
 
-    sample_weight = flood_sample_weight(y[train_idx], ts[train_idx], season=season)
     os.makedirs(artifact_dir, exist_ok=True)
 
     params_base = dict(
@@ -103,11 +110,25 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
         reg_lambda=1.0,
     )
 
+    train_idx_arr, val_idx_arr = np.asarray(train_idx), np.asarray(val_idx)
     t0 = time.time()
     n_trained = 0
     for h in range(HORIZON):
-        dtrain = xgb.DMatrix(X[train_idx], label=y[train_idx, h], weight=sample_weight)
-        dval = xgb.DMatrix(X[val_idx], label=y[val_idx, h]) if has_val else None
+        # Loc theo obs_mask RIENG TUNG horizon -- 1 dong co the that o gio h1
+        # nhung la noi suy o gio h2 (khoang cach do that khong deu theo gio).
+        if obs_mask is not None:
+            tr_h = train_idx_arr[obs_mask[train_idx_arr, h]]
+            va_h = val_idx_arr[obs_mask[val_idx_arr, h]] if has_val else val_idx_arr
+        else:
+            tr_h, va_h = train_idx_arr, val_idx_arr
+        if len(tr_h) == 0:
+            print(f"  h={h+1}: 0 dong con nhan that sau khi loc obs_mask, bo qua horizon nay.")
+            continue
+        w_h = flood_sample_weight(y[tr_h], ts[tr_h], season=season)
+
+        dtrain = xgb.DMatrix(X[tr_h], label=y[tr_h, h], weight=w_h)
+        dval = xgb.DMatrix(X[va_h], label=y[va_h, h]) if (has_val and len(va_h) > 0) else None
+        has_val_h = dval is not None
 
         for q in QUANTILES:
             params = {**params_base, "objective": "reg:quantileerror", "quantile_alpha": q}
@@ -117,7 +138,7 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
                 verbose_eval=False,
                 xgb_model=xgb_model,
             )
-            if has_val:
+            if has_val_h:
                 train_kwargs["evals"] = [(dval, "val")]
                 train_kwargs["early_stopping_rounds"] = early_stopping_rounds
             bst = xgb.train(params, dtrain, **train_kwargs)
@@ -128,12 +149,13 @@ def train_xgb_dataset(X: np.ndarray, y: np.ndarray, ts: np.ndarray,
     print(f"  [OK] Da train {n_trained} boosters trong {elapsed:.1f}s -> {artifact_dir}/\n")
 
 
-def filter_by_rids(X: np.ndarray, y: np.ndarray, rid_arr: np.ndarray, ts_arr: np.ndarray, target_rids: list):
+def filter_by_rids(X: np.ndarray, y: np.ndarray, rid_arr: np.ndarray, ts_arr: np.ndarray,
+                    obs_mask: np.ndarray, target_rids: list):
     """Lọc dữ liệu theo danh sách reservoir IDs."""
     idx_map = {info["idx"]: rid for rid, info in RESERVOIRS.items()}
     actual_rids = np.array([idx_map.get(r, -1) for r in rid_arr])
     mask = np.isin(actual_rids, target_rids)
-    return X[mask], y[mask], rid_arr[mask], ts_arr[mask]
+    return X[mask], y[mask], rid_arr[mask], ts_arr[mask], obs_mask[mask]
 
 
 def main():
@@ -154,12 +176,12 @@ def main():
     print(f"HUẤN LUYỆN XGBOOST | MODE: {args.mode.upper()} | MÙA: {args.season.upper()}")
     print("=" * 70)
 
-    X_all, y_all, rid_all, ts_all = build_tabular_dataset()
+    X_all, y_all, rid_all, ts_all, mask_all = build_tabular_dataset()
     season_suffix = f"_{args.season}" if args.season != "all" else ""
 
     if args.mode == "global":
         art_dir = f"artifacts/xgb{season_suffix}"
-        train_xgb_dataset(X_all, y_all, ts_all, art_dir, season=args.season)
+        train_xgb_dataset(X_all, y_all, ts_all, art_dir, season=args.season, obs_mask=mask_all)
 
     elif args.mode == "branch" and args.branch:
         b_key = args.branch.upper()
@@ -171,9 +193,9 @@ def main():
             rids = SONG_CON_2_VARIANTS["SONG_BUNG"]
         else:
             raise ValueError(f"branch={args.branch} không hợp lệ.")
-        X_b, y_b, _, ts_b = filter_by_rids(X_all, y_all, rid_all, ts_all, rids)
+        X_b, y_b, _, ts_b, mask_b = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, rids)
         art_dir = f"artifacts/xgb_branch/{b_key}{season_suffix}"
-        train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season)
+        train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season, obs_mask=mask_b)
 
     elif args.mode == "all-branches":
         branch_list = list(RIVER_BRANCHES.keys()) + ["A_VUONG_WITH_SONG_CON", "SONG_BUNG_WITH_SONG_CON"]
@@ -185,41 +207,41 @@ def main():
             else:
                 rids = SONG_CON_2_VARIANTS["SONG_BUNG"]
             print(f"\n>>> TRAIN NHÁNH: {b_name} ({len(rids)} hồ)")
-            X_b, y_b, _, ts_b = filter_by_rids(X_all, y_all, rid_all, ts_all, rids)
+            X_b, y_b, _, ts_b, mask_b = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, rids)
             art_dir = f"artifacts/xgb_branch/{b_name}{season_suffix}"
-            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season)
+            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season, obs_mask=mask_b)
 
     elif args.mode == "basin" and args.basin:
         rids = RIVER_BASINS_EXPERIMENT.get(args.basin)
         if not rids:
             raise ValueError(f"basin={args.basin} không hợp lệ.")
         b_clean = args.basin.upper().replace(" ", "_")
-        X_b, y_b, _, ts_b = filter_by_rids(X_all, y_all, rid_all, ts_all, rids)
+        X_b, y_b, _, ts_b, mask_b = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, rids)
         art_dir = f"artifacts/xgb_basin/{b_clean}{season_suffix}"
-        train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season)
+        train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season, obs_mask=mask_b)
 
     elif args.mode == "all-basins":
         for basin_name, rids in RIVER_BASINS_EXPERIMENT.items():
             b_clean = basin_name.upper().replace(" ", "_")
             print(f"\n>>> TRAIN LƯU VỰC: {basin_name} ({len(rids)} hồ)")
-            X_b, y_b, _, ts_b = filter_by_rids(X_all, y_all, rid_all, ts_all, rids)
+            X_b, y_b, _, ts_b, mask_b = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, rids)
             art_dir = f"artifacts/xgb_basin/{b_clean}{season_suffix}"
-            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season)
+            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=args.season, obs_mask=mask_b)
 
     elif args.mode == "single" and args.rid is not None:
         info = RESERVOIRS[args.rid]
         res_key = info["name"].replace(" ", "_")
-        X_s, y_s, _, ts_s = filter_by_rids(X_all, y_all, rid_all, ts_all, [args.rid])
+        X_s, y_s, _, ts_s, mask_s = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, [args.rid])
         art_dir = f"artifacts/xgb_single/{res_key}{season_suffix}"
-        train_xgb_dataset(X_s, y_s, ts_s, art_dir, season=args.season)
+        train_xgb_dataset(X_s, y_s, ts_s, art_dir, season=args.season, obs_mask=mask_s)
 
     elif args.mode == "all-single":
         for rid, info in RESERVOIRS.items():
             res_key = info["name"].replace(" ", "_")
             print(f"\n>>> TRAIN TỪNG HỒ: {info['name']} (RID={rid})")
-            X_s, y_s, _, ts_s = filter_by_rids(X_all, y_all, rid_all, ts_all, [rid])
+            X_s, y_s, _, ts_s, mask_s = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, [rid])
             art_dir = f"artifacts/xgb_single/{res_key}{season_suffix}"
-            train_xgb_dataset(X_s, y_s, ts_s, art_dir, season=args.season)
+            train_xgb_dataset(X_s, y_s, ts_s, art_dir, season=args.season, obs_mask=mask_s)
 
 
 if __name__ == "__main__":

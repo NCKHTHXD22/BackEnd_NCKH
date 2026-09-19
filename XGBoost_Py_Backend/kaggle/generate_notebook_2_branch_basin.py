@@ -90,8 +90,8 @@ def build_notebook() -> dict:
 
     cells.append(md("## Build dataset 1 lần duy nhất + helper"))
     cells.append(code("""
-    X_all, y_all, rid_all, ts_all = build_tabular_dataset()
-    DATA_ALL = (X_all, y_all, rid_all, ts_all)
+    X_all, y_all, rid_all, ts_all, mask_all = build_tabular_dataset()
+    DATA_ALL = (X_all, y_all, rid_all, ts_all, mask_all)
 
     BRANCH_GROUPS = list(RIVER_BRANCHES.keys()) + ["A_VUONG_WITH_SONG_CON", "SONG_BUNG_WITH_SONG_CON"]
     BASIN_KEY = {"Vu Gia": "VU_GIA", "Thu Bồn": "THU_BON"}
@@ -122,8 +122,8 @@ def build_notebook() -> dict:
                 print(f"[SKIP/RESUME] Nhánh {b_name} ({season}) đã train.")
                 continue
             print(f"\\n>>> PHA 2 - TRAIN NHÁNH: {b_name} | MÙA {season.upper()}")
-            X_b, y_b, _, ts_b = filter_by_rids(X_all, y_all, rid_all, ts_all, rids_for_branch(b_name))
-            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=season)
+            X_b, y_b, _, ts_b, mask_b = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, rids_for_branch(b_name))
+            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=season, obs_mask=mask_b)
     """))
     cells.append(code("""
     for b_name in BRANCH_GROUPS:
@@ -152,8 +152,8 @@ def build_notebook() -> dict:
                 print(f"[SKIP/RESUME] Lưu vực {basin_name} ({season}) đã train.")
                 continue
             print(f"\\n>>> PHA 3 - TRAIN LƯU VỰC: {basin_name} | MÙA {season.upper()}")
-            X_b, y_b, _, ts_b = filter_by_rids(X_all, y_all, rid_all, ts_all, rids)
-            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=season)
+            X_b, y_b, _, ts_b, mask_b = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, rids)
+            train_xgb_dataset(X_b, y_b, ts_b, art_dir, season=season, obs_mask=mask_b)
     """))
     cells.append(code("""
     for basin_name in RIVER_BASINS_EXPERIMENT:

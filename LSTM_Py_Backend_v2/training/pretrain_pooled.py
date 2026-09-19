@@ -168,11 +168,12 @@ def pretrain_pooled(
 
         model.train()
         train_loss = 0.0
-        for x_hind, x_nwp, y_b, station_rain, station_mask in tqdm(
+        for x_hind, x_nwp, y_b, station_rain, station_mask, obs_mask in tqdm(
             train_loader, desc=f"[POOLED-{season.upper()}] Epoch {epoch+1}/{cfg.epochs}", leave=False
         ):
             x_hind, x_nwp, y_b = x_hind.to(device), x_nwp.to(device), y_b.to(device)
             station_rain, station_mask = station_rain.to(device), station_mask.to(device)
+            obs_mask = obs_mask.to(device)
             y_noisy = y_b + torch.randn_like(y_b) * cfg.target_noise_std if cfg.target_noise_std > 0 else y_b
 
             optimizer.zero_grad()
@@ -184,7 +185,8 @@ def pretrain_pooled(
                 loss = quantile_loss_v2(preds, y_noisy, cfg.quantiles,
                                          horizon_decay=cfg.horizon_decay,
                                          coverage_weight=cfg.coverage_weight,
-                                         peak_weight=cfg.peak_weight)
+                                         peak_weight=cfg.peak_weight,
+                                         obs_mask=obs_mask)
 
             amp_scaler.scale(loss).backward()
             amp_scaler.unscale_(optimizer)
@@ -197,11 +199,12 @@ def pretrain_pooled(
 
         model.eval()
         val_loss = 0.0
-        all_preds, all_targets = [], []
+        all_preds, all_targets, all_obs_mask = [], [], []
         with torch.no_grad():
-            for x_hind, x_nwp, y_b, station_rain, station_mask in val_loader:
+            for x_hind, x_nwp, y_b, station_rain, station_mask, obs_mask in val_loader:
                 x_hind, x_nwp, y_b = x_hind.to(device), x_nwp.to(device), y_b.to(device)
                 station_rain, station_mask = station_rain.to(device), station_mask.to(device)
+                obs_mask = obs_mask.to(device)
                 with torch.amp.autocast("cuda", enabled=use_amp):
                     preds = model(
                         x_hind, x_nwp, teacher_forcing_ratio=0.0,
@@ -210,14 +213,17 @@ def pretrain_pooled(
                     val_loss += quantile_loss_v2(preds, y_b, cfg.quantiles,
                                                   horizon_decay=cfg.horizon_decay,
                                                   coverage_weight=cfg.coverage_weight,
-                                                  peak_weight=cfg.peak_weight).item()
+                                                  peak_weight=cfg.peak_weight,
+                                                  obs_mask=obs_mask).item()
                 all_preds.append(preds.cpu())
                 all_targets.append(y_b.cpu())
+                all_obs_mask.append(obs_mask.cpu())
 
         if len(val_loader) > 0:
             val_loss /= len(val_loader)
             preds_cat, targets_cat = torch.cat(all_preds), torch.cat(all_targets)
-            m = compute_metrics(preds_cat, targets_cat, cfg.median_idx)
+            mask_cat = torch.cat(all_obs_mask)
+            m = compute_metrics(preds_cat, targets_cat, cfg.median_idx, obs_mask=mask_cat)
         else:
             # Val rỗng sau khi lọc mùa (cửa sổ val không có tháng nào thuộc mùa
             # đang lọc) -- dùng train_loss thay thế để early-stopping/scheduler
@@ -280,47 +286,53 @@ def evaluate_model_on_reservoir(
     model.load_state_dict(compatible, strict=False)
     model.eval()
 
-    all_preds, all_targets = [], []
+    all_preds, all_targets, all_obs_mask = [], [], []
     with torch.no_grad():
-        for x_hind, x_nwp, y_b, station_rain, station_mask in test_loader:
+        for x_hind, x_nwp, y_b, station_rain, station_mask, obs_mask in test_loader:
             preds = model(
                 x_hind.to(device), x_nwp.to(device), teacher_forcing_ratio=0.0,
                 station_rain=station_rain.to(device), station_mask=station_mask.to(device),
             )
             all_preds.append(preds.cpu())
             all_targets.append(y_b)
+            all_obs_mask.append(obs_mask)
 
     preds_cat = torch.cat(all_preds)
     targets_cat = torch.cat(all_targets)
-    metrics = compute_metrics(preds_cat, targets_cat, cfg.median_idx)
+    mask_cat = torch.cat(all_obs_mask)
+    metrics = compute_metrics(preds_cat, targets_cat, cfg.median_idx, obs_mask=mask_cat)
 
+    # Lưu ý: horizons (metrics_at_specific_horizons) chưa lọc obs_mask, xem
+    # comment tương ứng ở training/train_reservoir.py.
     preds_np = (preds_cat[:, :, cfg.median_idx] ** 2).numpy()
     targets_np = (targets_cat ** 2).numpy()
+    mask_np = mask_cat.numpy().astype(bool)
     metrics["horizons"] = metrics_at_specific_horizons(preds_np, targets_np, horizons=[3, 6, 12, 24])
-    metrics["kge"] = round(kge_single(targets_np.reshape(-1), preds_np.reshape(-1)), 4)
+    metrics["kge"] = round(kge_single(targets_np[mask_np].reshape(-1), preds_np[mask_np].reshape(-1)), 4)
 
-    # Đánh giá phân rã theo mùa trên tập test
+    # Đánh giá phân rã theo mùa trên tập test (chỉ trên nhãn thật)
     test_ts = ts[test_idx]
     test_months = test_ts.astype("datetime64[M]").astype(int) % 12 + 1
 
-    dry_mask = np.isin(test_months, [1, 2, 3, 4, 5, 6, 7, 8])
-    rainy_mask = np.isin(test_months, [9, 10, 11, 12])
+    dry_mask = np.isin(test_months, [1, 2, 3, 4, 5, 6, 7, 8])[:, None] & mask_np
+    rainy_mask = np.isin(test_months, [9, 10, 11, 12])[:, None] & mask_np
 
     if dry_mask.any():
-        p_dry, t_dry = preds_np[dry_mask].reshape(-1), targets_np[dry_mask].reshape(-1)
+        p_dry, t_dry = preds_np[dry_mask], targets_np[dry_mask]
         metrics["nse_dry_season"] = round(nse_np(t_dry, p_dry), 4)
         metrics["rmse_dry_season"] = round(float(np.sqrt(np.mean((p_dry - t_dry) ** 2))), 2)
         metrics["kge_dry_season"] = round(kge_single(t_dry, p_dry), 4)
 
     if rainy_mask.any():
-        p_rainy, t_rainy = preds_np[rainy_mask].reshape(-1), targets_np[rainy_mask].reshape(-1)
+        p_rainy, t_rainy = preds_np[rainy_mask], targets_np[rainy_mask]
         metrics["nse_rainy_season"] = round(nse_np(t_rainy, p_rainy), 4)
         metrics["rmse_rainy_season"] = round(float(np.sqrt(np.mean((p_rainy - t_rainy) ** 2))), 2)
         metrics["kge_rainy_season"] = round(kge_single(t_rainy, p_rainy), 4)
 
     pred_low_np  = (preds_cat[:, :, 0]  ** 2).numpy()   # P5
     pred_high_np = (preds_cat[:, :, -1] ** 2).numpy()   # P95
-    picp_result = picp(targets_np.reshape(-1), pred_low_np.reshape(-1), pred_high_np.reshape(-1))
+    picp_result = picp(targets_np[mask_np].reshape(-1), pred_low_np[mask_np].reshape(-1),
+                        pred_high_np[mask_np].reshape(-1))
     metrics["picp_p5_p95"] = picp_result["picp"]
     metrics["mean_interval_width"] = picp_result["mean_interval_width"]
 

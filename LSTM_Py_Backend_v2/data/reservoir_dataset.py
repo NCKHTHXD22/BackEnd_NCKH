@@ -11,15 +11,20 @@ class ReservoirDataset(Dataset):
     """
     Load datasets/<reservoir_key>/v2_*.npy.
 
-    Mỗi item: (x_hindcast, x_nwp, y, station_rain, station_mask)
+    Mỗi item: (x_hindcast, x_nwp, y, station_rain, station_mask, obs_mask)
       x_hindcast   : (hindcast_len, n_hindcast_features) float32
       x_nwp        : (forecast_len, n_nwp_features)       float32
       y            : (forecast_len,)                       float32 — sqrt(inflow)
       station_rain : (hindcast_len, max_stations)          float32 — 0 nếu chưa build
       station_mask : (hindcast_len, max_stations)          bool    — False nếu chưa build
+      obs_mask     : (forecast_len,)                        bool    — True nếu chưa có
+                     v2_obs_mask.npy (hành vi cũ: coi mọi giờ là quan trắc thật).
+                     Khi có: True = giờ đó là nhãn thật, False = đoạn nội suy
+                     tuyến tính giả có sẵn trong Excel gốc (xem data/dataset_
+                     builder.py, ARIMAX/arimax_regional/qc.py).
 
     station_rain/station_mask CHỈ có ý nghĩa khi config.use_station_attention=True
-    (xem models/flood_lstm_v2.py). Luôn trả về đủ 5 phần tử để vòng lặp train/val/
+    (xem models/flood_lstm_v2.py). Luôn trả về đủ 6 phần tử để vòng lặp train/val/
     test không cần if/else riêng.
     """
 
@@ -30,6 +35,10 @@ class ReservoirDataset(Dataset):
 
         ts_path = os.path.join(data_dir, "v2_timestamps.npy")
         self.timestamps = np.load(ts_path) if os.path.exists(ts_path) else None
+
+        obs_mask_path = os.path.join(data_dir, "v2_obs_mask.npy")
+        self.has_obs_mask = os.path.exists(obs_mask_path)
+        self.obs_mask = np.load(obs_mask_path, mmap_mode="r") if self.has_obs_mask else None
 
         rain_path   = os.path.join(data_dir, "v2_station_rain.npy")
         mask_path   = os.path.join(data_dir, "v2_station_mask.npy")
@@ -53,7 +62,8 @@ class ReservoirDataset(Dataset):
         print(
             f"ReservoirDataset({data_dir}): {len(self):,} samples | "
             f"hindcast={self.X_hind.shape[1]}h | forecast={self.y.shape[1]}h | "
-            f"station_attention_data={'ON' if self.has_station_data else 'OFF'}"
+            f"station_attention_data={'ON' if self.has_station_data else 'OFF'} | "
+            f"obs_mask={'ON (' + f'{self.obs_mask.mean()*100:.1f}%' + ' nhãn thật)' if self.has_obs_mask else 'OFF (coi mọi giờ là thật)'}"
         )
 
     def __len__(self) -> int:
@@ -76,4 +86,9 @@ class ReservoirDataset(Dataset):
             station_rain = torch.zeros(T_h, self.max_stations, dtype=torch.float32)
             station_mask = torch.zeros(T_h, self.max_stations, dtype=torch.bool)
 
-        return x_hind, x_nwp, y_t, station_rain, station_mask
+        if self.has_obs_mask:
+            obs_mask = torch.from_numpy(np.array(self.obs_mask[idx], copy=False)).bool()
+        else:
+            obs_mask = torch.ones(y_t.shape[0], dtype=torch.bool)
+
+        return x_hind, x_nwp, y_t, station_rain, station_mask, obs_mask

@@ -135,8 +135,8 @@ def build_notebook() -> dict:
 
     cells.append(md("## Build dataset 1 lần duy nhất + helper"))
     cells.append(code("""
-    X_all, y_all, rid_all, ts_all = build_tabular_dataset()
-    DATA_ALL = (X_all, y_all, rid_all, ts_all)
+    X_all, y_all, rid_all, ts_all, mask_all = build_tabular_dataset()
+    DATA_ALL = (X_all, y_all, rid_all, ts_all, mask_all)
 
     BASIN_KEY = {"Vu Gia": "VU_GIA", "Thu Bồn": "THU_BON"}
 
@@ -169,7 +169,7 @@ def build_notebook() -> dict:
         basin_own = own_basin(rid)
 
         for season in SEASONS:
-            X_s, y_s, _, ts_s = filter_by_rids(X_all, y_all, rid_all, ts_all, [rid])
+            X_s, y_s, _, ts_s, mask_s = filter_by_rids(X_all, y_all, rid_all, ts_all, mask_all, [rid])
 
             if b_own and SOURCE_ROOT:
                 branch_art_dir = f"{SOURCE_ROOT}/artifacts/xgb_branch/{season_group(b_own, season)}"
@@ -178,7 +178,8 @@ def build_notebook() -> dict:
                     print(f"\\n>>> PHA 4 - FINE-TUNE {info['name']} từ nhánh {b_own} | MÙA {season.upper()}")
                     init_boosters = load_boosters(branch_art_dir)
                     train_xgb_dataset(X_s, y_s, ts_s, ft_art_dir, season=season,
-                                       init_boosters=init_boosters, num_boost_round=300, early_stopping_rounds=30)
+                                       init_boosters=init_boosters, num_boost_round=300, early_stopping_rounds=30,
+                                       obs_mask=mask_s)
 
             if basin_own and SOURCE_ROOT:
                 bkey = BASIN_KEY[basin_own]
@@ -188,7 +189,8 @@ def build_notebook() -> dict:
                     print(f"\\n>>> PHA 4 - FINE-TUNE {info['name']} từ lưu vực {basin_own} | MÙA {season.upper()}")
                     init_boosters = load_boosters(basin_art_dir)
                     train_xgb_dataset(X_s, y_s, ts_s, ft_art_dir, season=season,
-                                       init_boosters=init_boosters, num_boost_round=300, early_stopping_rounds=30)
+                                       init_boosters=init_boosters, num_boost_round=300, early_stopping_rounds=30,
+                                       obs_mask=mask_s)
     """))
     cells.append(code("""
     for rid, info in RESERVOIRS.items():
