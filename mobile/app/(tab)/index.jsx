@@ -28,6 +28,8 @@ import { saveCache, loadCache } from "@/lib/offlineCache";
 import i18n from "@/lib/i18n";
 
 const GMAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+// Overpass từ chối (406/429) request không có User-Agent định danh
+const OVERPASS_UA = "NCKH-FloodWarning/1.0 (Vu Gia - Thu Bon flood warning)";
 
 const DESC_VI = {
   "clear sky": "Quang đãng", "few clouds": "Ít mây", "scattered clouds": "Mây rải rác",
@@ -186,7 +188,7 @@ async function fetchBuildingsFromOverpassGet(lat, lng) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 20000);
     
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": OVERPASS_UA } });
     clearTimeout(timer);
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("json")) {
@@ -369,7 +371,7 @@ export default function HomeScreen() {
 
     // ── Primary: Backend proxy (gọi Overpass server-side, không bị rate limit) ──
     const proxyCtrl = new AbortController();
-    const proxyTimer = setTimeout(() => proxyCtrl.abort(), 25000);
+    const proxyTimer = setTimeout(() => proxyCtrl.abort(), 40000);
     try {
       const r = await fetch(
         `${API_URL}/api/buildings?lat=${lat}&lng=${lng}&radius=3000`,
@@ -435,7 +437,7 @@ export default function HomeScreen() {
       try {
         const res = await fetch(endpoint, {
           method:  "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": OVERPASS_UA },
           body:    `data=${encodeURIComponent(query)}`,
           signal:  ctrl.signal,
         });

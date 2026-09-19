@@ -368,33 +368,55 @@ app.get('/api/test-govapi', async (req, res) => {
 });
 
 // 🏢 Proxy: Lấy tòa nhà cao qua Overpass (server-side, không bị rate limit mobile)
+// Overpass từ chối (HTTP 406/429) mọi request dùng User-Agent mặc định của axios/okhttp —
+// bắt buộc gửi User-Agent định danh (chính sách sử dụng của Overpass), nếu không API luôn
+// trả [] vì tất cả mirror thất bại.
+const OVERPASS_UA = 'NCKH-FloodWarning/1.0 (Vu Gia - Thu Bon flood warning; contact: annguyen14032004@gmail.com)';
+const BUILDINGS_CACHE = new Map(); // key "lat2,lng2,radius" → { at, data }
+const BUILDINGS_TTL_MS = 6 * 60 * 60 * 1000; // dữ liệu công trình gần như không đổi
+
 app.get('/api/buildings', async (req, res) => {
-    const { lat, lng, radius = 3000 } = req.query;
-    if (!lat || !lng) return res.status(400).json({ error: 'Thiếu lat/lng' });
+    const { lat, lng } = req.query;
+    const radius = Math.min(Number(req.query.radius) || 3000, 5000);
+    const latN = Number(lat), lngN = Number(lng);
+    if (!Number.isFinite(latN) || !Number.isFinite(lngN)) return res.status(400).json({ error: 'Thiếu hoặc sai lat/lng' });
+
+    const cacheKey = `${latN.toFixed(2)},${lngN.toFixed(2)},${radius}`;
+    const hit = BUILDINGS_CACHE.get(cacheKey);
+    if (hit && Date.now() - hit.at < BUILDINGS_TTL_MS) return res.json(hit.data);
 
     const query =
-        `[out:json][timeout:20];` +
+        `[out:json][timeout:25];` +
         `(` +
-        `way["building"]["name"](around:${radius},${lat},${lng});` +
-        `way["building:levels"](around:${radius},${lat},${lng});` +
-        `way["tourism"="hotel"](around:${radius},${lat},${lng});` +
-        `relation["building"]["name"](around:${radius},${lat},${lng});` +
-        `);out center tags 30;`;
+        `way["building"]["building:levels"~"^([5-9]|[1-9][0-9]+)$"](around:${radius},${latN},${lngN});` +
+        `way["building"]["height"](around:${radius},${latN},${lngN});` +
+        `way["building"]["name"](around:${radius},${latN},${lngN});` +
+        `way["tourism"="hotel"](around:${radius},${latN},${lngN});` +
+        `relation["building"]["name"](around:${radius},${latN},${lngN});` +
+        `);out center tags 300;`;
 
     const MIRRORS = [
         'https://overpass-api.de/api/interpreter',
         'https://z.overpass-api.de/api/interpreter',
         'https://lz4.overpass-api.de/api/interpreter',
+        'https://overpass.private.coffee/api/interpreter',
     ];
 
+    const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
     let buildings = [];
+    let lastError = null;
+    let anyMirrorAnswered = false;
     for (const mirror of MIRRORS) {
         try {
             const { data } = await axios.post(
                 mirror,
                 `data=${encodeURIComponent(query)}`,
-                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 20000 }
+                {
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': OVERPASS_UA },
+                    timeout: 30000,
+                }
             );
+            anyMirrorAnswered = true;
             const parsed = (data.elements || [])
                 .filter(el => el.center || (el.lat != null && el.lon != null))
                 .map(el => ({
@@ -406,17 +428,23 @@ app.get('/api/buildings', async (req, res) => {
                     height:       el.tags?.height || null,
                     buildingType: el.tags?.building || el.tags?.tourism || null,
                 }))
-                .filter(b => b.lat && b.lng);
+                .filter(b => b.lat && b.lng)
+                // Ưu tiên nhà cao nhất (số tầng, rồi chiều cao) — app chỉ hiển thị vài chục toà gần nhất
+                .sort((a, b) => (num(b.levels) - num(a.levels)) || (num(b.height) - num(a.height)))
+                .slice(0, 60);
 
-            if (parsed.length > 0) {
-                buildings = parsed;
-                console.log(`[Buildings API] ${mirror.split('/')[2]}: ${buildings.length} kết quả`);
-                break;
-            }
+            console.log(`[Buildings API] ${mirror.split('/')[2]}: ${parsed.length} kết quả`);
+            buildings = parsed;
+            break; // mirror đã trả lời hợp lệ — kể cả rỗng (khu vực thật sự không có dữ liệu)
         } catch (e) {
+            lastError = e;
             console.log(`[Buildings API] ${mirror.split('/')[2]} thất bại: ${e.message}`);
         }
     }
+
+    // Chỉ cache khi có mirror trả lời — không cache kết quả do lỗi mạng/rate-limit
+    if (anyMirrorAnswered) BUILDINGS_CACHE.set(cacheKey, { at: Date.now(), data: buildings });
+    else console.error(`[Buildings API] tất cả mirror thất bại: ${lastError?.message}`);
 
     res.json(buildings);
 });
