@@ -10,19 +10,21 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSignUp, useAuth, SignedOut } from "@clerk/clerk-expo";
+import { useSignUp, useAuth } from "@clerk/clerk-expo";
 import { API_URL } from "@/lib/env";
 import { useState } from "react";
 import { authStyles } from "../../assets/styles/auth.styles.js";
 import { Image } from "expo-image";
 import { COLORS } from "../../constants/colors.js";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import VerifyEmail from "./verify-email.jsx";
 
 const SignUpScreen = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isLoaded, signUp } = useSignUp();
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn, signOut } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,29 +36,28 @@ const SignUpScreen = () => {
 
   const handleSignUp = async () => {
     if (!email || !password || !name || !phone) {
-      return Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin.");
+      return Alert.alert(t("common.error"), t("auth.signUp.fillAllFields"));
     }
     if (password.length < 8) {
-      return Alert.alert("Lỗi", "Mật khẩu phải từ 8 ký tự trở lên.");
+      return Alert.alert(t("common.error"), t("auth.signUp.passwordTooShort"));
     }
     if (!/[A-Z]/.test(password)) {
-      return Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 1 kí tự in hoa");
+      return Alert.alert(t("common.error"), t("auth.signUp.passwordNeedUpper"));
     }
     if (!/[0-9]/.test(password)) {
-      return Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 1 kí tự chữ số");
+      return Alert.alert(t("common.error"), t("auth.signUp.passwordNeedDigit"));
     }
     if (phone.length != 10) {
-      return Alert.alert("Lỗi", "Số điện thoại nhập phải đủ 10 chữ số. Vui lòng nhập lại");
+      return Alert.alert(t("common.error"), t("auth.signUp.phoneInvalid"));
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return Alert.alert("Lỗi", "Email không đúng. Vui lòng nhập lại email"
-      );
+      return Alert.alert(t("common.error"), t("auth.signUp.emailInvalid"));
     }
     if (!isLoaded) return;
     try {
       if (isSignedIn) {
-        await SignedOut();
+        await signOut();
       }
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
@@ -68,7 +69,7 @@ const SignUpScreen = () => {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
     } catch (err) {
-      Alert.alert("Lỗi", err.errors?.[0]?.message || "Đăng ký thất bại.");
+      Alert.alert(t("common.error"), err.errors?.[0]?.message || t("auth.signUp.signUpFailed"));
       console.error(JSON.stringify(err, null, 2));
     } finally {
       setLoading(false);
@@ -124,13 +125,13 @@ const SignUpScreen = () => {
             />
           </View>
 
-          <Text style={authStyles.title}>Tạo Tài Khoản</Text>
+          <Text style={authStyles.title}>{t("auth.signUp.title")}</Text>
 
           <View style={authStyles.formContainer}>
             <View style={authStyles.inputContainer}>
               <TextInput
                 style={authStyles.textInput}
-                placeholder="Họ và tên (Ex:Nguyễn Văn A)"
+                placeholder={t("auth.signUp.namePlaceholder")}
                 placeholderTextColor={COLORS.textLight}
                 value={name}
                 onChangeText={setName}
@@ -140,7 +141,7 @@ const SignUpScreen = () => {
             <View style={authStyles.inputContainer}>
               <TextInput
                 style={authStyles.textInput}
-                placeholder="Số điện thoại (Ex:0123456789)"
+                placeholder={t("auth.signUp.phonePlaceholder")}
                 placeholderTextColor={COLORS.textLight}
                 value={phone}
                 onChangeText={setPhone}
@@ -151,7 +152,7 @@ const SignUpScreen = () => {
             <View style={authStyles.inputContainer}>
               <TextInput
                 style={authStyles.textInput}
-                placeholder="Email (Ex:abc@gmail.com)"
+                placeholder={t("auth.signUp.emailPlaceholder")}
                 placeholderTextColor={COLORS.textLight}
                 value={email}
                 onChangeText={setEmail}
@@ -163,7 +164,7 @@ const SignUpScreen = () => {
             <View style={authStyles.inputContainer}>
               <TextInput
                 style={authStyles.textInput}
-                placeholder="Mật khẩu (Ex:Abcd1234)"
+                placeholder={t("auth.signUp.passwordPlaceholder")}
                 placeholderTextColor={COLORS.textLight}
                 value={password}
                 onChangeText={setPassword}
@@ -187,13 +188,13 @@ const SignUpScreen = () => {
               disabled={loading}
             >
               <Text style={authStyles.buttonText}>
-                {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
+                {loading ? t("auth.signUp.creating") : t("auth.signUp.signUp")}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={authStyles.linkContainer} onPress={() => router.back()}>
               <Text style={authStyles.linkText}>
-                Đã có tài khoản? <Text style={authStyles.link}>Đăng nhập</Text>
+                {t("auth.signUp.haveAccount")} <Text style={authStyles.link}>{t("auth.signUp.signIn")}</Text>
               </Text>
             </TouchableOpacity>
           </View>

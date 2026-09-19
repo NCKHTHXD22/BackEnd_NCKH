@@ -7,7 +7,9 @@ import AnimatedSplash from "@/components/AnimatedSplash";
 import { useState, useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { usePushNotifications } from "../lib/pushNotifications";
+import { getPushEnabled } from "../lib/notificationPrefs";
 import { API_URL } from "../lib/env";
+import "../lib/i18n"; // khởi tạo i18next sớm nhất — trước khi màn hình nào render
 
 // Giữ native splash cho đến khi sẵn sàng
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +24,10 @@ function PushTokenSync({ expoPushToken }) {
 
     (async () => {
       try {
+        // Tôn trọng lựa chọn tắt thông báo của người dùng trong Profile —
+        // trước đây bỏ qua hoàn toàn, luôn tự đăng ký lại mỗi lần mở app.
+        const enabled = await getPushEnabled();
+        if (!enabled) return;
         const authToken = await getToken();
         await fetch(`${API_URL}/api/users/push-token`, {
           method: "PATCH",

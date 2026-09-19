@@ -459,7 +459,9 @@ export default function FloodHistoryTraining({ lakeId, lakeData }) {
         setEvalLoading(false);
     }, [fetchHistory, fetchRainByLabel]);
 
-    useEffect(() => { loadHistData(); }, []);
+    // loadHistData phụ thuộc lakeId (qua fetchHistory) — deps rỗng trước đây
+    // khiến đổi hồ không load lại, biểu đồ Lịch sử giữ nguyên dữ liệu hồ cũ.
+    useEffect(() => { loadHistData(); }, [loadHistData]);
 
     // ── Fetch mưa dự báo Open-Meteo khi lakeId thay đổi ──────────────────────
     useEffect(() => {

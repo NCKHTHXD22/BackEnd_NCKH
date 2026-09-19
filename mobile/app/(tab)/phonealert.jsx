@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 const EMERGENCY_CONTACTS = [
   {
@@ -25,14 +26,19 @@ const EMERGENCY_CONTACTS = [
     phone: "02363821884",
   },
   {
+    // "02361022" (8 số) gần chắc là lỗi nhập liệu — 3 số khác trong danh sách
+    // đều 11 số. "1022" là tổng đài mã ngắn công khai của Trung tâm IOC Đà
+    // Nẵng (không cần mã vùng, khác số cố định thường). CẦN người phụ trách
+    // xác nhận lại trước khi phát hành — không tự suy đoán thêm.
     name: "Trung tâm IOC",
-    phone: "02361022",
+    phone: "1022",
   },
 ];
 
 export default function PhoneAlertScreen() {
   const { signOut } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleCall = (phoneNumber) => {
     const url = `tel:${phoneNumber}`;
@@ -54,7 +60,7 @@ export default function PhoneAlertScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>SỐ ĐIỆN THOẠI KHẨN CẤP</Text>
+        <Text style={styles.title}>{t("phonealert.title")}</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
           <Ionicons name="log-out-outline" size={24} color="red" />
         </TouchableOpacity>

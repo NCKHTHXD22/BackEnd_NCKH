@@ -140,6 +140,7 @@
     "reason_warning_85": "Reservoir reaches >85% capacity — monitor closely",
     "reason_low": "Reservoir at low level, inflow is small",
     "reason_ok": "Normal operation",
+    "forecastUnavailable": "The {{model}} model is currently unavailable — this does not mean there is no risk",
     "detail_danger": "HTL={{htl}}m ≥ MNGC={{mngc}}m. Open all spillways, Q_discharge ≥ {{qRec}} m³/s.",
     "detail_warning_mndbt": "HTL={{htl}}m ≥ MNDBT={{mndbt}}m. Maintain {{qRec}} m³/s for flood mitigation. Forecast Q_in: ~{{qPeak}} m³/s.",
     "detail_warning_85": "Reservoir at {{fill}}% capacity. Maintain discharge {{qRec}} m³/s.",
@@ -391,7 +392,7 @@
     "submitBtn": "Submit",
     "submitting": "Submitting...",
     "successTitle": "Submitted successfully!",
-    "successDetail": "Thank you for your report — it will be reviewed shortly.",
+    "successDetail": "Thank you for your report. It has been received and will appear on the map once an admin approves it (or immediately if AI confirms the flood level).",
     "close": "Close",
     "genericError": "Submission failed — please try again later."
   },

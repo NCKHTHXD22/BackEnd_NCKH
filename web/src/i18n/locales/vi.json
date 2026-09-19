@@ -140,6 +140,7 @@
     "reason_warning_85": "Hồ đạt >85% dung tích — theo dõi chặt",
     "reason_low": "Hồ ở mức thấp, lưu lượng vào nhỏ",
     "reason_ok": "Vận hành bình thường",
+    "forecastUnavailable": "Mô hình {{model}} đang gián đoạn, không lấy được dự báo mới — không phải không có nguy cơ",
     "detail_danger": "HTL={{htl}}m ≥ MNGC={{mngc}}m. Mở toàn bộ cửa xả, Q_xả ≥ {{qRec}} m³/s.",
     "detail_warning_mndbt": "HTL={{htl}}m ≥ MNDBT={{mndbt}}m. Duy trì {{qRec}} m³/s để phòng lũ. Dự báo Q_đến: ~{{qPeak}} m³/s.",
     "detail_warning_85": "Hồ đã tích {{fill}}% dung tích. Duy trì xả {{qRec}} m³/s.",
@@ -391,7 +392,7 @@
     "submitBtn": "Gửi thông tin",
     "submitting": "Đang gửi...",
     "successTitle": "Gửi thành công!",
-    "successDetail": "Cảm ơn bạn đã đóng góp thông tin — báo cáo sẽ được xem xét sớm.",
+    "successDetail": "Cảm ơn bạn đã đóng góp thông tin. Báo cáo đã được ghi nhận và sẽ hiện trên bản đồ sau khi Admin xét duyệt (hoặc ngay lập tức nếu AI xác nhận được mức ngập).",
     "close": "Đóng",
     "genericError": "Gửi thông tin thất bại — vui lòng thử lại sau."
   },

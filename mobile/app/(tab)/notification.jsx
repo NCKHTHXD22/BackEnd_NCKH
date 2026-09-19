@@ -14,19 +14,22 @@ import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import * as Location from "expo-location";
 import { useAuth } from "@clerk/clerk-expo";
+import { useTranslation } from "react-i18next";
 import { API_URL as BASE_URL } from "@/lib/env";
+import i18n from "@/lib/i18n";
 
 const NOTIF_URL = `${BASE_URL}/api/notifications`;
 const HELP_URL  = `${BASE_URL}/api/help`;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+// Dùng i18n.t() trực tiếp (không phải hook) vì các hàm này nằm ngoài component
 function timeAgo(date) {
   if (!date) return "";
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (s < 60)    return "Vừa xong";
-  if (s < 3600)  return `${Math.floor(s / 60)} phút trước`;
-  if (s < 86400) return `${Math.floor(s / 3600)} giờ trước`;
-  return `${Math.floor(s / 86400)} ngày trước`;
+  if (s < 60)    return i18n.t("notification.justNow");
+  if (s < 3600)  return i18n.t("notification.minutesAgo", { count: Math.floor(s / 60) });
+  if (s < 86400) return i18n.t("notification.hoursAgo", { count: Math.floor(s / 3600) });
+  return i18n.t("notification.daysAgo", { count: Math.floor(s / 86400) });
 }
 
 function cloudinaryThumb(url) {
@@ -36,11 +39,12 @@ function cloudinaryThumb(url) {
 
 // ─── Card: Yêu cầu hỗ trợ gần bạn ────────────────────────────────────────────
 function HelpCard({ item }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const addr = item.address
     ? `${item.address.street}, ${item.address.ward}, ${item.address.province}`
-    : "Chưa có địa chỉ";
-  const userName = item.user?.name || "Người dùng";
+    : t("notification.noAddress");
+  const userName = item.user?.name || t("notification.anonymousUser");
   const imgs = (item.imageUrls || []).slice(0, 2);
 
   return (
@@ -100,7 +104,7 @@ function HelpCard({ item }) {
       {/* What3Words nếu có */}
       {expanded && item.what3words && (
         <View style={styles.w3wRow}>
-          <Text style={styles.w3wIcon}>///</Text>
+          <Text style={styles.w3wIcon}>{"///"}</Text>
           <Text style={styles.w3wText}>{item.what3words}</Text>
         </View>
       )}
@@ -110,14 +114,15 @@ function HelpCard({ item }) {
 
 // ─── Card: Thông báo cá nhân ───────────────────────────────────────────────
 const TYPE_META = {
-  post_approved: { icon: "checkmark-circle", color: "#2E7D32", bg: "#E8F5E9", label: "Bài đăng" },
-  post_rejected: { icon: "close-circle",     color: "#C62828", bg: "#FFEBEE", label: "Bài đăng" },
+  post_approved: { icon: "checkmark-circle", color: "#2E7D32", bg: "#E8F5E9", labelKey: "notification.typePost" },
+  post_rejected: { icon: "close-circle",     color: "#C62828", bg: "#FFEBEE", labelKey: "notification.typePost" },
 };
 function getMeta(type) {
-  return TYPE_META[type] || { icon: "notifications", color: "#455A64", bg: "#ECEFF1", label: "Hệ thống" };
+  return TYPE_META[type] || { icon: "notifications", color: "#455A64", bg: "#ECEFF1", labelKey: "notification.typeSystem" };
 }
 
 function NotifCard({ item, onRead }) {
+  const { t } = useTranslation();
   const m = getMeta(item.type);
   return (
     <TouchableOpacity
@@ -130,7 +135,7 @@ function NotifCard({ item, onRead }) {
       </View>
       <View style={styles.cardBody}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardLabel}>{m.label}</Text>
+          <Text style={styles.cardLabel}>{t(m.labelKey)}</Text>
           {!item.read && <View style={styles.unreadDot} />}
           <Text style={styles.cardTime}>{timeAgo(item.createdAt)}</Text>
         </View>
@@ -143,6 +148,7 @@ function NotifCard({ item, onRead }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Notification() {
+  const { t } = useTranslation();
   const { getToken, isSignedIn } = useAuth();
   const [tab, setTab] = useState("nearby"); // "nearby" | "personal"
 
@@ -240,11 +246,11 @@ export default function Notification() {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Thông báo</Text>
+        <Text style={styles.headerTitle}>{t("notification.title")}</Text>
         {helpRequests.length > 0 && (
           <View style={styles.urgentBadge}>
             <Ionicons name="hand-left" size={12} color="white" />
-            <Text style={styles.urgentText}>{helpRequests.length} cần giúp</Text>
+            <Text style={styles.urgentText}>{t("notification.needHelpCount", { count: helpRequests.length })}</Text>
           </View>
         )}
       </View>
@@ -260,7 +266,7 @@ export default function Notification() {
             color={tab === "nearby" ? "#C62828" : "#78909C"}
           />
           <Text style={[styles.tabText, tab === "nearby" && styles.tabTextActive]}>
-            Gần tôi {helpRequests.length > 0 ? `(${helpRequests.length})` : ""}
+            {t("notification.tabNearby")} {helpRequests.length > 0 ? `(${helpRequests.length})` : ""}
           </Text>
         </TouchableOpacity>
 
@@ -273,7 +279,7 @@ export default function Notification() {
             color={tab === "personal" ? "#1565C0" : "#78909C"}
           />
           <Text style={[styles.tabText, tab === "personal" && styles.tabTextActive]}>
-            Của tôi {unreadCount > 0 ? `(${unreadCount})` : ""}
+            {t("notification.tabPersonal")} {unreadCount > 0 ? `(${unreadCount})` : ""}
           </Text>
         </TouchableOpacity>
       </View>
@@ -283,15 +289,15 @@ export default function Notification() {
         locError ? (
           <View style={styles.emptyWrap}>
             <Ionicons name="location-off-outline" size={52} color="#90A4AE" />
-            <Text style={styles.emptyTitle}>Không lấy được vị trí</Text>
+            <Text style={styles.emptyTitle}>{t("notification.locationOffTitle")}</Text>
             <Text style={styles.emptySubtitle}>
-              Vui lòng cho phép ứng dụng truy cập GPS để xem yêu cầu hỗ trợ gần bạn
+              {t("notification.locationOffSub")}
             </Text>
           </View>
         ) : !locationReady ? (
           <View style={styles.emptyWrap}>
             <ActivityIndicator size="large" color="#C62828" />
-            <Text style={[styles.emptySubtitle, { marginTop: 12 }]}>Đang xác định vị trí...</Text>
+            <Text style={[styles.emptySubtitle, { marginTop: 12 }]}>{t("notification.locating")}</Text>
           </View>
         ) : loadingHelp ? (
           <ActivityIndicator size="large" color="#C62828" style={{ marginTop: 40 }} />
@@ -305,9 +311,9 @@ export default function Notification() {
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
                 <Ionicons name="checkmark-circle-outline" size={52} color="#4CAF50" />
-                <Text style={styles.emptyTitle}>Không có yêu cầu hỗ trợ</Text>
+                <Text style={styles.emptyTitle}>{t("notification.noHelpTitle")}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Không có ai cần giúp đỡ trong vòng 5km quanh bạn
+                  {t("notification.noHelpSub")}
                 </Text>
               </View>
             }
@@ -320,9 +326,9 @@ export default function Notification() {
         !isSignedIn ? (
           <View style={styles.emptyWrap}>
             <Ionicons name="lock-closed-outline" size={52} color="#90A4AE" />
-            <Text style={styles.emptyTitle}>Chưa đăng nhập</Text>
+            <Text style={styles.emptyTitle}>{t("notification.notSignedInTitle")}</Text>
             <Text style={styles.emptySubtitle}>
-              Đăng nhập để xem thông báo cá nhân của bạn
+              {t("notification.notSignedInSub")}
             </Text>
           </View>
         ) : loadingPersonal ? (
@@ -337,8 +343,8 @@ export default function Notification() {
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
                 <Ionicons name="notifications-off-outline" size={52} color="#90A4AE" />
-                <Text style={styles.emptyTitle}>Không có thông báo</Text>
-                <Text style={styles.emptySubtitle}>Bạn chưa có thông báo nào</Text>
+                <Text style={styles.emptyTitle}>{t("notification.noNotifTitle")}</Text>
+                <Text style={styles.emptySubtitle}>{t("notification.noNotifSub")}</Text>
               </View>
             }
           />

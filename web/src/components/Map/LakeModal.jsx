@@ -162,6 +162,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
 
     // Fetch real data on load and when switching to forecast
     useEffect(() => {
+        let cancelled = false;
         const fetchData = async () => {
             if (!lakeId) return;
             try {
@@ -169,6 +170,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     mapApi.getInflowHistory(lakeId).catch(() => []),
                     mapApi.getRainLakeHistory(lakeId).catch(() => []),
                 ]);
+                if (cancelled) return;
                 setRealHistoryData(history);
                 setRainLakeHistory(Array.isArray(rainHistory) ? rainHistory : []);
 
@@ -176,16 +178,21 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     if (forecastView === 'ensemble') {
                         // Nạp song song mọi mô hình để so sánh trên cùng trục thời gian
                         const results = await Promise.all(MODELS.map(m => fetchForecastFor(m.id)));
+                        if (cancelled) return;
                         setEnsembleData(Object.fromEntries(MODELS.map((m, i) => [m.id, results[i]])));
                     } else {
-                        setRealForecastData(await fetchForecastFor(selectedModel));
+                        const fc = await fetchForecastFor(selectedModel);
+                        if (cancelled) return;
+                        setRealForecastData(fc);
                     }
                 }
             } catch (err) {
+                if (cancelled) return;
                 console.error("❌ Error fetching real data:", err);
             }
         };
         fetchData();
+        return () => { cancelled = true; };
     }, [lakeId, activeTab, selectedModel, selectedRainSource, forecastView]);
 
     if (!lakeId || !lakeData) return null;
@@ -375,19 +382,20 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     ), 0);
     const rainAxisMax = Math.max(10, Math.ceil((maxRainValue * 1.25) / 5) * 5);
 
-    // Run model simulation
+    // Làm mới dự báo theo yêu cầu người dùng (nút "Chạy mô hình"). Không còn
+    // setTimeout giả 1500ms — trạng thái loading phản ánh đúng thời gian fetch
+    // thật thay vì một hiệu ứng cố định không liên quan tới kết quả.
     const handleRunModel = async () => {
         setIsRunning(true);
         try {
-            // Try to fetch real forecast data
             const predictions = await fetchForecastFor(selectedModel);
             setRealForecastData(predictions); // Update the state used by unifiedData
             setForecastResults(predictions.length > 0 ? predictions : null);
         } catch (err) {
             console.error("Error running model:", err);
+        } finally {
+            setIsRunning(false);
         }
-        // Simulate processing time
-        setTimeout(() => { setIsRunning(false); }, 1500);
     };
 
     const isAdmin = !!getAdminToken();

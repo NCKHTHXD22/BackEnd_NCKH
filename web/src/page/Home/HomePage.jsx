@@ -310,7 +310,7 @@ export default function HomePage() {
                             <Marker key={`wl-${index}`} position={[lat, lng]}>
                                 <Popup>
                                     <strong>{t('map.waterLevelStation')} {station.name || t('map.noName')}</strong><br />
-                                    {t('map.waterLevel')} {station.waterLevel || 0} m
+                                    {t('map.waterLevel')} {station.level || 0} m
                                 </Popup>
                             </Marker>
                         )
@@ -318,8 +318,10 @@ export default function HomePage() {
 
                     {/* Rendering Reservoirs */}
                     {showReservoirLayer && reservoirs.map((res, index) => {
-                        let lat = res.location?.lat || res.lat;
-                        let lng = res.location?.lng || res.lng || res.lon;
+                        // Schema InflowLake không có location.lat/lng (chỉ có location.coordinates
+                        // dạng GeoJSON [lon, lat] + field top-level lat/lon) — ưu tiên field thật.
+                        let lat = res.lat ?? res.location?.coordinates?.[1];
+                        let lng = res.lon ?? res.location?.coordinates?.[0];
                         const resConfig = RESERVOIRS[res.Id_Lake] || Object.values(RESERVOIRS).find(r => r.name.toLowerCase() === res.Lake_Name?.toLowerCase() || r.name.toLowerCase() === res.name?.toLowerCase());
                         if (resConfig) {
                             lat = resConfig.lat;

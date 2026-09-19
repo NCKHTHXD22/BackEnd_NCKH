@@ -9,10 +9,12 @@ import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useAuth } from "@clerk/clerk-expo";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import { API_URL } from "@/lib/env";
 
 
 export default function HelpRequestScreen() {
+  const { t } = useTranslation();
   const { getToken } = useAuth();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -37,7 +39,7 @@ export default function HelpRequestScreen() {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Lỗi", "Bạn cần cấp quyền truy cập vị trí để sử dụng tính năng bản đồ.");
+        Alert.alert(t("common.error"), t("help.locationPermissionError"));
         return;
       }
       const currentLocation = await Location.getCurrentPositionAsync({});
@@ -51,26 +53,28 @@ export default function HelpRequestScreen() {
   }, []);
 
   const handlePickImage = async () => {
-    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
-    if (!granted) {
-      Alert.alert("Bạn cần cấp quyền truy cập máy ảnh");
-      return;
-    }
-
-    Alert.alert("Thêm hình ảnh", "Bạn muốn chọn ảnh từ thư viện hay chụp ảnh mới?", [
+    // Chỉ xin quyền Camera khi người dùng thực sự chọn "Chụp ảnh" — trước
+    // đây xin ngay từ đầu khiến từ chối Camera cũng chặn luôn việc chọn ảnh
+    // từ thư viện (không hề cần quyền Camera).
+    Alert.alert(t("help.addImageTitle"), t("help.addImageMessage"), [
       {
-        text: "Chụp ảnh",
+        text: t("help.takePhoto"),
         onPress: async () => {
+          const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+          if (!granted) {
+            Alert.alert(t("help.cameraPermissionError"));
+            return;
+          }
           const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
           if (!result.canceled) setImages([...images, result.assets[0]]);
         },
       },
       {
-        text: "Chọn từ thư viện",
+        text: t("help.pickFromLibrary"),
         onPress: async () => {
           const { granted: mediaGranted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (!mediaGranted) {
-            Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh");
+            Alert.alert(t("help.libraryPermissionError"));
             return;
           }
           const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.5, allowsMultipleSelection: true });
@@ -79,7 +83,7 @@ export default function HelpRequestScreen() {
           }
         },
       },
-      { text: "Hủy", style: "cancel" },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -122,15 +126,15 @@ export default function HelpRequestScreen() {
 
     const newErrors = {};
     let missingFields = [];
-    if (!name) { newErrors.name = true; missingFields.push("- Họ tên"); }
-    if (!phone) { newErrors.phone = true; missingFields.push("- Số điện thoại"); }
-    if (!address.ward) { newErrors.ward = true; missingFields.push("- Phường/Xã"); }
-    if (!description) { newErrors.description = true; missingFields.push("- Nội dung cần hỗ trợ"); }
+    if (!name) { newErrors.name = true; missingFields.push(t("help.missingName")); }
+    if (!phone) { newErrors.phone = true; missingFields.push(t("help.missingPhone")); }
+    if (!address.ward) { newErrors.ward = true; missingFields.push(t("help.missingWard")); }
+    if (!description) { newErrors.description = true; missingFields.push(t("help.missingDescription")); }
 
     setErrors(newErrors);
 
     if (missingFields.length > 0) {
-      Alert.alert("Thiếu thông tin:", missingFields.join("\n"));
+      Alert.alert(t("help.missingFieldsTitle"), missingFields.join("\n"));
       return;
     }
 
@@ -157,11 +161,11 @@ export default function HelpRequestScreen() {
           Authorization: `Bearer ${token}`,
         },
       });
-      Alert.alert("✅ Thành công", "Yêu cầu cứu trợ đã được gửi.");
+      Alert.alert(`✅ ${t("common.success")}`, t("help.submitSuccess"));
       resetForm();
     } catch (error) {
       console.error("Lỗi gửi yêu cầu:", error);
-      Alert.alert("❌ Lỗi", "Không gửi được yêu cầu. Vui lòng thử lại.");
+      Alert.alert(`❌ ${t("common.error")}`, t("help.submitError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -170,20 +174,20 @@ export default function HelpRequestScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Yêu cầu trợ giúp</Text>
-        <Text style={styles.title}>Khuyến cáo: Khai báo thông tin sai là vi phạm pháp luật Việt Nam và có thể bị xử lý hình sự</Text>
-        <Text style={styles.label}>🧍 Họ tên</Text>
+        <Text style={styles.title}>{t("help.title")}</Text>
+        <Text style={styles.title}>{t("help.legalNotice")}</Text>
+        <Text style={styles.label}>{t("help.nameLabel")}</Text>
         <TextInput style={[styles.input, errors.name && { borderColor: 'red' }]} value={name} onChangeText={setName} />
 
-        <Text style={styles.label}>📞 Số điện thoại</Text>
+        <Text style={styles.label}>{t("help.phoneLabel")}</Text>
         <TextInput style={[styles.input, errors.phone && { borderColor: 'red' }]} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
-        <Text style={styles.label}>🏠 Địa chỉ</Text>
+        <Text style={styles.label}>{t("help.addressLabel")}</Text>
         <TextInput style={styles.input} value={address.province} onChangeText={(text) => setAddress({ ...address, province: text })} />
 
         <View style={{ position: "relative", marginBottom: 1 }}>
           <TextInput
-            placeholder="Phường/Xã *"
+            placeholder={t("help.wardPlaceholder")}
             value={address.ward}
             onChangeText={handleWardChange}
             style={[styles.input, errors.ward && { borderColor: 'red' }]}
@@ -199,15 +203,15 @@ export default function HelpRequestScreen() {
           )}
         </View>
 
-        <TextInput style={styles.input} placeholder="Số nhà, tên đường" value={address.street} onChangeText={(text) => setAddress({ ...address, street: text })} />
+        <TextInput style={styles.input} placeholder={t("help.streetPlaceholder")} value={address.street} onChangeText={(text) => setAddress({ ...address, street: text })} />
 
-        <Text style={styles.label}>📍 What3words (tùy chọn)</Text>
+        <Text style={styles.label}>{t("help.what3wordsLabel")}</Text>
         <TextInput style={styles.input} value={what3words} onChangeText={setWhat3words} />
 
-        <Text style={styles.label}>✏️ Nội dung cần hỗ trợ</Text>
+        <Text style={styles.label}>{t("help.descriptionLabel")}</Text>
         <TextInput style={[styles.input, { height: 100 }, errors.description && { borderColor: 'red' }]} value={description} onChangeText={setDescription} multiline />
 
-        <Text style={styles.label}>🗺️ Chọn vị trí trên bản đồ</Text>
+        <Text style={styles.label}>{t("help.mapLabel")}</Text>
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
@@ -217,11 +221,11 @@ export default function HelpRequestScreen() {
         >
           {location && <Marker coordinate={location} />}
         </MapView>
-        <Text style={styles.label}>🖼️ Hình ảnh minh họa</Text>
+        <Text style={styles.label}>{t("help.imagesLabel")}</Text>
         {/* Ảnh đính kèm */}
         <TouchableOpacity onPress={handlePickImage} style={styles.imagePicker}>
           {images.length === 0 ? (
-            <Text>📷 Thêm hình ảnh</Text>
+            <Text>{t("help.addImage")}</Text>
           ) : (
             <View style={styles.imageGrid}>
               {images.map((img, index) => (
@@ -240,7 +244,7 @@ export default function HelpRequestScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={isSubmitting}>
-          <Text style={styles.submitText}>Gửi yêu cầu trợ giúp</Text>
+          <Text style={styles.submitText}>{t("help.submitBtn")}</Text>
         </TouchableOpacity>
       </ScrollView>
 

@@ -429,6 +429,7 @@ export default function OperationDashboard({ lakeId }) {
     const [latestHydro, setLatestHydro] = useState({ qvao: 0, luuluongxa: 0, htl: 0 });
     const [selectedModel, setSelectedModel] = useState('lstm'); // lstm | arimax | rf
     const [forecastData, setForecastData] = useState([]);   // forecast for the selected model
+    const [forecastError, setForecastError] = useState(null); // non-null = model thật sự lỗi/gián đoạn (khác rỗng-nhưng-ok)
     const [showExplain, setShowExplain] = useState(true);
     const [showRec, setShowRec]       = useState(true);
 
@@ -458,6 +459,7 @@ export default function OperationDashboard({ lakeId }) {
         floodVol: lakeSpec.flood_volume,
         turbines: lakeSpec.turbines,
         capacity: lakeSpec.capacity_mw,
+        maxTurbineFlow: lakeSpec.max_turbine_flow,
     } : getLakeConst(lakeId || selectedReservoir);
     // c === null → hồ chưa có thông số, UI sẽ hiện cảnh báo
 
@@ -479,7 +481,10 @@ export default function OperationDashboard({ lakeId }) {
             qvao: latestHydro.qvao,
             luuluongxa: latestHydro.luuluongxa,
             forecastPeak,
-            lakeConst: getLakeConst(selectedReservoir),
+            // Dùng đúng "c" (ưu tiên lakeSpec từ DB, fallback LAKE_CONSTANTS) —
+            // KHÔNG dùng getLakeConst() riêng vì nó bỏ qua lakeSpec đã fetch,
+            // sinh ngưỡng giả (MNC=0) cho hồ có specs thật trong DB.
+            lakeConst: c,
             t,
         });
         return {
@@ -489,7 +494,7 @@ export default function OperationDashboard({ lakeId }) {
             actions: recFromDB?.actions ?? computed.actions ?? [],
             qRec:    recFromDB?.q_rec ?? computed.qRec ?? 0,
         };
-    }, [recFromDB, latestHydro, forecastPeak, i18n.language]);
+    }, [recFromDB, latestHydro, forecastPeak, i18n.language, lakeSpec, selectedReservoir, lakeId]);
 
     const statusNarrative = useMemo(() =>
         buildStatusNarrative({
@@ -532,6 +537,16 @@ export default function OperationDashboard({ lakeId }) {
     // Lưu lượng môi trường tối thiểu (từ LakeSpec hoặc mặc định 0)
     const minEnvFlow = lakeSpec?.min_env_flow ?? 0;
 
+    // ─── Reset dữ liệu phụ thuộc hồ khi đổi hồ ────────────────────────────────
+    // Tránh hiển thị nhầm specs/công suất/khuyến nghị của hồ trước trong lúc
+    // các fetch mới đang chạy (đặc biệt khi fetch lỗi và .catch nuốt lỗi).
+    useEffect(() => {
+        setLakeSpec(null);
+        setVolumeInfo(null);
+        setPowerInfo(null);
+        setRecFromDB(null);
+    }, [lakeId, selectedReservoir]);
+
     // ─── Fetch all reservoirs (if no lakeId locked) ───────────────────────────
     useEffect(() => {
         if (lakeId) return;
@@ -552,9 +567,11 @@ export default function OperationDashboard({ lakeId }) {
         const id = lakeId || selectedReservoir;
         if (!id) return;
 
+        let cancelled = false;
         const fetchHydro = async () => {
             try {
                 const data = await mapApi.getLiveHydro(id);
+                if (cancelled) return;
                 setLatestHydro({
                     qvao: data.qvao || 0,
                     luuluongxa: data.luuluongxa || 0,
@@ -598,7 +615,7 @@ export default function OperationDashboard({ lakeId }) {
 
         fetchHydro(); // initial load
         const timer = setInterval(fetchHydro, 60 * 60 * 1000); // refresh every 1 hour
-        return () => clearInterval(timer);
+        return () => { cancelled = true; clearInterval(timer); };
     }, [selectedReservoir, lakeId]);
 
     // ─── Fetch forecast for the selected model — refresh every 1 hour ─────────
@@ -609,21 +626,23 @@ export default function OperationDashboard({ lakeId }) {
         return docs.filter(d => d.createdAt === newest);
     };
 
+    // KHÔNG .catch() ở đây nữa — để lỗi thật (network/500) văng lên cho
+    // fetchForecast() phân biệt với "chưa có dữ liệu" (mảng rỗng hợp lệ).
     const fetchRawForecast = async (id, model) => {
         if (model === 'rf') {
-            const rf = await mapApi.getForecastRf(id).catch(() => null);
+            const rf = await mapApi.getForecastRf(id);
             return Array.isArray(rf) ? rf : [];
         }
         if (model === 'xgboost') {
-            const xgb = await mapApi.getForecastXgb(id).catch(() => null);
+            const xgb = await mapApi.getForecastXgb(id);
             return Array.isArray(xgb) ? xgb : [];
         }
         if (model === 'arimax') {
             // "station" — same default rain source used when the Forecast tab first loads.
-            const docs = await mapApi.getForecastHistory(id, 'station').catch(() => null);
+            const docs = await mapApi.getForecastHistory(id, 'station');
             return latestArimaxBatch(docs);
         }
-        const lstm = await mapApi.getForecastLstm(id).catch(() => null);
+        const lstm = await mapApi.getForecastLstm(id);
         if (!lstm) return [];
         return Array.isArray(lstm) ? lstm : (lstm.predictions || []);
     };
@@ -632,9 +651,11 @@ export default function OperationDashboard({ lakeId }) {
         const id = lakeId || selectedReservoir;
         if (!id) return;
 
+        let cancelled = false;
         const fetchForecast = async () => {
             try {
                 const arr = await fetchRawForecast(id, selectedModel);
+                if (cancelled) return;
                 const mapped = arr.map(d => {
                     const dt = new Date(d.forecastTime || d.targetTime || d.time);
                     return {
@@ -655,14 +676,18 @@ export default function OperationDashboard({ lakeId }) {
                     };
                 });
                 setForecastData(mapped);
+                setForecastError(null);
             } catch (e) {
+                if (cancelled) return;
                 console.error("Error fetching forecast", e);
+                setForecastData([]);
+                setForecastError(selectedModel);
             }
         };
 
         fetchForecast(); // initial load
         const timer = setInterval(fetchForecast, 60 * 60 * 1000); // refresh every 1 hour
-        return () => clearInterval(timer);
+        return () => { cancelled = true; clearInterval(timer); };
     }, [selectedReservoir, lakeId, selectedModel]);
 
     // ─── Fetch lake spec từ DB (thay LAKE_CONSTANTS hard-code) ────────────────
@@ -671,7 +696,7 @@ export default function OperationDashboard({ lakeId }) {
         if (!id) return;
         mapApi.getLakeSpec(id)
             .then(spec => setLakeSpec(spec))
-            .catch(() => {}); // fallback về LAKE_CONSTANTS nếu chưa seed
+            .catch((e) => console.error("Error fetching lake spec (fallback to LAKE_CONSTANTS)", e));
     }, [selectedReservoir, lakeId]);
 
     // ─── Fetch volume (Z→V nội suy) + power + khuyến nghị khi hydro thay đổi ─
@@ -684,13 +709,13 @@ export default function OperationDashboard({ lakeId }) {
         // Dung tích hồ từ Z-V curve
         mapApi.getVolume(id, htl)
             .then(v => setVolumeInfo(v))
-            .catch(() => {});
+            .catch((e) => console.error("Error fetching volume", e));
 
         // Công suất phát điện
         if (q > 0) {
             mapApi.getPower(id, htl, q)
                 .then(p => setPowerInfo(p))
-                .catch(() => {});
+                .catch((e) => console.error("Error fetching power", e));
         }
 
         // Khuyến nghị vận hành từ backend
@@ -701,7 +726,7 @@ export default function OperationDashboard({ lakeId }) {
             forecast_peak: forecastPeak || latestHydro.qvao,
         })
             .then(r => setRecFromDB(r))
-            .catch(() => {});
+            .catch((e) => console.error("Error fetching operation recommendation (fallback to local compute)", e));
     }, [latestHydro, forecastPeak, selectedReservoir, lakeId]);
 
     // ─── Phase 4: Fetch alerts & op-logs — poll mỗi 5 phút ───────────────────
@@ -715,7 +740,7 @@ export default function OperationDashboard({ lakeId }) {
                 ]);
                 setReservoirAlerts(Array.isArray(alerts) ? alerts : []);
                 setOpLogs(Array.isArray(logs) ? logs : []);
-            } catch { /* silent */ }
+            } catch (e) { console.error("Error fetching alerts/op-logs", e); }
         };
         fetchAlerts();
         const t = setInterval(fetchAlerts, 5 * 60 * 1000); // 5 phút
@@ -952,7 +977,7 @@ export default function OperationDashboard({ lakeId }) {
                                     q_turbine={latestHydro.q_turbine}
                                     q_spillway={latestHydro.q_spillway}
                                     lakeId={lakeId || selectedReservoir}
-                                    maxTurbineFlow={c?.max_turbine_flow ?? c?.maxTurbineFlow}
+                                    maxTurbineFlow={c?.maxTurbineFlow}
                                 />
                             </div>
                             <div className="mt-2 grid grid-cols-2 gap-2">
@@ -1113,6 +1138,13 @@ export default function OperationDashboard({ lakeId }) {
                             )}
                         </div>
                     </div>
+
+                    {forecastError === selectedModel && (
+                        <div className="w-full bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-[12px] font-bold flex items-center gap-2">
+                            <AlertTriangle size={14} className="shrink-0" />
+                            {t('operation.forecastUnavailable', { model: selectedModelInfo.label })}
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
                         {/* Chart card */}
@@ -1489,7 +1521,7 @@ export default function OperationDashboard({ lakeId }) {
                                     e.stopPropagation();
                                     setAlertChecking(true);
                                     try { await mapApi.triggerAlertCheck(); }
-                                    catch { /* ignore */ }
+                                    catch (err) { console.error("Error triggering alert check", err); }
                                     setTimeout(async () => {
                                         try {
                                             const id = lakeId || selectedReservoir;
@@ -1499,7 +1531,7 @@ export default function OperationDashboard({ lakeId }) {
                                             ]);
                                             setReservoirAlerts(Array.isArray(alerts) ? alerts : []);
                                             setOpLogs(Array.isArray(logs) ? logs : []);
-                                        } catch { /* ignore */ }
+                                        } catch (err) { console.error("Error refreshing alerts/op-logs", err); }
                                         setAlertChecking(false);
                                     }, 5000);
                                 }}

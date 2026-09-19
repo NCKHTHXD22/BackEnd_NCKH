@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 import axios from "axios";
 import * as Location from "expo-location";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "../../assets/styles/post.styles.js";
 import { API_URL } from "@/lib/env";
 
@@ -20,15 +21,21 @@ const MAX_IMAGES = 5;
 
 // 4 loại báo cáo — PHẢI khớp enum ở backend (src/core/entities/FloodPost.js)
 const REPORT_TYPES = [
-  { value: "flood_point", label: "Điểm ngập" },
-  { value: "flood_road", label: "Đường ngập" },
-  { value: "fallen_tree", label: "Cây ngã đổ" },
-  { value: "landslide", label: "Khu vực sạt lở" },
+  { value: "flood_point", labelKey: "floodpost.reportTypes.flood_point" },
+  { value: "flood_road", labelKey: "floodpost.reportTypes.flood_road" },
+  { value: "fallen_tree", labelKey: "floodpost.reportTypes.fallen_tree" },
+  { value: "landslide", labelKey: "floodpost.reportTypes.landslide" },
 ];
 const FLOOD_LEVEL_TYPES = ["flood_point", "flood_road"];
 const POINT_TYPES = ["flood_point", "fallen_tree"];
 const RANGE_TYPES = ["flood_road", "landslide"];
+// Giá trị gửi lên backend PHẢI giữ nguyên tiếng Việt (khớp enum server) — chỉ
+// nhãn hiển thị được dịch, qua LANDSLIDE_STATUS_LABEL_KEY bên dưới.
 const LANDSLIDE_STATUS = ["Có nguy cơ", "Đã sạt lở"];
+const LANDSLIDE_STATUS_LABEL_KEY = {
+  "Có nguy cơ": "floodpost.landslideStatus.risk",
+  "Đã sạt lở": "floodpost.landslideStatus.happened",
+};
 
 const WARDS_DA_NANG = [
  "Phường Hải Châu","Phường Hòa Cường","Phường Thanh Khê","Phường An Khê","Phường An Hải",
@@ -50,7 +57,17 @@ const WARDS_DA_NANG = [
   "Xã Tân Hiệp"
 ];
 
+// Nhãn hiển thị dịch được cho areaType — giá trị gửi backend vẫn giữ tiếng Việt
+// (khớp enum server ở src/core/entities/FloodPost.js)
+const AREA_TYPES = ["Trong nhà", "Ngoài đường", "Khu vực khác"];
+const AREA_TYPE_LABEL_KEY = {
+  "Trong nhà": "floodpost.areaTypes.indoor",
+  "Ngoài đường": "floodpost.areaTypes.outdoor",
+  "Khu vực khác": "floodpost.areaTypes.other",
+};
+
 export default function FloodPost() {
+  const { t } = useTranslation();
   const { getToken } = useAuth();
 
   const [reportType, setReportType] = useState("flood_point");
@@ -86,11 +103,10 @@ export default function FloodPost() {
   // State để kiểm tra lỗi thiếu input
   const [errors, setErrors] = useState({ ward: false, location: false, floodLevel: false, fromAddress: false, toAddress: false, eventEndTime: false });
 
- useEffect(() => {
-  (async () => {
+ const fetchCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Lỗi", "Bạn cần cấp quyền truy cập vị trí để sử dụng tính năng bản đồ.");
+      Alert.alert(t("common.error"), t("floodpost.locationPermissionError"));
       return;
     }
 
@@ -103,34 +119,39 @@ export default function FloodPost() {
       latitudeDelta: 0.01,
       longitudeDelta: 0.01,
     });
-  })();
+  };
+
+ useEffect(() => {
+  fetchCurrentLocation();
 }, []);
 
     const handlePickImage = async () => {
       if (images.length >= MAX_IMAGES) {
-        Alert.alert("Đã đủ ảnh", `Bạn chỉ có thể gửi tối đa ${MAX_IMAGES} ảnh.`);
+        Alert.alert(t("floodpost.maxImagesTitle"), t("floodpost.maxImagesMessage", { max: MAX_IMAGES }));
         return;
       }
-      const { granted } = await ImagePicker.requestCameraPermissionsAsync();
-      if (!granted) {
-        Alert.alert("Bạn cần cấp quyền truy cập máy ảnh");
-        return;
-      }
-
-      Alert.alert("Thêm hình ảnh", "Bạn muốn chọn ảnh từ thư viện hay chụp ảnh mới?", [
+      // Chỉ xin quyền Camera khi người dùng THỰC SỰ chọn "Chụp ảnh" — trước
+      // đây xin ngay từ đầu khiến từ chối Camera cũng chặn luôn việc chọn
+      // ảnh từ thư viện (không hề cần quyền Camera).
+      Alert.alert(t("floodpost.addImageTitle"), t("floodpost.addImageMessage"), [
         {
-          text: "Chụp ảnh",
+          text: t("floodpost.takePhoto"),
           onPress: async () => {
+            const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+            if (!granted) {
+              Alert.alert(t("floodpost.cameraPermissionError"));
+              return;
+            }
             const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
             if (!result.canceled) addImages([result.assets[0]]);
         },
       },
       {
-        text: "Chọn từ thư viện",
+        text: t("floodpost.pickFromLibrary"),
         onPress: async () => {
           const { granted: mediaGranted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (!mediaGranted) {
-            Alert.alert("Bạn cần cấp quyền truy cập thư viện ảnh");
+            Alert.alert(t("floodpost.libraryPermissionError"));
             return;
           }
           const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.5, allowsMultipleSelection: true });
@@ -139,7 +160,7 @@ export default function FloodPost() {
           }
         },
       },
-      { text: "Hủy", style: "cancel" },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -147,7 +168,7 @@ export default function FloodPost() {
     setImages((prev) => {
       const combined = [...prev, ...newAssets];
       if (combined.length > MAX_IMAGES) {
-        Alert.alert("Vượt quá giới hạn", `Chỉ giữ lại ${MAX_IMAGES} ảnh đầu tiên (tối đa ${MAX_IMAGES} ảnh/lần gửi).`);
+        Alert.alert(t("floodpost.tooManyImagesTitle"), t("floodpost.tooManyImagesMessage", { max: MAX_IMAGES }));
       }
       return combined.slice(0, MAX_IMAGES);
     });
@@ -191,6 +212,9 @@ export default function FloodPost() {
       setLocation(null);
       setRegion(null);
       setErrors({ ward: false, location: false, floodLevel: false, fromAddress: false, toAddress: false, eventEndTime: false });
+      // Nạp lại GPS ngay — trước đây để location/region = null, muốn báo
+      // điểm ngập thứ 2 trong cùng phiên phải thoát tab rồi vào lại mới có GPS.
+      fetchCurrentLocation();
     }
 
   const hasError = {
@@ -205,7 +229,7 @@ export default function FloodPost() {
   setErrors(hasError);
 
   if (Object.values(hasError).some(Boolean)) {
-    Alert.alert("Thiếu thông tin", "Vui lòng điền đủ các trường bắt buộc.");
+    Alert.alert(t("floodpost.missingFieldsTitle"), t("floodpost.missingFieldsMessage"));
     return;
   }
 
@@ -247,19 +271,24 @@ export default function FloodPost() {
       });
     });
 
-    await axios.post(`${API_URL}/api/posts`, formData, {
+    const res = await axios.post(`${API_URL}/api/posts`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
       },
     });
 
-    Alert.alert("Thành công", "Thông tin đã được gửi.");
+    // Bài chưa được AI/Admin duyệt sẽ chưa hiện trên bản đồ — nói rõ để người
+    // gửi không tưởng là "gửi mà không nhận".
+    Alert.alert(
+      t("floodpost.submitSuccessTitle"),
+      res.data?.status === "approved" ? t("floodpost.submitSuccessMessage") : t("floodpost.submitPendingMessage")
+    );
     // Reset nếu cần ở đây
     resetForm();
   } catch (err) {
     console.error("Lỗi gửi:", err.response?.data || err.message);
-    Alert.alert("Lỗi", err.response?.data?.error || "Không thể gửi dữ liệu. Hãy thử lại.");
+    Alert.alert(t("common.error"), err.response?.data?.error || t("floodpost.submitErrorGeneric"));
   } finally {
     setIsSubmitting(false); // 👈 Kết thúc loading
   }
@@ -271,17 +300,17 @@ export default function FloodPost() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Chia sẻ điểm ngập bạn đang thấy</Text>
+          <Text style={styles.title}>{t("floodpost.title")}</Text>
 
           {/* Loại báo cáo */}
           <View style={styles.segment}>
-            {REPORT_TYPES.map((t) => (
+            {REPORT_TYPES.map((rt) => (
               <TouchableOpacity
-                key={t.value}
-                style={[styles.segmentBtn, reportType === t.value && styles.segmentSelected]}
-                onPress={() => setReportType(t.value)}
+                key={rt.value}
+                style={[styles.segmentBtn, reportType === rt.value && styles.segmentSelected]}
+                onPress={() => setReportType(rt.value)}
               >
-                <Text style={{ fontSize: 12 }}>{t.label}</Text>
+                <Text style={{ fontSize: 12 }}>{t(rt.labelKey)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -295,7 +324,7 @@ export default function FloodPost() {
             />
             <View style={{ flex: 1, position: "relative" }}>
               <TextInput
-                placeholder="Phường/Xã *"
+                placeholder={t("floodpost.wardPlaceholder")}
                 value={ward}
                 onChangeText={handleWardChange}
                 onFocus={() => {
@@ -326,14 +355,14 @@ export default function FloodPost() {
           {isPointType && (
             <>
               <TextInput
-                placeholder={isTree ? "Địa chỉ cây ngã đổ" : "Số nhà, tên đường (nếu có)"}
+                placeholder={isTree ? t("floodpost.treeAddressPlaceholder") : t("floodpost.streetPlaceholder")}
                 value={address}
                 onChangeText={setAddress}
                 style={styles.input}
               />
 
               {/* Bản đồ */}
-              <Text style={styles.label}>Chọn vị trí chính xác trên bản đồ *</Text>
+              <Text style={styles.label}>{t("floodpost.mapLabel")}</Text>
               <MapView
                 style={[styles.map, errors.location && { borderColor: "red", borderWidth: 1 }]}
                 provider={PROVIDER_GOOGLE}
@@ -348,13 +377,13 @@ export default function FloodPost() {
           {isRangeType && (
             <>
               <TextInput
-                placeholder={isLandslide ? "Địa chỉ bắt đầu sạt lở *" : "Ngập từ địa chỉ *"}
+                placeholder={isLandslide ? t("floodpost.fromAddressLandslide") : t("floodpost.fromAddressFlood")}
                 value={fromAddress}
                 onChangeText={setFromAddress}
                 style={[styles.input, errors.fromAddress && { borderColor: "red" }]}
               />
               <TextInput
-                placeholder={isLandslide ? "Địa chỉ kết thúc sạt lở *" : "Đến địa chỉ *"}
+                placeholder={isLandslide ? t("floodpost.toAddressLandslide") : t("floodpost.toAddressFlood")}
                 value={toAddress}
                 onChangeText={setToAddress}
                 style={[styles.input, errors.toAddress && { borderColor: "red" }]}
@@ -365,7 +394,7 @@ export default function FloodPost() {
           {isFloodLevelType && (
             <>
               <TextInput
-                placeholder="Mức ngập (cm) *"
+                placeholder={t("floodpost.floodLevelPlaceholder")}
                 value={floodLevel}
                 onChangeText={setFloodLevel}
                 keyboardType="numeric"
@@ -374,13 +403,13 @@ export default function FloodPost() {
 
               {/* Segment chọn kiểu ngập */}
               <View style={styles.segment}>
-                {["Trong nhà", "Ngoài đường", "Khu vực khác"].map((type) => (
+                {AREA_TYPES.map((type) => (
                   <TouchableOpacity
                     key={type}
                     style={[styles.segmentBtn, areaType === type && styles.segmentSelected]}
                     onPress={() => setAreaType(type)}
                   >
-                    <Text>{type}</Text>
+                    <Text>{t(AREA_TYPE_LABEL_KEY[type])}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -395,7 +424,7 @@ export default function FloodPost() {
                   style={[styles.segmentBtn, landslideStatus === s && styles.segmentSelected]}
                   onPress={() => setLandslideStatus(s)}
                 >
-                  <Text>{s}</Text>
+                  <Text>{t(LANDSLIDE_STATUS_LABEL_KEY[s])}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -403,7 +432,7 @@ export default function FloodPost() {
 
           {/* Chọn thời gian */}
           <Text style={styles.label}>
-            {isTree ? "Thời gian cây ngã đổ" : isLandslide ? "Thời gian bắt đầu sạt lở" : "Thời gian ngập"}
+            {isTree ? t("floodpost.timeLabelTree") : isLandslide ? t("floodpost.timeLabelLandslide") : t("floodpost.timeLabelFlood")}
           </Text>
           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
             <Text>{floodTime.toLocaleString()}</Text>
@@ -423,7 +452,7 @@ export default function FloodPost() {
 
           {isLandslide && (
             <>
-              <Text style={styles.label}>Thời gian kết thúc sạt lở</Text>
+              <Text style={styles.label}>{t("floodpost.timeLabelLandslideEnd")}</Text>
               <TouchableOpacity
                 onPress={() => setShowEndDatePicker(true)}
                 style={[styles.input, errors.eventEndTime && { borderColor: "red" }]}
@@ -447,7 +476,7 @@ export default function FloodPost() {
           {/* Mô tả — không hiển thị cho Khu vực sạt lở */}
           {!isLandslide && (
             <TextInput
-              placeholder={isTree ? "Mô tả ảnh hưởng (giao thông, đường dây điện...)" : "Mô tả/khuyến nghị"}
+              placeholder={isTree ? t("floodpost.descPlaceholderTree") : t("floodpost.descPlaceholderDefault")}
               value={description}
               onChangeText={setDescription}
               style={styles.input}
@@ -458,7 +487,7 @@ export default function FloodPost() {
           {/* Ảnh đính kèm */}
           <TouchableOpacity onPress={handlePickImage} style={styles.imagePicker}>
           {images.length === 0 ? (
-            <Text>📷 Thêm hình ảnh</Text>
+            <Text>{t("floodpost.addImage")}</Text>
           ) : (
             <View style={styles.imageGrid}>
               {images.map((img, index) => (
@@ -482,14 +511,14 @@ export default function FloodPost() {
             <View style={styles.switchRow}>
               <Switch value={isFrequentFlood} onValueChange={setIsFrequentFlood} />
               <Text style={styles.switchLabel}>
-                {isLandslide ? "Địa điểm này thường xuyên bị sạt lở" : "Địa điểm này thường xuyên bị ngập"}
+                {isLandslide ? t("floodpost.frequentLandslide") : t("floodpost.frequentFlood")}
               </Text>
             </View>
           )}
 
           {/* Gửi */}
           <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={isSubmitting}>
-            <Text style={styles.submitText}>Gửi thông tin</Text>
+            <Text style={styles.submitText}>{t("floodpost.submitBtn")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -498,7 +527,7 @@ export default function FloodPost() {
     {isSubmitting && (
       <View style={styles.overlay}>
         <ActivityIndicator size="large" color="#fff" />
-        <Text style={styles.loadingText}>Đang gửi thông tin...</Text>
+        <Text style={styles.loadingText}>{t("floodpost.sending")}</Text>
       </View>
     )}
     </>

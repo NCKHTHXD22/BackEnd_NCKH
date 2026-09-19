@@ -10,18 +10,23 @@ import {
   StyleSheet,
   TextInput,
   Linking,
+  Alert,
 } from "react-native";
 import MapView, { PROVIDER_GOOGLE, Marker, Circle, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import axios from "axios";
 import { useRouter } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
+import { useTranslation } from "react-i18next";
 import mapStyles from "../../assets/styles/home.styles.js";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "@/lib/env";
 import { scheduleFloodAlert, scheduleTestNotification } from "@/lib/pushNotifications";
+import { getAlertRadiusKm, getAlertLevelCm } from "@/lib/alertPrefs";
+import { saveCache, loadCache } from "@/lib/offlineCache";
+import i18n from "@/lib/i18n";
 
-const OWM_KEY = "c41fa113b3691968f275c36bcadebe29";
 const GMAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 const DESC_VI = {
@@ -98,13 +103,17 @@ function decodePolyline(encoded) {
 // ── Hiển thị thời gian tương đối (vd: "2 giờ trước") ─────────────────────────
 function timeAgo(date) {
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (s < 60)          return "Vừa xong";
-  if (s < 3600)        return `${Math.floor(s / 60)} phút trước`;
-  if (s < 86400)       return `${Math.floor(s / 3600)} giờ trước`;
-  return `${Math.floor(s / 86400)} ngày trước`;
+  if (s < 60)          return i18n.t("notification.justNow");
+  if (s < 3600)        return i18n.t("notification.minutesAgo", { count: Math.floor(s / 60) });
+  if (s < 86400)       return i18n.t("notification.hoursAgo", { count: Math.floor(s / 3600) });
+  return i18n.t("notification.daysAgo", { count: Math.floor(s / 86400) });
 }
 
-const AREA_TYPE_LABEL = { "Trong nhà": "Trong nhà", "Ngoài đường": "Ngoài đường", "Khác": "Khu vực khác" };
+const AREA_TYPE_LABEL_KEY = {
+  "Trong nhà": "floodpost.areaTypes.indoor",
+  "Ngoài đường": "floodpost.areaTypes.outdoor",
+  "Khu vực khác": "floodpost.areaTypes.other",
+};
 
 // ── Cloudinary thumbnail: chuyển ảnh gốc → thumbnail 280×180 để tiết kiệm RAM ──
 function cloudinaryThumb(url) {
@@ -220,7 +229,16 @@ async function fetchBuildingsFromOverpassGet(lat, lng) {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { getToken } = useAuth();
   const [location, setLocation] = useState(null);
+  // ── "Tôi an toàn" — check-in an toàn cá nhân trong sự kiện lũ ──────────────
+  const [safetyCheckin, setSafetyCheckin] = useState(null); // { isSafe, checkedAt }
+  const [safetyBusy, setSafetyBusy] = useState(false);
+  // ── Chế độ offline — hiển thị dữ liệu bản đồ đã cache khi mất mạng ─────────
+  const [isOffline, setIsOffline] = useState(false);
+  const [offlineSince, setOfflineSince] = useState(null);
+  const [locationDenied, setLocationDenied] = useState(false);
   const [markers, setMarkers] = useState([]);
   const [rainStations, setRainStations] = useState([]);
   const [reservoirs, setReservoirs] = useState([]);
@@ -236,6 +254,7 @@ export default function HomeScreen() {
 
   // ── Function panel ──────────────────────────────────────────────────────────
   const [showFunctionPanel, setShowFunctionPanel] = useState(false);
+  const [showSatellite, setShowSatellite] = useState(false);
 
   // ── Tall buildings ──────────────────────────────────────────────────────────
   const [showBuildings, setShowBuildings] = useState(false);
@@ -266,8 +285,14 @@ export default function HomeScreen() {
   // Ngưỡng và cooldown
   const ALERT_COOLDOWN_MS   = 30 * 60 * 1000; // 30 phút: dismiss xong không hiện lại
   const ALERT_CHECK_DELAY   =  5 * 60 * 1000; // 5 phút: debounce check
-  const FLOOD_RADIUS_KM     = 0.3;             // 300m (trước 500m)
-  const FLOOD_LEVEL_CM      = 30;              // chỉ cảnh báo khi ngập > 30cm
+  // Ngưỡng cảnh báo ngập giờ cá nhân hoá được — nạp từ lib/alertPrefs.js
+  // (SecureStore), chỉnh trong Profile. Mặc định vẫn 300m/30cm như trước.
+  const [FLOOD_RADIUS_KM, setFloodRadiusKm] = useState(0.3);
+  const [FLOOD_LEVEL_CM, setFloodLevelCm]   = useState(30);
+  useEffect(() => {
+    getAlertRadiusKm().then(setFloodRadiusKm);
+    getAlertLevelCm().then(setFloodLevelCm);
+  }, []);
   const RAIN_HEAVY_MM       = 50;              // ≥50mm/h = cực kỳ nặng
   const RAIN_RADIUS_KM      = 5;
   const THREE_DAYS_MS       = 3 * 24 * 60 * 60 * 1000;
@@ -289,8 +314,8 @@ export default function HomeScreen() {
   // ── Mini weather ────────────────────────────────────────────────────────────
   const fetchMiniWeather = useCallback(async (lat, lon) => {
     try {
-      const res = await axios.get("https://api.openweathermap.org/data/2.5/weather", {
-        params: { lat, lon, units: "metric", appid: OWM_KEY },
+      const res = await axios.get(`${API_URL}/api/weather/current`, {
+        params: { lat, lon },
       });
       setMiniWeather({
         temp: Math.round(res.data.main?.temp),
@@ -306,8 +331,8 @@ export default function HomeScreen() {
     setLoadingPopup(true);
     setPopupWeather(null);
     try {
-      const res = await axios.get("https://api.openweathermap.org/data/2.5/weather", {
-        params: { lat, lon, units: "metric", appid: OWM_KEY },
+      const res = await axios.get(`${API_URL}/api/weather/current`, {
+        params: { lat, lon },
       });
       setPopupWeather({
         temp: Math.round(res.data.main?.temp),
@@ -647,6 +672,60 @@ export default function HomeScreen() {
     scheduleTestNotification(10);
   }, []);
 
+  // ── Nạp trạng thái "Tôi an toàn" đã lưu trên server (nếu có) ─────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch(`${API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.safetyCheckin?.checkedAt) setSafetyCheckin(data.safetyCheckin);
+      } catch { /* offline hoặc chưa đăng nhập — bỏ qua, nút vẫn dùng được */ }
+    })();
+  }, [getToken]);
+
+  // ── Gửi check-in "Tôi an toàn" lên server ────────────────────────────────────
+  const handleSafetyCheckin = () => {
+    Alert.alert(
+      t("home.safety.confirmTitle"),
+      t("home.safety.confirmMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("home.safety.confirmBtn"),
+          onPress: async () => {
+            setSafetyBusy(true);
+            try {
+              const token = await getToken();
+              const res = await fetch(`${API_URL}/api/users/safety-status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  isSafe: true,
+                  lat: location?.latitude ?? null,
+                  lon: location?.longitude ?? null,
+                }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                setSafetyCheckin(data.safetyCheckin);
+              } else {
+                Alert.alert(t("common.error"), data.message || t("home.safety.sendError"));
+              }
+            } catch {
+              Alert.alert(t("common.error"), t("home.safety.networkError"));
+            } finally {
+              setSafetyBusy(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // ── Đồng bộ OS notification khi localAlerts thay đổi ─────────────────────────
   // Gửi OS notification cho mỗi alert mới để hiển thị khi app ở background/closed
   const prevAlertIdsRef = useRef(new Set());
@@ -666,7 +745,14 @@ export default function HomeScreen() {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") return;
+        if (status !== "granted") {
+          // Trước đây return im lặng — người dùng không biết vì sao cảnh báo
+          // theo GPS (ngập gần nhà, khoảng cách toà nhà an toàn...) không hoạt
+          // động. Giờ báo rõ để tránh hiểu lầm "khu vực của tôi an toàn".
+          setLocationDenied(true);
+          return;
+        }
+        setLocationDenied(false);
         subscription = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
           (loc) => setLocation(loc.coords)
@@ -706,8 +792,7 @@ export default function HomeScreen() {
 
       const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
       const now = Date.now();
-      setMarkers(
-        (postsData || [])
+      const nextMarkers = (postsData || [])
           .filter((p) => {
             if (!p.createdAt) return true;
             return now - new Date(p.createdAt).getTime() <= SEVEN_DAYS;
@@ -717,17 +802,31 @@ export default function HomeScreen() {
             coordinates: { lat: p.location?.latitude || 0, lng: p.location?.longitude || 0 },
             locationName: p.location?.address || "Ch\u01b0a x\u00e1c \u0111\u1ecbnh",
             content: p.description || "",
-          }))
-      );
-      setRainStations((rainData || []).map((r) => ({
+          }));
+      setMarkers(nextMarkers);
+      const nextRainStations = (rainData || []).map((r) => ({
         ...r, type: "rain",
         coordinates: { lat: r.location?.lat || 0, lng: r.location?.lng || 0 },
-      })));
-      setReservoirs((reservoirData || []).map((r) => ({
+      }));
+      const nextReservoirs = (reservoirData || []).map((r) => ({
         ...r, type: "reservoir",
         coordinates: { lat: r.lat || r.location?.lat || 0, lng: r.lon || r.location?.lng || 0 },
-      })));
-    } catch (error) { console.error("❌ Map fetch:", error); }
+      }));
+      setRainStations(nextRainStations);
+      setReservoirs(nextReservoirs);
+      setIsOffline(false);
+      setOfflineSince(null);
+      saveCache("mapData", { markers: nextMarkers, rainStations: nextRainStations, reservoirs: nextReservoirs });
+    } catch (error) {
+      const cached = await loadCache("mapData");
+      if (cached?.data) {
+        setMarkers(cached.data.markers || []);
+        setRainStations(cached.data.rainStations || []);
+        setReservoirs(cached.data.reservoirs || []);
+        setOfflineSince(cached.savedAt);
+      }
+      setIsOffline(true);
+      console.error("❌ Map fetch:", error); }
   }, []);
 
   useEffect(() => {
@@ -820,7 +919,7 @@ export default function HomeScreen() {
       const newIds  = newAlerts.map((a) => a.id).sort().join(",");
       return prevIds === newIds ? prev : newAlerts;
     });
-  }, [location, markers, rainStations]); // reservoirs đã bỏ khỏi banner map
+  }, [location, markers, rainStations, FLOOD_RADIUS_KM, FLOOD_LEVEL_CM]); // reservoirs đã bỏ khỏi banner map
 
 
 
@@ -860,6 +959,32 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* ── Cảnh báo chưa cấp quyền vị trí ── */}
+      {locationDenied && (
+        <TouchableOpacity
+          style={locationDeniedStyles.banner}
+          onPress={() => Linking.openSettings()}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="location-outline" size={16} color="#fff" />
+          <Text style={locationDeniedStyles.text}>
+            {t("home.locationDenied")}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* ── Chế độ offline — đang hiển thị dữ liệu cache do mất mạng ── */}
+      {isOffline && (
+        <View style={[locationDeniedStyles.banner, { backgroundColor: "#616161", top: locationDenied ? 76 : 44 }]}>
+          <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+          <Text style={locationDeniedStyles.text}>
+            {offlineSince
+              ? t("home.offlineWithTime", { time: timeAgo(offlineSince) })
+              : t("home.offlineNoData")}
+          </Text>
+        </View>
+      )}
+
       {/* ── Mini Weather Widget ── */}
       {miniWeather && (
         <TouchableOpacity style={miniStyles.widget} onPress={() => router.push("/(tab)/weather")} activeOpacity={0.85}>
@@ -884,7 +1009,7 @@ export default function HomeScreen() {
           <Ionicons name="search-outline" size={16} color="#9E9E9E" />
           <TextInput
             style={searchStyles.input}
-            placeholder="Tìm địa chỉ tại Đà Nẵng..."
+            placeholder={t("home.searchPlaceholder")}
             placeholderTextColor="#B0BEC5"
             value={searchQuery}
             onChangeText={handleSearchChange}
@@ -960,7 +1085,7 @@ export default function HomeScreen() {
               onPress={() => { setViewMode("status"); setShowFunctionPanel(false); }}
             >
               <Ionicons name="map-outline" size={15} color={viewMode === "status" ? "#fff" : "#37474F"} />
-              <Text style={[fabStyles.optionText, viewMode === "status" && { color: "#fff" }]}>Hiện trạng</Text>
+              <Text style={[fabStyles.optionText, viewMode === "status" && { color: "#fff" }]}>{t("home.fab.status")}</Text>
               {viewMode === "status" && <View style={fabStyles.activeDot} />}
             </TouchableOpacity>
 
@@ -970,7 +1095,7 @@ export default function HomeScreen() {
               onPress={() => { setViewMode("flood"); handleZoomToCurrentLocation(); setShowFunctionPanel(false); }}
             >
               <Ionicons name="water-outline" size={15} color={viewMode === "flood" ? "#fff" : "#37474F"} />
-              <Text style={[fabStyles.optionText, viewMode === "flood" && { color: "#fff" }]}>Ngập gần đây</Text>
+              <Text style={[fabStyles.optionText, viewMode === "flood" && { color: "#fff" }]}>{t("home.fab.flood")}</Text>
               {viewMode === "flood" && <View style={fabStyles.activeDot} />}
             </TouchableOpacity>
 
@@ -980,7 +1105,7 @@ export default function HomeScreen() {
               onPress={() => { setSearchMode(!searchMode); setShowFunctionPanel(false); }}
             >
               <Ionicons name="search-outline" size={15} color={searchMode ? "#fff" : "#37474F"} />
-              <Text style={[fabStyles.optionText, searchMode && { color: "#fff" }]}>Tìm địa chỉ</Text>
+              <Text style={[fabStyles.optionText, searchMode && { color: "#fff" }]}>{t("home.fab.search")}</Text>
               {searchMode && <View style={fabStyles.activeDot} />}
             </TouchableOpacity>
 
@@ -995,10 +1120,20 @@ export default function HomeScreen() {
                 <Ionicons name="business-outline" size={15} color={showBuildings ? "#fff" : "#37474F"} />
               )}
               <Text style={[fabStyles.optionText, showBuildings && { color: "#fff" }]}>
-                {"Tòa nhà cao"}
+                {t("home.fab.buildings")}
                 {tallBuildings.length > 0 ? `  (${tallBuildings.length})` : ""}
               </Text>
               {showBuildings && <View style={fabStyles.activeDot} />}
+            </TouchableOpacity>
+
+            {/* Lớp bản đồ vệ tinh */}
+            <TouchableOpacity
+              style={[fabStyles.option, showSatellite && fabStyles.optionBuilding]}
+              onPress={() => { setShowSatellite(!showSatellite); setShowFunctionPanel(false); }}
+            >
+              <Ionicons name="globe-outline" size={15} color={showSatellite ? "#fff" : "#37474F"} />
+              <Text style={[fabStyles.optionText, showSatellite && { color: "#fff" }]}>{t("home.fab.satellite")}</Text>
+              {showSatellite && <View style={fabStyles.activeDot} />}
             </TouchableOpacity>
           </View>
         )}
@@ -1032,6 +1167,10 @@ export default function HomeScreen() {
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         mapPadding={{ top: 80, right: 0, bottom: 0, left: 0 }}
+        // "hybrid" = ảnh vệ tinh + tên đường/địa danh chồng lên trên, dễ định
+        // hướng hơn "satellite" thuần. customMapStyle chỉ có tác dụng ở
+        // "standard" nên không xung đột khi bật vệ tinh.
+        mapType={showSatellite ? "hybrid" : "standard"}
         customMapStyle={mapStyle}
         initialRegion={vietnamRegion}
         showsUserLocation={!!location}
@@ -1219,7 +1358,7 @@ export default function HomeScreen() {
             />
             <Text style={popupStyles.title} numberOfLines={1}>
               {selectedMarker.name ||
-                (selectedMarker.type === "building" ? "Tòa nhà cao tầng" : "Báo cáo")}
+                (selectedMarker.type === "building" ? t("home.building.generic") : t("home.popup.unnamedReport"))}
             </Text>
             <TouchableOpacity
               onPress={() => { setSelectedMarker(null); setPopupWeather(null); setRouteCoords([]); setRouteInfo(null); }}
@@ -1258,32 +1397,63 @@ export default function HomeScreen() {
           <Image source={require("../../assets/images/navigation.png")} style={mapStyles.zoomIcon} />
         </TouchableOpacity>
       </View>
+
+      {/* ── Chatbot AI hỗ trợ người dân ── */}
+      <TouchableOpacity
+        style={chatFabStyles.btn}
+        onPress={() => router.push("/(tab)/chatbot")}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="chatbubble-ellipses" size={22} color="#fff" />
+      </TouchableOpacity>
+
+      {/* ── "Tôi an toàn" — check-in an toàn cá nhân ── */}
+      <View style={safetyStyles.wrap}>
+        {safetyCheckin?.checkedAt && (
+          <View style={safetyStyles.badge}>
+            <Text style={safetyStyles.badgeText}>{t("home.safety.checkedIn", { time: timeAgo(safetyCheckin.checkedAt) })}</Text>
+          </View>
+        )}
+        <TouchableOpacity
+          style={[safetyStyles.btn, safetyCheckin?.checkedAt && safetyStyles.btnChecked]}
+          onPress={handleSafetyCheckin}
+          disabled={safetyBusy}
+          activeOpacity={0.85}
+        >
+          {safetyBusy ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="shield-checkmark" size={22} color="#fff" />
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 // ── Building Popup ─────────────────────────────────────────────────────────────
 const BUILDING_TYPE_LABEL = {
-  hotel:       { label: "Khách sạn",        icon: "bed",       color: "#E91E63" },
-  lodging:     { label: "Khách sạn",        icon: "bed",       color: "#E91E63" },
-  office:      { label: "Văn phòng",        icon: "briefcase", color: "#1976D2" },
-  apartments:  { label: "Chung cư",         icon: "home",      color: "#7B1FA2" },
-  commercial:  { label: "Thương mại",       icon: "storefront",color: "#E65100" },
+  hotel:       { labelKey: "home.building.hotel",       icon: "bed",       color: "#E91E63" },
+  lodging:     { labelKey: "home.building.hotel",       icon: "bed",       color: "#E91E63" },
+  office:      { labelKey: "home.building.office",      icon: "briefcase", color: "#1976D2" },
+  apartments:  { labelKey: "home.building.apartments",  icon: "home",      color: "#7B1FA2" },
+  commercial:  { labelKey: "home.building.commercial",  icon: "storefront",color: "#E65100" },
 };
 
 function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
+  const { t } = useTranslation();
   const dist = userLocation
     ? getDistanceKm(userLocation.latitude, userLocation.longitude, item.lat, item.lng)
     : null;
   const typeInfo = BUILDING_TYPE_LABEL[item.buildingType] ||
-    { label: "Tòa nhà cao tầng", icon: "business", color: "#5C6BC0" };
+    { labelKey: "home.building.generic", icon: "business", color: "#5C6BC0" };
 
   return (
     <View style={popupStyles.section}>
       {/* Loại công trình */}
       <View style={[bldStyles.typeBadge, { backgroundColor: typeInfo.color + "18", borderColor: typeInfo.color + "55" }]}>
         <Ionicons name={typeInfo.icon} size={14} color={typeInfo.color} />
-        <Text style={[bldStyles.typeLabel, { color: typeInfo.color }]}>{typeInfo.label}</Text>
+        <Text style={[bldStyles.typeLabel, { color: typeInfo.color }]}>{t(typeInfo.labelKey)}</Text>
       </View>
 
       {/* Thông số tòa nhà */}
@@ -1292,14 +1462,14 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
           <View style={bldStyles.infoBox}>
             <Ionicons name="layers-outline" size={18} color="#5C6BC0" />
             <Text style={bldStyles.infoValue}>{item.levels}</Text>
-            <Text style={bldStyles.infoLabel}>tầng</Text>
+            <Text style={bldStyles.infoLabel}>{t("home.building.levels")}</Text>
           </View>
         )}
         {item.height && (
           <View style={bldStyles.infoBox}>
             <Ionicons name="trending-up-outline" size={18} color="#5C6BC0" />
             <Text style={bldStyles.infoValue}>{item.height}m</Text>
-            <Text style={bldStyles.infoLabel}>chiều cao</Text>
+            <Text style={bldStyles.infoLabel}>{t("home.building.height")}</Text>
           </View>
         )}
         {dist != null && (
@@ -1308,14 +1478,14 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
             <Text style={bldStyles.infoValue}>
               {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`}
             </Text>
-            <Text style={bldStyles.infoLabel}>đường thẳng</Text>
+            <Text style={bldStyles.infoLabel}>{t("home.building.distance")}</Text>
           </View>
         )}
         {!item.levels && !item.height && dist == null && (
           <View style={[bldStyles.infoBox, { flex: 3 }]}>
             <Ionicons name="business-outline" size={18} color="#5C6BC0" />
             <Text style={bldStyles.infoValue}>—</Text>
-            <Text style={bldStyles.infoLabel}>Chưa có dữ liệu</Text>
+            <Text style={bldStyles.infoLabel}>{t("home.building.noData")}</Text>
           </View>
         )}
       </View>
@@ -1325,7 +1495,7 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
         <View style={bldStyles.routeLoading}>
           <ActivityIndicator size="small" color="#1976D2" />
           <Text style={{ fontSize: 12, color: "#1976D2", marginLeft: 8, fontWeight: "600" }}>
-            Đang tính đường đi...
+            {t("home.building.routeLoading")}
           </Text>
         </View>
       ) : routeInfo?.error ? (
@@ -1340,13 +1510,13 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
           <View style={bldStyles.routeItem}>
             <Ionicons name="car-outline" size={16} color="#1976D2" />
             <Text style={bldStyles.routeValue}>{routeInfo.distance}</Text>
-            <Text style={bldStyles.routeLabel}>lái xe</Text>
+            <Text style={bldStyles.routeLabel}>{t("home.building.driving")}</Text>
           </View>
           <View style={bldStyles.routeDivider} />
           <View style={bldStyles.routeItem}>
             <Ionicons name="time-outline" size={16} color="#1976D2" />
             <Text style={bldStyles.routeValue}>{routeInfo.duration}</Text>
-            <Text style={bldStyles.routeLabel}>thời gian</Text>
+            <Text style={bldStyles.routeLabel}>{t("home.building.duration")}</Text>
           </View>
         </View>
       ) : null}
@@ -1354,7 +1524,7 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
 
       <View style={bldStyles.hint}>
         <Ionicons name="shield-checkmark-outline" size={14} color="#388E3C" />
-        <Text style={bldStyles.hintText}>Nơi trú ẩn an toàn khi xảy ra ngập lụt</Text>
+        <Text style={bldStyles.hintText}>{t("home.building.shelterHint")}</Text>
       </View>
 
       <TouchableOpacity
@@ -1363,7 +1533,7 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
         activeOpacity={0.8}
       >
         <Ionicons name="navigate" size={16} color="white" style={{ marginRight: 6 }} />
-        <Text style={bldStyles.navBtnText}>Mở Google Maps chỉ đường</Text>
+        <Text style={bldStyles.navBtnText}>{t("home.building.openDirections")}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -1371,6 +1541,7 @@ function BuildingPopup({ item, userLocation, onNavigate, routeInfo }) {
 
 // ── Reservoir Popup ────────────────────────────────────────────────────────────
 function ReservoirPopup({ item, weather, loading }) {
+  const { t } = useTranslation();
   const htl       = item.htl ?? null;
   const qvao      = item.qvao ?? null;
   const luuluongxa = item.luuluongxa ?? null;
@@ -1379,22 +1550,22 @@ function ReservoirPopup({ item, weather, loading }) {
   return (
     <View style={popupStyles.section}>
       <View style={popupStyles.hydroGrid}>
-        <HydroBox icon="trending-up"       iconColor="#0277BD" label="Mực nước (HTL)"  value={htl != null        ? `${htl.toFixed(2)} m`        : "—"} highlight={htl != null} />
-        <HydroBox icon="arrow-down-circle" iconColor="#26A69A" label="Lưu lượng đến"   value={qvao != null       ? `${qvao.toFixed(1)} m³/s`    : "—"} highlight={qvao != null} />
-        <HydroBox icon="arrow-up-circle"   iconColor="#EF5350" label="Lưu lượng xả"    value={luuluongxa != null ? `${luuluongxa.toFixed(1)} m³/s` : "—"} highlight={luuluongxa != null} />
+        <HydroBox icon="trending-up"       iconColor="#0277BD" label={`${t("home.popup.waterLevel")} (HTL)`}  value={htl != null        ? `${htl.toFixed(2)} m`        : "—"} highlight={htl != null} />
+        <HydroBox icon="arrow-down-circle" iconColor="#26A69A" label={t("home.popup.inflow")}   value={qvao != null       ? `${qvao.toFixed(1)} m³/s`    : "—"} highlight={qvao != null} />
+        <HydroBox icon="arrow-up-circle"   iconColor="#EF5350" label={t("home.popup.discharge")}    value={luuluongxa != null ? `${luuluongxa.toFixed(1)} m³/s` : "—"} highlight={luuluongxa != null} />
       </View>
       {rainLevel && (
         <View style={[popupStyles.rainBadgeRow, { backgroundColor: rainLevel.bg }]}>
           <Ionicons name="rainy" size={14} color={rainLevel.color} />
           <Text style={[popupStyles.rainBadgeText, { color: rainLevel.color }]}>
-            {item.sumDepth > 0 ? `Mưa: ${item.sumDepth} mm/h` : "Hiện không có mưa"}
+            {item.sumDepth > 0 ? `${t("home.popup.rainPrefix")}: ${item.sumDepth} mm/h` : t("home.popup.noRain")}
             {" · "}{rainLevel.label}
           </Text>
         </View>
       )}
       <WeatherInline weather={weather} loading={loading} />
       {item.lastUpdate && (
-        <Text style={popupStyles.updateText}>🕐 Cập nhật: {new Date(item.lastUpdate).toLocaleString("vi-VN")}</Text>
+        <Text style={popupStyles.updateText}>🕐 {t("home.popup.updatedAt")}: {new Date(item.lastUpdate).toLocaleString(i18n.language)}</Text>
       )}
     </View>
   );
@@ -1402,6 +1573,7 @@ function ReservoirPopup({ item, weather, loading }) {
 
 // ── Rain Station Popup ─────────────────────────────────────────────────────────
 function RainStationPopup({ item, weather, loading }) {
+  const { t } = useTranslation();
   const rainLevel = getRainLevelColor(item.sumDepth);
   return (
     <View style={popupStyles.section}>
@@ -1418,12 +1590,12 @@ function RainStationPopup({ item, weather, loading }) {
       </View>
       <View style={popupStyles.infoRow}>
         <Ionicons name="location-outline" size={14} color="#78909C" />
-        <Text style={popupStyles.infoLabel}> Vị trí</Text>
+        <Text style={popupStyles.infoLabel}> {t("home.popup.location")}</Text>
         <Text style={popupStyles.infoValue} numberOfLines={1}>{item.address || item.name}</Text>
       </View>
       <WeatherInline weather={weather} loading={loading} />
       {item.lastUpdate && (
-        <Text style={popupStyles.updateText}>🕐 Cập nhật: {new Date(item.lastUpdate).toLocaleString("vi-VN")}</Text>
+        <Text style={popupStyles.updateText}>🕐 {t("home.popup.updatedAt")}: {new Date(item.lastUpdate).toLocaleString(i18n.language)}</Text>
       )}
     </View>
   );
@@ -1431,10 +1603,11 @@ function RainStationPopup({ item, weather, loading }) {
 
 // ── Weather Inline ─────────────────────────────────────────────────────────────
 function WeatherInline({ weather, loading }) {
+  const { t } = useTranslation();
   if (loading) return (
     <View style={popupStyles.weatherRow}>
       <ActivityIndicator size="small" color={COLORS.primary} />
-      <Text style={{ marginLeft: 8, fontSize: 12, color: "#90A4AE" }}>Đang tải thời tiết...</Text>
+      <Text style={{ marginLeft: 8, fontSize: 12, color: "#90A4AE" }}>{t("home.popup.loadingWeather")}</Text>
     </View>
   );
   if (!weather) return null;
@@ -1450,9 +1623,9 @@ function WeatherInline({ weather, loading }) {
           <Text style={popupStyles.weatherDesc}>{toVi(weather.desc)}</Text>
         </View>
         <View style={popupStyles.weatherStats}>
-          <WeatherStat icon="water-outline"       value={`${weather.humidity}%`}         label="Độ ẩm" />
-          <WeatherStat icon="speedometer-outline" value={`${weather.wind} km/h`}          label="Gió" />
-          {weather.rainMm > 0 && <WeatherStat icon="rainy-outline" value={`${weather.rainMm.toFixed(1)}mm`} label="Mưa 1h" />}
+          <WeatherStat icon="water-outline"       value={`${weather.humidity}%`}         label={t("home.popup.humidity")} />
+          <WeatherStat icon="speedometer-outline" value={`${weather.wind} km/h`}          label={t("home.popup.wind")} />
+          {weather.rainMm > 0 && <WeatherStat icon="rainy-outline" value={`${weather.rainMm.toFixed(1)}mm`} label={t("home.popup.rain1h")} />}
         </View>
       </View>
     </View>
@@ -1481,13 +1654,14 @@ function HydroBox({ icon, iconColor, label, value, highlight }) {
 
 // ── Flood Post Popup ───────────────────────────────────────────────────────────
 function FloodPostPopup({ item }) {
+  const { t } = useTranslation();
   const imgs      = (Array.isArray(item.imageUrls) ? item.imageUrls : []).slice(0, 3);
-  const userName  = item.user?.name || "Người dùng ẩn danh";
+  const userName  = item.user?.name || t("home.popup.anonymousUser");
   const district  = item.location?.district || "";
-  const address   = item.location?.address  || item.locationName || "Chưa xác định";
+  const address   = item.location?.address  || item.locationName || t("home.popup.unknownAddress");
   const fullAddr  = district ? `${address}, ${district}` : address;
   const floodLevel = item.floodLevel;
-  const areaType  = item.areaType ? (AREA_TYPE_LABEL[item.areaType] || item.areaType) : null;
+  const areaType  = item.areaType ? (AREA_TYPE_LABEL_KEY[item.areaType] ? t(AREA_TYPE_LABEL_KEY[item.areaType]) : item.areaType) : null;
   const floodTime = item.floodTime ? new Date(item.floodTime) : null;
 
   return (
@@ -1535,13 +1709,13 @@ function FloodPostPopup({ item }) {
           {!!floodLevel && (
             <View style={postStyles.floodBadge}>
               <Ionicons name="water" size={12} color="#0D47A1" />
-              <Text style={postStyles.floodBadgeText}>Ngập {floodLevel} cm</Text>
+              <Text style={postStyles.floodBadgeText}>{t("home.popup.floodLevelBadge", { level: floodLevel })}</Text>
             </View>
           )}
           {item.aiProcessed && item.aiFloodLevel !== null && (
             <View style={[postStyles.floodBadge, { backgroundColor: '#E3F2FD', borderColor: '#90CAF9' }]}>
               <Text style={{ fontSize: 12 }}>🤖</Text>
-              <Text style={[postStyles.floodBadgeText, { color: '#1565C0' }]}>AI đo: {item.aiFloodLevel} cm</Text>
+              <Text style={[postStyles.floodBadgeText, { color: '#1565C0' }]}>{t("home.popup.aiMeasured", { level: item.aiFloodLevel })}</Text>
             </View>
           )}
           {!!areaType && (
@@ -1563,14 +1737,14 @@ function FloodPostPopup({ item }) {
       {item.isFrequentFlood && (
         <View style={postStyles.frequentBadge}>
           <Ionicons name="warning" size={13} color="#E65100" />
-          <Text style={postStyles.frequentText}>Khu vực này thường xuyên bị ngập</Text>
+          <Text style={postStyles.frequentText}>{t("home.popup.frequentFloodArea")}</Text>
         </View>
       )}
 
       {/* ── Thời điểm xảy ra ── */}
       {floodTime && (
         <Text style={postStyles.floodTime}>
-          🕐 Xảy ra lúc: {floodTime.toLocaleString("vi-VN")}
+          🕐 {t("home.popup.occurredAt")}: {floodTime.toLocaleString(i18n.language)}
         </Text>
       )}
     </View>
@@ -1578,6 +1752,16 @@ function FloodPostPopup({ item }) {
 }
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
+const locationDeniedStyles = StyleSheet.create({
+  banner: {
+    position: "absolute", top: 0, left: 0, right: 0, zIndex: 1000,
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "rgba(198,40,40,0.95)",
+    paddingHorizontal: 12, paddingVertical: 8, gap: 8,
+  },
+  text: { color: "#fff", fontSize: 12, fontWeight: "600", flex: 1 },
+});
+
 const miniStyles = StyleSheet.create({
   widget: {
     position: "absolute", top: 0, left: 0, right: 0, zIndex: 1000,
@@ -1672,6 +1856,30 @@ const searchStyles = StyleSheet.create({
 const uiStyles = StyleSheet.create({
   layerButtons: { position: "absolute", top: 140, right: 10, zIndex: 999, gap: 6 },
   layerBtn: { padding: 10, borderRadius: 10, elevation: 2 },
+});
+
+const chatFabStyles = StyleSheet.create({
+  btn: {
+    position: "absolute", bottom: 100, left: 20, zIndex: 999,
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: "#1976D2", alignItems: "center", justifyContent: "center",
+    elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3,
+  },
+});
+
+const safetyStyles = StyleSheet.create({
+  wrap: { position: "absolute", bottom: 100, right: 20, zIndex: 999, alignItems: "flex-end" },
+  btn: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: "#43A047", alignItems: "center", justifyContent: "center",
+    elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3,
+  },
+  btnChecked: { backgroundColor: "#2E7D32" },
+  badge: {
+    backgroundColor: "rgba(46,125,50,0.95)", borderRadius: 10,
+    paddingVertical: 4, paddingHorizontal: 8, marginBottom: 6, maxWidth: 160,
+  },
+  badgeText: { color: "#fff", fontSize: 10, fontWeight: "600", textAlign: "right" },
 });
 
 const markerStyles = StyleSheet.create({

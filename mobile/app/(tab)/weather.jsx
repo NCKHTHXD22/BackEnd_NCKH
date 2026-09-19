@@ -12,16 +12,19 @@ import {
   Dimensions,
 } from "react-native";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../constants/colors";
 import { API_URL } from "@/lib/env";
+import { saveCache, loadCache } from "@/lib/offlineCache";
+import i18n from "@/lib/i18n";
 import ReservoirStatusCard from "../../components/ReservoirStatusCard";
 
 const { width } = Dimensions.get("window");
 
-const OWM_KEY = "c41fa113b3691968f275c36bcadebe29";
 const DEFAULT_COORD = { latitude: 16.047, longitude: 108.206 }; // Đà Nẵng fallback
 
 // Bản dịch mô tả thời tiết OpenWeatherMap → Tiếng Việt
@@ -42,19 +45,28 @@ const DESC_VI = {
   "fog": "Sương dày",
 };
 
-const toVi = (desc) => DESC_VI[desc?.toLowerCase()] || desc || "—";
+// Mô tả từ OpenWeatherMap luôn ở tiếng Anh (proxy không truyền lang) — chỉ
+// dịch sang tiếng Việt khi app đang ở chế độ vi; ở chế độ en giữ nguyên gốc.
+const toVi = (desc) => {
+  if (i18n.language?.startsWith("en")) return desc || "—";
+  return DESC_VI[desc?.toLowerCase()] || desc || "—";
+};
 
 const getUVLevel = (uvi) => {
   if (uvi == null) return { text: "—", color: "#9E9E9E" };
-  if (uvi <= 2) return { text: `${uvi} Thấp`, color: "#43A047" };
-  if (uvi <= 5) return { text: `${uvi} Trung bình`, color: "#FDD835" };
-  if (uvi <= 7) return { text: `${uvi} Cao`, color: "#FB8C00" };
-  if (uvi <= 10) return { text: `${uvi} Rất cao`, color: "#EF5350" };
-  return { text: `${uvi} Cực cao`, color: "#9C27B0" };
+  const label = (key) => i18n.t(`weather.${key}`);
+  if (uvi <= 2) return { text: `${uvi} ${label("uvLow")}`, color: "#43A047" };
+  if (uvi <= 5) return { text: `${uvi} ${label("uvModerate")}`, color: "#FDD835" };
+  if (uvi <= 7) return { text: `${uvi} ${label("uvHigh")}`, color: "#FB8C00" };
+  if (uvi <= 10) return { text: `${uvi} ${label("uvVeryHigh")}`, color: "#EF5350" };
+  return { text: `${uvi} ${label("uvExtreme")}`, color: "#9C27B0" };
 };
 
 const getWeekday = (dateStr) => {
   const d = new Date(dateStr);
+  if (i18n.language?.startsWith("en")) {
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()];
+  }
   return ["CN", "T.2", "T.3", "T.4", "T.5", "T.6", "T.7"][d.getDay()];
 };
 
@@ -72,8 +84,9 @@ const distKm = (lat1, lon1, lat2, lon2) => {
 };
 
 export default function WeatherScreen() {
+  const { t } = useTranslation();
   const [coord, setCoord] = useState(null);
-  const [locName, setLocName] = useState("Đang xác định...");
+  const [locName, setLocName] = useState(t("weather.determiningLocation"));
   const [current, setCurrent] = useState(null);
   const [hourly, setHourly] = useState([]);
   const [daily, setDaily] = useState([]);
@@ -83,6 +96,8 @@ export default function WeatherScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [offlineSince, setOfflineSince] = useState(null);
 
   // ── Lấy vị trí GPS ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -97,31 +112,33 @@ export default function WeatherScreen() {
           const geo = await Location.reverseGeocodeAsync(loc.coords);
           if (geo?.length > 0) {
             const g = geo[0];
-            setLocName([g.subregion || g.district, g.city].filter(Boolean).join(", ") || "Vị trí của bạn");
+            setLocName([g.subregion || g.district, g.city].filter(Boolean).join(", ") || t("weather.yourLocation"));
           }
         } else {
           setCoord(DEFAULT_COORD);
-          setLocName("Đà Nẵng (mặc định)");
+          setLocName(t("weather.defaultLocation"));
         }
       } catch {
         setCoord(DEFAULT_COORD);
-        setLocName("Đà Nẵng (mặc định)");
+        setLocName(t("weather.defaultLocation"));
       }
     })();
-  }, []);
+  }, [t]);
 
   // ── Fetch thời tiết khi có tọa độ ───────────────────────────────────────────
   const fetchWeather = useCallback(async (lat, lon) => {
     try {
+      // Gọi qua backend proxy (/api/weather/*) thay vì OpenWeatherMap trực
+      // tiếp — key API giờ chỉ sống ở server, không còn lộ trong app bundle.
       const [curRes, foreRes, oneRes] = await Promise.all([
-        axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
-          params: { lat, lon, units: "metric", appid: OWM_KEY, lang: "vi" },
+        axios.get(`${API_URL}/api/weather/current`, {
+          params: { lat, lon, lang: "vi" },
         }),
-        axios.get(`https://api.openweathermap.org/data/2.5/forecast`, {
-          params: { lat, lon, units: "metric", appid: OWM_KEY, cnt: 40 },
+        axios.get(`${API_URL}/api/weather/forecast`, {
+          params: { lat, lon, cnt: 40 },
         }),
-        axios.get(`https://api.openweathermap.org/data/2.5/uvi`, {
-          params: { lat, lon, appid: OWM_KEY },
+        axios.get(`${API_URL}/api/weather/uvi`, {
+          params: { lat, lon },
         }).catch(() => ({ data: { value: null } })),
       ]);
 
@@ -155,11 +172,30 @@ export default function WeatherScreen() {
           };
         });
       setDaily(dailyArr);
+      setIsOffline(false);
+      setOfflineSince(null);
+      saveCache("weather", {
+        current: curRes.data,
+        uvIndex: oneRes.data?.value ?? null,
+        hourly: nextItems,
+        daily: dailyArr,
+      });
     } catch (err) {
-      setError("Không thể tải dữ liệu thời tiết. Kiểm tra kết nối mạng.");
       console.error("Weather fetch error:", err);
+      // Mất mạng — dùng dữ liệu thời tiết đã cache thay vì màn hình lỗi trắng
+      const cached = await loadCache("weather");
+      if (cached?.data) {
+        setCurrent(cached.data.current);
+        setUvIndex(cached.data.uvIndex ?? null);
+        setHourly(cached.data.hourly || []);
+        setDaily(cached.data.daily || []);
+        setOfflineSince(cached.savedAt);
+        setIsOffline(true);
+      } else {
+        setError(t("weather.loadError"));
+      }
     }
-  }, []);
+  }, [t]);
 
   // ── Fetch trạm quan trắc & hồ chứa ─────────────────────────────────────────
   const fetchStations = useCallback(async (lat, lon) => {
@@ -169,8 +205,9 @@ export default function WeatherScreen() {
         axios.get(`${API_URL}/api/inflowLake`),
       ]);
 
+      let sortedRain = null;
       if (rainRes.status === "fulfilled" && Array.isArray(rainRes.value.data)) {
-        const sorted = rainRes.value.data
+        sortedRain = rainRes.value.data
           .filter((s) => s.location?.lat && s.location?.lng)
           .map((s) => ({
             ...s,
@@ -178,11 +215,12 @@ export default function WeatherScreen() {
           }))
           .sort((a, b) => a.dist - b.dist)
           .slice(0, 5);
-        setRainStations(sorted);
+        setRainStations(sortedRain);
       }
 
+      let sortedReservoirs = null;
       if (reservoirRes.status === "fulfilled" && Array.isArray(reservoirRes.value.data)) {
-        const sorted = reservoirRes.value.data
+        sortedReservoirs = reservoirRes.value.data
           .filter((r) => (r.lat || r.location?.lat) && (r.lon || r.location?.lng))
           .map((r) => ({
             ...r,
@@ -194,10 +232,19 @@ export default function WeatherScreen() {
           }))
           .sort((a, b) => a.dist - b.dist)
           .slice(0, 3);
-        setReservoirs(sorted);
+        setReservoirs(sortedReservoirs);
+      }
+
+      if (sortedRain || sortedReservoirs) {
+        saveCache("weatherStations", { rainStations: sortedRain, reservoirs: sortedReservoirs });
       }
     } catch (err) {
       console.error("Station fetch error:", err);
+      const cached = await loadCache("weatherStations");
+      if (cached?.data) {
+        if (cached.data.rainStations) setRainStations(cached.data.rainStations);
+        if (cached.data.reservoirs) setReservoirs(cached.data.reservoirs);
+      }
     }
   }, []);
 
@@ -232,7 +279,7 @@ export default function WeatherScreen() {
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={{ marginTop: 12, color: "#666", fontSize: 14 }}>
-          Đang tải dữ liệu thời tiết...
+          {t("weather.loading")}
         </Text>
       </View>
     );
@@ -244,10 +291,10 @@ export default function WeatherScreen() {
       <View style={styles.center}>
         <Ionicons name="cloud-offline-outline" size={64} color="#B0BEC5" />
         <Text style={{ marginTop: 16, color: "#546E7A", fontSize: 15, textAlign: "center", paddingHorizontal: 30 }}>
-          {error || "Không thể tải dữ liệu thời tiết."}
+          {error || t("weather.loadErrorGeneric")}
         </Text>
         <TouchableOpacity onPress={() => coord && fetchWeather(coord.latitude, coord.longitude)} style={styles.retryBtn}>
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Thử lại</Text>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>{t("common.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -279,6 +326,18 @@ export default function WeatherScreen() {
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
     >
+      {/* ── Chế độ offline — đang hiển thị dữ liệu cache do mất mạng ── */}
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={14} color="#fff" />
+          <Text style={styles.offlineBannerText}>
+            {offlineSince
+              ? t("weather.offlineWithTime", { time: new Date(offlineSince).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" }) })
+              : t("weather.offlineNoTime")}
+          </Text>
+        </View>
+      )}
+
       {/* ── HERO CARD: Thời tiết hiện tại ── */}
       <LinearGradient colors={gradColors} style={styles.heroCard}>
         <View style={styles.heroTop}>
@@ -286,7 +345,7 @@ export default function WeatherScreen() {
           <Text style={styles.heroLoc}>{locName}</Text>
         </View>
         <Text style={styles.heroDate}>
-          {new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long" })}
+          {new Date().toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "long" })}
         </Text>
 
         <View style={styles.heroMain}>
@@ -299,30 +358,30 @@ export default function WeatherScreen() {
           <View>
             <Text style={styles.heroTemp}>{temp}°C</Text>
             <Text style={styles.heroDesc}>{toVi(description)}</Text>
-            <Text style={styles.heroFeels}>Cảm giác: {feelsLike}°C</Text>
+            <Text style={styles.heroFeels}>{t("weather.feelsLike")}: {feelsLike}°C</Text>
           </View>
         </View>
 
         {/* 4 chỉ số */}
         <View style={styles.statRow}>
-          <StatBox icon="water-outline" label="Độ ẩm" value={`${humidity}%`} />
-          <StatBox icon="speedometer-outline" label="Gió" value={`${windSpeed} km/h`} />
-          <StatBox icon="sunny-outline" label="UV" value={uv.text} valueColor={uv.color} />
-          <StatBox icon="rainy-outline" label="Mưa 1h" value={`${rainMm.toFixed(1)} mm`} />
+          <StatBox icon="water-outline" label={t("weather.humidity")} value={`${humidity}%`} />
+          <StatBox icon="speedometer-outline" label={t("weather.wind")} value={`${windSpeed} km/h`} />
+          <StatBox icon="sunny-outline" label={t("weather.uv")} value={uv.text} valueColor={uv.color} />
+          <StatBox icon="rainy-outline" label={t("weather.rain1h")} value={`${rainMm.toFixed(1)} mm`} />
         </View>
       </LinearGradient>
 
       {/* ── DỰ BÁO THEO GIỜ ── */}
-      <SectionHeader title="Dự báo theo giờ (24h)" icon="time-outline" />
+      <SectionHeader title={t("weather.hourlyForecast")} icon="time-outline" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourlyList}>
         {hourly.map((item, idx) => {
-          const t = new Date(item.dt * 1000).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+          const timeLabel = new Date(item.dt * 1000).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" });
           const temp_ = Math.round(item.main.temp);
           const ic = item.weather[0].icon;
           const pop = Math.round((item.pop || 0) * 100);
           return (
             <View key={idx} style={styles.hourCard}>
-              <Text style={styles.hourTime}>{t}</Text>
+              <Text style={styles.hourTime}>{timeLabel}</Text>
               <Image source={{ uri: `https://openweathermap.org/img/wn/${ic}@2x.png` }} style={styles.hourIcon} />
               <Text style={styles.hourTemp}>{temp_}°</Text>
               {pop > 0 && (
@@ -337,11 +396,11 @@ export default function WeatherScreen() {
       </ScrollView>
 
       {/* ── DỰ BÁO 5 NGÀY ── */}
-      <SectionHeader title="Dự báo 5 ngày tới" icon="calendar-outline" />
+      <SectionHeader title={t("weather.dailyForecast")} icon="calendar-outline" />
       <View style={styles.dailyCard}>
         {daily.map((d, idx) => (
           <View key={idx} style={[styles.dailyRow, idx < daily.length - 1 && styles.dailySep]}>
-            <Text style={styles.dailyDay}>{idx === 0 ? "Hôm nay" : getWeekday(d.date)}</Text>
+            <Text style={styles.dailyDay}>{idx === 0 ? t("weather.today") : getWeekday(d.date)}</Text>
             <Image source={{ uri: `https://openweathermap.org/img/wn/${d.icon}@2x.png` }} style={styles.dailyIcon} />
             <Text style={styles.dailyDesc} numberOfLines={1}>{toVi(d.desc)}</Text>
             <View style={styles.dailyTemps}>
@@ -360,7 +419,7 @@ export default function WeatherScreen() {
       {/* ── TRẠM QUAN TRẮC MƯA ── */}
       {rainStations.length > 0 && (
         <>
-          <SectionHeader title="Trạm quan trắc mưa gần đây" icon="rainy-outline" />
+          <SectionHeader title={t("weather.nearbyRainStations")} icon="rainy-outline" />
           <View style={styles.stationCard}>
             {rainStations.map((s, idx) => (
               <View key={idx} style={[styles.stationRow, idx < rainStations.length - 1 && styles.dailySep]}>
@@ -369,7 +428,7 @@ export default function WeatherScreen() {
                 <Text style={styles.stationDist}>{s.dist.toFixed(1)} km</Text>
                 <View style={[styles.rainLevelBadge, { backgroundColor: getRainColor(s.sumDepth) + "22", borderColor: getRainColor(s.sumDepth) }]}>
                   <Text style={[styles.rainLevelText, { color: getRainColor(s.sumDepth) }]}>
-                    {s.sumDepth != null ? `${s.sumDepth} mm/h` : "Không mưa"}
+                    {s.sumDepth != null ? `${s.sumDepth} mm/h` : t("weather.noRain")}
                   </Text>
                 </View>
               </View>
@@ -381,7 +440,20 @@ export default function WeatherScreen() {
       {/* ── HỒ CHỨA GẦN NHẤT ── */}
       {reservoirs.length > 0 && (
         <>
-          <SectionHeader title="Hồ chứa gần vị trí" icon="water-outline" />
+          <SectionHeader title={t("weather.nearbyReservoirs")} icon="water-outline" />
+          <TouchableOpacity
+            style={styles.forecastCta}
+            onPress={() => router.push("/(tab)/forecasting")}
+          >
+            <View style={styles.forecastCtaIcon}>
+              <Ionicons name="analytics" size={20} color={COLORS.white} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.forecastCtaTitle}>{t("weather.forecastCtaTitle")}</Text>
+              <Text style={styles.forecastCtaSub}>{t("weather.forecastCtaSub")}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+          </TouchableOpacity>
           <View style={styles.reservoirWrapper}>
             {reservoirs.map((r, idx) => (
               <ReservoirStatusCard
@@ -440,6 +512,12 @@ function getRainColor(mm) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F3F6FA" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
+  offlineBanner: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "#616161", marginHorizontal: 12, marginTop: 10,
+    borderRadius: 10, paddingVertical: 6, paddingHorizontal: 10,
+  },
+  offlineBannerText: { color: "#fff", fontSize: 11, fontWeight: "600", flex: 1 },
   retryBtn: {
     marginTop: 20,
     backgroundColor: COLORS.primary,
@@ -578,4 +656,31 @@ const styles = StyleSheet.create({
 
   // ── Reservoirs
   reservoirWrapper: { marginHorizontal: 12 },
+
+  // ── Forecast CTA (link sang màn Dự báo AI/LSTM) ──────────────────────────
+  forecastCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 12,
+    marginBottom: 12,
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    padding: 14,
+    gap: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  forecastCtaIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  forecastCtaTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  forecastCtaSub: { fontSize: 12, color: "#6B7280", marginTop: 2 },
 });
