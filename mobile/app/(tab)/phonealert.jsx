@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,13 @@ import {
   Linking,
   TouchableOpacity,
   FlatList,
+  Share,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@clerk/clerk-expo";
+import * as Location from "expo-location";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
@@ -37,14 +41,41 @@ const EMERGENCY_CONTACTS = [
 
 export default function PhoneAlertScreen() {
   const { signOut } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
   const { t } = useTranslation();
+  const [sosBusy, setSosBusy] = useState(false);
 
   const handleCall = (phoneNumber) => {
     const url = `tel:${phoneNumber}`;
     Linking.openURL(url).catch((err) =>
       console.error("Lỗi khi gọi điện thoại:", err)
     );
+  };
+
+  // Chia sẻ vị trí GPS hiện tại ngay lập tức qua bảng chia sẻ của hệ điều hành
+  // (SMS/Zalo/Messenger...) cho người thân — nhanh hơn điền form "Yêu cầu trợ
+  // giúp" đầy đủ khi đang trong tình huống khẩn cấp cần báo vị trí ngay.
+  const handleSOS = async () => {
+    setSosBusy(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(t("phonealert.sosLocationDeniedTitle"), t("phonealert.sosLocationDeniedMessage"));
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const { latitude, longitude } = loc.coords;
+      const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      const name = user?.fullName || user?.firstName || "";
+      const message = t("phonealert.sosMessage", { name, link: mapsLink });
+      await Share.share({ message });
+    } catch (err) {
+      console.error("Lỗi SOS:", err);
+      Alert.alert(t("common.error"), t("phonealert.sosError"));
+    } finally {
+      setSosBusy(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -65,6 +96,18 @@ export default function PhoneAlertScreen() {
           <Ionicons name="log-out-outline" size={24} color="red" />
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={styles.sosBtn} onPress={handleSOS} disabled={sosBusy} activeOpacity={0.85}>
+        {sosBusy ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <>
+            <Ionicons name="alert-circle" size={22} color="#fff" />
+            <Text style={styles.sosBtnText}>{t("phonealert.sosBtn")}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+      <Text style={styles.sosHint}>{t("phonealert.sosHint")}</Text>
 
       <FlatList
         data={EMERGENCY_CONTACTS}
@@ -130,5 +173,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
     marginTop: 8,
     width: "100%",
+  },
+  sosBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#C62828",
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginBottom: 6,
+  },
+  sosBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  sosHint: {
+    fontSize: 11,
+    color: "#78909C",
+    textAlign: "center",
+    marginBottom: 18,
   },
 });

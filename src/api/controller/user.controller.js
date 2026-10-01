@@ -52,7 +52,7 @@ export const getUserProfile = async (req, res) => {
 export const updateUserInfo = async (req, res) => {
     try {
         const clerkId = req.auth.userId;
-        const { name, phone, allowNotification, favoriteLocation } = req.body;
+        const { name, phone, allowNotification, favoriteLocation, alertRadiusKm, alertLevelCm } = req.body;
 
         const user = await userRepo.findByClerkId(clerkId);
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -61,11 +61,36 @@ export const updateUserInfo = async (req, res) => {
         if (phone) user.phone = phone;
         if (allowNotification !== undefined) user.allowNotification = allowNotification;
         if (favoriteLocation) user.favoriteLocation = favoriteLocation;
+        if (typeof alertRadiusKm === "number" && alertRadiusKm > 0) user.alertRadiusKm = alertRadiusKm;
+        if (typeof alertLevelCm === "number" && alertLevelCm > 0) user.alertLevelCm = alertLevelCm;
 
         await user.save();
         res.json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// ─── PATCH /api/users/location  (auth required) ───────────────────────────────
+// App gọi định kỳ khi GPS cập nhật (xem index.jsx) — KHÔNG phải theo dõi vị
+// trí nền liên tục của hệ điều hành, chỉ là vị trí gần nhất lúc app đang mở.
+// proximityAlert.job.js dùng giá trị này để cảnh báo ngập/mưa cực lớn gần
+// người dùng ngay cả khi họ vừa rời khỏi app (xem PROXIMITY_LOCATION_MAX_AGE_MS).
+export const updateUserLocation = async (req, res) => {
+    try {
+        const clerkId = req.auth.userId;
+        const { lat, lon } = req.body;
+        if (typeof lat !== "number" || typeof lon !== "number" || Number.isNaN(lat) || Number.isNaN(lon)) {
+            return res.status(400).json({ message: "lat/lon không hợp lệ" });
+        }
+        const user = await userRepo.findByClerkId(clerkId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.lastLocation = { lat, lon, updatedAt: new Date() };
+        await user.save();
+        res.json({ message: "Đã cập nhật vị trí" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 };
 

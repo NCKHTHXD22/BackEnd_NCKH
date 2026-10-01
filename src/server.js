@@ -44,6 +44,7 @@ import "./jobs/xgbForecast.job.js";
 import "./jobs/rfForecast.job.js";
 import "./jobs/inflowLakeHistory.job.js";
 import "./jobs/floodAlert.job.js";
+import "./jobs/proximityAlert.job.js";
 
 const app = express();
 // Sau reverse proxy (nginx), nếu không set thì mọi người dùng chung 1 IP → rate limit

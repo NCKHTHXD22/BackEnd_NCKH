@@ -42,13 +42,30 @@ const ProfileScreen = () => {
     getAlertLevelCm().then(setAlertLevelCmState);
   }, []);
 
+  // Đồng bộ ngưỡng lên server (không chỉ lưu cục bộ) — để proximityAlert.job.js
+  // dùng đúng lựa chọn của người dùng khi cảnh báo lúc app đang đóng/nền.
+  const syncAlertPrefsToServer = async (patch) => {
+    try {
+      const authToken = await getToken();
+      await fetch(`${API_URL}/api/users`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify(patch),
+      });
+    } catch (e) {
+      console.warn("Không đồng bộ được ngưỡng cảnh báo lên server:", e.message);
+    }
+  };
+
   const chooseRadius = async (km) => {
     setAlertRadiusKmState(km);
     await setAlertRadiusKm(km);
+    syncAlertPrefsToServer({ alertRadiusKm: km });
   };
   const chooseLevel = async (cm) => {
     setAlertLevelCmState(cm);
     await setAlertLevelCm(cm);
+    syncAlertPrefsToServer({ alertLevelCm: cm });
   };
 
   // Nạp đúng trạng thái đã lưu — trước đây luôn mặc định "true" dù người

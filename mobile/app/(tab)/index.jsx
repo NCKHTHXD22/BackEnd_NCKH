@@ -28,6 +28,7 @@ import { saveCache, loadCache } from "@/lib/offlineCache";
 import i18n from "@/lib/i18n";
 
 const GMAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+const LOCATION_SYNC_INTERVAL = 2 * 60 * 1000; // 2 phút — đủ để proximityAlert.job.js (chạy /5 phút) luôn có vị trí gần đây
 // Overpass từ chối (406/429) request không có User-Agent định danh
 const OVERPASS_UA = "NCKH-FloodWarning/1.0 (Vu Gia - Thu Bon flood warning)";
 
@@ -741,6 +742,25 @@ export default function HomeScreen() {
     prevAlertIdsRef.current = new Set(localAlerts.map((a) => a.id));
   }, [localAlerts]);
 
+  // ── Đồng bộ vị trí lên server (không phải theo dõi nền OS) ──────────────────
+  // Cho phép proximityAlert.job.js cảnh báo ngập/mưa cực lớn gần người dùng dù
+  // họ vừa rời khỏi app gần đây (foreground GPS watch bên dưới mới lấy được vị
+  // trí, không phải background location) — xem ghi chú trong proximityAlert.service.js.
+  const lastLocationSyncRef = useRef(0);
+  const syncLocationToServer = useCallback(async (coords) => {
+    const now = Date.now();
+    if (now - lastLocationSyncRef.current < LOCATION_SYNC_INTERVAL) return;
+    lastLocationSyncRef.current = now;
+    try {
+      const token = await getToken();
+      await axios.patch(
+        `${API_URL}/api/users/location`,
+        { lat: coords.latitude, lon: coords.longitude },
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 8000 }
+      );
+    } catch { /* offline hoặc lỗi tạm thời — bỏ qua, thử lại lần cập nhật GPS kế tiếp */ }
+  }, [getToken]);
+
   // ── GPS watch ───────────────────────────────────────────────────────────────
   useEffect(() => {
     let subscription;
@@ -757,12 +777,15 @@ export default function HomeScreen() {
         setLocationDenied(false);
         subscription = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
-          (loc) => setLocation(loc.coords)
+          (loc) => {
+            setLocation(loc.coords);
+            syncLocationToServer(loc.coords);
+          }
         );
       } catch (err) { console.error("❌ GPS:", err); }
     })();
     return () => subscription?.remove();
-  }, []);
+  }, [syncLocationToServer]);
 
   // ── Mini weather when GPS ready ─────────────────────────────────────────────
   useEffect(() => {

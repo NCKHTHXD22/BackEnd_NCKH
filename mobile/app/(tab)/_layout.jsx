@@ -2,17 +2,53 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View } from "react-native";
+import { View, AppState } from "react-native";
+import { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../constants/colors";
 import { API_URL, CLERK_KEY } from "@/lib/env";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import WeatherAlertBanner from "../../components/WeatherAlertBanner";
 
+const UNREAD_POLL_MS = 2 * 60 * 1000; // 2 phút — đủ nhanh mà không tốn pin/băng thông
+
+// Số thông báo cá nhân chưa đọc — hiện dạng badge đỏ trên icon tab "Thông báo"
+// mà không cần mở tab mới biết có tin mới.
+function useUnreadNotificationCount(isSignedIn, getToken) {
+  const [count, setCount] = useState(0);
+
+  const refresh = useCallback(async () => {
+    if (!isSignedIn) { setCount(0); return; }
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await axios.get(`${API_URL}/api/notifications/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000,
+      });
+      const unread = (res.data || []).filter((n) => !n.read).length;
+      setCount(unread);
+    } catch { /* offline hoặc lỗi tạm thời — giữ badge cũ */ }
+  }, [isSignedIn, getToken]);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, UNREAD_POLL_MS);
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") refresh();
+    });
+    return () => { clearInterval(interval); sub.remove(); };
+  }, [refresh]);
+
+  return count;
+}
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const { t } = useTranslation();
+  const unreadCount = useUnreadNotificationCount(isSignedIn, getToken);
 
   if (!isLoaded) return null;
 
@@ -77,6 +113,8 @@ export default function TabLayout() {
           options={{
             title: t("tabs.notification"),
             tabBarIcon: ({ color, size }) => <Ionicons name="notifications" size={size} color={color} />,
+            tabBarBadge: unreadCount > 0 ? (unreadCount > 99 ? "99+" : unreadCount) : undefined,
+            tabBarBadgeStyle: { backgroundColor: "#C62828" },
           }}
         />
         <Tabs.Screen

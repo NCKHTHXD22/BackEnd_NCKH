@@ -1,5 +1,7 @@
 import axios from "axios";
 import ReservoirAlert from "../core/entities/ReservoirAlert.js";
+import Post from "../core/entities/FloodPost.js";
+import RainStation from "../core/entities/RainStation.js";
 
 // Chatbot hỗ trợ người dân — gọi Claude API từ server, key (ANTHROPIC_API_KEY)
 // chỉ nằm ở .env, không bao giờ đi vào app mobile/web bundle.
@@ -12,6 +14,22 @@ const MAX_MESSAGE_CHARS = 1000;
 const MAX_HISTORY_TURNS = 10;
 
 const LEVEL_LABEL = { watch: "Theo dõi", warning: "Cảnh báo", danger: "Khẩn cấp" };
+
+// Bán kính "xung quanh vị trí người dùng" khi trả lời câu hỏi kiểu "khu vực
+// tôi có ngập không" — rộng hơn bán kính cảnh báo đẩy (300m) vì đây chỉ là
+// ngữ cảnh tham khảo cho câu trả lời, không phải cảnh báo tự động.
+const LOCAL_CONTEXT_RADIUS_KM = 5;
+const LOCAL_RAIN_HEAVY_MM = 30;
+
+function distanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 const SYSTEM_PROMPT = `Bạn là trợ lý AI của ứng dụng cảnh báo lũ lưu vực sông Vu Gia - Thu Bồn (Đà Nẵng - Quảng Nam), hỗ trợ người dân.
 
@@ -52,8 +70,58 @@ class ChatbotService {
         return lines.join("\n");
     }
 
+    // Tóm tắt điểm ngập đã duyệt + trạm mưa cực lớn gần vị trí người dùng
+    // (nếu app gửi kèm GPS) — giúp chatbot trả lời có căn cứ về khu vực cụ
+    // thể thay vì chỉ nói chung chung về mực nước hồ chứa.
+    async buildLocalContext(lat, lon) {
+        if (typeof lat !== "number" || typeof lon !== "number" || Number.isNaN(lat) || Number.isNaN(lon)) {
+            return null;
+        }
+
+        const since = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // báo cáo trong 3 ngày gần nhất
+        const [posts, rainStations] = await Promise.all([
+            Post.find({
+                status: "approved",
+                "location.latitude": { $ne: null },
+                "location.longitude": { $ne: null },
+                createdAt: { $gte: since },
+            })
+                .select("reportType location floodLevel isFrequentFlood createdAt")
+                .limit(200)
+                .lean(),
+            RainStation.find({ sumDepth: { $gte: LOCAL_RAIN_HEAVY_MM } })
+                .select("name location sumDepth")
+                .limit(100)
+                .lean(),
+        ]);
+
+        const nearbyPosts = posts
+            .filter((p) => distanceKm(lat, lon, p.location.latitude, p.location.longitude) <= LOCAL_CONTEXT_RADIUS_KM)
+            .slice(0, 10);
+        const nearbyRain = rainStations
+            .filter((r) => r.location?.lat != null && distanceKm(lat, lon, r.location.lat, r.location.lng) <= LOCAL_CONTEXT_RADIUS_KM)
+            .slice(0, 5);
+
+        if (nearbyPosts.length === 0 && nearbyRain.length === 0) {
+            return `Trong bán kính ${LOCAL_CONTEXT_RADIUS_KM}km quanh vị trí người dùng: không có báo cáo ngập nào được duyệt trong 3 ngày qua, không có trạm mưa cực lớn.`;
+        }
+
+        const lines = [`Trong bán kính ${LOCAL_CONTEXT_RADIUS_KM}km quanh vị trí người dùng:`];
+        nearbyPosts.forEach((p) => {
+            const kind = p.reportType === "fallen_tree" ? "cây ngã đổ" : p.reportType === "flood_road" ? "đường ngập" : "điểm ngập";
+            lines.push(`- Báo cáo ${kind} tại ${p.location.address || p.location.district || "gần đó"}` +
+                (p.floodLevel ? `, mức ${p.floodLevel}cm` : "") +
+                (p.isFrequentFlood ? " (khu vực thường xuyên ngập)" : "") +
+                `, ghi nhận ${new Date(p.createdAt).toLocaleDateString("vi-VN")}.`);
+        });
+        nearbyRain.forEach((r) => {
+            lines.push(`- Trạm mưa ${r.name || "gần đó"}: lượng mưa tích luỹ ${r.sumDepth}mm — mức rất cao.`);
+        });
+        return lines.join("\n");
+    }
+
     // history: [{ role: "user" | "assistant", content: string }]
-    async reply(message, history = []) {
+    async reply(message, history = [], { lat, lon } = {}) {
         const apiKey = process.env.ANTHROPIC_API_KEY;
         if (!apiKey) {
             const err = new Error("Chatbot chưa được cấu hình (thiếu ANTHROPIC_API_KEY).");
@@ -78,14 +146,20 @@ class ChatbotService {
         // Tin nhắn mới là "user" nên lịch sử không được kết thúc bằng "user"
         if (alternating.length > 0 && alternating[alternating.length - 1].role === "user") alternating.pop();
 
-        const context = await this.buildContext();
+        const [context, localContext] = await Promise.all([
+            this.buildContext(),
+            this.buildLocalContext(lat, lon),
+        ]);
+        const localSection = localContext
+            ? `\n\nDỮ LIỆU KHU VỰC NGƯỜI DÙNG (theo GPS ứng dụng gửi kèm — chỉ mang tính tham khảo, không phải cảnh báo chính thức):\n${localContext}`
+            : "";
 
         const { data } = await axios.post(
             ANTHROPIC_URL,
             {
                 model: MODEL,
                 max_tokens: 600,
-                system: `${SYSTEM_PROMPT}\n\nDỮ LIỆU HIỆN TẠI (cập nhật tự động mỗi 15 phút):\n${context}`,
+                system: `${SYSTEM_PROMPT}\n\nDỮ LIỆU HIỆN TẠI (cập nhật tự động mỗi 15 phút):\n${context}${localSection}`,
                 messages: [...alternating, { role: "user", content: message }],
             },
             {

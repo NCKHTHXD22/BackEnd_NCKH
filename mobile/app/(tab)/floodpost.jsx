@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, Switch, KeyboardAvoidingView,
-  Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator
+  Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator,
+  AppState,
 } from "react-native";
 
 import { useAuth } from "@clerk/clerk-expo";
@@ -12,10 +13,10 @@ import MapView, {PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import { Image } from "expo-image";
 import axios from "axios";
 import * as Location from "expo-location";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "../../assets/styles/post.styles.js";
 import { API_URL } from "@/lib/env";
+import { enqueuePost, trySendQueue, getQueue } from "@/lib/postQueue";
 
 const MAX_IMAGES = 5;
 
@@ -93,6 +94,8 @@ export default function FloodPost() {
   const [images, setImages] = useState([]); // Thay vì 1 ảnh -> nhiều ảnh
   const [region, setRegion] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncingQueue, setSyncingQueue] = useState(false);
 
   const isFloodLevelType = FLOOD_LEVEL_TYPES.includes(reportType);
   const isPointType = POINT_TYPES.includes(reportType);
@@ -124,6 +127,35 @@ export default function FloodPost() {
  useEffect(() => {
   fetchCurrentLocation();
 }, []);
+
+  // ── Hàng đợi báo cáo chưa gửi được (do mất mạng) ─────────────────────────
+  // Thử gửi lại: lúc mở màn hình + mỗi khi app quay lại foreground (thường
+  // là lúc có mạng trở lại sau khi người dùng rời vùng mất sóng).
+  const syncQueue = useCallback(async () => {
+    const queued = await getQueue();
+    if (queued.length === 0) { setPendingCount(0); return; }
+    setSyncingQueue(true);
+    try {
+      const { sent, remaining } = await trySendQueue(getToken);
+      setPendingCount(remaining);
+      if (sent > 0) {
+        Alert.alert(
+          t("floodpost.queueSentTitle"),
+          t("floodpost.queueSentMessage", { count: sent })
+        );
+      }
+    } finally {
+      setSyncingQueue(false);
+    }
+  }, [getToken, t]);
+
+  useEffect(() => {
+    syncQueue();
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") syncQueue();
+    });
+    return () => sub.remove();
+  }, [syncQueue]);
 
     const handlePickImage = async () => {
       if (images.length >= MAX_IMAGES) {
@@ -233,36 +265,40 @@ export default function FloodPost() {
     return;
   }
 
+  // Các trường đơn giản — dùng chung cho gửi ngay và cho hàng đợi offline
+  // (FormData không serialize được để lưu vào AsyncStorage, nên giữ dạng object).
+  const fields = {
+    reportType,
+    "location[province]": province,
+    "location[district]": ward,
+  };
+  if (isPointType) {
+    fields["location[address]"] = address;
+    fields["location[latitude]"] = location.latitude;
+    fields["location[longitude]"] = location.longitude;
+  }
+  if (isRangeType) {
+    fields.fromAddress = fromAddress;
+    fields.toAddress = toAddress;
+  }
+  if (isFloodLevelType) {
+    fields.floodLevel = floodLevel;
+    fields.areaType = areaType;
+  }
+  if (isLandslide) {
+    fields.landslideStatus = landslideStatus;
+    fields.eventEndTime = eventEndTime.toISOString();
+  }
+  fields.floodTime = floodTime.toISOString();
+  if (!isLandslide) fields.description = description;
+  if (!isTree) fields.isFrequentFlood = isFrequentFlood;
+
   try {
     setIsSubmitting(true); // 👈 Bắt đầu loading
 
     const token = await getToken();
     const formData = new FormData();
-
-    formData.append("reportType", reportType);
-    formData.append("location[province]", province);
-    formData.append("location[district]", ward);
-    if (isPointType) {
-      formData.append("location[address]", address);
-      formData.append("location[latitude]", location.latitude);
-      formData.append("location[longitude]", location.longitude);
-    }
-    if (isRangeType) {
-      formData.append("fromAddress", fromAddress);
-      formData.append("toAddress", toAddress);
-    }
-    if (isFloodLevelType) {
-      formData.append("floodLevel", floodLevel);
-      formData.append("areaType", areaType);
-    }
-    if (isLandslide) {
-      formData.append("landslideStatus", landslideStatus);
-      formData.append("eventEndTime", eventEndTime.toISOString());
-    }
-    formData.append("floodTime", floodTime.toISOString());
-    if (!isLandslide) formData.append("description", description);
-    if (!isTree) formData.append("isFrequentFlood", isFrequentFlood);
-
+    Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
     images.forEach((image, index) => {
       formData.append("images", {
         uri: image.uri,
@@ -276,6 +312,7 @@ export default function FloodPost() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
       },
+      timeout: 20000,
     });
 
     // Bài chưa được AI/Admin duyệt sẽ chưa hiện trên bản đồ — nói rõ để người
@@ -287,6 +324,16 @@ export default function FloodPost() {
     // Reset nếu cần ở đây
     resetForm();
   } catch (err) {
+    // Lỗi mạng thực sự (không có response, vd mất sóng/timeout ở vùng ngập) —
+    // lưu lại vào hàng đợi thay vì bắt người dùng nhập lại từ đầu.
+    if (!err.response) {
+      await enqueuePost(fields, images);
+      const queued = await getQueue();
+      setPendingCount(queued.length);
+      Alert.alert(t("floodpost.queuedTitle"), t("floodpost.queuedMessage"));
+      resetForm();
+      return;
+    }
     console.error("Lỗi gửi:", err.response?.data || err.message);
     Alert.alert(t("common.error"), err.response?.data?.error || t("floodpost.submitErrorGeneric"));
   } finally {
@@ -301,6 +348,18 @@ export default function FloodPost() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>{t("floodpost.title")}</Text>
+
+          {pendingCount > 0 && (
+            <TouchableOpacity style={queueStyles.banner} onPress={syncQueue} disabled={syncingQueue}>
+              {syncingQueue ? (
+                <ActivityIndicator size="small" color="#8A6D00" />
+              ) : (
+                <Text style={queueStyles.bannerText}>
+                  {t("floodpost.queuePendingBanner", { count: pendingCount })}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
 
           {/* Loại báo cáo */}
           <View style={styles.segment}>
@@ -533,3 +592,21 @@ export default function FloodPost() {
     </>
   );
 }
+
+const queueStyles = StyleSheet.create({
+  banner: {
+    backgroundColor: "#FFF8E1",
+    borderWidth: 1,
+    borderColor: "#FFE082",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    alignItems: "center",
+  },
+  bannerText: {
+    color: "#8A6D00",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+});

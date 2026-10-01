@@ -173,7 +173,13 @@
     "daysAgo": "{{count}}d ago"
   },
   "phonealert": {
-    "title": "EMERGENCY PHONE NUMBERS"
+    "title": "EMERGENCY PHONE NUMBERS",
+    "sosBtn": "SOS — Share my location",
+    "sosHint": "Share your current GPS location via SMS/Messenger with family or rescue teams.",
+    "sosLocationDeniedTitle": "Location permission needed",
+    "sosLocationDeniedMessage": "Please allow location access to share your emergency coordinates.",
+    "sosMessage": "🆘 {{name}} needs help! Current location: {{link}}",
+    "sosError": "Could not get your location. Please try again or call an emergency number below directly."
   },
   "help": {
     "title": "Request assistance",
@@ -257,7 +263,12 @@
     "submitSuccessTitle": "Success",
     "submitPendingMessage": "Your report has been received and is awaiting admin review. It will appear on the map once approved.",
     "submitSuccessMessage": "Your report has been sent.",
-    "submitErrorGeneric": "Could not submit. Please try again."
+    "submitErrorGeneric": "Could not submit. Please try again.",
+    "queuedTitle": "Report saved",
+    "queuedMessage": "No network connection right now. Your report was saved on this device and will be sent automatically once you're back online.",
+    "queueSentTitle": "Queued reports sent",
+    "queueSentMessage": "{{count}} previously saved report(s) were sent successfully.",
+    "queuePendingBanner": "{{count}} report(s) waiting for a connection — tap to retry"
   },
   "auth": {
     "signIn": {
@@ -297,6 +308,7 @@
   "chatbot": {
     "title": "AI Assistant",
     "subtitle": "Help with flood safety and using the app",
+    "subtitleWithLocation": "Using your location for more relevant answers",
     "welcome": "Hi! I can explain how to use the app, current reservoir conditions, and flood safety tips.",
     "suggest1": "Are any reservoirs on alert right now?",
     "suggest2": "How do I report a flooded spot?",

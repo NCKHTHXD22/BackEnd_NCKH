@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import * as Location from "expo-location";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../../constants/colors";
 import { API_URL } from "@/lib/env";
@@ -27,6 +28,25 @@ export default function ChatbotScreen() {
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
   const idRef = useRef(0);
+  const coordsRef = useRef(null);
+  const [hasLocation, setHasLocation] = useState(false);
+
+  // Chỉ đọc vị trí nếu quyền đã được cấp sẵn (từ màn Hiện trạng) — không tự
+  // xin quyền ở đây để tránh popup bất ngờ ngay khi mở chat. Nếu chưa có
+  // quyền, chatbot vẫn hoạt động bình thường, chỉ là không biết vị trí.
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status !== "granted") return;
+        const loc = await Location.getLastKnownPositionAsync();
+        if (loc) {
+          coordsRef.current = { lat: loc.coords.latitude, lon: loc.coords.longitude };
+          setHasLocation(true);
+        }
+      } catch { /* im lặng — chatbot vẫn dùng được không cần vị trí */ }
+    })();
+  }, []);
 
   const scrollToEnd = () => setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
 
@@ -49,7 +69,11 @@ export default function ChatbotScreen() {
       try {
         const res = await axios.post(
           `${API_URL}/api/chatbot/message`,
-          { message: content, history },
+          {
+            message: content,
+            history,
+            ...(coordsRef.current ? { lat: coordsRef.current.lat, lon: coordsRef.current.lon } : {}),
+          },
           { timeout: 35000 }
         );
         setMessages((prev) => [
@@ -102,7 +126,9 @@ export default function ChatbotScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 8 }}>
           <Text style={styles.title}>{t("chatbot.title")}</Text>
-          <Text style={styles.subtitle}>{t("chatbot.subtitle")}</Text>
+          <Text style={styles.subtitle}>
+            {hasLocation ? t("chatbot.subtitleWithLocation") : t("chatbot.subtitle")}
+          </Text>
         </View>
       </View>
 

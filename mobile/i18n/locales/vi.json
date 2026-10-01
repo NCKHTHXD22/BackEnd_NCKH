@@ -173,7 +173,13 @@
     "daysAgo": "{{count}} ngày trước"
   },
   "phonealert": {
-    "title": "SỐ ĐIỆN THOẠI KHẨN CẤP"
+    "title": "SỐ ĐIỆN THOẠI KHẨN CẤP",
+    "sosBtn": "SOS — Gửi vị trí của tôi",
+    "sosHint": "Chia sẻ vị trí GPS hiện tại qua tin nhắn/Zalo cho người thân hoặc đội cứu hộ.",
+    "sosLocationDeniedTitle": "Cần quyền vị trí",
+    "sosLocationDeniedMessage": "Hãy cho phép ứng dụng truy cập vị trí để gửi toạ độ khẩn cấp.",
+    "sosMessage": "🆘 {{name}} cần trợ giúp! Vị trí hiện tại: {{link}}",
+    "sosError": "Không lấy được vị trí. Hãy thử lại hoặc gọi trực tiếp số khẩn cấp bên dưới."
   },
   "help": {
     "title": "Yêu cầu trợ giúp",
@@ -257,7 +263,12 @@
     "submitSuccessTitle": "Thành công",
     "submitPendingMessage": "Báo cáo đã được ghi nhận và đang chờ Admin xét duyệt. Sau khi được duyệt, báo cáo sẽ hiện trên bản đồ.",
     "submitSuccessMessage": "Thông tin đã được gửi.",
-    "submitErrorGeneric": "Không thể gửi dữ liệu. Hãy thử lại."
+    "submitErrorGeneric": "Không thể gửi dữ liệu. Hãy thử lại.",
+    "queuedTitle": "Đã lưu báo cáo",
+    "queuedMessage": "Không có kết nối mạng lúc này. Báo cáo đã được lưu trên máy và sẽ tự động gửi khi có mạng trở lại.",
+    "queueSentTitle": "Đã gửi báo cáo đang chờ",
+    "queueSentMessage": "{{count}} báo cáo đã lưu trước đó đã được gửi thành công.",
+    "queuePendingBanner": "{{count}} báo cáo đang chờ mạng để gửi — chạm để thử lại"
   },
   "auth": {
     "signIn": {
@@ -297,6 +308,7 @@
   "chatbot": {
     "title": "Trợ lý AI",
     "subtitle": "Hỗ trợ người dân về lũ lụt và cách dùng ứng dụng",
+    "subtitleWithLocation": "Đang dùng vị trí của bạn để trả lời sát khu vực hơn",
     "welcome": "Xin chào! Tôi có thể giải thích cách dùng ứng dụng, tình hình hồ chứa hiện tại và hướng dẫn an toàn khi có lũ.",
     "suggest1": "Hiện có hồ nào đang cảnh báo không?",
     "suggest2": "Cách báo điểm ngập trên app?",
