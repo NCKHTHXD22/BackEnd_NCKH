@@ -756,6 +756,22 @@ export default function HomeScreen() {
     } catch { /* offline hoặc lỗi tạm thời — bỏ qua, thử lại lần cập nhật GPS kế tiếp */ }
   }, [getToken]);
 
+  // ── Mini weather — chỉ gọi lại khi đã đổi vị trí đáng kể hoặc đã lâu ─────────
+  // Trước đây nằm trong useEffect phụ thuộc trực tiếp vào `location` (object mới
+  // mỗi lần GPS cập nhật, kể cả khi gần như đứng yên) → gọi API thời tiết mỗi
+  // ~5s thay vì 30 phút/lần như dự định, khiến máy ì và tab Thời tiết load lâu.
+  const lastMiniWeatherRef = useRef({ lat: null, lon: null, at: 0 });
+  const maybeFetchMiniWeather = useCallback((coords) => {
+    const last = lastMiniWeatherRef.current;
+    const now = Date.now();
+    const movedFar = last.lat == null
+      || getDistanceKm(last.lat, last.lon, coords.latitude, coords.longitude) > 2;
+    const stale = now - last.at > 30 * 60 * 1000;
+    if (!movedFar && !stale) return;
+    lastMiniWeatherRef.current = { lat: coords.latitude, lon: coords.longitude, at: now };
+    fetchMiniWeather(coords.latitude, coords.longitude);
+  }, [fetchMiniWeather]);
+
   // ── GPS watch ───────────────────────────────────────────────────────────────
   useEffect(() => {
     let subscription;
@@ -770,28 +786,20 @@ export default function HomeScreen() {
           return;
         }
         setLocationDenied(false);
+        // 15s / 25m — đủ nhanh cho cảnh báo an toàn (vốn đã có debounce 5 phút
+        // riêng) mà không khiến màn hình re-render liên tục mỗi 5 giây như trước.
         subscription = await Location.watchPositionAsync(
-          { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
+          { accuracy: Location.Accuracy.High, timeInterval: 15000, distanceInterval: 25 },
           (loc) => {
             setLocation(loc.coords);
             syncLocationToServer(loc.coords);
+            maybeFetchMiniWeather(loc.coords);
           }
         );
       } catch (err) { console.error("❌ GPS:", err); }
     })();
     return () => subscription?.remove();
-  }, [syncLocationToServer]);
-
-  // ── Mini weather when GPS ready ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!location) return;
-    fetchMiniWeather(location.latitude, location.longitude);
-    const id = setInterval(
-      () => fetchMiniWeather(location.latitude, location.longitude),
-      30 * 60 * 1000
-    );
-    return () => clearInterval(id);
-  }, [location, fetchMiniWeather]);
+  }, [syncLocationToServer, maybeFetchMiniWeather]);
 
   // ── Fetch map data ──────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -1164,18 +1172,21 @@ export default function HomeScreen() {
         <TouchableOpacity
           onPress={() => setShowWarningPosts(!showWarningPosts)}
           style={[uiStyles.layerBtn, { backgroundColor: showWarningPosts ? "#D32F2F" : "#9E9E9E" }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="alert-circle" size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowReservoirs(!showReservoirs)}
           style={[uiStyles.layerBtn, { backgroundColor: showReservoirs ? "#009688" : "#ccc" }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="water" size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowRainStations(!showRainStations)}
           style={[uiStyles.layerBtn, { backgroundColor: showRainStations ? "#fb8c00" : "#ccc" }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="rainy" size={20} color="white" />
         </TouchableOpacity>
