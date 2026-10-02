@@ -42,6 +42,7 @@ const adminApi = {
   listAdmins: () => axiosClient.get("/admin/admins").then(res => res.data),
   createAdmin: (body) => axiosClient.post("/admin/admins", body).then(res => res.data),
   deleteAdmin: (id) => axiosClient.delete(`/admin/admins/${id}`).then(res => res.data),
+  approveAdmin: (id) => axiosClient.patch(`/admin/admins/${id}/approve`).then(res => res.data),
 
   // Sensors (lấy từ API ngoài)
   getSensorsInfo: () =>

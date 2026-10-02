@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaUserShield, FaTrash, FaUserPlus } from "react-icons/fa";
+import { FaUserShield, FaTrash, FaUserPlus, FaCheck } from "react-icons/fa";
 import adminApi from "../../api/adminApi";
 
 export default function ManageAdmins() {
@@ -25,6 +25,12 @@ export default function ManageAdmins() {
   const del = async (id) => {
     if (!window.confirm("Xóa admin?")) return;
     await adminApi.deleteAdmin(id);
+    load();
+  };
+
+  // Duyệt admin tự đăng ký qua trang /admin/register (trạng thái "pending")
+  const approve = async (id) => {
+    await adminApi.approveAdmin(id);
     load();
   };
 
@@ -92,6 +98,7 @@ export default function ManageAdmins() {
                 <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                   <th className="px-3 py-2.5 text-left font-bold rounded-l-lg">Tên tài khoản</th>
                   <th className="px-3 py-2.5 text-left font-bold">Email</th>
+                  <th className="px-3 py-2.5 text-left font-bold">Trạng thái</th>
                   <th className="px-3 py-2.5 text-center font-bold rounded-r-lg">Hành động</th>
                 </tr>
               </thead>
@@ -100,7 +107,26 @@ export default function ManageAdmins() {
                   <tr key={a._id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-3 py-3 font-semibold text-slate-700">{a.username}</td>
                     <td className="px-3 py-3 text-slate-500">{a.email}</td>
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-3 py-3">
+                      {a.status === "pending" ? (
+                        <span className="inline-block bg-amber-50 text-amber-600 text-xs font-bold px-2.5 py-1 rounded-lg">
+                          Chờ duyệt
+                        </span>
+                      ) : (
+                        <span className="inline-block bg-emerald-50 text-emerald-600 text-xs font-bold px-2.5 py-1 rounded-lg">
+                          Hoạt động
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-center flex items-center justify-center gap-2">
+                      {a.status === "pending" && (
+                        <button
+                          className="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                          onClick={() => approve(a._id)}
+                        >
+                          <FaCheck size={11} /> Duyệt
+                        </button>
+                      )}
                       <button
                         className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                         onClick={() => del(a._id)}
@@ -112,7 +138,7 @@ export default function ManageAdmins() {
                 ))}
                 {admins.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="text-center text-slate-400 py-8 text-sm">
+                    <td colSpan={4} className="text-center text-slate-400 py-8 text-sm">
                       Chưa có quản trị viên nào
                     </td>
                   </tr>

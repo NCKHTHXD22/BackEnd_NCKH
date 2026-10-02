@@ -154,16 +154,13 @@ export default function AdminLogin() {
                         </div>
 
                         {/* Options row */}
+                        {/* Quên mật khẩu: ẩn tạm — backend chưa có dịch vụ gửi email để thực hiện reset thật */}
                         <div className="flex items-center justify-between">
                             <label className="flex items-center gap-2 cursor-pointer select-none">
                                 <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
                                     className="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-blue-500" />
                                 <span className="text-slate-400 text-sm">{t('adminLogin.rememberMe')}</span>
                             </label>
-                            <Link to="/admin/forgot-password"
-                                className="text-blue-400 hover:text-blue-300 text-sm font-semibold transition-colors">
-                                {t('adminLogin.forgotPassword')}
-                            </Link>
                         </div>
 
                         {/* Submit */}

@@ -15,6 +15,7 @@ import {
     createAdmin,
     listAdmins,
     deleteAdmin,
+    approveAdmin,
     getApprovedPosts,
     getRejectedPosts,
     getUserStats
@@ -41,6 +42,7 @@ router.delete("/users/:id", adminAuth, deleteUserAdmin);
 router.post("/admins", adminAuth, createAdmin);
 router.get("/admins", adminAuth, listAdmins);
 router.delete("/admins/:id", adminAuth, deleteAdmin);
+router.patch("/admins/:id/approve", adminAuth, approveAdmin);
 router.get("/users/stats", adminAuth, getUserStats);
 
 export default router;

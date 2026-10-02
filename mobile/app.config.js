@@ -73,7 +73,8 @@ export default {
       "expo-splash-screen",
       "expo-location",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/withKotlinStdlibFix.js"
     ],
     experiments: {
       typedRoutes: true,

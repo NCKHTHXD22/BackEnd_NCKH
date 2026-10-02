@@ -204,7 +204,8 @@ export const createAdmin = async (req, res) => {
 
 export const listAdmins = async (req, res) => {
     try {
-        const admins = await adminRepo.findAll();
+        // -passwordHash: trước đây trả nguyên document, lộ bcrypt hash ra frontend.
+        const admins = await adminRepo.model.find({}).select("-passwordHash");
         res.json(admins);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -216,6 +217,21 @@ export const deleteAdmin = async (req, res) => {
         const admin = await adminRepo.delete(req.params.id);
         if (!admin) return res.status(404).json({ error: "Admin not found" });
         res.json({ message: "Admin deleted" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Duyệt admin tự đăng ký qua POST /admin/auth/register (status: 'pending' → 'active')
+export const approveAdmin = async (req, res) => {
+    try {
+        const admin = await adminRepo.model.findByIdAndUpdate(
+            req.params.id,
+            { status: "active" },
+            { new: true }
+        ).select("-passwordHash");
+        if (!admin) return res.status(404).json({ error: "Admin not found" });
+        res.json(admin);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

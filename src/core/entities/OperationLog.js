@@ -26,7 +26,10 @@ const OperationLogSchema = new mongoose.Schema(
         actions:       [{ type: String }],
 
         source: { type: String, enum: ['auto', 'manual'], default: 'auto' },
-        logged_at: { type: Date, default: Date.now, index: true },
+        // Không đặt index: true ở đây — TTL index bên dưới đã phủ field này;
+        // khai cả hai gây lỗi "Duplicate schema index" (Mongoose tạo 2 index
+        // trùng field, 1 cái không có TTL sẽ vô hiệu hoá việc tự xoá log cũ).
+        logged_at: { type: Date, default: Date.now },
     },
     { versionKey: false }
 );

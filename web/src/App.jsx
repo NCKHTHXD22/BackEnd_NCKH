@@ -21,7 +21,6 @@ class ErrorBoundary extends React.Component {
 }
 import AdminLogin from "./page/admin/Login";
 import AdminRegister from "./page/admin/Register";
-import ForgotPassword from "./page/admin/ForgotPassword";
 import AdminLayout from "./page/admin/Layout";
 import Pending from "./page/admin/Pending";
 import Approved from "./page/admin/Approved";
@@ -48,7 +47,7 @@ function App() {
             {/* Admin auth pages (riêng, không dùng layout) */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/register" element={<AdminRegister />} />
-            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+            {/* /admin/forgot-password ẩn tạm — chưa có dịch vụ email để reset mật khẩu thật */}
 
             {/* Public routes — bản đồ tại root */}
             <Route path="/" element={<HomePage />} />

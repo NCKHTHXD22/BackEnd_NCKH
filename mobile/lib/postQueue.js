@@ -13,6 +13,12 @@ function isNetworkError(err) {
   return !err.response;
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// POST /api/posts giới hạn 5 request/phút/IP (strictLimit) — giãn cách giữa các
+// lần gửi trong hàng đợi để không tự đụng rate limit khi có nhiều báo cáo tồn
+// đọng cùng lúc (vd. offline cả buổi, tích luỹ vài báo cáo).
+const QUEUE_SEND_DELAY_MS = 13000;
+
 export async function getQueue() {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
@@ -77,7 +83,9 @@ export async function trySendQueue(getToken) {
   let failed = 0;
   const remaining = [];
 
-  for (const item of queue) {
+  for (let i = 0; i < queue.length; i++) {
+    const item = queue[i];
+    if (i > 0) await sleep(QUEUE_SEND_DELAY_MS);
     try {
       const token = await getToken();
       await axios.post(`${API_URL}/api/posts`, buildFormData(item), {
@@ -91,13 +99,17 @@ export async function trySendQueue(getToken) {
     } catch (err) {
       if (isNetworkError(err)) {
         // Vẫn chưa có mạng — giữ nguyên báo cáo này và tất cả phía sau, thử lại sau.
-        remaining.push(item, ...queue.slice(queue.indexOf(item) + 1));
+        remaining.push(item, ...queue.slice(i + 1));
         break;
       }
-      // Lỗi server (400/500...) — dữ liệu có vấn đề, không tự gửi lại vô hạn.
+      // 429 (rate limit) không phải lỗi dữ liệu — không tính vào số lần thử,
+      // giữ nguyên để lần sync kế tiếp gửi lại.
+      if (err.response.status !== 429) {
+        item.attempts = (item.attempts || 0) + 1;
+      }
+      // Lỗi server khác (400/500...) — dữ liệu có vấn đề, không tự gửi lại vô hạn.
       // Sau 3 lần thử vẫn lỗi thì bỏ khỏi hàng đợi để tránh kẹt mãi.
-      item.attempts = (item.attempts || 0) + 1;
-      if (item.attempts < 3) remaining.push(item);
+      if ((item.attempts || 0) < 3) remaining.push(item);
       else failed += 1;
     }
   }

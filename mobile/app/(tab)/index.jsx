@@ -22,7 +22,7 @@ import mapStyles from "../../assets/styles/home.styles.js";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "@/lib/env";
-import { scheduleFloodAlert, scheduleTestNotification } from "@/lib/pushNotifications";
+import { scheduleFloodAlert } from "@/lib/pushNotifications";
 import { getAlertRadiusKm, getAlertLevelCm } from "@/lib/alertPrefs";
 import { saveCache, loadCache } from "@/lib/offlineCache";
 import i18n from "@/lib/i18n";
@@ -669,11 +669,6 @@ export default function HomeScreen() {
     }
     setShowFunctionPanel(false);
   };
-
-  // ── Test notification: schedule 10s sau khi mount (thoát app để xem) ─────────
-  useEffect(() => {
-    scheduleTestNotification(10);
-  }, []);
 
   // ── Nạp trạng thái "Tôi an toàn" đã lưu trên server (nếu có) ─────────────────
   useEffect(() => {
