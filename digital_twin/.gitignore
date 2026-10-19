@@ -1,0 +1,12 @@
+# Dữ liệu gốc và trung gian – dung lượng lớn, tái tạo được bằng scripts/
+data/raw/
+data/work/
+.venv/
+__pycache__/
+
+app/node_modules/
+app/dist/
+app/.env.local
+
+# WhiteboxTools tự ghi file cấu hình vào thư mục chạy
+settings.json
