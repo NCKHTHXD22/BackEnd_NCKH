@@ -166,7 +166,7 @@
     {
       "id": "reservoirs",
       "group": "Công trình",
-      "name": "16 hồ thủy điện",
+      "name": "15 hồ thủy điện",
       "type": "geojson",
       "url": "/data/dt/reservoirs.geojson",
       "visible": true,
@@ -178,9 +178,9 @@
           "label_en": "Coloured by river branch"
         }
       ],
-      "source": "Backend NCKH: config/reservoirs.js, seedLakeSpecs.js",
-      "name_en": "16 hydropower reservoirs",
-      "source_en": "NCKH backend: config/reservoirs.js, seedLakeSpecs.js"
+      "source": "Tọa độ đập: OpenStreetMap (web/src/utils/reservoirs.js); thông số: backend seedLakeSpecs.js",
+      "name_en": "15 hydropower reservoirs",
+      "source_en": "Dam locations: OpenStreetMap (web/src/utils/reservoirs.js); specs: backend seedLakeSpecs.js"
     },
     {
       "id": "rain_stations",

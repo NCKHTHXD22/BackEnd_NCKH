@@ -29,8 +29,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     107.63,
-     15.815
+     107.61733,
+     15.79966
     ]
    }
   },
@@ -95,8 +95,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     107.637,
-     15.726
+     107.63943,
+     15.698
     ]
    }
   },
@@ -128,8 +128,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     108.125,
-     15.326
+     108.14814,
+     15.33081
     ]
    }
   },
@@ -359,8 +359,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     107.81,
-     15.33
+     107.82574,
+     15.31906
     ]
    }
   },
@@ -392,8 +392,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     107.92872,
-     15.71279
+     107.94407,
+     15.68774
     ]
    }
   },
@@ -425,8 +425,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     107.8234,
-     15.90558
+     107.80839,
+     15.9334
     ]
    }
   },
@@ -458,41 +458,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     108.152,
-     15.53666
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "id": "HO-18",
-   "properties": {
-    "code": "HO-18",
-    "lake_id": 18,
-    "name": "Hồ Đắk Mi 2",
-    "branch": "Đắk Mi",
-    "river": null,
-    "address": null,
-    "regulation_doc": null,
-    "MNC": null,
-    "MNDBT": null,
-    "MNGC": null,
-    "crest": null,
-    "total_volume": null,
-    "dead_volume": null,
-    "flood_volume": null,
-    "turbines": null,
-    "capacity_mw": null,
-    "design_head": null,
-    "spillway_crest_elev": null,
-    "spillway_width": null,
-    "has_spec": false
-   },
-   "geometry": {
-    "type": "Point",
-    "coordinates": [
-     107.81,
-     15.23832
+     108.148,
+     15.52654
     ]
    }
   },

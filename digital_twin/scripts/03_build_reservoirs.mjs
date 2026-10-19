@@ -1,5 +1,6 @@
-// Bước 3 – Sinh lớp "Hồ chứa" (GeoJSON) từ dữ liệu sẵn có của backend:
-//   - tọa độ + tên:      src/api/config/reservoirs.js
+// Bước 3 – Sinh lớp "Hồ chứa" (GeoJSON) từ dữ liệu sẵn có của hệ thống:
+//   - tọa độ tuyến đập:  web/src/utils/reservoirs.js (tọa độ HIỂN THỊ dùng chung với bản đồ 2D;
+//                        tọa độ trong src/api/config/reservoirs.js là đầu vào mô hình – không dùng ở đây)
 //   - tên có dấu, địa chỉ: src/script/seedRainLake.js  (mảng `lakes`)
 //   - thông số kỹ thuật:  src/script/seedLakeSpecs.js  (mảng `LAKE_SPECS`)
 // Hai file seed kết nối MongoDB khi import, nên ở đây chỉ đọc phần mảng dữ liệu.
@@ -21,7 +22,7 @@ const readArray = (file, name) => {
   return vm.runInNewContext(src.slice(start + `const ${name} = `.length, end + 2));
 };
 
-const { RESERVOIRS } = await import(pathToUrl(path.join(repo, 'src/api/config/reservoirs.js')));
+const { RESERVOIRS } = await import(pathToUrl(path.join(repo, 'web/src/utils/reservoirs.js')));
 const lakes = Object.fromEntries(readArray('src/script/seedRainLake.js', 'lakes').map(l => [l.Id_Lake, l]));
 const specs = Object.fromEntries(readArray('src/script/seedLakeSpecs.js', 'LAKE_SPECS').map(s => [s.lake_id, s]));
 
@@ -36,7 +37,10 @@ const BRANCH = {
 const NAME_FALLBACK = { 18: 'Hồ Đắk Mi 2' };
 const titleCase =s => s.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
 
-const features = Object.entries(RESERVOIRS).map(([id, r]) => {
+// Tạm ẩn trên bản đồ: Đắk Mi 2 (18) chưa có thông số kỹ thuật và số liệu đo trong hệ thống
+const HIDDEN_ON_MAP = new Set([18]);
+
+const features = Object.entries(RESERVOIRS).filter(([id]) => !HIDDEN_ON_MAP.has(Number(id))).map(([id, r]) => {
   id = Number(id);
   const s = specs[id] ?? {};
   const l = lakes[id] ?? {};
@@ -61,7 +65,7 @@ const features = Object.entries(RESERVOIRS).map(([id, r]) => {
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, JSON.stringify({ type: 'FeatureCollection', features }, null, 1));
 const missing = features.filter(f => !f.properties.has_spec).map(f => f.properties.name);
-console.log(`Đã ghi ${features.length} hồ → ${path.relative(repo, out)}`);
+console.log(`Đã ghi ${features.length} hồ → ${path.relative(repo, out)} (ẩn: ${[...HIDDEN_ON_MAP].join(', ')})`);
 if (missing.length) console.log('Chưa có thông số kỹ thuật:', missing.join(', '));
 
 function pathToUrl(p) { return new URL('file:///' + p.replace(/\\/g, '/')).href; }

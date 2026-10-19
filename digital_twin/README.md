@@ -69,8 +69,9 @@ Bước 4 cần WhiteboxTools: lần đầu thư viện `whitebox` tự tải v�
   chủ yếu ở vùng đồng bằng hạ lưu nơi DEM 30 m kém chính xác).
 - Mạng sông từ DEM: 567 đoạn, 2.688 km, cấp Strahler tối đa 5. Sông có tên (OSM): 34 sông.
 - Mặt nước: 97 vùng, 27,9 km².
-- Lưu vực đến tuyến đập: Sông Tranh 2 = 1.102 km², Đắk Mi 4 = 1.122 km², A Vương = 581 km²,
-  Sông Bung 4 → 4A → 5 → 6 = 773 → 2.295 → 2.392 → 2.412 km² (đầy đủ trong `data/kiem_tra_tuyen_dap.csv`).
+- Lưu vực đến tuyến đập (tọa độ đập theo OSM): A Vương 683 km², Sông Tranh 2 → 3 → 4 = 1.106 → 1.448 → 1.609 km²,
+  Đắk Mi 3 → 4 = 613 → 1.122 km², Sông Bung 4 → 4A → 5 → 6 = 1.490 → 2.295 → 2.392 → 2.412 km²
+  (đầy đủ trong `data/kiem_tra_tuyen_dap.csv`).
 
 ## Khu thí điểm Hội An
 
@@ -91,11 +92,11 @@ mặt (có mái nhà, cây) nên cao độ nền trong phố chỉ là xấp x�
 
 ## Việc cần người thực hiện
 
-1. **Kiểm tra tọa độ đập.** Đắk Mi 3, Khe Diên, Sông Tranh 4 bị đánh dấu *NGHI SAI TỌA ĐỘ* (vị trí trong
-   backend không nằm trên sông, lưu vực tính ra < 50 km²). Nhiều tọa độ khác bị làm tròn tới 0,01° (~1 km).
-   Mở `data/kiem_tra_tuyen_dap.csv`, đối chiếu với hồ sơ đập/Google Earth, sửa trong
-   `src/api/config/reservoirs.js` (nguồn dữ liệu duy nhất), rồi chạy lại script 03 → 04.
-2. **Bổ sung thông số hồ Đắk Mi 2** vào `src/script/seedLakeSpecs.js` (hiện thiếu), chạy lại script 03.
+1. ~~Kiểm tra tọa độ đập~~ – đã cập nhật 2026-10-19 theo OpenStreetMap (xem `web/src/utils/reservoirs.js`);
+   `data/kiem_tra_tuyen_dap.csv` không còn hồ nào bị cảnh báo. Tọa độ trong cấu hình mô hình
+   (`src/api/config/reservoirs.js`, config LSTM/XGBoost/RF) **giữ nguyên** vì là đầu vào mô hình đã huấn luyện.
+2. **Đắk Mi 2 đang tạm ẩn trên bản đồ** (`HIDDEN_ON_MAP` trong script 03) vì chưa có thông số và số liệu đo.
+   Khi bổ sung vào `src/script/seedLakeSpecs.js` + CSDL thì bỏ ẩn và chạy lại script 03 → 04.
 3. **(Tùy chọn) Token Cesium ion** để dùng Cesium World Terrain: đăng ký miễn phí tại ion.cesium.com,
    chép `app/.env.example` thành `app/.env.local` và điền token. Không có token, ứng dụng dùng địa hình
    Esri World Elevation 3D (vẫn chạy tốt).
