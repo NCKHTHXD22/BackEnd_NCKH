@@ -466,7 +466,9 @@
       "gotoReservoir": "Go to reservoir",
       "openLake": "Open reservoir operation panel",
       "liveSoon": "Observed data (water level, inflow/outflow, rainfall) will appear here once the API is connected (phase 2).",
-      "forecastSoon": "12-hour inflow forecasts (LSTM/XGBoost, p10–p90 band) will appear here once the API is connected (phase 2)."
+      "forecastSoon": "12-hour inflow forecasts (LSTM/XGBoost, p10–p90 band) will appear here once the API is connected (phase 2).",
+      "loadingLake": "Loading reservoir data…",
+      "operationAdminOnly": "The reservoir operation panel (dam animation, operating advice) is for administrators – sign in to view it."
     },
     "flood": {
       "eyebrow": "Hoi An pilot · Scenario",
@@ -525,6 +527,9 @@
       "m2": "m²",
       "mcm": "million m³",
       "mw": "MW"
-    }
+    },
+    "qualityHigh": "HD",
+    "qualityStandard": "Standard",
+    "qualityHint": "Display quality: HD is sharper (heavier), Standard is lighter"
   }
 }

@@ -466,7 +466,9 @@
       "gotoReservoir": "Đến hồ chứa",
       "openLake": "Mở bảng vận hành hồ",
       "liveSoon": "Số liệu thực đo (mực nước, lưu lượng đến/xả, mưa) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2).",
-      "forecastSoon": "Dự báo lưu lượng 12 giờ (LSTM/XGBoost, dải p10–p90) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2)."
+      "forecastSoon": "Dự báo lưu lượng 12 giờ (LSTM/XGBoost, dải p10–p90) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2).",
+      "loadingLake": "Đang tải số liệu hồ…",
+      "operationAdminOnly": "Bảng vận hành hồ (mô phỏng đập, khuyến nghị vận hành) dành cho tài khoản quản trị – đăng nhập để xem."
     },
     "flood": {
       "eyebrow": "Khu thí điểm Hội An · Kịch bản",
@@ -525,6 +527,9 @@
       "m2": "m²",
       "mcm": "triệu m³",
       "mw": "MW"
-    }
+    },
+    "qualityHigh": "HD",
+    "qualityStandard": "Tiêu chuẩn",
+    "qualityHint": "Chất lượng hiển thị: HD sắc nét hơn (tốn máy hơn), Tiêu chuẩn nhẹ máy"
   }
 }

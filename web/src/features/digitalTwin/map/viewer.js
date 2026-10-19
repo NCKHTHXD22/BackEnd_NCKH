@@ -46,6 +46,7 @@ export async function createViewer(container) {
   viewer.scene.requestRenderMode = true;           // chỉ vẽ lại khi có thay đổi – nhẹ máy
   viewer.scene.maximumRenderTimeChange = Infinity;
   viewer.cesiumWidget.creditContainer.style.fontSize = '10px';
+  viewer.scene.postProcessStages.fxaa.enabled = true;   // khử răng cưa cạnh nhà, đường, ranh giới
 
   let terrainName = 'WGS84 ellipsoid';
   try {
@@ -56,6 +57,18 @@ export async function createViewer(container) {
     console.warn('Không tải được địa hình, dùng mặt phẳng:', e);
   }
   return { viewer, terrainName, hasIonToken: Boolean(ION_TOKEN) };
+}
+
+// Chất lượng hiển thị. Mặc định Cesium vẽ theo pixel CSS → trên màn hình có tỷ lệ 125–200% (Windows,
+// màn hình HiDPI) ảnh bị kéo giãn, mờ. 'high': vẽ theo pixel thật của màn hình (tối đa ×2) và tải ảnh
+// vệ tinh/địa hình ở mức chi tiết cao hơn; 'standard': như mặc định, nhẹ máy (điện thoại).
+export function setQuality(viewer, level) {
+  const high = level === 'high';
+  const dpr = window.devicePixelRatio || 1;
+  viewer.useBrowserRecommendedResolution = !high;
+  viewer.resolutionScale = high && dpr > 2 ? 2 / dpr : 1;
+  viewer.scene.globe.maximumScreenSpaceError = high ? 1.25 : 2;   // nhỏ hơn = tải ô chi tiết hơn
+  viewer.scene.requestRender();
 }
 
 // requestRenderMode chỉ vẽ khi được yêu cầu; hình bám địa hình (đường, polygon) dựng lại bất đồng

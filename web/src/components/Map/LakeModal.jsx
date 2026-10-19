@@ -84,10 +84,13 @@ function LegendChip({ color, label, swatch = 'line' }) {
     );
 }
 
-export default function LakeModal({ lakeId, lakeData, onClose }) {
+// embedded=true: chỉ hiển thị nội dung một tab (`tab`), không có lớp phủ/tiêu đề/thanh tab –
+// dùng để nhúng vào bảng thông tin của bản đồ số 3D. Mặc định là modal như cũ.
+export default function LakeModal({ lakeId, lakeData, onClose, embedded = false, tab = 'overview' }) {
     const { t, i18n } = useTranslation();
     const isMobile = useIsMobile();
     const [activeTab, setActiveTab] = useState('overview');
+    const shownTab = embedded ? tab : activeTab;
     const [selectedRainSource, setSelectedRainSource] = useState('station');
     const [selectedModel, setSelectedModel] = useState('lstm');
     const [isRunning, setIsRunning] = useState(false);
@@ -186,7 +189,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                 setRealHistoryData(history);
                 setRainLakeHistory(Array.isArray(rainHistory) ? rainHistory : []);
 
-                if (activeTab === 'forecast') {
+                if (shownTab === 'forecast') {
                     if (forecastView === 'ensemble') {
                         // Nạp song song mọi mô hình để so sánh trên cùng trục thời gian
                         const results = await Promise.all(MODELS.map(m => fetchForecastFor(m.id)));
@@ -205,7 +208,7 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         };
         fetchData();
         return () => { cancelled = true; };
-    }, [lakeId, activeTab, selectedModel, selectedRainSource, forecastView]);
+    }, [lakeId, shownTab, selectedModel, selectedRainSource, forecastView]);
 
     if (!lakeId || !lakeData) return null;
 
@@ -435,57 +438,10 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
         },
     ];
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white w-full max-w-[95vw] h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-fade-in">
-
-                {/* Header */}
-                <div className="relative text-white p-5 flex justify-between items-start overflow-hidden bg-header shrink-0">
-                    <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/5" />
-                    <div className="pointer-events-none absolute bottom-0 right-32 h-24 w-24 rounded-full bg-cyan-400/10" />
-                    <div className="relative">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="w-2 h-2 bg-emerald-300 rounded-full ring-4 ring-emerald-300/20 animate-pulse-soft"></span>
-                            <span className="text-sm text-blue-100/80">{t('lakeModal.reservoirDetails')}</span>
-                        </div>
-                        <h2 className="text-2xl font-black tracking-wide uppercase">
-                            {i18n.language === 'en' ? lakeName : `HỒ ${lakeName}`}
-                        </h2>
-                        <p className="text-sm text-blue-100/70 mt-1">
-                            {lakeData.address || lakeData.province || ''}
-                        </p>
-                    </div>
-                    <div className="relative flex gap-2">
-                        <div className="bg-emerald-500 hover:bg-emerald-400 cursor-pointer text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-md shadow-emerald-900/20">
-                            <span className="w-2 h-2 bg-white rounded-full"></span> {t('lakeModal.operating')}
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="bg-white/15 hover:bg-white/25 border border-white/20 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-colors"
-                        >
-                            <X size={16} /> {t('lakeModal.close')}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Navigation Tabs */}
-                <div className="bg-white px-3 sm:px-6 py-2 sm:py-3 border-b border-slate-100 flex items-center gap-1.5 sm:gap-2 overflow-x-auto shrink-0">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? tab.active : tab.inactive}`}
-                        >
-                            {tab.icon} {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Tab Content Area */}
-                <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
-
+    const tabContent = (
+                <>
                     {/* OVERVIEW TAB */}
-                    {activeTab === 'overview' && (
+                    {shownTab === 'overview' && (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Basic Info */}
@@ -600,14 +556,14 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     )}
 
                     {/* OPERATION TAB */}
-                    {activeTab === 'operation' && (
+                    {shownTab === 'operation' && (
                         <div className="-mt-8">
                             <OperationDashboard lakeId={lakeId} />
                         </div>
                     )}
 
                     {/* MERGED FORECAST TAB (Dự báo = old forecast + research) */}
-                    {activeTab === 'forecast' && (
+                    {shownTab === 'forecast' && (
                         <div className="space-y-6">
                             {/* Sub-tab: từng mô hình  ↔  tổng hợp mọi mô hình */}
                             <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
@@ -1115,11 +1071,66 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                     )}
 
                     {/* HISTORY AND TRAINING TAB */}
-                    {activeTab === 'history' && (
+                    {shownTab === 'history' && (
                         <div className="-m-6 h-full">
                             <FloodHistoryTraining lakeId={lakeId} lakeData={lakeData} />
                         </div>
                     )}
+                </>
+    );
+
+    if (embedded) return <div className="bg-slate-50 p-6">{tabContent}</div>;   // cùng padding với vùng nội dung của modal
+
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white w-full max-w-[95vw] h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-fade-in">
+
+                {/* Header */}
+                <div className="relative text-white p-5 flex justify-between items-start overflow-hidden bg-header shrink-0">
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/5" />
+                    <div className="pointer-events-none absolute bottom-0 right-32 h-24 w-24 rounded-full bg-cyan-400/10" />
+                    <div className="relative">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 bg-emerald-300 rounded-full ring-4 ring-emerald-300/20 animate-pulse-soft"></span>
+                            <span className="text-sm text-blue-100/80">{t('lakeModal.reservoirDetails')}</span>
+                        </div>
+                        <h2 className="text-2xl font-black tracking-wide uppercase">
+                            {i18n.language === 'en' ? lakeName : `HỒ ${lakeName}`}
+                        </h2>
+                        <p className="text-sm text-blue-100/70 mt-1">
+                            {lakeData.address || lakeData.province || ''}
+                        </p>
+                    </div>
+                    <div className="relative flex gap-2">
+                        <div className="bg-emerald-500 hover:bg-emerald-400 cursor-pointer text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-md shadow-emerald-900/20">
+                            <span className="w-2 h-2 bg-white rounded-full"></span> {t('lakeModal.operating')}
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="bg-white/15 hover:bg-white/25 border border-white/20 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-colors"
+                        >
+                            <X size={16} /> {t('lakeModal.close')}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Navigation Tabs */}
+                <div className="bg-white px-3 sm:px-6 py-2 sm:py-3 border-b border-slate-100 flex items-center gap-1.5 sm:gap-2 overflow-x-auto shrink-0">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? tab.active : tab.inactive}`}
+                        >
+                            {tab.icon} {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Tab Content Area */}
+                <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
+
+                    {tabContent}
 
                 </div>
             </div>

@@ -3,9 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { FaInfoCircle } from 'react-icons/fa';
 import { FIELDS, fmt, pick } from '../data/fields.js';
 import { PANEL, PANEL_HEAD, CloseButton } from './ui.jsx';
+import LakeModal from '../../../components/Map/LakeModal';
+import { getAdminToken } from '../../../services/auth';
 
-// Bảng thông tin khi bấm vào một đối tượng. Thẻ "Hiện trạng" và "Dự báo" nối API ở giai đoạn 2.
-export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, className = '' }) {
+// Bảng thông tin khi bấm vào một đối tượng. Với hồ chứa, thẻ "Hiện trạng" và "Dự báo" nhúng đúng các tab
+// của bảng vận hành hồ 2D (LakeModal): Tổng quan + Vận hành (admin, có mô phỏng đập) và Dự báo.
+export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, lakeData, className = '', wideClassName = '' }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const [tab, setTab] = useState('info');
@@ -14,9 +17,13 @@ export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, 
   const { layer, props } = info;
   const fields = (FIELDS[layer.id] ?? []).filter(([k]) => props[k] != null && props[k] !== '');
   const TABS = [['info', 'tabInfo'], ['live', 'tabLive'], ['fc', 'tabForecast']];
+  const isLake = layer.id === 'reservoirs';
+  const wide = isLake && tab !== 'info';
+  const isAdmin = !!getAdminToken();
+  const lakeId = props.lake_id;
 
   return (
-    <div className={`${PANEL} flex flex-col animate-fade-in ${className}`}>
+    <div className={`${PANEL} flex flex-col animate-fade-in ${wide ? wideClassName : className}`}>
       <div className={PANEL_HEAD}>
         <div className="min-w-0">
           <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5"><FaInfoCircle className="text-blue-600" /> {pick(layer, 'name', lang)}</p>
@@ -75,10 +82,24 @@ export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, 
             {layer.source && <p className="mt-3 text-[11px] text-slate-400">{t('digitalTwin.info.source', { src: pick(layer, 'source', lang) })}</p>}
           </>
         )}
-        {tab !== 'info' && (
+        {tab !== 'info' && !isLake && (
           <p className="text-xs bg-blue-50 border-l-4 border-blue-400 text-slate-700 rounded px-2.5 py-2">
             {t(tab === 'live' ? 'digitalTwin.info.liveSoon' : 'digitalTwin.info.forecastSoon')}
           </p>
+        )}
+        {wide && !lakeData && <p className="text-xs text-slate-500 animate-pulse-soft">{t('digitalTwin.info.loadingLake')}</p>}
+        {wide && lakeData && (
+          <div className="-mx-3 -mb-3 border-t border-slate-100">
+            {tab === 'live' && (
+              <>
+                <LakeModal embedded tab="overview" lakeId={lakeId} lakeData={lakeData} />
+                {isAdmin
+                  ? <div className="border-t border-slate-200"><LakeModal embedded tab="operation" lakeId={lakeId} lakeData={lakeData} /></div>
+                  : <p className="mx-6 mb-6 -mt-2 text-xs bg-violet-50 border-l-4 border-violet-400 text-violet-900 rounded px-2.5 py-2">{t('digitalTwin.info.operationAdminOnly')}</p>}
+              </>
+            )}
+            {tab === 'fc' && <LakeModal embedded tab="forecast" lakeId={lakeId} lakeData={lakeData} />}
+          </div>
         )}
       </div>
     </div>

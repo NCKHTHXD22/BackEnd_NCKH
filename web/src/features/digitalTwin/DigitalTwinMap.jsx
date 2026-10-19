@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater } from 'react-icons/fa';
-import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, BASEMAPS } from './map/viewer.js';
+import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem } from 'react-icons/fa';
+import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, setQuality, BASEMAPS } from './map/viewer.js';
 import { loadLayer, entityProps } from './map/layers.js';
 import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/hoian.js';
 import LayerPanel from './components/LayerPanel.jsx';
@@ -37,9 +37,20 @@ export default function DigitalTwinMap() {
   const [basemap, setBm] = useState('satellite');
   const [exag, setExag] = useState(1.5);
   const [night, setNightState] = useState(false);
+  // HD mặc định trên máy tính, tiêu chuẩn trên điện thoại; nhớ lựa chọn của người dùng
+  const [quality, setQualityState] = useState(() => {
+    try { const q = localStorage.getItem('dt.quality'); if (q) return q; } catch { /* trình duyệt chặn localStorage */ }
+    return typeof window !== 'undefined' && window.innerWidth < 640 ? 'standard' : 'high';
+  });
   const [flood, setFlood] = useState({ open: false, ready: false, curve: null });
   const [showLayers, setShowLayers] = useState(() => typeof window === 'undefined' || window.innerWidth >= 640);
   const [activeLake, setActiveLake] = useState(null);
+  const [lakeData, setLakeData] = useState(null);
+  const lakesRef = useRef(null);   // danh sách hồ từ API (dùng chung cho bảng thông tin và LakeModal)
+  const lakeRecord = async lakeId => {
+    if (!lakesRef.current) lakesRef.current = await mapApi.getReservoirs().then(l => (Array.isArray(l) ? l : [])).catch(() => []);
+    return lakesRef.current.find(r => Number(r.Id_Lake) === Number(lakeId)) ?? null;
+  };
 
   const patch = (id, p) => setLayerState(s => ({ ...s, [id]: { ...s[id], ...p } }));
 
@@ -86,6 +97,7 @@ export default function DigitalTwinMap() {
       if (destroyed) { viewer.destroy(); return; }
       viewerRef.current = viewer;
       if (import.meta.env.DEV) window.vgtbViewer = viewer;
+      setQuality(viewer, quality);
       setEnv({ terrainName: r.terrainName, hasIonToken: r.hasIonToken });
       const lat = Number(params.get('lat')), lon = Number(params.get('lon'));
       if (lat && lon) flyToPoint(viewer, lon, lat, Number(params.get('zoom')) || 12);
@@ -142,11 +154,22 @@ export default function DigitalTwinMap() {
 
   // Mở bảng vận hành hồ (LakeModal sẵn có của web) – cần bản ghi hồ từ API như HomePage
   const onOpenLake = async lakeId => {
-    const list = await mapApi.getReservoirs().catch(() => []);
-    const data = (Array.isArray(list) ? list : []).find(r => Number(r.Id_Lake) === Number(lakeId));
-    // Hồ chưa có trong API inflowLake (vd. Đắk Mi 2): mở với tên từ bản đồ, viết hoa như các hồ khác
+    const data = await lakeRecord(lakeId);
+    // Hồ chưa có trong API inflowLake: mở với tên từ bản đồ, viết hoa như các hồ khác
     setActiveLake({ id: lakeId, data: data ?? { Id_Lake: lakeId, name: info?.props?.name?.toLocaleUpperCase('vi') } });
   };
+
+  // Số liệu hồ cho thẻ Hiện trạng/Dự báo khi đang chọn một hồ
+  const selectedLakeId = info?.layer.id === 'reservoirs' ? info.props.lake_id : null;
+  useEffect(() => {
+    let alive = true;
+    setLakeData(null);
+    if (selectedLakeId == null) return undefined;
+    lakeRecord(selectedLakeId).then(d => {
+      if (alive) setLakeData(d ?? { Id_Lake: selectedLakeId, name: info?.props?.name?.toLocaleUpperCase('vi') });
+    });
+    return () => { alive = false; };
+  }, [selectedLakeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- Khu thí điểm Hội An -------------------------------------------------------------
   const openHoiAn = async () => {
@@ -183,6 +206,12 @@ export default function DigitalTwinMap() {
     handles.current.hoian_roads?.setNight?.(on);
     handles.current.hoian_buildings?.setNight?.(on);
   };
+  const toggleQuality = () => {
+    const q = quality === 'high' ? 'standard' : 'high';
+    setQualityState(q);
+    setQuality(viewerRef.current, q);
+    try { localStorage.setItem('dt.quality', q); } catch { /* bỏ qua */ }
+  };
   const back2d = () => {
     const v = viewerRef.current && currentView(viewerRef.current);
     navigate(v ? `/?lat=${v.lat}&lon=${v.lon}&zoom=${v.zoom}` : '/');
@@ -200,6 +229,8 @@ export default function DigitalTwinMap() {
   // Bố cục: desktop – panel nổi hai bên; điện thoại – panel thành ngăn dưới đáy
   const sheet = 'absolute left-2 right-2 bottom-2 z-[1001] max-h-[46vh]';
   const infoPos = isMobile ? sheet : `absolute top-20 z-[1000] w-[340px] max-h-[calc(100%-6.5rem)] ${flood.open ? 'right-[384px]' : 'right-3'}`;
+  const wideInfoPos = isMobile ? 'absolute left-2 right-2 bottom-2 z-[1002] max-h-[78vh]'
+    : 'absolute right-3 top-20 z-[1001] w-[min(1120px,calc(100%-5.5rem))] max-h-[calc(100%-6rem)]';
   const floodPos = isMobile ? sheet : 'absolute right-3 top-20 z-[1000] w-[360px] max-h-[calc(100%-6.5rem)]';
   const layerPos = isMobile ? sheet : 'absolute left-16 top-[4.5rem] z-[1000] w-72 max-h-[calc(100%-7rem)]';
 
@@ -212,6 +243,9 @@ export default function DigitalTwinMap() {
         <button onClick={openHoiAn} className={`${PILL_BTN} ${PILL_PRIMARY}`}><FaWater /> {t('digitalTwin.hoian')}</button>
         <button onClick={toggleNight} className={`${PILL_BTN} ${night ? PILL_ON : PILL_IDLE}`}>
           {night ? <FaMoon /> : <FaSun className="text-amber-500" />} {t(night ? 'digitalTwin.night' : 'digitalTwin.day')}
+        </button>
+        <button onClick={toggleQuality} title={t('digitalTwin.qualityHint')} className={`${PILL_BTN} ${quality === 'high' ? PILL_ON : PILL_IDLE}`}>
+          <FaGem /> {t(quality === 'high' ? 'digitalTwin.qualityHigh' : 'digitalTwin.qualityStandard')}
         </button>
         <select value={basemap} aria-label={t('digitalTwin.basemap')}
           onChange={e => { setBm(e.target.value); setBasemap(viewerRef.current, e.target.value, night); }}
@@ -242,7 +276,7 @@ export default function DigitalTwinMap() {
       )}
       {flood.open && <FloodPanel ready={flood.ready} curve={flood.curve} onLevel={onLevel} onClose={closeFlood} className={floodPos} />}
       <InfoPanel info={info} related={related} onClose={() => select(null)} onGoto={onGoto} onOpenLake={onOpenLake}
-        className={`${infoPos} ${isMobile ? 'z-[1002]' : ''}`} />
+        lakeData={lakeData} className={`${infoPos} ${isMobile ? 'z-[1002]' : ''}`} wideClassName={wideInfoPos} />
 
       {!env && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
