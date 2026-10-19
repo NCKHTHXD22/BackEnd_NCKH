@@ -7,7 +7,9 @@
     "manageSystem": "Admin Dashboard",
     "profile": "My Profile",
     "logout": "Sign Out",
-    "login": "Sign In"
+    "login": "Sign In",
+    "map2d": "2D map",
+    "map3d": "3D digital map"
   },
   "sidebar": {
     "title": "FW Admin",
@@ -19,7 +21,8 @@
     "rejected": "Rejected",
     "accountManagement": "Account Management",
     "users": "Users",
-    "admins": "Admins"
+    "admins": "Admins",
+    "digitalTwin": "3D digital map"
   },
   "adminNavbar": {
     "title": "Flood Warning Admin",
@@ -70,7 +73,8 @@
       "inflow": "Inflow (Qin):",
       "discharge": "Discharge:",
       "updatedAt": "Updated at:",
-      "million_m3": "million m³"
+      "million_m3": "million m³",
+      "noSpec": "No technical specifications for this reservoir in the system yet."
     },
     "forecast": {
       "rainSourceLabel": "SELECT RAINFALL DATA SOURCE:",
@@ -354,7 +358,8 @@
     "warnHeavyRainTitle": "Heavy rain at {{station}}",
     "warnRainDetail": "Rainfall: {{value}} mm",
     "unnamedStation": "station",
-    "unnamedLake": "Unnamed"
+    "unnamedLake": "Unnamed",
+    "view3d": "View this location in 3D"
   },
   "submitReport": {
     "title": "Submit Flood Report",
@@ -421,5 +426,105 @@
     "noAccount": "Don't have an account?",
     "registerNow": "Register now",
     "defaultError": "Incorrect username or password"
+  },
+  "digitalTwin": {
+    "title": "Vu Gia – Thu Bon basin digital map",
+    "home": "Whole basin",
+    "hoian": "Hoi An · Flood scenario",
+    "day": "Day",
+    "night": "Night",
+    "basemap": "Base map",
+    "terrain": "Terrain",
+    "terrainHint": "Vertical terrain exaggeration",
+    "back2d": "Back to 2D map",
+    "loadingViewer": "Starting the 3D map…",
+    "terrainSource": "Terrain: {{name}}",
+    "noIonToken": "no Cesium ion token",
+    "basemaps": {
+      "satellite": "Satellite",
+      "osm": "OSM map"
+    },
+    "layers": {
+      "title": "Map layers",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "loading": "loading…",
+      "error": "no data yet",
+      "idle": "turn on to load",
+      "opacity": "Opacity"
+    },
+    "info": {
+      "tabInfo": "Info",
+      "tabLive": "Live",
+      "tabForecast": "Forecast",
+      "close": "Close",
+      "noProps": "No attributes.",
+      "noSpec": "No technical specifications for this reservoir in the backend data.",
+      "related": "Related",
+      "source": "Source: {{src}}",
+      "gotoCatchment": "Show the reservoir's sub-catchment",
+      "gotoReservoir": "Go to reservoir",
+      "openLake": "Open reservoir operation panel",
+      "liveSoon": "Observed data (water level, inflow/outflow, rainfall) will appear here once the API is connected (phase 2).",
+      "forecastSoon": "12-hour inflow forecasts (LSTM/XGBoost, p10–p90 band) will appear here once the API is connected (phase 2)."
+    },
+    "flood": {
+      "eyebrow": "Hoi An pilot · Scenario",
+      "title": "Flood risk simulation",
+      "close": "Close scenario",
+      "building": "Building 54 thousand 3D houses and 2,570 road segments… (first load may take 1–2 minutes)",
+      "level": "Water level at Hoi An",
+      "play": "Flood progression",
+      "pause": "Pause",
+      "peak": "Peak",
+      "kpiArea": "km² flooded",
+      "kpiHouses": "houses flooded",
+      "kpiRoads": "km of road flooded",
+      "kpiDepth": "m max depth",
+      "curveArea": "Flooded area by water level",
+      "curveHouses": "Flooded houses by water level",
+      "unitHouses": "houses",
+      "note": "Illustrative connected-bathtub model on a 30 m DEM (water from the river and sea spreads into connected cells below the water level). Flow, travel time and dikes are not modelled. To be replaced by HEC-RAS 2D results. Water level in the DEM's vertical datum (EGM2008 ≈ mean sea level)."
+    },
+    "field": {
+      "branch": "River branch",
+      "river": "River",
+      "address": "Location",
+      "MNDBT": "Normal water level",
+      "MNC": "Dead water level",
+      "MNGC": "Flood control level",
+      "crest": "Dam crest elevation",
+      "total_volume": "Total storage",
+      "dead_volume": "Dead storage",
+      "flood_volume": "Flood control storage",
+      "capacity_mw": "Installed capacity",
+      "turbines": "Turbine units",
+      "design_head": "Design head",
+      "spillway_crest_elev": "Spillway crest elevation",
+      "spillway_width": "Total spillway width",
+      "regulation_doc": "Operating regulation",
+      "area_km2": "Area",
+      "catch_total_km2": "Catchment area at dam",
+      "strahler": "Stream order (Strahler)",
+      "length_km": "Length",
+      "name_en": "Other name",
+      "type": "Building type",
+      "levels": "Floors (estimated)",
+      "height_m": "Height",
+      "area_m2": "Footprint area",
+      "ground_m": "Ground elevation",
+      "flood_from_m": "Floods when water level reaches",
+      "depth_now_m": "Flood depth in scenario",
+      "highway": "Road type (OSM)",
+      "warning": "Data warning"
+    },
+    "unit": {
+      "m": "m",
+      "km": "km",
+      "km2": "km²",
+      "m2": "m²",
+      "mcm": "million m³",
+      "mw": "MW"
+    }
   }
 }

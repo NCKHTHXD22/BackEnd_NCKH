@@ -7,7 +7,9 @@
     "manageSystem": "Quản trị hệ thống",
     "profile": "Thông tin cá nhân",
     "logout": "Đăng xuất",
-    "login": "Đăng nhập"
+    "login": "Đăng nhập",
+    "map2d": "Bản đồ 2D",
+    "map3d": "Bản đồ số 3D"
   },
   "sidebar": {
     "title": "FW Admin",
@@ -19,7 +21,8 @@
     "rejected": "Bị từ chối",
     "accountManagement": "Quản lý tài khoản",
     "users": "Người dùng",
-    "admins": "Quản lý Admin"
+    "admins": "Quản lý Admin",
+    "digitalTwin": "Bản đồ số 3D"
   },
   "adminNavbar": {
     "title": "Flood Warning Admin",
@@ -70,7 +73,8 @@
       "inflow": "Lưu lượng đến (Qđến):",
       "discharge": "Lưu lượng xả:",
       "updatedAt": "Cập nhật lúc:",
-      "million_m3": "triệu m³"
+      "million_m3": "triệu m³",
+      "noSpec": "Chưa có thông số kỹ thuật của hồ này trong hệ thống."
     },
     "forecast": {
       "rainSourceLabel": "CHỌN NGUỒN DỮ LIỆU MƯA:",
@@ -354,7 +358,8 @@
     "warnHeavyRainTitle": "Mưa lớn tại {{station}}",
     "warnRainDetail": "Lượng mưa: {{value}} mm",
     "unnamedStation": "trạm đo",
-    "unnamedLake": "Không tên"
+    "unnamedLake": "Không tên",
+    "view3d": "Xem bản đồ 3D tại vị trí này"
   },
   "submitReport": {
     "title": "Gửi thông tin ngập",
@@ -421,5 +426,105 @@
     "noAccount": "Chưa có tài khoản?",
     "registerNow": "Đăng ký ngay",
     "defaultError": "Tên đăng nhập hoặc mật khẩu không đúng"
+  },
+  "digitalTwin": {
+    "title": "Bản đồ số lưu vực Vu Gia – Thu Bồn",
+    "home": "Toàn lưu vực",
+    "hoian": "Khu Hội An · Kịch bản ngập",
+    "day": "Ban ngày",
+    "night": "Ban đêm",
+    "basemap": "Bản đồ nền",
+    "terrain": "Địa hình",
+    "terrainHint": "Phóng đại địa hình theo chiều đứng",
+    "back2d": "Về bản đồ 2D",
+    "loadingViewer": "Đang khởi tạo bản đồ 3D…",
+    "terrainSource": "Địa hình: {{name}}",
+    "noIonToken": "chưa có token Cesium ion",
+    "basemaps": {
+      "satellite": "Ảnh vệ tinh",
+      "osm": "Bản đồ OSM"
+    },
+    "layers": {
+      "title": "Lớp bản đồ",
+      "collapse": "Thu gọn",
+      "expand": "Mở rộng",
+      "loading": "đang tải…",
+      "error": "chưa có dữ liệu",
+      "idle": "bật để tải",
+      "opacity": "Độ trong suốt"
+    },
+    "info": {
+      "tabInfo": "Thông tin",
+      "tabLive": "Hiện trạng",
+      "tabForecast": "Dự báo",
+      "close": "Đóng",
+      "noProps": "Chưa có thuộc tính.",
+      "noSpec": "Chưa có thông số kỹ thuật của hồ này trong dữ liệu backend.",
+      "related": "Liên quan",
+      "source": "Nguồn: {{src}}",
+      "gotoCatchment": "Xem lưu vực bộ phận của hồ",
+      "gotoReservoir": "Đến hồ chứa",
+      "openLake": "Mở bảng vận hành hồ",
+      "liveSoon": "Số liệu thực đo (mực nước, lưu lượng đến/xả, mưa) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2).",
+      "forecastSoon": "Dự báo lưu lượng 12 giờ (LSTM/XGBoost, dải p10–p90) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2)."
+    },
+    "flood": {
+      "eyebrow": "Khu thí điểm Hội An · Kịch bản",
+      "title": "Mô phỏng nguy cơ ngập",
+      "close": "Tắt kịch bản",
+      "building": "Đang dựng 54 nghìn nhà 3D và 2.570 đoạn đường… (lần đầu có thể mất 1–2 phút tùy máy)",
+      "level": "Mực nước tại Hội An",
+      "play": "Diễn biến lũ",
+      "pause": "Dừng",
+      "peak": "Đỉnh lũ",
+      "kpiArea": "km² ngập",
+      "kpiHouses": "nhà bị ngập",
+      "kpiRoads": "km đường ngập",
+      "kpiDepth": "m sâu nhất",
+      "curveArea": "Diện tích ngập theo mực nước",
+      "curveHouses": "Số nhà ngập theo mực nước",
+      "unitHouses": "nhà",
+      "note": "Mô hình minh họa “dâng nước có kết nối” trên DEM 30 m (nước từ sông và biển tràn vào ô thấp hơn mực nước, có đường nối liền). Chưa tính dòng chảy, thời gian truyền lũ, đê bao. Sẽ thay bằng kết quả HEC-RAS 2D. Mực nước theo hệ cao độ của DEM (EGM2008 ≈ mực nước biển trung bình)."
+    },
+    "field": {
+      "branch": "Nhánh sông",
+      "river": "Sông",
+      "address": "Địa điểm",
+      "MNDBT": "Mực nước dâng bình thường",
+      "MNC": "Mực nước chết",
+      "MNGC": "Mực nước gia cường",
+      "crest": "Cao trình đỉnh đập",
+      "total_volume": "Tổng dung tích",
+      "dead_volume": "Dung tích chết",
+      "flood_volume": "Dung tích phòng lũ",
+      "capacity_mw": "Công suất lắp máy",
+      "turbines": "Số tổ máy",
+      "design_head": "Cột nước thiết kế",
+      "spillway_crest_elev": "Cao trình ngưỡng tràn",
+      "spillway_width": "Tổng bề rộng tràn",
+      "regulation_doc": "Quy trình vận hành",
+      "area_km2": "Diện tích",
+      "catch_total_km2": "Tổng diện tích lưu vực đến tuyến đập",
+      "strahler": "Cấp sông (Strahler)",
+      "length_km": "Chiều dài",
+      "name_en": "Tên khác",
+      "type": "Loại công trình",
+      "levels": "Số tầng (ước tính)",
+      "height_m": "Chiều cao",
+      "area_m2": "Diện tích nền",
+      "ground_m": "Cao độ nền",
+      "flood_from_m": "Bắt đầu ngập khi mực nước đạt",
+      "depth_now_m": "Độ sâu ngập theo kịch bản",
+      "highway": "Loại đường (OSM)",
+      "warning": "Cảnh báo dữ liệu"
+    },
+    "unit": {
+      "m": "m",
+      "km": "km",
+      "km2": "km²",
+      "m2": "m²",
+      "mcm": "triệu m³",
+      "mw": "MW"
+    }
   }
 }

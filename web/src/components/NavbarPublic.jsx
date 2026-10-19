@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaSearch, FaUserCircle, FaBars, FaTimes, FaCog, FaSignOutAlt } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getAdminToken, removeAdminToken } from '../services/auth';
 import logoImg from '../assets/images/Logo_V1_transparent.png';
@@ -23,6 +23,20 @@ function LangToggle() {
             <span className="text-white/30">|</span>
             <span className={current === 'en' ? 'text-white' : 'text-white/50'}>EN</span>
         </button>
+    );
+}
+
+// Công tắc bản đồ 2D (Leaflet, trang chủ) ↔ bản đồ số 3D (/ban-do-so)
+function MapModeToggle({ className = '' }) {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const is3d = useLocation().pathname.startsWith('/ban-do-so');
+    const item = active => `px-2.5 py-1 rounded-full transition-all duration-200 ${active ? 'bg-white text-blue-700 shadow-sm' : 'text-white/70 hover:text-white'}`;
+    return (
+        <div className={`items-center gap-0.5 bg-white/10 border border-white/20 p-0.5 rounded-full text-xs font-bold ${className}`}>
+            <button className={item(!is3d)} onClick={() => is3d && navigate('/')}>{t('navbar.map2d')}</button>
+            <button className={item(is3d)} onClick={() => !is3d && navigate('/ban-do-so')}>{t('navbar.map3d')}</button>
+        </div>
     );
 }
 
@@ -78,6 +92,9 @@ export default function NavbarPublic() {
 
             {/* Right: Actions */}
             <div className="relative flex items-center gap-3">
+                {/* Bản đồ 2D / 3D */}
+                <MapModeToggle className="hidden md:flex" />
+
                 {/* Language Toggle */}
                 <LangToggle />
 
@@ -165,6 +182,8 @@ export default function NavbarPublic() {
                         />
                         <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     </div>
+
+                    <MapModeToggle className="flex w-fit" />
 
                     {/* Mobile Lang Toggle */}
                     <button

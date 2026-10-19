@@ -1,0 +1,255 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
+import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater } from 'react-icons/fa';
+import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, BASEMAPS } from './map/viewer.js';
+import { loadLayer, entityProps } from './map/layers.js';
+import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/hoian.js';
+import LayerPanel from './components/LayerPanel.jsx';
+import InfoPanel from './components/InfoPanel.jsx';
+import FloodPanel from './components/FloodPanel.jsx';
+import { IconButton, PILL_BTN, PILL_IDLE, PILL_ON, PILL_PRIMARY } from './components/ui.jsx';
+import LakeModal from '../../components/Map/LakeModal';
+import mapApi from '../../api/mapApi';
+import useIsMobile from '../../hooks/useIsMobile';
+
+// Kiểu lớp → hàm nạp. Lớp mới có kiểu riêng thì đăng ký thêm ở đây.
+const LOADERS = { geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads };
+const CATALOG_URL = '/data/dt/layers.json';
+
+export default function DigitalTwinMap() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const isMobile = useIsMobile();
+  const box = useRef(null);
+  const viewerRef = useRef(null);
+  const handles = useRef({});
+  const pending = useRef({});
+  const catalogRef = useRef(null);
+  const floodRef = useRef(null);
+  const [catalog, setCatalog] = useState(null);
+  const [layerState, setLayerState] = useState({});
+  const [info, setInfo] = useState(null);
+  const [env, setEnv] = useState(null);
+  const [basemap, setBm] = useState('satellite');
+  const [exag, setExag] = useState(1.5);
+  const [night, setNightState] = useState(false);
+  const [flood, setFlood] = useState({ open: false, ready: false, curve: null });
+  const [showLayers, setShowLayers] = useState(() => typeof window === 'undefined' || window.innerWidth >= 640);
+  const [activeLake, setActiveLake] = useState(null);
+
+  const patch = (id, p) => setLayerState(s => ({ ...s, [id]: { ...s[id], ...p } }));
+
+  const select = useCallback(picked => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    viewer.__selectedHandle?.highlight?.(null);
+    viewer.__selectedHandle = null;
+    const h = picked?.layerId && handles.current[picked.layerId];
+    if (!h) { setInfo(null); viewer.selectedEntity = undefined; viewer.scene.requestRender(); return; }
+    if (h.propsOf) {                       // đối tượng trong Primitive (nhà, đường Hội An)
+      viewer.selectedEntity = undefined;
+      h.highlight(picked);
+      viewer.__selectedHandle = h;
+      setInfo({ layer: h.def, props: h.propsOf(picked), pickId: picked });
+    } else {
+      viewer.selectedEntity = picked;
+      setInfo({ layer: h.def, props: entityProps(picked) });
+    }
+    viewer.scene.requestRender();
+  }, []);
+
+  /** Nạp lớp (một lần) rồi trả về handle. */
+  const ensureLayer = useCallback(id => {
+    if (handles.current[id]) return Promise.resolve(handles.current[id]);
+    if (pending.current[id]) return pending.current[id];
+    const def = catalogRef.current.layers.find(l => l.id === id);
+    patch(id, { status: 'loading' });
+    pending.current[id] = LOADERS[def.type](viewerRef.current, { ...def, visible: true })
+      .then(h => { handles.current[id] = h; patch(id, { status: 'ready', visible: true, opacity: 1 }); return h; })
+      .catch(e => { console.warn(id, e); patch(id, { status: 'error', visible: false }); throw e; });
+    return pending.current[id];
+  }, []);
+
+  useEffect(() => {
+    // StrictMode (dev) gắn–gỡ–gắn lại component: viewer tạo xong sau khi đã gỡ thì hủy ngay,
+    // và mọi viewer đều hủy khi rời trang để không rò WebGL context.
+    let destroyed = false;
+    let viewer = null;
+    let click = null;
+    (async () => {
+      const r = await createViewer(box.current);
+      viewer = r.viewer;
+      if (destroyed) { viewer.destroy(); return; }
+      viewerRef.current = viewer;
+      if (import.meta.env.DEV) window.vgtbViewer = viewer;
+      setEnv({ terrainName: r.terrainName, hasIonToken: r.hasIonToken });
+      const lat = Number(params.get('lat')), lon = Number(params.get('lon'));
+      if (lat && lon) flyToPoint(viewer, lon, lat, Number(params.get('zoom')) || 12);
+      else flyHome(viewer, 0);
+
+      const cat = await (await fetch(CATALOG_URL)).json();
+      if (destroyed) return;
+      catalogRef.current = cat;
+      setCatalog(cat);
+      for (const def of cat.layers.filter(l => LOADERS[l.type])) {
+        if (def.lazy) { patch(def.id, { status: 'idle', visible: false }); continue; }
+        patch(def.id, { status: 'loading', visible: def.visible, opacity: 1 });
+        LOADERS[def.type](viewer, def)
+          .then(h => { if (!destroyed) { handles.current[def.id] = h; patch(def.id, { status: 'ready' }); } })
+          .catch(e => { console.warn(def.id, e); patch(def.id, { status: 'error', visible: false }); });
+      }
+
+      click = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      click.setInputAction(ev => {
+        const p = viewer.scene.pick(ev.position);
+        select(Cesium.defined(p) ? p.id : null);
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      click.setInputAction(ev => {
+        const p = viewer.scene.pick(ev.endPosition);
+        viewer.canvas.style.cursor = Cesium.defined(p) && p.id?.layerId ? 'pointer' : '';
+      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    })().catch(e => console.error('Khởi tạo bản đồ 3D lỗi:', e));
+    return () => {
+      destroyed = true;
+      click?.destroy();
+      if (viewer && !viewer.isDestroyed()) viewer.destroy();
+      viewerRef.current = null;
+      handles.current = {}; pending.current = {}; floodRef.current = null;
+      if (import.meta.env.DEV) delete window.vgtbViewer;
+    };
+    // tham số URL chỉ dùng lúc mở trang
+  }, [select]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onToggle = (id, on) => {
+    const h = handles.current[id];
+    if (!h) { if (on) ensureLayer(id); return; }
+    h.setVisible(on); patch(id, { visible: on });
+  };
+  const onOpacity = (id, a) => { handles.current[id]?.setOpacity(a); patch(id, { opacity: a }); };
+
+  const onGoto = (layerId, code) => {
+    const h = handles.current[layerId];
+    const e = h?.find?.(code);
+    if (!e) return;
+    if (!h.dataSource.show) onToggle(layerId, true);
+    select(e);
+    viewerRef.current.flyTo(e, { duration: 1.5, offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-40), 0) });
+  };
+
+  // Mở bảng vận hành hồ (LakeModal sẵn có của web) – cần bản ghi hồ từ API như HomePage
+  const onOpenLake = async lakeId => {
+    const list = await mapApi.getReservoirs().catch(() => []);
+    const data = (Array.isArray(list) ? list : []).find(r => Number(r.Id_Lake) === Number(lakeId));
+    // Hồ chưa có trong API inflowLake (vd. Đắk Mi 2): mở với tên từ bản đồ, viết hoa như các hồ khác
+    setActiveLake({ id: lakeId, data: data ?? { Id_Lake: lakeId, name: info?.props?.name?.toLocaleUpperCase('vi') } });
+  };
+
+  // ---- Khu thí điểm Hội An -------------------------------------------------------------
+  const openHoiAn = async () => {
+    flyTo(viewerRef.current, 'hoian');
+    setFlood(f => ({ ...f, open: true }));
+    const [bld, roads] = await Promise.all([ensureLayer('hoian_buildings'), ensureLayer('hoian_roads')]);
+    if (!viewerRef.current) return;
+    if (!floodRef.current) floodRef.current = createFloodLayer(viewerRef.current, bld.grid);
+    roads.setNight?.(night);
+    bld.setNight?.(night);
+    const curve = [];
+    for (let wl = 0.5; wl <= 5.001; wl += 0.25) {
+      curve.push({ wl, area: floodRef.current.stats(wl).areaKm2, houses: bld.countFlooded(wl) });
+    }
+    setFlood({ open: true, ready: true, curve });
+  };
+  const onLevel = wl => {
+    const s = floodRef.current.setLevel(wl);
+    const houses = handles.current.hoian_buildings.setLevel(wl);
+    const roadKm = handles.current.hoian_roads?.setLevel?.(wl) ?? 0;
+    setInfo(i => (i?.pickId ? { ...i, props: handles.current[i.layer.id].propsOf(i.pickId) } : i));
+    return { ...s, houses, roadKm };
+  };
+  const closeFlood = () => {
+    floodRef.current?.setLevel(null);
+    handles.current.hoian_buildings?.setLevel(null);
+    handles.current.hoian_roads?.setLevel?.(null);
+    setFlood(f => ({ ...f, open: false }));
+  };
+  const toggleNight = () => {
+    const on = !night;
+    setNightState(on);
+    setNight(viewerRef.current, on);
+    handles.current.hoian_roads?.setNight?.(on);
+    handles.current.hoian_buildings?.setNight?.(on);
+  };
+  const back2d = () => {
+    const v = viewerRef.current && currentView(viewerRef.current);
+    navigate(v ? `/?lat=${v.lat}&lon=${v.lon}&zoom=${v.zoom}` : '/');
+  };
+
+  // Quan hệ giữa đối tượng: hồ ↔ lưu vực bộ phận của hồ
+  const related = [];
+  if (info?.layer.id === 'reservoirs' && handles.current.catchments?.find(`LVH-${info.props.lake_id}`)) {
+    related.push({ layerId: 'catchments', code: `LVH-${info.props.lake_id}`, labelKey: 'digitalTwin.info.gotoCatchment' });
+  }
+  if (info?.layer.id === 'catchments' && info.props.reservoir_code) {
+    related.push({ layerId: 'reservoirs', code: info.props.reservoir_code, labelKey: 'digitalTwin.info.gotoReservoir' });
+  }
+
+  // Bố cục: desktop – panel nổi hai bên; điện thoại – panel thành ngăn dưới đáy
+  const sheet = 'absolute left-2 right-2 bottom-2 z-[1001] max-h-[46vh]';
+  const infoPos = isMobile ? sheet : `absolute top-20 z-[1000] w-[340px] max-h-[calc(100%-6.5rem)] ${flood.open ? 'right-[384px]' : 'right-3'}`;
+  const floodPos = isMobile ? sheet : 'absolute right-3 top-20 z-[1000] w-[360px] max-h-[calc(100%-6.5rem)]';
+  const layerPos = isMobile ? sheet : 'absolute left-16 top-[4.5rem] z-[1000] w-72 max-h-[calc(100%-7rem)]';
+
+  return (
+    <div className="absolute inset-0">
+      <div ref={box} className="absolute inset-0" />
+
+      {/* Thanh công cụ trên cùng */}
+      <div className="absolute top-3 left-16 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1000] flex gap-2 overflow-x-auto p-1.5 rounded-2xl bg-white/85 backdrop-blur border border-white/60 shadow-lg shadow-slate-900/10">
+        <button onClick={openHoiAn} className={`${PILL_BTN} ${PILL_PRIMARY}`}><FaWater /> {t('digitalTwin.hoian')}</button>
+        <button onClick={toggleNight} className={`${PILL_BTN} ${night ? PILL_ON : PILL_IDLE}`}>
+          {night ? <FaMoon /> : <FaSun className="text-amber-500" />} {t(night ? 'digitalTwin.night' : 'digitalTwin.day')}
+        </button>
+        <select value={basemap} aria-label={t('digitalTwin.basemap')}
+          onChange={e => { setBm(e.target.value); setBasemap(viewerRef.current, e.target.value, night); }}
+          className={`${PILL_BTN} ${PILL_IDLE} pr-2`}>
+          {Object.keys(BASEMAPS).map(k => <option key={k} value={k}>{t(`digitalTwin.basemaps.${k}`)}</option>)}
+        </select>
+        <label className={`${PILL_BTN} ${PILL_IDLE} font-medium`} title={t('digitalTwin.terrainHint')}>
+          {t('digitalTwin.terrain')} ×{exag.toFixed(1)}
+          <input type="range" min="1" max="4" step="0.5" value={exag} className="w-20 accent-blue-600"
+            onChange={e => {
+              const v = Number(e.target.value); setExag(v);
+              viewerRef.current.scene.verticalExaggeration = v; viewerRef.current.scene.requestRender();
+            }} />
+        </label>
+      </div>
+
+      {/* Cột nút nổi bên trái – giống HomePage */}
+      <div className="absolute left-3 top-3 z-[1000] flex flex-col gap-2">
+        <IconButton icon={<FaLayerGroup />} label={t('digitalTwin.layers.title')} active={showLayers} onClick={() => setShowLayers(v => !v)} />
+        <IconButton icon={<FaGlobeAsia />} label={t('digitalTwin.home')} onClick={() => flyHome(viewerRef.current)} />
+        <IconButton icon={<FaMap />} label={t('digitalTwin.back2d')} onClick={back2d} />
+      </div>
+
+      {showLayers && (
+        <LayerPanel catalog={catalog} state={layerState} onToggle={onToggle} onOpacity={onOpacity}
+          onClose={() => setShowLayers(false)} className={`${layerPos} animate-slide-in-left`}
+          footer={env && <>{t('digitalTwin.terrainSource', { name: env.terrainName })}{!env.hasIonToken && <> · {t('digitalTwin.noIonToken')}</>}</>} />
+      )}
+      {flood.open && <FloodPanel ready={flood.ready} curve={flood.curve} onLevel={onLevel} onClose={closeFlood} className={floodPos} />}
+      <InfoPanel info={info} related={related} onClose={() => select(null)} onGoto={onGoto} onOpenLake={onOpenLake}
+        className={`${infoPos} ${isMobile ? 'z-[1002]' : ''}`} />
+
+      {!env && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <p className="bg-white/90 rounded-xl px-4 py-2 shadow text-sm text-slate-600 animate-pulse-soft">{t('digitalTwin.loadingViewer')}</p>
+        </div>
+      )}
+      <LakeModal lakeId={activeLake?.id} lakeData={activeLake?.data} onClose={() => setActiveLake(null)} />
+    </div>
+  );
+}

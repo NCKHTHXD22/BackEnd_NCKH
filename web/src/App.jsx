@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 class ErrorBoundary extends React.Component {
@@ -31,6 +31,12 @@ import ReportsPublic from "./page/Home/Reports";
 import HomePage from "./page/Home/HomePage";
 import AdminDashboard from "./page/admin/AdminDashboard";
 
+// Bản đồ số 3D (CesiumJS ~4 MB) – tải lười để không làm chậm trang bản đồ 2D
+const DigitalTwinPage = lazy(() => import("./features/digitalTwin/DigitalTwinPage"));
+const PageLoading = () => (
+  <div className="min-h-screen flex items-center justify-center text-slate-500 text-sm animate-pulse-soft">…</div>
+);
+
 function RequireAdmin({ children }) {
   const token = localStorage.getItem("adminToken");
   if (!token) return <Navigate to="/admin/login" replace />;
@@ -52,6 +58,8 @@ function App() {
             {/* Public routes — bản đồ tại root */}
             <Route path="/" element={<HomePage />} />
             <Route path="/reports" element={<ReportsPublic />} />
+            <Route path="/ban-do-so" element={<Suspense fallback={<PageLoading />}><DigitalTwinPage /></Suspense>} />
+            <Route path="/digital-twin" element={<Navigate to="/ban-do-so" replace />} />
 
             {/* Admin protected routes */}
             <Route

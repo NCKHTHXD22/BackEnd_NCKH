@@ -1,0 +1,533 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "HO-1",
+   "properties": {
+    "code": "HO-1",
+    "lake_id": 1,
+    "name": "Hồ A Vương",
+    "branch": "A Vương",
+    "river": "Sông A Vương",
+    "address": "Xã A Rooi, Đông Giang, Đà Nẵng",
+    "regulation_doc": "QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn",
+    "MNC": 340,
+    "MNDBT": 380,
+    "MNGC": 381,
+    "crest": 382,
+    "total_volume": 343.5,
+    "dead_volume": 77.5,
+    "flood_volume": 80,
+    "turbines": 2,
+    "capacity_mw": 210,
+    "design_head": 280,
+    "spillway_crest_elev": 375,
+    "spillway_width": 26,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.63,
+     15.815
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-2",
+   "properties": {
+    "code": "HO-2",
+    "lake_id": 2,
+    "name": "Hồ Đắk Mi 4",
+    "branch": "Đắk Mi",
+    "river": "Sông Đắk Mi",
+    "address": "Xã Phước Hòa, Phước Sơn, Đà Nẵng",
+    "regulation_doc": "QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn",
+    "MNC": 225,
+    "MNDBT": 258,
+    "MNGC": 260.5,
+    "crest": 261.5,
+    "total_volume": 312.3,
+    "dead_volume": 97,
+    "flood_volume": 80,
+    "turbines": 3,
+    "capacity_mw": 208,
+    "design_head": 87,
+    "spillway_crest_elev": 252,
+    "spillway_width": 36,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.8325,
+     15.45285
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-3",
+   "properties": {
+    "code": "HO-3",
+    "lake_id": 3,
+    "name": "Hồ Sông Bung 4",
+    "branch": "Sông Bung",
+    "river": "Sông Bung",
+    "address": "Xã Tà Pơơ, Nam Giang, Đà Nẵng",
+    "regulation_doc": "QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn",
+    "MNC": 205,
+    "MNDBT": 222.5,
+    "MNGC": 224,
+    "crest": 225,
+    "total_volume": 510.8,
+    "dead_volume": 276.8,
+    "flood_volume": 70,
+    "turbines": 2,
+    "capacity_mw": 156,
+    "design_head": 110,
+    "spillway_crest_elev": 217,
+    "spillway_width": 24,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.637,
+     15.726
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-4",
+   "properties": {
+    "code": "HO-4",
+    "lake_id": 4,
+    "name": "Hồ Sông Tranh 2",
+    "branch": "Sông Tranh",
+    "river": "Sông Tranh (Thu Bồn)",
+    "address": "Xã Trà Đốc, Bắc Trà My, Đà Nẵng",
+    "regulation_doc": "QĐ 1865/QĐ-TTg (2021) — Liên hồ Vu Gia - Thu Bồn",
+    "MNC": 158,
+    "MNDBT": 175,
+    "MNGC": 176.5,
+    "crest": 177,
+    "total_volume": 730,
+    "dead_volume": 215,
+    "flood_volume": 190,
+    "turbines": 2,
+    "capacity_mw": 190,
+    "design_head": 63,
+    "spillway_crest_elev": 168,
+    "spillway_width": 22,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     108.125,
+     15.326
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-7",
+   "properties": {
+    "code": "HO-7",
+    "lake_id": 7,
+    "name": "Hồ Sông Bung 4A",
+    "branch": "Sông Bung",
+    "river": "Sông Bung",
+    "address": "Nam Giang, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)",
+    "MNC": 130,
+    "MNDBT": 138,
+    "MNGC": 139,
+    "crest": 140,
+    "total_volume": 20,
+    "dead_volume": 5,
+    "flood_volume": 8,
+    "turbines": 1,
+    "capacity_mw": 16,
+    "design_head": 52,
+    "spillway_crest_elev": 134,
+    "spillway_width": 12,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.679,
+     15.765
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-8",
+   "properties": {
+    "code": "HO-8",
+    "lake_id": 8,
+    "name": "Hồ Sông Bung 5",
+    "branch": "Sông Bung",
+    "river": "Sông Bung",
+    "address": "Đông Giang, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)",
+    "MNC": 175,
+    "MNDBT": 185,
+    "MNGC": 186.5,
+    "crest": 187.5,
+    "total_volume": 100,
+    "dead_volume": 28,
+    "flood_volume": 30,
+    "turbines": 2,
+    "capacity_mw": 50,
+    "design_head": 49,
+    "spillway_crest_elev": 180,
+    "spillway_width": 20,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.7473,
+     15.808
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-9",
+   "properties": {
+    "code": "HO-9",
+    "lake_id": 9,
+    "name": "Hồ Sông Bung 2",
+    "branch": "Sông Bung",
+    "river": "Sông Bung",
+    "address": "Nam Giang, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)",
+    "MNC": 330,
+    "MNDBT": 340,
+    "MNGC": 342,
+    "crest": 343,
+    "total_volume": 250,
+    "dead_volume": 70,
+    "flood_volume": 60,
+    "turbines": 2,
+    "capacity_mw": 100,
+    "design_head": 69,
+    "spillway_crest_elev": 336,
+    "spillway_width": 24,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.397,
+     15.7145
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-11",
+   "properties": {
+    "code": "HO-11",
+    "lake_id": 11,
+    "name": "Hồ Sông Bung 6",
+    "branch": "Sông Bung",
+    "river": "Sông Bung",
+    "address": "Nam Giang, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Bung)",
+    "MNC": 93,
+    "MNDBT": 100,
+    "MNGC": 101,
+    "crest": 102,
+    "total_volume": 50,
+    "dead_volume": 12,
+    "flood_volume": 15,
+    "turbines": 1,
+    "capacity_mw": 30,
+    "design_head": 40,
+    "spillway_crest_elev": 96,
+    "spillway_width": 12,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.78,
+     15.82
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-12",
+   "properties": {
+    "code": "HO-12",
+    "lake_id": 12,
+    "name": "Hồ Sông Tranh 3",
+    "branch": "Sông Tranh",
+    "river": "Sông Tranh (Thu Bồn)",
+    "address": "Tiên Phước, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Tranh)",
+    "MNC": 60,
+    "MNDBT": 65,
+    "MNGC": 66,
+    "crest": 67,
+    "total_volume": 60,
+    "dead_volume": 15,
+    "flood_volume": 18,
+    "turbines": 2,
+    "capacity_mw": 60,
+    "design_head": 35,
+    "spillway_crest_elev": 61,
+    "spillway_width": 20,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     108.143,
+     15.4445
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-13",
+   "properties": {
+    "code": "HO-13",
+    "lake_id": 13,
+    "name": "Hồ Za Hung",
+    "branch": "A Vương",
+    "river": "Sông Za Hung",
+    "address": "Tây Giang, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (thượng nguồn A Vương)",
+    "MNC": 150,
+    "MNDBT": 160,
+    "MNGC": 161.5,
+    "crest": 162.5,
+    "total_volume": 130,
+    "dead_volume": 35,
+    "flood_volume": 40,
+    "turbines": 2,
+    "capacity_mw": 90,
+    "design_head": 64,
+    "spillway_crest_elev": 155,
+    "spillway_width": 22,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.654,
+     15.86005
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-14",
+   "properties": {
+    "code": "HO-14",
+    "lake_id": 14,
+    "name": "Hồ Đắk Mi 3",
+    "branch": "Đắk Mi",
+    "river": "Sông Đắk Mi",
+    "address": "Phước Sơn, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Đắk Mi)",
+    "MNC": 340,
+    "MNDBT": 352,
+    "MNGC": 353.5,
+    "crest": 354.5,
+    "total_volume": 70,
+    "dead_volume": 18,
+    "flood_volume": 20,
+    "turbines": 1,
+    "capacity_mw": 30,
+    "design_head": 76,
+    "spillway_crest_elev": 348,
+    "spillway_width": 12,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.81,
+     15.33
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-15",
+   "properties": {
+    "code": "HO-15",
+    "lake_id": 15,
+    "name": "Hồ Khe Diên",
+    "branch": "Sông Tranh",
+    "river": "Sông Vu Gia",
+    "address": "Nông Sơn, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (hạ lưu Vu Gia)",
+    "MNC": 18,
+    "MNDBT": 24,
+    "MNGC": 25,
+    "crest": 26,
+    "total_volume": 35,
+    "dead_volume": 8,
+    "flood_volume": 10,
+    "turbines": 1,
+    "capacity_mw": 30,
+    "design_head": 17,
+    "spillway_crest_elev": 21,
+    "spillway_width": 30,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.92872,
+     15.71279
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-16",
+   "properties": {
+    "code": "HO-16",
+    "lake_id": 16,
+    "name": "Hồ Sông Côn 2",
+    "branch": "A Vương",
+    "river": "Sông Côn",
+    "address": "Đông Giang, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương",
+    "MNC": 320,
+    "MNDBT": 334,
+    "MNGC": 335.5,
+    "crest": 336.5,
+    "total_volume": 90,
+    "dead_volume": 22,
+    "flood_volume": 25,
+    "turbines": 2,
+    "capacity_mw": 60,
+    "design_head": 76,
+    "spillway_crest_elev": 330,
+    "spillway_width": 20,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.8234,
+     15.90558
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-17",
+   "properties": {
+    "code": "HO-17",
+    "lake_id": 17,
+    "name": "Hồ Sông Tranh 4",
+    "branch": "Sông Tranh",
+    "river": "Sông Tranh (Thu Bồn)",
+    "address": "Hiệp Đức, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Sông Tranh)",
+    "MNC": 53,
+    "MNDBT": 58,
+    "MNGC": 59,
+    "crest": 60,
+    "total_volume": 40,
+    "dead_volume": 10,
+    "flood_volume": 12,
+    "turbines": 1,
+    "capacity_mw": 40,
+    "design_head": 34,
+    "spillway_crest_elev": 55,
+    "spillway_width": 20,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     108.152,
+     15.53666
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-18",
+   "properties": {
+    "code": "HO-18",
+    "lake_id": 18,
+    "name": "Hồ Đắk Mi 2",
+    "branch": "Đắk Mi",
+    "river": null,
+    "address": null,
+    "regulation_doc": null,
+    "MNC": null,
+    "MNDBT": null,
+    "MNGC": null,
+    "crest": null,
+    "total_volume": null,
+    "dead_volume": null,
+    "flood_volume": null,
+    "turbines": null,
+    "capacity_mw": null,
+    "design_head": null,
+    "spillway_crest_elev": null,
+    "spillway_width": null,
+    "has_spec": false
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.81,
+     15.23832
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "HO-19",
+   "properties": {
+    "code": "HO-19",
+    "lake_id": 19,
+    "name": "Hồ Đắk Mi 4C",
+    "branch": "Đắk Mi",
+    "river": "Sông Đắk Mi",
+    "address": "Phước Sơn, Đà Nẵng",
+    "regulation_doc": "Quy trình vận hành đơn hồ — Bộ Công Thương (bậc thang Đắk Mi)",
+    "MNC": 153,
+    "MNDBT": 162,
+    "MNGC": 163,
+    "crest": 164,
+    "total_volume": 45,
+    "dead_volume": 12,
+    "flood_volume": 15,
+    "turbines": 1,
+    "capacity_mw": 35,
+    "design_head": 57,
+    "spillway_crest_elev": 158,
+    "spillway_width": 12,
+    "has_spec": true
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     107.92893,
+     15.4643
+    ]
+   }
+  }
+ ]
+}

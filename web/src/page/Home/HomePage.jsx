@@ -5,13 +5,14 @@ import { MapContainer, TileLayer, Marker, Popup, Tooltip, GeoJSON, useMap } from
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import NavbarPublic from '../../components/NavbarPublic';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     FaCog, FaCrosshairs, FaExclamationTriangle, FaLayerGroup, FaTrash,
     FaPlus, FaMinus, FaExpand, FaEdit, FaPaperPlane,
     FaBell, FaMapMarkedAlt, FaProjectDiagram, FaSearchLocation, FaBook,
     FaChevronLeft, FaSearch, FaFilter, FaChevronRight,
     FaMountain, FaUsers, FaGlobeAsia, FaMap, FaWater,
-    FaCloudRain, FaTint, FaThermometerHalf
+    FaCloudRain, FaTint, FaThermometerHalf, FaCube
 } from 'react-icons/fa';
 import { MdSatellite, MdLayers, MdWarning } from 'react-icons/md';
 import mapApi from '../../api/mapApi';
@@ -85,6 +86,18 @@ const MapResizer = () => {
     return null;
 };
 
+// Ghi lại tâm/zoom hiện tại của bản đồ để nút "Xem 3D" mở đúng vị trí trên bản đồ số 3D
+const MapViewTracker = ({ viewRef }) => {
+    const map = useMap();
+    React.useEffect(() => {
+        const save = () => { const c = map.getCenter(); viewRef.current = { lat: c.lat, lon: c.lng, zoom: map.getZoom() }; };
+        save();
+        map.on('moveend', save);
+        return () => { map.off('moveend', save); };
+    }, [map, viewRef]);
+    return null;
+};
+
 // Map tile configs
 const TILE_LAYERS = {
     vietnam: {
@@ -142,7 +155,17 @@ function SidebarIcon({ icon, label, active, onClick, activeClass }) {
 
 export default function HomePage() {
     const { t, i18n } = useTranslation();
-    const position = [16.0544, 108.2022];
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    // Quay lại từ bản đồ số 3D (?lat=&lon=&zoom=) thì mở đúng vị trí đó; mặc định như cũ
+    const urlLat = Number(searchParams.get('lat')), urlLon = Number(searchParams.get('lon'));
+    const position = urlLat && urlLon ? [urlLat, urlLon] : [16.0544, 108.2022];
+    const initialZoom = Number(searchParams.get('zoom')) || 12;
+    const mapViewRef = useRef(null);
+    const open3d = () => {
+        const v = mapViewRef.current;
+        navigate(v ? `/ban-do-so?lat=${v.lat.toFixed(5)}&lon=${v.lon.toFixed(5)}&zoom=${v.zoom}` : '/ban-do-so');
+    };
 
     const [rainStations, setRainStations] = useState([]);
     const [waterLevels, setWaterLevels] = useState([]);
@@ -263,7 +286,7 @@ export default function HomePage() {
             <div className="absolute top-16 left-0 w-full h-[calc(100vh-4rem)] z-0">
                 <MapContainer
                     center={position}
-                    zoom={12}
+                    zoom={initialZoom}
                     scrollWheelZoom={true}
                     style={{ height: '100%', width: '100%' }}
                     zoomControl={false}
@@ -284,6 +307,7 @@ export default function HomePage() {
                     )}
 
                     <MapResizer />
+                    <MapViewTracker viewRef={mapViewRef} />
 
                     {/* Rendering Rain Stations */}
                     {showRainLayer && rainStations.map((station, index) => {
@@ -436,6 +460,19 @@ export default function HomePage() {
                 >
                     <FaLayerGroup />
                 </button>
+
+                <div className="relative group">
+                    <button
+                        className="w-10 h-10 rounded-xl bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all duration-200"
+                        onClick={open3d}
+                        aria-label={t('mapPanel.view3d')}
+                    >
+                        <FaCube />
+                    </button>
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 hidden group-hover:block bg-slate-800 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md">
+                        {t('mapPanel.view3d')}
+                    </div>
+                </div>
 
                 <div className="relative group">
                     <button

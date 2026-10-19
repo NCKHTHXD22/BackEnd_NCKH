@@ -8,6 +8,7 @@ import {
   FaUsers,
   FaUserShield,
   FaTachometerAlt,
+  FaCube,
   FaChevronDown,
   FaChevronRight,
   FaClipboardList,
@@ -79,6 +80,13 @@ export default function Sidebar({ open = false, onClose }) {
               <FaTachometerAlt className="text-sm" />
             </span>
             <span>{t("sidebar.home")}</span>
+          </NavLink>
+
+          <NavLink to="/ban-do-so" className={({ isActive }) => topLink(isActive)}>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 group-hover:bg-white/10">
+              <FaCube className="text-sm" />
+            </span>
+            <span>{t("sidebar.digitalTwin")}</span>
           </NavLink>
 
           <NavLink to="/admin/dashboard" end className={({ isActive }) => topLink(isActive) + " mb-2"}>

@@ -1,0 +1,249 @@
+{
+  "_note": "Danh mục lớp bản đồ (vi + *_en). Thêm lớp mới = thêm 1 mục + file dữ liệu; không cần sửa mã giao diện. Khi có API: 'url' trỏ sang /api/dt/layers/:id/geojson.",
+  "groups": [
+    "Khu thí điểm Hội An",
+    "Thủy văn",
+    "Công trình",
+    "Quan trắc",
+    "Dự báo",
+    "Ngập",
+    "Xã hội"
+  ],
+  "layers": [
+    {
+      "id": "hoian_buildings",
+      "group": "Khu thí điểm Hội An",
+      "name": "Nhà 3D (54.779 nhà)",
+      "type": "hoian_buildings",
+      "url": "/data/dt/hoian/buildings.json",
+      "grid": "/data/dt/hoian/flood_grid.json",
+      "lazy": true,
+      "legend": [
+        {
+          "color": "#e8c872",
+          "label": "Nhà (màu tường ngẫu nhiên)",
+          "label_en": "Houses (random wall colours)"
+        },
+        {
+          "color": "#e63946",
+          "label": "Đỏ/tím: ngập theo kịch bản",
+          "label_en": "Red/purple: flooded in scenario"
+        }
+      ],
+      "source": "Footprint © OpenStreetMap; chiều cao ước tính theo loại nhà và diện tích nền",
+      "name_en": "3D buildings (54,779)",
+      "source_en": "Footprints © OpenStreetMap; heights estimated from building type and footprint area"
+    },
+    {
+      "id": "hoian_roads",
+      "group": "Khu thí điểm Hội An",
+      "name": "Đường giao thông",
+      "type": "hoian_roads",
+      "url": "/data/dt/hoian/roads.geojson",
+      "lazy": true,
+      "legend": [
+        {
+          "color": "#f6f1e7",
+          "label": "Đường (ban đêm phát sáng)",
+          "label_en": "Roads (lit at night)"
+        },
+        {
+          "color": "#ff4d4d",
+          "label": "Đoạn ngập theo kịch bản",
+          "label_en": "Flooded in scenario"
+        }
+      ],
+      "source": "© OpenStreetMap contributors (ODbL)",
+      "name_en": "Roads"
+    },
+    {
+      "id": "basin",
+      "group": "Thủy văn",
+      "name": "Ranh giới lưu vực",
+      "type": "geojson",
+      "url": "/data/dt/basin.geojson",
+      "visible": true,
+      "style": "basin",
+      "legend": [
+        {
+          "color": "#ffd166",
+          "label": "Ranh giới toàn lưu vực",
+          "label_en": "Whole basin boundary"
+        }
+      ],
+      "source": "Tách từ DEM Copernicus 30 m (WhiteboxTools, D8)",
+      "name_en": "Basin boundary",
+      "source_en": "Delineated from Copernicus 30 m DEM (WhiteboxTools, D8)"
+    },
+    {
+      "id": "catchments",
+      "group": "Thủy văn",
+      "name": "Lưu vực bộ phận các hồ",
+      "type": "geojson",
+      "url": "/data/dt/catchments.geojson",
+      "visible": false,
+      "style": "byBranch",
+      "legend": [
+        {
+          "color": "#e76f51",
+          "label": "Nhánh A Vương",
+          "label_en": "A Vuong branch"
+        },
+        {
+          "color": "#2a9d8f",
+          "label": "Nhánh Sông Bung",
+          "label_en": "Song Bung branch"
+        },
+        {
+          "color": "#e9c46a",
+          "label": "Nhánh Đắk Mi",
+          "label_en": "Dak Mi branch"
+        },
+        {
+          "color": "#9b8bd4",
+          "label": "Nhánh Sông Tranh",
+          "label_en": "Song Tranh branch"
+        }
+      ],
+      "source": "Tách từ DEM Copernicus 30 m (WhiteboxTools, D8)",
+      "name_en": "Reservoir sub-catchments",
+      "source_en": "Delineated from Copernicus 30 m DEM (WhiteboxTools, D8)"
+    },
+    {
+      "id": "streams",
+      "group": "Thủy văn",
+      "name": "Mạng sông suối (từ DEM)",
+      "type": "geojson",
+      "url": "/data/dt/streams.geojson",
+      "visible": true,
+      "style": "streams",
+      "legend": [
+        {
+          "color": "#4cc9f0",
+          "label": "Độ dày theo cấp Strahler",
+          "label_en": "Width by Strahler order"
+        }
+      ],
+      "source": "Trích từ DEM, ngưỡng 10 km²",
+      "name_en": "Stream network (from DEM)"
+    },
+    {
+      "id": "osm_rivers",
+      "group": "Thủy văn",
+      "name": "Sông chính (có tên, OSM)",
+      "type": "geojson",
+      "url": "/data/dt/osm_rivers.geojson",
+      "visible": false,
+      "style": "osmRivers",
+      "legend": [
+        {
+          "color": "#3a86ff",
+          "label": "Sông có tên",
+          "label_en": "Named rivers"
+        }
+      ],
+      "source": "© OpenStreetMap contributors (ODbL)",
+      "name_en": "Main rivers (named, OSM)"
+    },
+    {
+      "id": "lakes",
+      "group": "Công trình",
+      "name": "Mặt nước hồ chứa",
+      "type": "geojson",
+      "url": "/data/dt/lakes.geojson",
+      "visible": true,
+      "style": "lakes",
+      "legend": [
+        {
+          "color": "#219ebc",
+          "label": "Mặt hồ (OSM)",
+          "label_en": "Water surface (OSM)"
+        }
+      ],
+      "source": "© OpenStreetMap contributors (ODbL)",
+      "name_en": "Reservoir water surfaces"
+    },
+    {
+      "id": "reservoirs",
+      "group": "Công trình",
+      "name": "16 hồ thủy điện",
+      "type": "geojson",
+      "url": "/data/dt/reservoirs.geojson",
+      "visible": true,
+      "style": "reservoirs",
+      "legend": [
+        {
+          "color": "#ffffff",
+          "label": "Màu theo nhánh sông",
+          "label_en": "Coloured by river branch"
+        }
+      ],
+      "source": "Backend NCKH: config/reservoirs.js, seedLakeSpecs.js",
+      "name_en": "16 hydropower reservoirs",
+      "source_en": "NCKH backend: config/reservoirs.js, seedLakeSpecs.js"
+    },
+    {
+      "id": "rain_stations",
+      "group": "Quan trắc",
+      "name": "Trạm đo mưa",
+      "type": "pending",
+      "pending": "Lấy từ API backend (giai đoạn tích hợp)",
+      "name_en": "Rain gauges",
+      "pending_en": "From the backend API (integration phase)"
+    },
+    {
+      "id": "wl_stations",
+      "group": "Quan trắc",
+      "name": "Trạm thủy văn",
+      "type": "pending",
+      "pending": "Lấy từ API backend (giai đoạn tích hợp)",
+      "name_en": "Hydrological stations",
+      "pending_en": "From the backend API (integration phase)"
+    },
+    {
+      "id": "forecast",
+      "group": "Dự báo",
+      "name": "Dự báo lưu lượng 12 giờ",
+      "type": "pending",
+      "pending": "LSTM/XGBoost qua API (giai đoạn tích hợp)",
+      "name_en": "12-hour inflow forecast",
+      "pending_en": "LSTM/XGBoost via API (integration phase)"
+    },
+    {
+      "id": "flood",
+      "group": "Ngập",
+      "name": "Vùng ngập theo kịch bản",
+      "type": "pending",
+      "pending": "Cần kết quả HEC-RAS 2D",
+      "name_en": "Flood extent by scenario",
+      "pending_en": "Needs HEC-RAS 2D results"
+    },
+    {
+      "id": "admin",
+      "group": "Xã hội",
+      "name": "Ranh giới xã/phường",
+      "type": "pending",
+      "pending": "Cần bản đồ hành chính sau sáp nhập 2025",
+      "name_en": "Commune/ward boundaries",
+      "pending_en": "Needs post-2025 administrative boundaries"
+    },
+    {
+      "id": "buildings",
+      "group": "Xã hội",
+      "name": "Nhà 3D (LOD1)",
+      "type": "pending",
+      "pending": "Cần footprint nhà + 3D Tiles",
+      "name_en": "3D buildings (LOD1)",
+      "pending_en": "Needs building footprints + 3D Tiles"
+    }
+  ],
+  "groups_en": [
+    "Hoi An pilot area",
+    "Hydrology",
+    "Infrastructure",
+    "Monitoring",
+    "Forecast",
+    "Flooding",
+    "Society"
+  ]
+}
