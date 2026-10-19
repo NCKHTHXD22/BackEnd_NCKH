@@ -35,16 +35,25 @@ import weatherProxyRoutes from "./api/routes/weatherProxy.routes.js";
 import chatbotRoutes from "./api/routes/chatbot.routes.js";
 import { logger } from "./api/middlewares/logger.js";
 
-// ⭐ CRON JOB — BẮT BUỘC PHẢI IMPORT
-import "./jobs/fetchRainData.job.js";
-import "./jobs/inflowLake.job.js";
-import "./jobs/rainLakeHistory.job.js";
-import "./jobs/lstmForecast.job.js";
-import "./jobs/xgbForecast.job.js";
-import "./jobs/rfForecast.job.js";
-import "./jobs/inflowLakeHistory.job.js";
-import "./jobs/floodAlert.job.js";
-import "./jobs/proximityAlert.job.js";
+// ⭐ CRON JOB — mặc định LUÔN chạy (máy chủ thật không cần cấu hình gì thêm).
+// Chạy backend trên máy phát triển mà .env trỏ vào CSDL thật: đặt DISABLE_JOBS=1 để các job không
+// ghi dữ liệu vào CSDL thật và không gửi cảnh báo/thông báo đẩy tới người dùng.
+const CRON_JOBS = [
+    "./jobs/fetchRainData.job.js",
+    "./jobs/inflowLake.job.js",
+    "./jobs/rainLakeHistory.job.js",
+    "./jobs/lstmForecast.job.js",
+    "./jobs/xgbForecast.job.js",
+    "./jobs/rfForecast.job.js",
+    "./jobs/inflowLakeHistory.job.js",
+    "./jobs/floodAlert.job.js",
+    "./jobs/proximityAlert.job.js",
+];
+if (process.env.DISABLE_JOBS === "1") {
+    console.log("⏸️  DISABLE_JOBS=1 — không khởi động cron job");
+} else {
+    for (const job of CRON_JOBS) await import(job);   // tuần tự, đúng thứ tự như import tĩnh trước đây
+}
 
 const app = express();
 // Sau reverse proxy (nginx), nếu không set thì mọi người dùng chung 1 IP → rate limit

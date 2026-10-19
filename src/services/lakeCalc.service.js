@@ -15,7 +15,11 @@ class LakeCalcService {
     // ── 1. Lấy thông số kỹ thuật ──────────────────────────────────────────────
     async getSpec(lakeId) {
         const spec = await LakeSpec.findOne({ lake_id: Number(lakeId) }).lean();
-        if (!spec) throw new Error(`Không tìm thấy thông số hồ lake_id=${lakeId}`);
+        if (!spec) {
+            const err = new Error(`Không tìm thấy thông số hồ lake_id=${lakeId}`);
+            err.status = 404;   // hồ chưa có thông số (vd. Đắk Mi 2) → 404, không phải lỗi máy chủ
+            throw err;
+        }
         return spec;
     }
 
