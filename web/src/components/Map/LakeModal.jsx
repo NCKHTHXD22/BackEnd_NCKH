@@ -102,6 +102,18 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
     const [realHistoryData, setRealHistoryData] = useState([]);
     const [rainLakeHistory, setRainLakeHistory] = useState([]);
     const [isSyncing, setIsSyncing] = useState(false);
+    // Thông số kỹ thuật của đúng hồ đang mở (trước đây ghi cứng số của hồ A Vương cho mọi hồ)
+    const [spec, setSpec] = useState(null);
+    useEffect(() => {
+        if (!lakeId) return;
+        let alive = true;
+        setSpec(null);
+        mapApi.getLakeSpec(lakeId)
+            .then(d => { if (alive) setSpec(d || false); })
+            .catch(() => { if (alive) setSpec(false); });   // 404: hồ chưa có thông số (vd. Đắk Mi 2)
+        return () => { alive = false; };
+    }, [lakeId]);
+    const specVal = (v, unit) => (spec === null ? '…' : v == null ? '—' : `${Number(v).toLocaleString(i18n.language === 'en' ? 'en-US' : 'vi-VN')}${unit}`);
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -484,16 +496,19 @@ export default function LakeModal({ lakeId, lakeData, onClose }) {
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between border-b border-slate-100 pb-2">
                                             <span className="text-slate-500">{t('lakeModal.overview.designCapacity')}</span>
-                                            <span className="font-semibold text-blue-900">343.55 {t('lakeModal.overview.million_m3')}</span>
+                                            <span className="font-semibold text-blue-900">{specVal(spec?.total_volume, ` ${t('lakeModal.overview.million_m3')}`)}</span>
                                         </div>
                                         <div className="flex justify-between border-b border-slate-100 pb-2">
                                             <span className="text-slate-500">{t('lakeModal.overview.normalPool')}</span>
-                                            <span className="font-semibold text-blue-900">380 m</span>
+                                            <span className="font-semibold text-blue-900">{specVal(spec?.MNDBT, ' m')}</span>
                                         </div>
                                         <div className="flex justify-between border-b border-slate-100 pb-2">
                                             <span className="text-slate-500">{t('lakeModal.overview.deadLevel')}</span>
-                                            <span className="font-semibold text-blue-900">340 m</span>
+                                            <span className="font-semibold text-blue-900">{specVal(spec?.MNC, ' m')}</span>
                                         </div>
+                                        {spec === false && (
+                                            <p className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1.5">{t('lakeModal.overview.noSpec')}</p>
+                                        )}
                                     </div>
                                 </div>
 
