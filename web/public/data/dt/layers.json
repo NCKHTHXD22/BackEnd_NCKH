@@ -183,6 +183,40 @@
       "source_en": "Dam locations: OpenStreetMap (web/src/utils/reservoirs.js); specs: backend seedLakeSpecs.js"
     },
     {
+      "id": "dams",
+      "group": "Công trình",
+      "name": "Đập thủy điện 3D",
+      "name_en": "3D hydropower dams",
+      "type": "dams",
+      "url": "/data/dt/dams.geojson",
+      "beds": "/data/dt/dam_lakebeds.json",
+      "visible": true,
+      "legend": [
+        {
+          "color": "#cdc8bd",
+          "label": "Thân đập (mặt cắt trọng lực gần đúng)",
+          "label_en": "Dam body (approx. gravity profile)"
+        },
+        {
+          "color": "#1f6173",
+          "label": "Mặt hồ ở mực nước đo thật",
+          "label_en": "Reservoir at observed water level"
+        },
+        {
+          "color": "#7a6e5a",
+          "label": "Bờ hồ lộ ra khi nước rút",
+          "label_en": "Exposed banks at low water"
+        },
+        {
+          "color": "#f97316",
+          "label": "Vạch MNC / MNDBT / MNGC",
+          "label_en": "MNC / MNDBT / MNGC lines"
+        }
+      ],
+      "source": "Tuyến đập: OpenStreetMap; kích thước: API lake-specs; mực nước, lưu lượng: API inflowLake (mỗi giờ)",
+      "source_en": "Dam axes: OpenStreetMap; dimensions: lake-specs API; level and flows: inflowLake API (hourly)"
+    },
+    {
       "id": "rain_stations",
       "group": "Quan trắc",
       "name": "Trạm đo mưa",

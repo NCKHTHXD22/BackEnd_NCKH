@@ -1,0 +1,382 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-1",
+    "lake_id": 1,
+    "reservoir_code": "HO-1",
+    "name": "Hồ A Vương",
+    "osm_id": "way/479648364",
+    "length_m": 212,
+    "footprint_width_m": 70,
+    "osm_height_m": null,
+    "upstream_bearing": 2.4,
+    "lake_osm_id": "relation/7058726",
+    "lake_area_km2": 7.61
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.616336,
+      15.799679
+     ],
+     [
+      107.618314,
+      15.799631
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-2",
+    "lake_id": 2,
+    "reservoir_code": "HO-2",
+    "name": "Hồ Đắk Mi 4",
+    "osm_id": "way/439942289",
+    "length_m": 475,
+    "footprint_width_m": 95,
+    "osm_height_m": null,
+    "upstream_bearing": 141.4,
+    "lake_osm_id": "relation/6545033",
+    "lake_area_km2": 9.28
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.83026,
+      15.452148
+     ],
+     [
+      107.833674,
+      15.45487
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-3",
+    "lake_id": 3,
+    "reservoir_code": "HO-3",
+    "name": "Hồ Sông Bung 4",
+    "osm_id": "way/479647796",
+    "length_m": 321,
+    "footprint_width_m": 78,
+    "osm_height_m": null,
+    "upstream_bearing": 181.0,
+    "lake_osm_id": "relation/7058717",
+    "lake_area_km2": 6.57
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.637939,
+      15.698001
+     ],
+     [
+      107.640931,
+      15.697995
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-4",
+    "lake_id": 4,
+    "reservoir_code": "HO-4",
+    "name": "Hồ Sông Tranh 2",
+    "osm_id": "relation/20743406",
+    "length_m": 637,
+    "footprint_width_m": 119,
+    "osm_height_m": null,
+    "upstream_bearing": 254.5,
+    "lake_osm_id": "relation/16195278",
+    "lake_area_km2": 15.13
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      108.148946,
+      15.328056
+     ],
+     [
+      108.147283,
+      15.333575
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-7",
+    "lake_id": 7,
+    "reservoir_code": "HO-7",
+    "name": "Hồ Sông Bung 4A",
+    "osm_id": "way/875642999",
+    "length_m": 309,
+    "footprint_width_m": 81,
+    "osm_height_m": null,
+    "upstream_bearing": 197.3,
+    "lake_osm_id": "way/1099779467",
+    "lake_area_km2": 0.67
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.679126,
+      15.76525
+     ],
+     [
+      107.681887,
+      15.764461
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-8",
+    "lake_id": 8,
+    "reservoir_code": "HO-8",
+    "name": "Hồ Sông Bung 5",
+    "osm_id": "way/1318145157",
+    "length_m": 312,
+    "footprint_width_m": null,
+    "osm_height_m": null,
+    "upstream_bearing": 263.3,
+    "lake_osm_id": "way/433818255",
+    "lake_area_km2": 0.54
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.747152,
+      15.809577
+     ],
+     [
+      107.747536,
+      15.806784
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-11",
+    "lake_id": 11,
+    "reservoir_code": "HO-11",
+    "name": "Hồ Sông Bung 6",
+    "osm_id": "way/1270939018",
+    "length_m": 259,
+    "footprint_width_m": 29,
+    "osm_height_m": null,
+    "upstream_bearing": 220.3,
+    "lake_osm_id": "way/433818255",
+    "lake_area_km2": 0.21
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.77993,
+      15.817929
+     ],
+     [
+      107.778063,
+      15.819416
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-12",
+    "lake_id": 12,
+    "reservoir_code": "HO-12",
+    "name": "Hồ Sông Tranh 3",
+    "osm_id": "way/440411118",
+    "length_m": 342,
+    "footprint_width_m": 171,
+    "osm_height_m": null,
+    "upstream_bearing": 228.6,
+    "lake_osm_id": "relation/6502716",
+    "lake_area_km2": 2.75
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      108.142709,
+      15.445755
+     ],
+     [
+      108.144847,
+      15.443467
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-13",
+    "lake_id": 13,
+    "reservoir_code": "HO-13",
+    "name": "Hồ Za Hung",
+    "osm_id": "way/624211586",
+    "length_m": 123,
+    "footprint_width_m": 29,
+    "osm_height_m": null,
+    "upstream_bearing": 345.1,
+    "lake_osm_id": "way/1099701271",
+    "lake_area_km2": 0.26
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.653197,
+      15.859765
+     ],
+     [
+      107.654297,
+      15.860068
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-14",
+    "lake_id": 14,
+    "reservoir_code": "HO-14",
+    "name": "Hồ Đắk Mi 3",
+    "osm_id": "way/888875287",
+    "length_m": 153,
+    "footprint_width_m": 11,
+    "osm_height_m": null,
+    "upstream_bearing": 207.8,
+    "lake_osm_id": "way/439941711",
+    "lake_area_km2": 0.09
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.826376,
+      15.318747
+     ],
+     [
+      107.825111,
+      15.319373
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-16",
+    "lake_id": 16,
+    "reservoir_code": "HO-16",
+    "name": "Hồ Sông Côn 2",
+    "osm_id": "way/390411207",
+    "length_m": 125,
+    "footprint_width_m": null,
+    "osm_height_m": null,
+    "upstream_bearing": 324.1,
+    "lake_osm_id": null,
+    "lake_area_km2": null
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.807918,
+      15.933065
+     ],
+     [
+      107.808852,
+      15.93374
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-17",
+    "lake_id": 17,
+    "reservoir_code": "HO-17",
+    "name": "Hồ Sông Tranh 4",
+    "osm_id": "way/1472001972",
+    "length_m": 367,
+    "footprint_width_m": 124,
+    "osm_height_m": 32.0,
+    "upstream_bearing": 225.3,
+    "lake_osm_id": "relation/20146867",
+    "lake_area_km2": 2.85
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      108.147,
+      15.527951
+     ],
+     [
+      108.149441,
+      15.525624
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "code": "DAP-19",
+    "lake_id": 19,
+    "reservoir_code": "HO-19",
+    "name": "Hồ Đắk Mi 4C",
+    "osm_id": "way/878175634",
+    "length_m": 115,
+    "footprint_width_m": 43,
+    "osm_height_m": null,
+    "upstream_bearing": 281.9,
+    "lake_osm_id": "way/440650928",
+    "lake_area_km2": 0.52
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      107.929225,
+      15.464514
+     ],
+     [
+      107.92902,
+      15.463494
+     ]
+    ]
+   }
+  }
+ ]
+}

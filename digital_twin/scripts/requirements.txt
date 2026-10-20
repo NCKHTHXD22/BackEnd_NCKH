@@ -6,3 +6,4 @@ geopandas
 pyogrio
 requests
 whitebox
+scipy

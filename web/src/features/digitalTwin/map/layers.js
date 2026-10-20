@@ -62,8 +62,9 @@ const STYLES = {
     // 4 hồ trong quy trình liên hồ (QĐ 1865/QĐ-TTg) luôn hiện tên; hồ khác hiện khi phóng gần
     const main = [1, 2, 3, 4].includes(prop(e, 'lake_id'));
     e.label = new Cesium.LabelGraphics({
-      text: prop(e, 'name').replace(/^Hồ /, ''), font: `${main ? 700 : 600} ${main ? 14 : 12}px "Segoe UI", sans-serif`,
-      fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.BLACK, outlineWidth: 3,
+      text: prop(e, 'name').replace(/^Hồ /, ''), font: `${main ? 700 : 600} ${main ? 30 : 26}px "Segoe UI", sans-serif`,
+      scale: 0.5,                                   // vẽ chữ cỡ ×2 rồi thu lại → nét trên màn hình HiDPI
+      fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.BLACK, outlineWidth: 6,
       style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, -20),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, main ? 400000 : 90000),

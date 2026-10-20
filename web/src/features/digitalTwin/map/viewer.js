@@ -39,14 +39,18 @@ export async function createViewer(container) {
     baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false,
     navigationHelpButton: false, timeline: false, animation: false, infoBox: false,
     fullscreenButton: false, selectionIndicator: true,
+    // Chỉ dùng chế độ 3D (bớt bộ đệm 2D/Columbus); xin card đồ họa rời trên laptop có 2 card.
+    // Khử răng cưa (MSAA/FXAA) đặt theo mức chất lượng trong setQuality().
+    scene3DOnly: true,
+    contextOptions: { webgl: { powerPreference: 'high-performance' } },
   });
   viewer.scene.globe.enableLighting = false;
   viewer.scene.globe.depthTestAgainstTerrain = true;
-  viewer.scene.verticalExaggeration = 1.5;
+  viewer.scene.verticalExaggeration = 1;     // tỷ lệ thật; thanh "Địa hình ×" cho phép phóng đại
   viewer.scene.requestRenderMode = true;           // chỉ vẽ lại khi có thay đổi – nhẹ máy
+  viewer.scene.globe.tileCacheSize = 400;          // giữ ô ảnh đã tải khi quay lại vùng cũ → bớt chớp mờ
   viewer.scene.maximumRenderTimeChange = Infinity;
   viewer.cesiumWidget.creditContainer.style.fontSize = '10px';
-  viewer.scene.postProcessStages.fxaa.enabled = true;   // khử răng cưa cạnh nhà, đường, ranh giới
 
   let terrainName = 'WGS84 ellipsoid';
   try {
@@ -60,15 +64,20 @@ export async function createViewer(container) {
 }
 
 // Chất lượng hiển thị. Mặc định Cesium vẽ theo pixel CSS → trên màn hình có tỷ lệ 125–200% (Windows,
-// màn hình HiDPI) ảnh bị kéo giãn, mờ. 'high': vẽ theo pixel thật của màn hình (tối đa ×2) và tải ảnh
-// vệ tinh/địa hình ở mức chi tiết cao hơn; 'standard': như mặc định, nhẹ máy (điện thoại).
+// màn hình HiDPI) ảnh bị kéo giãn, mờ.
+// 'high': vẽ theo pixel thật của màn hình (tối đa ×2), MSAA ×4 cho cạnh đập/đường/ranh giới mịn mà không
+//         làm nhòe chữ như FXAA, tải ảnh vệ tinh/địa hình chi tiết hơn.
+// 'standard': như mặc định, FXAA rẻ, nhẹ máy (điện thoại, máy yếu).
 export function setQuality(viewer, level) {
   const high = level === 'high';
   const dpr = window.devicePixelRatio || 1;
+  const scene = viewer.scene;
   viewer.useBrowserRecommendedResolution = !high;
   viewer.resolutionScale = high && dpr > 2 ? 2 / dpr : 1;
-  viewer.scene.globe.maximumScreenSpaceError = high ? 1.25 : 2;   // nhỏ hơn = tải ô chi tiết hơn
-  viewer.scene.requestRender();
+  scene.msaaSamples = high ? 4 : 1;
+  scene.postProcessStages.fxaa.enabled = !high;
+  scene.globe.maximumScreenSpaceError = high ? 1.25 : 2;     // nhỏ hơn = tải ô chi tiết hơn
+  scene.requestRender();
 }
 
 // requestRenderMode chỉ vẽ khi được yêu cầu; hình bám địa hình (đường, polygon) dựng lại bất đồng

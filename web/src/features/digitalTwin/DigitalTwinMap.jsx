@@ -7,6 +7,7 @@ import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem } from 
 import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, setQuality, BASEMAPS } from './map/viewer.js';
 import { loadLayer, entityProps } from './map/layers.js';
 import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/hoian.js';
+import { loadDams } from './map/dams.js';
 import LayerPanel from './components/LayerPanel.jsx';
 import InfoPanel from './components/InfoPanel.jsx';
 import FloodPanel from './components/FloodPanel.jsx';
@@ -16,7 +17,7 @@ import mapApi from '../../api/mapApi';
 import useIsMobile from '../../hooks/useIsMobile';
 
 // Kiểu lớp → hàm nạp. Lớp mới có kiểu riêng thì đăng ký thêm ở đây.
-const LOADERS = { geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads };
+const LOADERS = { geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, dams: loadDams };
 const CATALOG_URL = '/data/dt/layers.json';
 
 export default function DigitalTwinMap() {
@@ -35,7 +36,7 @@ export default function DigitalTwinMap() {
   const [info, setInfo] = useState(null);
   const [env, setEnv] = useState(null);
   const [basemap, setBm] = useState('satellite');
-  const [exag, setExag] = useState(1.5);
+  const [exag, setExag] = useState(1);   // tỷ lệ thật – có công trình 3D (đập, nhà) nên mặc định không phóng đại
   const [night, setNightState] = useState(false);
   // HD mặc định trên máy tính, tiêu chuẩn trên điện thoại; nhớ lựa chọn của người dùng
   const [quality, setQualityState] = useState(() => {
@@ -59,7 +60,12 @@ export default function DigitalTwinMap() {
     if (!viewer) return;
     viewer.__selectedHandle?.highlight?.(null);
     viewer.__selectedHandle = null;
-    const h = picked?.layerId && handles.current[picked.layerId];
+    let h = picked?.layerId && handles.current[picked.layerId];
+    if (h?.redirect) {                     // bấm vào đập 3D → chọn hồ chứa tương ứng
+      const r = h.redirect(picked);
+      picked = handles.current[r.layerId]?.find(r.code) ?? null;
+      h = picked && handles.current[r.layerId];
+    }
     if (!h) { setInfo(null); viewer.selectedEntity = undefined; viewer.scene.requestRender(); return; }
     if (h.propsOf) {                       // đối tượng trong Primitive (nhà, đường Hội An)
       viewer.selectedEntity = undefined;
@@ -120,10 +126,21 @@ export default function DigitalTwinMap() {
         const p = viewer.scene.pick(ev.position);
         select(Cesium.defined(p) ? p.id : null);
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      // Đổi con trỏ khi rê qua đối tượng bấm được. scene.pick vẽ lại cả khung để dò → rất tốn: chỉ dò tối đa
+      // ~7 lần/giây và bỏ qua khi đang kéo/xoay bản đồ (nguyên nhân chính gây khựng khi di chuyển).
+      let dragging = false, lastPick = 0;
+      const T = Cesium.ScreenSpaceEventType;
+      for (const [down, up] of [[T.LEFT_DOWN, T.LEFT_UP], [T.RIGHT_DOWN, T.RIGHT_UP], [T.MIDDLE_DOWN, T.MIDDLE_UP]]) {
+        click.setInputAction(() => { dragging = true; }, down);
+        click.setInputAction(() => { dragging = false; }, up);
+      }
       click.setInputAction(ev => {
+        const now = performance.now();
+        if (dragging || now - lastPick < 140) return;
+        lastPick = now;
         const p = viewer.scene.pick(ev.endPosition);
         viewer.canvas.style.cursor = Cesium.defined(p) && p.id?.layerId ? 'pointer' : '';
-      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+      }, T.MOUSE_MOVE);
     })().catch(e => console.error('Khởi tạo bản đồ 3D lỗi:', e));
     return () => {
       destroyed = true;
@@ -258,6 +275,7 @@ export default function DigitalTwinMap() {
             onChange={e => {
               const v = Number(e.target.value); setExag(v);
               viewerRef.current.scene.verticalExaggeration = v; viewerRef.current.scene.requestRender();
+              handles.current.dams?.setExaggeration?.(v);   // đập/lòng hồ tự dựng phải phóng đại theo địa hình
             }} />
         </label>
       </div>

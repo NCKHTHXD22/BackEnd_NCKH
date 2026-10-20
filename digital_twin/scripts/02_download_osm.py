@@ -15,7 +15,7 @@ QUERIES = {
     # Hồ thủy điện trên OSM có thể gắn natural=water, landuse=reservoir hoặc water=reservoir
     "water": f'[out:json][timeout:180];(way["natural"="water"]({b});relation["natural"="water"]({b});'
              f'way["landuse"="reservoir"]({b});relation["landuse"="reservoir"]({b});'
-             f'way["water"="reservoir"]({b});relation["water"="reservoir"]({b}););out tags geom;',
+             f'way["water"="reservoir"]({b});relation["water"="reservoir"]({b}););out geom;',  # 'out geom' (không 'tags'): giữ thành phần của relation
 }
 
 out_dir = RAW / "osm"

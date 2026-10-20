@@ -16,7 +16,7 @@ QUERIES = {
     "buildings": f'[out:json][timeout:300];way["building"]({b});out tags geom;',
     "roads": f'[out:json][timeout:300];way["highway"]({b});out tags geom;',
     "water": f'[out:json][timeout:300];(way["natural"="water"]({b});relation["natural"="water"]({b});'
-             f'way["waterway"~"river|canal|riverbank"]({b});way["natural"="coastline"]({b}););out tags geom;',
+             f'way["waterway"~"river|canal|riverbank"]({b});way["natural"="coastline"]({b}););out geom;',  # giữ thành phần relation
 }
 
 out_dir = RAW / "hoian"
