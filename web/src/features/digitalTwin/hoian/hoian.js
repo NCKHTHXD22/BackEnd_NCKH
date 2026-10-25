@@ -69,7 +69,7 @@ export async function loadHoiAnBuildings(viewer, def) {
   // tuần tự rất nhanh) → giữ sẵn mảng id dùng chung cho tạo hình và đổi màu.
   const ids = items.map((_, idx) => ({ layerId: def.id, idx }));
   const cx = new Float64Array(items.length), cy = new Float64Array(items.length);   // tâm nhà – mô phỏng lấy độ sâu tại đây
-  const instances = items.map((it, idx) => {
+  const rings = items.map((it, idx) => {
     const flat = it[F.ring];
     const deg = [];
     let x = flat[0], y = flat[1];
@@ -80,27 +80,47 @@ export async function loadHoiAnBuildings(viewer, def) {
     }
     for (let k = 0; k < deg.length; k += 2) { cx[idx] += deg[k]; cy[idx] += deg[k + 1]; }
     cx[idx] /= deg.length / 2; cy[idx] /= deg.length / 2;
-    const base = terrainAt(deg[0], deg[1]) - 0.5; // chôn chân 0,5 m để không hở dưới đáy
-    return new Cesium.GeometryInstance({
-      geometry: new Cesium.PolygonGeometry({
-        polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(deg)),
-        height: base, extrudedHeight: base + 0.5 + it[F.height_m],
-        vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-      }),
-      id: ids[idx],
-      attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(baseColor[idx]) },
-    });
+    return deg;
   });
 
-  const primitive = viewer.scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: instances,
-    appearance: new Cesium.PerInstanceColorAppearance({ translucent: false, closed: true }),
-    asynchronous: true, releaseGeometryInstances: true, allowPicking: true,
-    shadows: Cesium.ShadowMode.DISABLED,
-  }));
-  primitive.show = Boolean(def.visible);
+  // Chia nhà theo ô ~1 km, mỗi ô một Primitive: ô ngoài khung nhìn bị bỏ qua khi vẽ, và dựng lần lượt từng ô (nhường
+  // luồng giữa các ô) để giao diện không treo. Bản đầu một Primitive cho cả 55 nghìn nhà → đứng máy khi dựng và khi vẽ.
+  const TILE = 0.01;
+  const tiles = new Map();
+  items.forEach((_, idx) => {
+    const k = `${Math.floor((cx[idx] - data.west) / TILE)}:${Math.floor((cy[idx] - data.south) / TILE)}`;
+    if (!tiles.has(k)) tiles.set(k, []);
+    tiles.get(k).push(idx);
+  });
+  const hideFar = new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(0, 15000);   // trên 15 km: nhà quá nhỏ, ẩn
+  const primOf = new Uint16Array(items.length);
+  const prims = [];
+  const appearance = new Cesium.PerInstanceColorAppearance({ translucent: false, closed: true });
+  for (const members of tiles.values()) {
+    const p = viewer.scene.primitives.add(new Cesium.Primitive({
+      geometryInstances: members.map(idx => {
+        const deg = rings[idx];
+        const base = terrainAt(deg[0], deg[1]) - 0.5; // chôn chân 0,5 m để không hở dưới đáy
+        primOf[idx] = prims.length;
+        return new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(deg)),
+            height: base, extrudedHeight: base + 0.5 + items[idx][F.height_m],
+            vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+          }),
+          id: ids[idx],
+          attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(baseColor[idx]), distanceDisplayCondition: hideFar },
+        });
+      }),
+      appearance, asynchronous: true, releaseGeometryInstances: true, allowPicking: true,
+      shadows: Cesium.ShadowMode.DISABLED,
+    }));
+    p.show = Boolean(def.visible);
+    prims.push(p);
+    await new Promise(res => setTimeout(res, 0));
+  }
   await new Promise(res => {
-    const check = () => (primitive.ready ? res() : setTimeout(check, 200));
+    const check = () => (prims.every(p => p.ready) ? res() : setTimeout(check, 200));
     viewer.scene.requestRender(); check();
   });
 
@@ -120,14 +140,14 @@ export async function loadHoiAnBuildings(viewer, def) {
     return night ? Cesium.Color.lerp(baseColor[idx], NIGHT, 0.62, new Cesium.Color()) : baseColor[idx];
   };
   const paint = idx => {
-    const a = primitive.getGeometryInstanceAttributes(ids[idx]);
+    const a = prims[primOf[idx]].getGeometryInstanceAttributes(ids[idx]);
     const c = idx === selected ? Cesium.Color.fromCssColorString('#00e676') : colorOf(idx);
     a.color = Cesium.ColorGeometryInstanceAttribute.toValue(c);
   };
 
   return {
-    def, primitive, items, F, offset, grid, centroids: { lon: cx, lat: cy },
-    setVisible(on) { primitive.show = on; viewer.scene.requestRender(); },
+    def, primitives: prims, items, F, offset, grid, centroids: { lon: cx, lat: cy },
+    setVisible(on) { for (const p of prims) p.show = on; viewer.scene.requestRender(); },
     setOpacity() {},
     propsOf(id) {
       const it = items[id.idx];

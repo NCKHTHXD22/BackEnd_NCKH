@@ -125,7 +125,7 @@ async function overpass(bbox, signal, onMirror) {
     const c = new AbortController();
     ctrls.push(c);
     signal?.addEventListener('abort', () => c.abort());
-    setTimeout(() => c.abort(), 45000);          // máy treo không trả lời (gặp 25/10/2026) – không để cả lượt chờ vô hạn
+    setTimeout(() => c.abort(), 20000);          // máy treo không trả lời (gặp 25/10/2026) – không để người dùng chờ lâu
     return fetch(url, { method: 'POST', body: new URLSearchParams({ data: q }), signal: c.signal })
       .then(r => { if (!r.ok) throw new Error(`${url} ${r.status}`); return r.json(); })
       .then(j => ({ j, url }));
@@ -138,13 +138,15 @@ async function overpass(bbox, signal, onMirror) {
     return Promise.any([first, late]);
   };
   try {
+    const t0 = Date.now();
     try {
       return await round();
     } catch (e) {
-      // cả ba máy lỗi (thường là "at capacity" lúc cao điểm) → chờ 8 s hỏi lại một lượt
-      if (signal?.aborted) throw e;
+      // cả ba máy lỗi NHANH (thường "at capacity" lúc cao điểm) → chờ 5 s hỏi lại một lượt; lỗi do treo lâu thì thôi,
+      // dựng luôn từ Open Buildings (người dùng có nút "Dựng lại")
+      if (signal?.aborted || Date.now() - t0 > 15000) throw e;
       onMirror?.('retry');
-      await new Promise(res => setTimeout(res, 8000));
+      await new Promise(res => setTimeout(res, 5000));
       return await round();
     }
   } finally {

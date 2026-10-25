@@ -50,17 +50,26 @@ function lengthKm(coords) {
   return s;
 }
 
-function rainImage() {
-  const c = document.createElement('canvas');
-  c.width = 4; c.height = 32;
-  const g = c.getContext('2d');
-  const grad = g.createLinearGradient(0, 0, 0, 32);
-  grad.addColorStop(0, 'rgba(255,255,255,0)');
-  grad.addColorStop(1, 'rgba(255,255,255,1)');
-  g.fillStyle = grad;
-  g.fillRect(1, 0, 2, 32);
-  return c;
-}
+// Vệt mưa trong không gian màn hình: các cột vệt rơi xiên, mật độ và độ đậm theo cường độ mưa (0…1)
+const RAIN_SHADER = `
+uniform sampler2D colorTexture;
+uniform float intensity;
+in vec2 v_textureCoordinates;
+float hash(float x) { return fract(sin(x * 133.3) * 13.13); }
+void main(void) {
+  vec4 scene = texture(colorTexture, v_textureCoordinates);
+  float t = czm_frameNumber / 90.0;
+  vec2 res = czm_viewport.zw;
+  vec2 uv = (gl_FragCoord.xy * 2.0 - res) / min(res.x, res.y);
+  float a = -0.25;
+  uv = mat2(cos(a), -sin(a), sin(a), cos(a)) * uv;
+  uv *= length(uv + vec2(0.0, 4.9)) * 0.3 + 1.0;
+  float v = 1.0 - sin(hash(floor(uv.x * 100.0)) * 2.0);
+  float streak = clamp(abs(sin(20.0 * t * v + uv.y * (5.0 / (2.0 + v)))) - (0.985 - 0.035 * intensity), 0.0, 1.0) * 20.0;
+  vec3 rain = vec3(0.72, 0.8, 0.9) * v * streak;
+  vec3 dim = scene.rgb * (1.0 - 0.22 * intensity);              // trời tối đi khi mưa to
+  out_FragColor = vec4(dim + rain * 0.45 * intensity, scene.a);
+}`;
 
 export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
   const root = `${base}${dir}/`;
@@ -122,33 +131,21 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
   scene.preRender.addEventListener(tick);
 
   // ---------------------------------------------------------------- mưa + bầu trời u ám
-  // hạt mưa sinh quanh camera; bán kính và bước rơi co giãn theo độ cao camera (sát nhà hay nhìn cả lưu vực đều thấy mưa)
-  const emitter = new Cesium.SphereEmitter(5000);
-  const rainSystem = new Cesium.ParticleSystem({
-    modelMatrix: Cesium.Matrix4.fromTranslation(scene.camera.position),
-    speed: -1, lifetime: 6, emitter,
-    startScale: 1, endScale: 0.3, image: rainImage(), emissionRate: 0,
-    startColor: new Cesium.Color(0.78, 0.86, 1, 0), endColor: new Cesium.Color(0.78, 0.86, 1, 0.85),
-    imageSize: new Cesium.Cartesian2(2.5, 24),
-    updateCallback: (p) => {
-      const down = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(p.position, new Cesium.Cartesian3()), -0.03 * emitter.radius, new Cesium.Cartesian3());
-      Cesium.Cartesian3.add(p.position, down, p.position);
-      const d = Cesium.Cartesian3.distance(scene.camera.position, p.position);
-      p.endColor.alpha = d > emitter.radius ? 0 : 0.85 / (d / emitter.radius + 0.15);
-    },
-  });
-  scene.primitives.add(rainSystem);
-  const follow = () => {
-    const hgt = scene.camera.positionCartographic.height;
-    emitter.radius = Math.min(30000, Math.max(250, hgt * 0.7));
-    rainSystem.modelMatrix = Cesium.Matrix4.fromTranslation(scene.camera.position, rainSystem.modelMatrix);
-  };
-  scene.preUpdate.addEventListener(follow);
+  // Mưa: một lượt hậu kỳ trên GPU vẽ vệt mưa phủ màn hình. Bản đầu dùng ParticleSystem – mưa to sinh tới ~60 nghìn hạt,
+  // mỗi hạt tính lại bằng JS mỗi khung hình → treo máy (phản ánh 26/10/2026).
+  let rainK = 0;
+  const rainStage = scene.postProcessStages.add(new Cesium.PostProcessStage({
+    name: 'sim_rain',
+    fragmentShader: RAIN_SHADER,
+    uniforms: { intensity: () => rainK },
+  }));
+  rainStage.enabled = false;
   const sky0 = { b: scene.skyAtmosphere?.brightnessShift ?? 0, s: scene.skyAtmosphere?.saturationShift ?? 0,
                  g: scene.globe.atmosphereBrightnessShift ?? 0, fog: scene.fog.density };
   const setWeather = mm => {
     const k = Math.min(1, (mm ?? 0) / 12);                         // 12 mm/giờ trở lên: mưa rất to
-    rainSystem.emissionRate = k > 0.02 ? 1500 + 9000 * k : 0;
+    rainK = k;
+    rainStage.enabled = k > 0.02;
     if (scene.skyAtmosphere) {
       scene.skyAtmosphere.brightnessShift = sky0.b - 0.45 * k;
       scene.skyAtmosphere.saturationShift = sky0.s - 0.5 * k;
@@ -346,8 +343,9 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
   };
 
   let visible = true, method = 'stage', hourNow = 0, active = true;
-  const rrm = scene.requestRenderMode;
-  scene.requestRenderMode = false;                 // dòng chảy, mưa, sóng nước cần vẽ liên tục
+  const rrm = scene.requestRenderMode, tfr = viewer.targetFrameRate;
+  scene.requestRenderMode = false;                 // dòng chảy, mưa, sóng nước cần vẽ liên tục…
+  viewer.targetFrameRate = 30;                     // …nhưng 30 khung/giây là đủ mượt, giảm nửa tải GPU so với vẽ tối đa
 
   /** Đặt giờ; trả NGAY số liệu thượng nguồn/trạm/mưa cho bảng thông tin. Phần Hội An (lần đầu phải tải lưới, lấy mẫu
    *  địa hình) chạy sau rồi gọi opts.onImpact(impact, giờ) – không bắt bảng thông tin chờ. */
@@ -388,8 +386,22 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
       x.material.uniforms.speed = 0.15 + 0.12 * Math.log10(Math.max(q, 1));
     }
 
-    if (hg) updateHoian(h, opts).then(imp => { if (imp) opts.onImpact?.(imp, h); }).catch(e => console.warn('Mô phỏng Hội An lỗi', e));
+    if (hg) scheduleHoian(h, opts);
     return { hour: i, time: sim.time[i], rain_mm: rain, lakes, stations, impact: lastImpact };
+  }
+
+  // Phát nhanh (4×) đổi giờ nhanh hơn lượt tính Hội An (55 nghìn nhà + mặt nước) → không xếp hàng mọi giờ, chỉ giữ giờ mới nhất
+  let hoianBusy = false, hoianNext = null;
+  function scheduleHoian(h, opts) {
+    if (hoianBusy) { hoianNext = [h, opts]; return; }
+    hoianBusy = true;
+    updateHoian(h, opts)
+      .then(imp => { if (imp) opts.onImpact?.(imp, h); })
+      .catch(e => console.warn('Mô phỏng Hội An lỗi', e))
+      .finally(() => {
+        hoianBusy = false;
+        if (hoianNext && active) { const [nh, no] = hoianNext; hoianNext = null; scheduleHoian(nh, no); }
+      });
   }
 
   let lastImpact = null;
@@ -490,9 +502,8 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
     destroy(opts = {}) {
       active = false;
       scene.preRender.removeEventListener(tick);
-      scene.preUpdate.removeEventListener(follow);
       setWeather(0);
-      scene.primitives.remove(rainSystem);
+      scene.postProcessStages.remove(rainStage);
       for (const x of rivers) scene.groundPrimitives.remove(x.prim);
       if (water) scene.primitives.remove(water);
       if (areaWater) scene.primitives.remove(areaWater);
@@ -501,6 +512,7 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
       opts.roads?.setDepths(null);
       lastArea?.setDepths(null, null);
       scene.requestRenderMode = rrm;
+      viewer.targetFrameRate = tfr;
       scene.requestRender();
     },
   };

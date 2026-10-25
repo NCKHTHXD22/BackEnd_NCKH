@@ -639,7 +639,7 @@
       "fly": "Bay tới khu",
       "remove": "Xóa khu",
       "another": "Vẽ khu khác",
-      "retry": "Cả ba máy chủ Overpass đang quá tải – thử lại sau 8 giây…",
+      "retry": "Cả ba máy chủ Overpass đang quá tải – thử lại sau 5 giây…",
       "osmFailed": "Máy chủ OpenStreetMap (Overpass) quá tải hoặc không trả lời – khu chỉ dựng từ Open Buildings (chưa có đường, cây, sông hồ, tên công trình). Thử dựng lại sau ít phút.",
       "rebuild": "Dựng lại",
       "placeVia": "Tên khu"

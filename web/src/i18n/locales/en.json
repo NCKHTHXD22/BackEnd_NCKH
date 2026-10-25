@@ -639,7 +639,7 @@
       "fly": "Fly to area",
       "remove": "Remove area",
       "another": "Draw another",
-      "retry": "All three Overpass servers are busy – retrying in 8 seconds…",
+      "retry": "All three Overpass servers are busy – retrying in 5 seconds…",
       "osmFailed": "The OpenStreetMap (Overpass) servers are overloaded or not responding – the area was built from Open Buildings only (no roads, trees, water or names yet). Try rebuilding in a few minutes.",
       "rebuild": "Rebuild",
       "placeVia": "Place name"
