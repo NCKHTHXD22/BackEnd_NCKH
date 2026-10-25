@@ -1,0 +1,239 @@
+{
+ "note": "Đỉnh mùa lũ (9–12) từng năm, số liệu giờ 2002–2019 và 2025; Gumbel (ước lượng hợp lý cực đại). 19 năm, lẫn thời kỳ trước/sau hồ chứa lớn → tham khảo.",
+ "stations": {
+  "AINGHIA": {
+   "name": "Ái Nghĩa",
+   "years": 19,
+   "gumbel": [
+    7.944,
+    1.709
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.1,
+    "BĐ II": 1.6,
+    "BĐ III": 2.4
+   },
+   "level_for_return_period_m": {
+    "2 năm": 8.57,
+    "5 năm": 10.51,
+    "10 năm": 11.79,
+    "20 năm": 13.02,
+    "50 năm": 14.61,
+    "100 năm": 15.81
+   },
+   "max_observed": {
+    "m": 10.77,
+    "year": 2009,
+    "return_period_years": 5.7
+   }
+  },
+  "CAMLE": {
+   "name": "Cẩm Lệ",
+   "years": 19,
+   "gumbel": [
+    1.398,
+    0.693
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.2,
+    "BĐ II": 2.9,
+    "BĐ III": 5.4
+   },
+   "level_for_return_period_m": {
+    "2 năm": 1.65,
+    "5 năm": 2.44,
+    "10 năm": 2.96,
+    "20 năm": 3.46,
+    "50 năm": 4.1,
+    "100 năm": 4.59
+   },
+   "max_observed": {
+    "m": 3.98,
+    "year": 2007,
+    "return_period_years": 41.9
+   }
+  },
+  "CAULAU": {
+   "name": "Câu Lâu",
+   "years": 19,
+   "gumbel": [
+    2.998,
+    1.404
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.2,
+    "BĐ II": 1.6,
+    "BĐ III": 2.6
+   },
+   "level_for_return_period_m": {
+    "2 năm": 3.51,
+    "5 năm": 5.1,
+    "10 năm": 6.16,
+    "20 năm": 7.17,
+    "50 năm": 8.48,
+    "100 năm": 9.46
+   },
+   "max_observed": {
+    "m": 5.62,
+    "year": 2025,
+    "return_period_years": 7.0
+   }
+  },
+  "GIAOTHUY": {
+   "name": "Giao Thủy",
+   "years": 19,
+   "gumbel": [
+    6.749,
+    1.917
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.5,
+    "BĐ II": 2.0,
+    "BĐ III": 3.4
+   },
+   "level_for_return_period_m": {
+    "2 năm": 7.45,
+    "5 năm": 9.62,
+    "10 năm": 11.06,
+    "20 năm": 12.44,
+    "50 năm": 14.23,
+    "100 năm": 15.57
+   },
+   "max_observed": {
+    "m": 10.03,
+    "year": 2025,
+    "return_period_years": 6.1
+   }
+  },
+  "HIEPDUC": {
+   "name": "Hiệp Đức",
+   "years": 19,
+   "gumbel": [
+    22.222,
+    3.765
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 3.3,
+    "BĐ II": 5.2,
+    "BĐ III": 8.4
+   },
+   "level_for_return_period_m": {
+    "2 năm": 23.6,
+    "5 năm": 27.87,
+    "10 năm": 30.7,
+    "20 năm": 33.41,
+    "50 năm": 36.91,
+    "100 năm": 39.54
+   },
+   "max_observed": {
+    "m": 30.01,
+    "year": 2017,
+    "return_period_years": 8.4
+   }
+  },
+  "HOIAN": {
+   "name": "Hội An",
+   "years": 19,
+   "gumbel": [
+    1.626,
+    0.754
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.1,
+    "BĐ II": 1.4,
+    "BĐ III": 2.2
+   },
+   "level_for_return_period_m": {
+    "2 năm": 1.9,
+    "5 năm": 2.76,
+    "10 năm": 3.32,
+    "20 năm": 3.87,
+    "50 năm": 4.57,
+    "100 năm": 5.09
+   },
+   "max_observed": {
+    "m": 3.39,
+    "year": 2025,
+    "return_period_years": 10.9
+   }
+  },
+  "HOIKHACH": {
+   "name": "Hội Khách",
+   "years": 19,
+   "gumbel": [
+    13.755,
+    2.394
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.9,
+    "BĐ II": 2.6,
+    "BĐ III": 3.7
+   },
+   "level_for_return_period_m": {
+    "2 năm": 14.63,
+    "5 năm": 17.35,
+    "10 năm": 19.14,
+    "20 năm": 20.87,
+    "50 năm": 23.1,
+    "100 năm": 24.77
+   },
+   "max_observed": {
+    "m": 19.32,
+    "year": 2025,
+    "return_period_years": 10.7
+   }
+  },
+  "NONGSON": {
+   "name": "Nông Sơn",
+   "years": 19,
+   "gumbel": [
+    13.291,
+    2.867
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.1,
+    "BĐ II": 1.5,
+    "BĐ III": 2.4
+   },
+   "level_for_return_period_m": {
+    "2 năm": 14.34,
+    "5 năm": 17.59,
+    "10 năm": 19.74,
+    "20 năm": 21.81,
+    "50 năm": 24.48,
+    "100 năm": 26.48
+   },
+   "max_observed": {
+    "m": 18.68,
+    "year": 2025,
+    "return_period_years": 7.1
+   }
+  },
+  "THANHMY": {
+   "name": "Thành Mỹ",
+   "years": 19,
+   "gumbel": [
+    18.603,
+    3.726
+   ],
+   "alarm_return_period_years": {
+    "BĐ I": 1.1,
+    "BĐ II": 1.7,
+    "BĐ III": 3.0
+   },
+   "level_for_return_period_m": {
+    "2 năm": 19.97,
+    "5 năm": 24.19,
+    "10 năm": 26.99,
+    "20 năm": 29.67,
+    "50 năm": 33.14,
+    "100 năm": 35.75
+   },
+   "max_observed": {
+    "m": 27.2,
+    "year": 2025,
+    "return_period_years": 10.6
+   }
+  }
+ }
+}

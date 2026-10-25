@@ -1,0 +1,800 @@
+{
+ "note": "Mạng kết nối thủy văn Vu Gia – Thu Bồn (tạo bởi 10_network.py). Thượng nguồn theo D8 (DEM 30 m), đồng bằng theo sông OSM; split_fraction tại phân lưu chưa biết (null). Tọa độ trạm gần đúng – cần xác nhận.",
+ "cell_m": 30.0,
+ "crs_compute": "EPSG:32649",
+ "cascades": {
+  "HO-1": [
+   "HO-7",
+   "HO-8",
+   "HO-11"
+  ],
+  "HO-12": [
+   "HO-17"
+  ],
+  "HO-13": [
+   "HO-1",
+   "HO-7",
+   "HO-8",
+   "HO-11"
+  ],
+  "HO-14": [
+   "HO-2",
+   "HO-19"
+  ],
+  "HO-2": [
+   "HO-19"
+  ],
+  "HO-3": [
+   "HO-7",
+   "HO-8",
+   "HO-11"
+  ],
+  "HO-4": [
+   "HO-12",
+   "HO-17"
+  ],
+  "HO-7": [
+   "HO-8",
+   "HO-11"
+  ],
+  "HO-8": [
+   "HO-11"
+  ],
+  "HO-9": [
+   "HO-3",
+   "HO-7",
+   "HO-8",
+   "HO-11"
+  ]
+ },
+ "warnings": [
+  "Đắk Mi 4 → Đắk Mi 4b → Đắk Mi 4c (QĐ 1865 Phụ lục I) – chưa có Đắk Mi 4b và tọa độ nhà máy; cạnh khai báo không có trễ truyền.",
+  "Za Hưng (HO-13): D8 xếp ở thượng lưu A Vương nhưng Q đến Za Hưng gần trùng Q đến A Vương – cần xác nhận vị trí đập, nhà máy, tuyến xả.",
+  "Các nhà máy kiểu đường dẫn (đường hầm) xả nước tại nhà máy, không tại đập – cần tọa độ nhà máy để đặt đúng điểm nhập lưu.",
+  "Tọa độ trạm thủy văn là gần đúng; diện tích tham chiếu (Thành Mỹ 1850, Nông Sơn 3130, Giao Thủy 3825 km²) cần xác nhận. Diện tích lưu vực các hồ khớp Phụ lục I QĐ 1865 (sai lệch ≤ 2,7%).",
+  "Tỷ lệ chia nước tại phân lưu (Quảng Huế, Yên/Quá Giáng, Vĩnh Điện) chưa biết – xác định bằng mô hình 1D hoặc số liệu đo.",
+  "Đồng bằng: chưa tính diện tích khu giữa đổ trực tiếp vào các nhánh (Túy Loan thượng nguồn, vùng trũng) – bổ sung khi có DTM."
+ ],
+ "nodes": [
+  {
+   "id": "HO-1",
+   "name": "Đập A Vương",
+   "type": "dam",
+   "area_km2": 682.6,
+   "local_area_km2": 142.6,
+   "lon": 107.61734,
+   "lat": 15.79938
+  },
+  {
+   "id": "HO-2",
+   "name": "Đập Đắk Mi 4",
+   "type": "dam",
+   "area_km2": 1121.8,
+   "local_area_km2": 509.0,
+   "lon": 107.83134,
+   "lat": 15.45373
+  },
+  {
+   "id": "HO-3",
+   "name": "Đập Sông Bung 4",
+   "type": "dam",
+   "area_km2": 1488.5,
+   "local_area_km2": 1155.5,
+   "lon": 107.6397,
+   "lat": 15.69844
+  },
+  {
+   "id": "HO-4",
+   "name": "Đập Sông Tranh 2",
+   "type": "dam",
+   "area_km2": 1106.1,
+   "local_area_km2": 1106.1,
+   "lon": 108.14807,
+   "lat": 15.33151
+  },
+  {
+   "id": "HO-7",
+   "name": "Đập Sông Bung 4A",
+   "type": "dam",
+   "area_km2": 2294.5,
+   "local_area_km2": 23.3,
+   "lon": 107.68055,
+   "lat": 15.76515
+  },
+  {
+   "id": "HO-8",
+   "name": "Đập Sông Bung 5",
+   "type": "dam",
+   "area_km2": 2392.1,
+   "local_area_km2": 97.6,
+   "lon": 107.74839,
+   "lat": 15.80761
+  },
+  {
+   "id": "HO-9",
+   "name": "Đập Sông Bung 2",
+   "type": "dam",
+   "area_km2": 333.0,
+   "local_area_km2": 333.0,
+   "lon": 107.39591,
+   "lat": 15.71648
+  },
+  {
+   "id": "HO-11",
+   "name": "Đập Sông Bung 6",
+   "type": "dam",
+   "area_km2": 2412.4,
+   "local_area_km2": 20.3,
+   "lon": 107.7812,
+   "lat": 15.82083
+  },
+  {
+   "id": "HO-12",
+   "name": "Đập Sông Tranh 3",
+   "type": "dam",
+   "area_km2": 1448.1,
+   "local_area_km2": 342.0,
+   "lon": 108.14316,
+   "lat": 15.44578
+  },
+  {
+   "id": "HO-13",
+   "name": "Đập Za Hung",
+   "type": "dam",
+   "area_km2": 540.0,
+   "local_area_km2": 540.0,
+   "lon": 107.65411,
+   "lat": 15.85953
+  },
+  {
+   "id": "HO-14",
+   "name": "Đập Đắk Mi 3",
+   "type": "dam",
+   "area_km2": 612.8,
+   "local_area_km2": 612.8,
+   "lon": 107.82555,
+   "lat": 15.31957
+  },
+  {
+   "id": "HO-15",
+   "name": "Đập Khe Diên",
+   "type": "dam",
+   "area_km2": 72.4,
+   "local_area_km2": 72.4,
+   "lon": 107.94407,
+   "lat": 15.68774
+  },
+  {
+   "id": "HO-16",
+   "name": "Đập Sông Côn 2",
+   "type": "dam",
+   "area_km2": 243.4,
+   "local_area_km2": 243.4,
+   "lon": 107.80909,
+   "lat": 15.93256
+  },
+  {
+   "id": "HO-17",
+   "name": "Đập Sông Tranh 4",
+   "type": "dam",
+   "area_km2": 1609.2,
+   "local_area_km2": 161.1,
+   "lon": 108.14876,
+   "lat": 15.52659
+  },
+  {
+   "id": "HO-19",
+   "name": "Đập Đắk Mi 4C",
+   "type": "dam",
+   "area_km2": 82.1,
+   "local_area_km2": 82.1,
+   "lon": 107.9295,
+   "lat": 15.46378
+  },
+  {
+   "id": "ST-THANHMY",
+   "name": "Trạm Thành Mỹ",
+   "type": "station",
+   "area_ref": 1850,
+   "snap_m": 1082,
+   "snap_how": "gần nhất trong ±35% diện tích tham chiếu",
+   "river": "Vu Gia (Cái)",
+   "area_km2": 2047.9,
+   "local_area_km2": 926.1,
+   "lon": 107.82986,
+   "lat": 15.76792
+  },
+  {
+   "id": "ST-NONGSON",
+   "name": "Trạm Nông Sơn",
+   "type": "station",
+   "area_ref": 3130,
+   "snap_m": 361,
+   "snap_how": "gần nhất trong ±35% diện tích tham chiếu",
+   "river": "Thu Bồn",
+   "area_km2": 3165.7,
+   "local_area_km2": 3.9,
+   "lon": 108.02949,
+   "lat": 15.69786
+  },
+  {
+   "id": "ST-GIAOTHUY",
+   "name": "Trạm Giao Thủy (đầu đồng bằng Thu Bồn)",
+   "type": "station",
+   "area_ref": 3825,
+   "snap_m": 883,
+   "snap_how": "gần nhất trong ±35% diện tích tham chiếu",
+   "area_km2": 3510.1,
+   "local_area_km2": 344.4,
+   "lon": 108.10944,
+   "lat": 15.83819
+  },
+  {
+   "id": "J-VUGIA-END",
+   "name": "Cuối sông Vu Gia (tách Quảng Huế / Ái Nghĩa)",
+   "type": "delta_head",
+   "area_ref": null,
+   "snap_m": 1464,
+   "snap_how": "ô tích lũy lớn nhất",
+   "area_km2": 5347.6,
+   "local_area_km2": 104.2,
+   "lon": 108.11053,
+   "lat": 15.87965
+  },
+  {
+   "id": "J01",
+   "name": "Hợp lưu",
+   "type": "confluence",
+   "area_km2": 5243.4,
+   "local_area_km2": 483.2,
+   "lon": 107.94147,
+   "lat": 15.84238
+  },
+  {
+   "id": "J02",
+   "name": "Hợp lưu",
+   "type": "confluence",
+   "area_km2": 4516.8,
+   "local_area_km2": 56.5,
+   "lon": 107.85031,
+   "lat": 15.82022
+  },
+  {
+   "id": "J03",
+   "name": "Hợp lưu",
+   "type": "confluence",
+   "area_km2": 2271.2,
+   "local_area_km2": 100.1,
+   "lon": 107.63868,
+   "lat": 15.72659
+  },
+  {
+   "id": "J04",
+   "name": "Hợp lưu",
+   "type": "confluence",
+   "area_km2": 3161.8,
+   "local_area_km2": 299.0,
+   "lon": 108.01366,
+   "lat": 15.68979
+  },
+  {
+   "id": "J05",
+   "name": "Hợp lưu",
+   "type": "confluence",
+   "area_km2": 2790.4,
+   "local_area_km2": 1099.1,
+   "lon": 108.05615,
+   "lat": 15.57414
+  },
+  {
+   "id": "D01",
+   "name": "Nối Quá Giáng – Ái Nghĩa",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.13836,
+   "lat": 15.89628
+  },
+  {
+   "id": "D02",
+   "name": "Nối Quá Giáng – Đô Toả",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.21684,
+   "lat": 15.97144
+  },
+  {
+   "id": "D04",
+   "name": "Nối Đô Toả – Hàn",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.23488,
+   "lat": 16.02922
+  },
+  {
+   "id": "D09",
+   "name": "Nối Yên – Cẩm Lệ",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.16462,
+   "lat": 15.99369
+  },
+  {
+   "id": "D10",
+   "name": "Nối La Thọ – Quá Giáng",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.16914,
+   "lat": 15.91435
+  },
+  {
+   "id": "D11",
+   "name": "Nối La Thọ – Thanh Quýt",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.21191,
+   "lat": 15.91082
+  },
+  {
+   "id": "D12",
+   "name": "Nối Vĩnh Điện – Thu Bồn",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.23447,
+   "lat": 15.8638
+  },
+  {
+   "id": "D15",
+   "name": "Nối Quảng Huế – Thu Bồn",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.12002,
+   "lat": 15.84453
+  },
+  {
+   "id": "D20",
+   "name": "Nối Thanh Quýt – Vĩnh Điện",
+   "type": "delta_junction",
+   "area_km2": null,
+   "lon": 108.24705,
+   "lat": 15.92974
+  },
+  {
+   "id": "ST-AINGHIA",
+   "name": "Trạm Ái Nghĩa",
+   "type": "station",
+   "area_km2": null,
+   "river": "Sông Ái Nghĩa",
+   "snap_m": 362,
+   "coord_note": "tọa độ gần đúng – cần xác nhận",
+   "lon": 108.11367,
+   "lat": 15.8835
+  },
+  {
+   "id": "ST-CAULAU",
+   "name": "Trạm Câu Lâu",
+   "type": "station",
+   "area_km2": null,
+   "river": "Sông Thu Bồn",
+   "snap_m": 1179,
+   "coord_note": "tọa độ gần đúng – cần xác nhận",
+   "lon": 108.27163,
+   "lat": 15.86253
+  },
+  {
+   "id": "ST-HOIAN",
+   "name": "Trạm Hội An",
+   "type": "station",
+   "area_km2": null,
+   "river": "Sông Thu Bồn",
+   "snap_m": 1140,
+   "coord_note": "tọa độ gần đúng – cần xác nhận",
+   "lon": 108.32548,
+   "lat": 15.87072
+  },
+  {
+   "id": "ST-CAMLE",
+   "name": "Trạm Cẩm Lệ",
+   "type": "station",
+   "area_km2": null,
+   "river": "Sông Cẩm Lệ",
+   "snap_m": 341,
+   "coord_note": "tọa độ gần đúng – cần xác nhận",
+   "lon": 108.1963,
+   "lat": 16.00119
+  },
+  {
+   "id": "OUT-Hàn",
+   "name": "Cửa Sông Hàn",
+   "type": "outlet",
+   "area_km2": null,
+   "lon": 108.21793,
+   "lat": 16.09999
+  },
+  {
+   "id": "OUT-ThuBồn",
+   "name": "Cửa Sông Thu Bồn",
+   "type": "outlet",
+   "area_km2": null,
+   "lon": 108.39417,
+   "lat": 15.87288
+  },
+  {
+   "id": "SRC-TúyLoan",
+   "name": "Đầu Sông Túy Loan",
+   "type": "source",
+   "area_km2": 41.8,
+   "lon": 108.02686,
+   "lat": 16.02508
+  }
+ ],
+ "edges": [
+  {
+   "source": "d8",
+   "length_km": 13.86,
+   "z_up": 315.6,
+   "z_down": 110.0,
+   "slope": 0.01484,
+   "from": "HO-1",
+   "to": "J03"
+  },
+  {
+   "source": "d8",
+   "length_km": 8.88,
+   "z_up": 110.0,
+   "z_down": 63.0,
+   "slope": 0.00529,
+   "from": "J03",
+   "to": "HO-7"
+  },
+  {
+   "source": "d8",
+   "length_km": 12.0,
+   "z_up": 63.0,
+   "z_down": 32.0,
+   "slope": 0.00258,
+   "from": "HO-7",
+   "to": "HO-8"
+  },
+  {
+   "source": "d8",
+   "length_km": 4.92,
+   "z_up": 32.0,
+   "z_down": 17.5,
+   "slope": 0.00294,
+   "from": "HO-8",
+   "to": "HO-11"
+  },
+  {
+   "source": "d8",
+   "length_km": 9.29,
+   "z_up": 17.5,
+   "z_down": 11.0,
+   "slope": 0.0007,
+   "from": "HO-11",
+   "to": "J02"
+  },
+  {
+   "source": "d8",
+   "length_km": 13.11,
+   "z_up": 11.0,
+   "z_down": 8.0,
+   "slope": 0.00023,
+   "from": "J02",
+   "to": "J01"
+  },
+  {
+   "source": "d8",
+   "length_km": 24.18,
+   "z_up": 8.0,
+   "z_down": 4.0,
+   "slope": 0.00017,
+   "from": "J01",
+   "to": "J-VUGIA-END"
+  },
+  {
+   "source": "d8",
+   "length_km": 57.64,
+   "z_up": 182.7,
+   "z_down": 13.0,
+   "slope": 0.00294,
+   "flow_component": "q_spillway",
+   "from": "HO-2",
+   "to": "ST-THANHMY"
+  },
+  {
+   "source": "d8",
+   "length_km": 7.72,
+   "z_up": 13.0,
+   "z_down": 11.0,
+   "slope": 0.00026,
+   "from": "ST-THANHMY",
+   "to": "J02"
+  },
+  {
+   "source": "d8",
+   "length_km": 4.04,
+   "z_up": 130.3,
+   "z_down": 110.0,
+   "slope": 0.00503,
+   "from": "HO-3",
+   "to": "J03"
+  },
+  {
+   "source": "d8",
+   "length_km": 20.9,
+   "z_up": 98.5,
+   "z_down": 46.5,
+   "slope": 0.00249,
+   "from": "HO-4",
+   "to": "HO-12"
+  },
+  {
+   "source": "d8",
+   "length_km": 14.5,
+   "z_up": 46.5,
+   "z_down": 25.5,
+   "slope": 0.00145,
+   "from": "HO-12",
+   "to": "HO-17"
+  },
+  {
+   "source": "d8",
+   "length_km": 19.36,
+   "z_up": 25.5,
+   "z_down": 12.0,
+   "slope": 0.0007,
+   "from": "HO-17",
+   "to": "J05"
+  },
+  {
+   "source": "d8",
+   "length_km": 19.86,
+   "z_up": 12.0,
+   "z_down": 7.0,
+   "slope": 0.00025,
+   "from": "J05",
+   "to": "J04"
+  },
+  {
+   "source": "d8",
+   "length_km": 2.21,
+   "z_up": 7.0,
+   "z_down": 6.5,
+   "slope": 0.00023,
+   "from": "J04",
+   "to": "ST-NONGSON"
+  },
+  {
+   "source": "d8",
+   "length_km": 26.49,
+   "z_up": 6.5,
+   "z_down": 3.0,
+   "slope": 0.00013,
+   "from": "ST-NONGSON",
+   "to": "ST-GIAOTHUY"
+  },
+  {
+   "source": "d8",
+   "length_km": 69.33,
+   "z_up": 526.4,
+   "z_down": 130.3,
+   "slope": 0.00571,
+   "from": "HO-9",
+   "to": "HO-3"
+  },
+  {
+   "source": "d8",
+   "length_km": 12.17,
+   "z_up": 430.2,
+   "z_down": 315.6,
+   "slope": 0.00941,
+   "from": "HO-13",
+   "to": "HO-1"
+  },
+  {
+   "source": "d8",
+   "length_km": 23.2,
+   "z_up": 330.5,
+   "z_down": 182.7,
+   "slope": 0.00637,
+   "from": "HO-14",
+   "to": "HO-2"
+  },
+  {
+   "source": "d8",
+   "length_km": 14.2,
+   "z_up": 180.2,
+   "z_down": 7.0,
+   "slope": 0.01219,
+   "from": "HO-15",
+   "to": "J04"
+  },
+  {
+   "source": "d8",
+   "length_km": 31.66,
+   "z_up": 271.3,
+   "z_down": 8.0,
+   "slope": 0.00832,
+   "from": "HO-16",
+   "to": "J01"
+  },
+  {
+   "source": "d8",
+   "length_km": 25.1,
+   "z_up": 51.0,
+   "z_down": 12.0,
+   "slope": 0.00155,
+   "from": "HO-19",
+   "to": "J05"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Quá Giáng",
+   "length_km": 4.71,
+   "split_fraction": null,
+   "from": "D01",
+   "to": "D10"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Quá Giáng",
+   "length_km": 11.47,
+   "split_fraction": null,
+   "from": "D10",
+   "to": "D02"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Đô Toả",
+   "length_km": 10.01,
+   "split_fraction": null,
+   "from": "D02",
+   "to": "D04"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Ái Nghĩa",
+   "length_km": 2.1,
+   "split_fraction": null,
+   "from": "J-VUGIA-END",
+   "to": "ST-AINGHIA"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Ái Nghĩa",
+   "length_km": 4.49,
+   "split_fraction": null,
+   "from": "ST-AINGHIA",
+   "to": "D01"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Hàn",
+   "length_km": 8.25,
+   "split_fraction": null,
+   "from": "D04",
+   "to": "OUT-Hàn"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Yên",
+   "length_km": 14.47,
+   "split_fraction": null,
+   "from": "D01",
+   "to": "D09"
+  },
+  {
+   "source": "osm",
+   "river": "Sông La Thọ",
+   "length_km": 5.48,
+   "split_fraction": null,
+   "from": "D10",
+   "to": "D11"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Vĩnh Điện",
+   "length_km": 8.09,
+   "split_fraction": null,
+   "from": "D12",
+   "to": "D20"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Vĩnh Điện",
+   "length_km": 7.06,
+   "split_fraction": null,
+   "from": "D20",
+   "to": "D02"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Thu Bồn",
+   "length_km": 1.34,
+   "split_fraction": null,
+   "from": "ST-GIAOTHUY",
+   "to": "D15"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Thu Bồn",
+   "length_km": 15.11,
+   "split_fraction": null,
+   "from": "D15",
+   "to": "D12"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Thu Bồn",
+   "length_km": 4.01,
+   "split_fraction": null,
+   "from": "D12",
+   "to": "ST-CAULAU"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Thu Bồn",
+   "length_km": 6.69,
+   "split_fraction": null,
+   "from": "ST-CAULAU",
+   "to": "ST-HOIAN"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Thu Bồn",
+   "length_km": 8.42,
+   "split_fraction": null,
+   "from": "ST-HOIAN",
+   "to": "OUT-ThuBồn"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Quảng Huế",
+   "length_km": 5.8,
+   "split_fraction": null,
+   "from": "J-VUGIA-END",
+   "to": "D15"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Cẩm Lệ",
+   "length_km": 3.73,
+   "split_fraction": null,
+   "from": "D09",
+   "to": "ST-CAMLE"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Cẩm Lệ",
+   "length_km": 5.3,
+   "split_fraction": null,
+   "from": "ST-CAMLE",
+   "to": "D04"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Túy Loan",
+   "length_km": 20.91,
+   "split_fraction": null,
+   "from": "SRC-TúyLoan",
+   "to": "D09"
+  },
+  {
+   "source": "osm",
+   "river": "Sông Thanh Quýt",
+   "length_km": 5.31,
+   "split_fraction": null,
+   "from": "D11",
+   "to": "D20"
+  },
+  {
+   "source": "declared",
+   "kind": "diversion",
+   "flow_component": "q_turbine",
+   "length_km": null,
+   "note": "QĐ 1865 Phụ lục I: nhà máy Đắk Mi 4 (Q max 128 m³/s) xả vào hồ Đắk Mi 4b (lưu vực riêng 29 km² nhưng Q nhà máy 130 m³/s) rồi Đắk Mi 4c (140 m³/s) → sông Thu Bồn. Đắk Mi 4b chưa có trong hệ thống nên nối thẳng HO-2 → HO-19. Cạnh D8 từ HO-2 xuôi Đắk Mi (về Vu Gia) chỉ mang phần xả tràn và dòng chảy tối thiểu (≥ 3 m³/s, Điều 13).",
+   "from": "HO-2",
+   "to": "HO-19"
+  }
+ ]
+}

@@ -30,3 +30,27 @@ BRANCH_OF = {
 
 for p in (RAW, WORK, OUT):
     p.mkdir(parents=True, exist_ok=True)
+
+
+def hoian_window(transform, shape, crs="EPSG:32649", pad=10):
+    """Cửa sổ (hàng, cột) trên lưới UTM `transform`/`shape` phủ khu thí điểm Hội An (lưới flood_grid.json của 07_hoian.py)
+    + `pad` ô – để 14/19 lưu mặt nước khu này cho mô phỏng 3D (23_sim_package.py)."""
+    import json
+    from rasterio.warp import transform_bounds
+    from rasterio.windows import from_bounds
+    g = json.loads((OUT / "hoian" / "flood_grid.json").read_text(encoding="utf-8"))
+    b = (g["west"], g["north"] - g["dy"] * g["ny"], g["west"] + g["dx"] * g["nx"], g["north"])
+    w = from_bounds(*transform_bounds("EPSG:4326", crs, *b), transform=transform).round_offsets().round_lengths()
+    r0, c0 = max(int(w.row_off) - pad, 0), max(int(w.col_off) - pad, 0)
+    r1, c1 = min(int(w.row_off + w.height) + pad, shape[0]), min(int(w.col_off + w.width) + pad, shape[1])
+    return (slice(r0, r1), slice(c0, c1)), transform * transform.translation(c0, r0)
+
+
+def block_mean(a, k=10):
+    """Trung bình khối k×k bỏ qua NaN (mặt nước toàn vùng 30 m → 300 m cho mô phỏng 3D); khối toàn NaN → NaN."""
+    import warnings
+    import numpy as np
+    h, w = a.shape[0] // k * k, a.shape[1] // k * k
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        return np.nanmean(a[:h, :w].reshape(h // k, k, w // k, k), axis=(1, 3)).astype(np.float32)

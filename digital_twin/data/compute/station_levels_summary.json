@@ -1,0 +1,2434 @@
+{
+ "note": "Chuẩn hóa từ Documents/Data_MucNuoc (17_station_levels.py). Mực nước m theo cao độ trạm KTTV; giờ Việt Nam.",
+ "stations": [
+  {
+   "station_code": "THANHMY",
+   "kttv_id": 71526,
+   "name": "Thành Mỹ",
+   "river": "Cái (Vu Gia)",
+   "range_m": [
+    9.0,
+    30.0
+   ],
+   "lat": 15.767,
+   "lon": 107.833,
+   "alarm": [
+    15.0,
+    19.0,
+    22.0
+   ],
+   "historic_m": null,
+   "historic_year": null
+  },
+  {
+   "station_code": "HOIKHACH",
+   "kttv_id": 71533,
+   "name": "Hội Khách",
+   "river": "Vu Gia",
+   "range_m": [
+    6.0,
+    21.0
+   ],
+   "lat": 15.817,
+   "lon": 107.825,
+   "alarm": [
+    14.5,
+    15.5,
+    16.5
+   ],
+   "historic_m": null,
+   "historic_year": null
+  },
+  {
+   "station_code": "AINGHIA",
+   "kttv_id": 71527,
+   "name": "Ái Nghĩa",
+   "river": "Vu Gia",
+   "range_m": [
+    1.0,
+    12.0
+   ],
+   "lat": 15.883,
+   "lon": 108.117,
+   "alarm": [
+    6.5,
+    8.0,
+    9.0
+   ],
+   "historic_m": 10.77,
+   "historic_year": 2009.0
+  },
+  {
+   "station_code": "CAMLE",
+   "kttv_id": 71521,
+   "name": "Cẩm Lệ",
+   "river": "Cẩm Lệ",
+   "range_m": [
+    -1.2,
+    5.0
+   ],
+   "lat": 16.009,
+   "lon": 108.209,
+   "alarm": [
+    1.0,
+    2.0,
+    2.5
+   ],
+   "historic_m": 4.4,
+   "historic_year": 1964.0
+  },
+  {
+   "station_code": "SONTRA",
+   "kttv_id": 71545,
+   "name": "Sơn Trà (Tiên Sa)",
+   "river": "Biển",
+   "range_m": [
+    -1.2,
+    2.5
+   ],
+   "lat": null,
+   "lon": null,
+   "alarm": null,
+   "historic_m": null,
+   "historic_year": null
+  },
+  {
+   "station_code": "HIEPDUC",
+   "kttv_id": 71528,
+   "name": "Hiệp Đức",
+   "river": "Thu Bồn",
+   "range_m": [
+    10.0,
+    31.0
+   ],
+   "lat": 15.576,
+   "lon": 108.04,
+   "alarm": [
+    26.0,
+    28.0,
+    30.0
+   ],
+   "historic_m": null,
+   "historic_year": null
+  },
+  {
+   "station_code": "NONGSON",
+   "kttv_id": 71529,
+   "name": "Nông Sơn",
+   "river": "Thu Bồn",
+   "range_m": [
+    2.0,
+    21.0
+   ],
+   "lat": 15.7,
+   "lon": 108.033,
+   "alarm": [
+    11.0,
+    13.0,
+    15.0
+   ],
+   "historic_m": null,
+   "historic_year": null
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "kttv_id": 71530,
+   "name": "Giao Thủy",
+   "river": "Thu Bồn",
+   "range_m": [
+    -1.0,
+    11.5
+   ],
+   "lat": 15.842,
+   "lon": 108.133,
+   "alarm": [
+    6.5,
+    7.5,
+    8.8
+   ],
+   "historic_m": 10.06,
+   "historic_year": 1964.0
+  },
+  {
+   "station_code": "CAULAU",
+   "kttv_id": 71531,
+   "name": "Câu Lâu",
+   "river": "Thu Bồn",
+   "range_m": [
+    -1.5,
+    6.5
+   ],
+   "lat": 15.862,
+   "lon": 108.283,
+   "alarm": [
+    2.0,
+    3.0,
+    4.0
+   ],
+   "historic_m": 5.62,
+   "historic_year": 2025.0
+  },
+  {
+   "station_code": "HOIAN",
+   "kttv_id": 71532,
+   "name": "Hội An",
+   "river": "Thu Bồn",
+   "range_m": [
+    -1.5,
+    4.0
+   ],
+   "lat": 15.867,
+   "lon": 108.333,
+   "alarm": [
+    1.0,
+    1.5,
+    2.0
+   ],
+   "historic_m": 3.4,
+   "historic_year": 1964.0
+  }
+ ],
+ "inventory": [
+  {
+   "station_code": "AINGHIA",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T23:00:00.000",
+   "n": 10179,
+   "ok": 3809,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 6369
+  },
+  {
+   "station_code": "AINGHIA",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 11378,
+   "ok": 11301,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 76
+  },
+  {
+   "station_code": "AINGHIA",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T00:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 8277,
+   "ok": 8277,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "CAMLE",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T23:00:00.000",
+   "n": 29158,
+   "ok": 22637,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 6521
+  },
+  {
+   "station_code": "CAMLE",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2020-01-01T00:00:00.000",
+   "n": 16270,
+   "ok": 16188,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 81
+  },
+  {
+   "station_code": "CAMLE",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T00:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 7930,
+   "ok": 7930,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "CAMLE",
+   "source": "gio_lien_tuc",
+   "from": "1999-01-01T00:00:00.000",
+   "to": "2008-12-31T23:00:00.000",
+   "n": 87635,
+   "ok": 67375,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 20260
+  },
+  {
+   "station_code": "CAULAU",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T23:00:00.000",
+   "n": 28912,
+   "ok": 22365,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 6546
+  },
+  {
+   "station_code": "CAULAU",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 15570,
+   "ok": 15473,
+   "out_of_range": 0,
+   "spike": 3,
+   "sentinel": 0,
+   "duplicate": 94
+  },
+  {
+   "station_code": "CAULAU",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T00:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 8445,
+   "ok": 8400,
+   "out_of_range": 3,
+   "spike": 42,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "CAULAU",
+   "source": "gio_lien_tuc",
+   "from": "2001-01-01T00:00:00.000",
+   "to": "2005-12-31T23:00:00.000",
+   "n": 43824,
+   "ok": 32454,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 11370
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T19:00:00.000",
+   "n": 10505,
+   "ok": 3961,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 6543
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 11164,
+   "ok": 11091,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 72
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T00:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 8491,
+   "ok": 8488,
+   "out_of_range": 0,
+   "spike": 3,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "HIEPDUC",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T22:00:00.000",
+   "n": 10812,
+   "ok": 4093,
+   "out_of_range": 0,
+   "spike": 13,
+   "sentinel": 0,
+   "duplicate": 6706
+  },
+  {
+   "station_code": "HIEPDUC",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 11938,
+   "ok": 11815,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 123
+  },
+  {
+   "station_code": "HIEPDUC",
+   "source": "VNDMS_2025",
+   "from": "2025-01-04T11:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 7922,
+   "ok": 7922,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "HOIAN",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 13752,
+   "ok": 13607,
+   "out_of_range": 2,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 142
+  },
+  {
+   "station_code": "HOIAN",
+   "source": "VNDMS_2025",
+   "from": "2025-01-02T15:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 8297,
+   "ok": 8297,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "HOIAN",
+   "source": "gio_lien_tuc",
+   "from": "2000-01-01T00:00:00.000",
+   "to": "2005-12-31T23:00:00.000",
+   "n": 52608,
+   "ok": 50717,
+   "out_of_range": 0,
+   "spike": 4,
+   "sentinel": 0,
+   "duplicate": 1887
+  },
+  {
+   "station_code": "HOIKHACH",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T19:00:00.000",
+   "n": 10253,
+   "ok": 4387,
+   "out_of_range": 0,
+   "spike": 12,
+   "sentinel": 0,
+   "duplicate": 5854
+  },
+  {
+   "station_code": "HOIKHACH",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 10500,
+   "ok": 10386,
+   "out_of_range": 0,
+   "spike": 3,
+   "sentinel": 0,
+   "duplicate": 111
+  },
+  {
+   "station_code": "HOIKHACH",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T00:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 8415,
+   "ok": 8415,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 0
+  },
+  {
+   "station_code": "NONGSON",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T22:00:00.000",
+   "n": 11055,
+   "ok": 4477,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 6577
+  },
+  {
+   "station_code": "NONGSON",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 11581,
+   "ok": 11500,
+   "out_of_range": 0,
+   "spike": 2,
+   "sentinel": 0,
+   "duplicate": 79
+  },
+  {
+   "station_code": "NONGSON",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T01:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 4636,
+   "ok": 4047,
+   "out_of_range": 176,
+   "spike": 15,
+   "sentinel": 398,
+   "duplicate": 0
+  },
+  {
+   "station_code": "SONTRA",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 7581,
+   "ok": 7528,
+   "out_of_range": 0,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 53
+  },
+  {
+   "station_code": "SONTRA",
+   "source": "gio_lien_tuc",
+   "from": "1983-01-01T00:00:00.000",
+   "to": "2009-12-31T23:00:00.000",
+   "n": 236688,
+   "ok": 233908,
+   "out_of_range": 0,
+   "spike": 3,
+   "sentinel": 0,
+   "duplicate": 2777
+  },
+  {
+   "station_code": "THANHMY",
+   "source": "MIKE_lu_2002_2011",
+   "from": "2002-09-01T01:00:00.000",
+   "to": "2011-12-31T22:00:00.000",
+   "n": 8498,
+   "ok": 2760,
+   "out_of_range": 0,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 5737
+  },
+  {
+   "station_code": "THANHMY",
+   "source": "PCTT_0.2_2003_2019",
+   "from": "2003-09-01T01:00:00.000",
+   "to": "2019-12-31T19:00:00.000",
+   "n": 10527,
+   "ok": 10441,
+   "out_of_range": 1,
+   "spike": 0,
+   "sentinel": 0,
+   "duplicate": 85
+  },
+  {
+   "station_code": "THANHMY",
+   "source": "VNDMS_2025",
+   "from": "2025-01-01T00:00:00.000",
+   "to": "2025-12-31T19:00:00.000",
+   "n": 8052,
+   "ok": 8050,
+   "out_of_range": 1,
+   "spike": 1,
+   "sentinel": 0,
+   "duplicate": 0
+  }
+ ],
+ "flood_season_peaks": [
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1983-10-25T23:00:00.000",
+   "level_m": 1.3600000143,
+   "year": 1983,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1984-11-27T23:00:00.000",
+   "level_m": 0.8199999928,
+   "year": 1984,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1985-10-15T22:00:00.000",
+   "level_m": 1.1499999762,
+   "year": 1985,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1986-11-30T20:00:00.000",
+   "level_m": 0.7799999714,
+   "year": 1986,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1987-12-01T19:00:00.000",
+   "level_m": 0.8799999952,
+   "year": 1987,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1988-10-29T00:00:00.000",
+   "level_m": 1.1399999857,
+   "year": 1988,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1989-10-13T08:00:00.000",
+   "level_m": 1.0199999809,
+   "year": 1989,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1990-09-18T10:00:00.000",
+   "level_m": 1.3600000143,
+   "year": 1990,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1991-10-29T00:00:00.000",
+   "level_m": 0.8799999952,
+   "year": 1991,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1992-10-28T22:00:00.000",
+   "level_m": 1.0199999809,
+   "year": 1992,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1993-12-15T22:00:00.000",
+   "level_m": 0.8000000119,
+   "year": 1993,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1994-12-04T22:00:00.000",
+   "level_m": 0.8100000024,
+   "year": 1994,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1995-10-26T22:00:00.000",
+   "level_m": 1.0199999809,
+   "year": 1995,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1996-11-18T02:00:00.000",
+   "level_m": 0.8899999857,
+   "year": 1996,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1997-09-25T04:00:00.000",
+   "level_m": 0.8999999762,
+   "year": 1997,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1998-11-21T23:00:00.000",
+   "level_m": 0.9800000191,
+   "year": 1998,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "1999-11-03T13:00:00.000",
+   "level_m": 4.28,
+   "year": 1999,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "1999-10-19T20:00:00.000",
+   "level_m": 1.1299999952,
+   "year": 1999,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2000-11-19T03:00:00.000",
+   "level_m": 1.2,
+   "year": 2000,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2000-11-18T03:00:00.000",
+   "level_m": 1.7200000286,
+   "year": 2000,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2000-10-13T23:00:00.000",
+   "level_m": 0.9599999785,
+   "year": 2000,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2001-10-23T00:00:00.000",
+   "level_m": 1.68,
+   "year": 2001,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2001-10-22T17:00:00.000",
+   "level_m": 4.1500000954,
+   "year": 2001,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2001-10-22T22:00:00.000",
+   "level_m": 2.1099998951,
+   "year": 2001,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2001-11-11T19:00:00.000",
+   "level_m": 1.0,
+   "year": 2001,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2002-10-26T05:00:00.000",
+   "level_m": 7.8699998856,
+   "year": 2002,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2002-11-04T22:00:00.000",
+   "level_m": 0.8600000143,
+   "year": 2002,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2002-10-26T08:00:00.000",
+   "level_m": 2.9600000381,
+   "year": 2002,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2002-10-26T03:00:00.000",
+   "level_m": 7.25,
+   "year": 2002,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2002-10-25T18:00:00.000",
+   "level_m": 20.7099990845,
+   "year": 2002,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2002-11-21T21:00:00.000",
+   "level_m": 0.9800000191,
+   "year": 2002,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2002-10-26T01:00:00.000",
+   "level_m": 13.1499996185,
+   "year": 2002,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2002-10-25T22:00:00.000",
+   "level_m": 12.6999998093,
+   "year": 2002,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2002-11-04T22:00:00.000",
+   "level_m": 0.7699999809,
+   "year": 2002,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2002-10-25T21:00:00.000",
+   "level_m": 17.1399993896,
+   "year": 2002,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2003-11-14T11:00:00.000",
+   "level_m": 8.85,
+   "year": 2003,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2003-11-15T01:00:00.000",
+   "level_m": 1.1000000238,
+   "year": 2003,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2003-11-14T20:00:00.000",
+   "level_m": 3.78,
+   "year": 2003,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2003-11-14T13:00:00.000",
+   "level_m": 8.22,
+   "year": 2003,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2003-10-17T23:00:00.000",
+   "level_m": 25.09,
+   "year": 2003,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2003-11-15T00:00:00.000",
+   "level_m": 1.73,
+   "year": 2003,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2003-11-14T06:00:00.000",
+   "level_m": 15.01,
+   "year": 2003,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2003-10-18T03:00:00.000",
+   "level_m": 15.15,
+   "year": 2003,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2003-11-24T21:00:00.000",
+   "level_m": 0.8399999738,
+   "year": 2003,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2003-11-14T05:00:00.000",
+   "level_m": 22.95,
+   "year": 2003,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2004-11-27T14:00:00.000",
+   "level_m": 9.61,
+   "year": 2004,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2004-11-28T01:00:00.000",
+   "level_m": 1.87,
+   "year": 2004,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2004-11-27T21:00:00.000",
+   "level_m": 4.59,
+   "year": 2004,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2004-11-27T14:00:00.000",
+   "level_m": 8.87,
+   "year": 2004,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2004-11-27T11:00:00.000",
+   "level_m": 27.19,
+   "year": 2004,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2004-11-27T23:00:00.000",
+   "level_m": 2.48,
+   "year": 2004,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2004-11-27T09:00:00.000",
+   "level_m": 16.01,
+   "year": 2004,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2004-11-27T13:00:00.000",
+   "level_m": 17.38,
+   "year": 2004,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2004-11-26T22:00:00.000",
+   "level_m": 0.7099999785,
+   "year": 2004,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2004-11-27T07:00:00.000",
+   "level_m": 21.38,
+   "year": 2004,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2005-10-11T12:00:00.000",
+   "level_m": 8.53,
+   "year": 2005,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2005-11-01T21:00:00.000",
+   "level_m": 1.44,
+   "year": 2005,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2005-10-25T11:00:00.000",
+   "level_m": 3.56,
+   "year": 2005,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2005-10-25T03:00:00.000",
+   "level_m": 7.88,
+   "year": 2005,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2005-10-11T02:00:00.000",
+   "level_m": 23.73,
+   "year": 2005,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2005-10-25T04:00:00.000",
+   "level_m": 1.54,
+   "year": 2005,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2005-10-11T06:00:00.000",
+   "level_m": 14.37,
+   "year": 2005,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2005-10-11T05:00:00.000",
+   "level_m": 14.74,
+   "year": 2005,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2005-11-01T11:00:00.000",
+   "level_m": 1.1200000048,
+   "year": 2005,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2005-10-11T04:00:00.000",
+   "level_m": 20.57,
+   "year": 2005,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2006-10-01T23:00:00.000",
+   "level_m": 9.75,
+   "year": 2006,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2006-10-01T10:00:00.000",
+   "level_m": 2.0399999619,
+   "year": 2006,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2006-10-02T06:00:00.000",
+   "level_m": 3.65,
+   "year": 2006,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2006-10-02T01:00:00.000",
+   "level_m": 8.03,
+   "year": 2006,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2006-12-06T05:00:00.000",
+   "level_m": 23.39,
+   "year": 2006,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2006-12-07T01:00:00.000",
+   "level_m": 1.79,
+   "year": 2006,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2006-10-01T19:00:00.000",
+   "level_m": 17.01,
+   "year": 2006,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2006-12-06T08:00:00.000",
+   "level_m": 14.9,
+   "year": 2006,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2006-10-01T07:00:00.000",
+   "level_m": 1.3999999762,
+   "year": 2006,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2006-10-01T17:00:00.000",
+   "level_m": 23.05,
+   "year": 2006,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2007-11-12T07:00:00.000",
+   "level_m": 10.36,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2007-11-12T19:00:00.000",
+   "level_m": 3.98,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2007-11-12T11:00:00.000",
+   "level_m": 5.39,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2007-11-12T10:00:00.000",
+   "level_m": 9.6,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2007-11-11T23:00:00.000",
+   "level_m": 29.0,
+   "year": 2007,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2007-11-12T15:00:00.000",
+   "level_m": 3.28,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2007-11-12T02:00:00.000",
+   "level_m": 17.67,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2007-11-12T06:00:00.000",
+   "level_m": 18.65,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2007-10-03T01:00:00.000",
+   "level_m": 1.06,
+   "year": 2007,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2007-10-30T17:00:00.000",
+   "level_m": 24.72,
+   "year": 2007,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2008-10-17T19:00:00.000",
+   "level_m": 9.1,
+   "year": 2008,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2008-10-17T01:00:00.000",
+   "level_m": 1.15,
+   "year": 2008,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2008-10-17T18:00:00.000",
+   "level_m": 3.94,
+   "year": 2008,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2008-10-17T19:00:00.000",
+   "level_m": 8.4099998474,
+   "year": 2008,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2008-10-17T01:00:00.000",
+   "level_m": 24.3899993896,
+   "year": 2008,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2008-10-17T18:00:00.000",
+   "level_m": 2.16,
+   "year": 2008,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2008-10-17T13:00:00.000",
+   "level_m": 15.32,
+   "year": 2008,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2008-10-17T13:00:00.000",
+   "level_m": 15.15,
+   "year": 2008,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2008-11-18T00:00:00.000",
+   "level_m": 0.8500000238,
+   "year": 2008,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2008-10-17T12:00:00.000",
+   "level_m": 19.83,
+   "year": 2008,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2009-09-30T03:00:00.000",
+   "level_m": 10.77,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2009-09-30T12:00:00.000",
+   "level_m": 3.16,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2009-09-30T09:00:00.000",
+   "level_m": 5.29,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2009-09-30T04:00:00.000",
+   "level_m": 9.75,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2009-09-30T00:00:00.000",
+   "level_m": 29.01,
+   "year": 2009,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2009-09-30T10:00:00.000",
+   "level_m": 3.2,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2009-09-29T23:00:00.000",
+   "level_m": 18.53,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2009-09-30T06:00:00.000",
+   "level_m": 17.65,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2009-09-29T08:00:00.000",
+   "level_m": 1.7000000477,
+   "year": 2009,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2009-09-29T22:00:00.000",
+   "level_m": 26.93,
+   "year": 2009,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2010-11-17T03:00:00.000",
+   "level_m": 8.97,
+   "year": 2010,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2010-11-04T20:00:00.000",
+   "level_m": 1.2,
+   "year": 2010,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2010-11-17T09:00:00.000",
+   "level_m": 4.03,
+   "year": 2010,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2010-11-17T03:00:00.000",
+   "level_m": 8.49,
+   "year": 2010,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2010-11-16T21:00:00.000",
+   "level_m": 26.35,
+   "year": 2010,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2010-11-17T11:00:00.000",
+   "level_m": 2.2,
+   "year": 2010,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2010-11-16T13:00:00.000",
+   "level_m": 14.63,
+   "year": 2010,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2010-11-17T00:00:00.000",
+   "level_m": 16.4500007629,
+   "year": 2010,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2010-11-07T07:00:00.000",
+   "level_m": 0.97,
+   "year": 2010,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2010-11-16T09:00:00.000",
+   "level_m": 19.34,
+   "year": 2010,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2011-11-08T03:00:00.000",
+   "level_m": 10.0,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2011-11-08T11:00:00.000",
+   "level_m": 2.82,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2011-11-08T10:00:00.000",
+   "level_m": 4.74,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2011-11-08T03:00:00.000",
+   "level_m": 9.07,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2011-11-07T19:00:00.000",
+   "level_m": 26.34,
+   "year": 2011,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2011-11-08T10:00:00.000",
+   "level_m": 2.85,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2011-11-07T23:00:00.000",
+   "level_m": 16.7299995422,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2011-11-07T21:00:00.000",
+   "level_m": 16.92,
+   "year": 2011,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2011-10-04T01:00:00.000",
+   "level_m": 1.0,
+   "year": 2011,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2011-11-07T20:00:00.000",
+   "level_m": 21.98,
+   "year": 2011,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2012-10-07T13:00:00.000",
+   "level_m": 7.22,
+   "year": 2012,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2012-10-07T01:00:00.000",
+   "level_m": 0.83,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2012-10-07T17:00:00.000",
+   "level_m": 1.3,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2012-10-07T12:00:00.000",
+   "level_m": 5.16,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2012-10-07T05:00:00.000",
+   "level_m": 18.36,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2012-10-27T22:00:00.000",
+   "level_m": 0.92,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2012-10-07T09:00:00.000",
+   "level_m": 12.52,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2012-10-07T07:00:00.000",
+   "level_m": 10.39,
+   "year": 2012,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2012-10-27T19:00:00.000",
+   "level_m": 0.86,
+   "year": 2012,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2012-10-07T03:00:00.000",
+   "level_m": 16.23,
+   "year": 2012,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2013-11-16T02:00:00.000",
+   "level_m": 10.0,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2013-11-16T13:00:00.000",
+   "level_m": 2.67,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2013-11-16T14:00:00.000",
+   "level_m": 4.55,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2013-11-16T03:00:00.000",
+   "level_m": 8.94,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2013-11-15T23:00:00.000",
+   "level_m": 26.75,
+   "year": 2013,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2013-11-16T14:00:00.000",
+   "level_m": 2.69,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2013-11-15T20:00:00.000",
+   "level_m": 16.95,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2013-11-16T04:00:00.000",
+   "level_m": 16.47,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2013-10-15T04:00:00.000",
+   "level_m": 1.67,
+   "year": 2013,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2013-11-15T19:00:00.000",
+   "level_m": 25.78,
+   "year": 2013,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2014-12-03T07:00:00.000",
+   "level_m": 6.7,
+   "year": 2014,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2014-12-02T21:00:00.000",
+   "level_m": 0.94,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2014-12-02T20:00:00.000",
+   "level_m": 1.19,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2014-11-16T01:00:00.000",
+   "level_m": 4.89,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2014-11-15T17:00:00.000",
+   "level_m": 18.17,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2014-12-02T19:00:00.000",
+   "level_m": 0.95,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2014-12-03T04:00:00.000",
+   "level_m": 11.45,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2014-11-15T19:00:00.000",
+   "level_m": 10.4,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2014-12-04T19:00:00.000",
+   "level_m": 0.81,
+   "year": 2014,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2014-12-02T22:00:00.000",
+   "level_m": 14.6,
+   "year": 2014,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2015-11-06T07:00:00.000",
+   "level_m": 6.7,
+   "year": 2015,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2015-09-14T13:00:00.000",
+   "level_m": 0.86,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2015-11-06T05:00:00.000",
+   "level_m": 1.67,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2015-11-06T01:00:00.000",
+   "level_m": 5.34,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2015-11-05T19:00:00.000",
+   "level_m": 18.69,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2015-11-27T22:00:00.000",
+   "level_m": 0.94,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2015-11-06T01:00:00.000",
+   "level_m": 11.46,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2015-11-05T22:00:00.000",
+   "level_m": 10.82,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2015-09-14T13:00:00.000",
+   "level_m": 0.8,
+   "year": 2015,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2015-11-05T22:00:00.000",
+   "level_m": 14.72,
+   "year": 2015,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2016-12-15T23:00:00.000",
+   "level_m": 9.42,
+   "year": 2016,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2016-12-15T23:00:00.000",
+   "level_m": 1.67,
+   "year": 2016,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2016-12-15T23:00:00.000",
+   "level_m": 4.0,
+   "year": 2016,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2016-12-15T23:00:00.000",
+   "level_m": 8.36,
+   "year": 2016,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2016-12-03T10:00:00.000",
+   "level_m": 25.65,
+   "year": 2016,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2016-12-15T23:00:00.000",
+   "level_m": 2.36,
+   "year": 2016,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2016-12-15T21:00:00.000",
+   "level_m": 15.97,
+   "year": 2016,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2016-12-03T14:00:00.000",
+   "level_m": 15.64,
+   "year": 2016,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2016-12-11T19:00:00.000",
+   "level_m": 0.8,
+   "year": 2016,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2016-12-15T20:00:00.000",
+   "level_m": 21.72,
+   "year": 2016,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2017-11-05T21:00:00.000",
+   "level_m": 10.11,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2017-11-06T13:00:00.000",
+   "level_m": 2.59,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2017-11-06T06:00:00.000",
+   "level_m": 5.15,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2017-11-05T23:00:00.000",
+   "level_m": 9.5,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2017-11-05T22:00:00.000",
+   "level_m": 30.01,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2017-11-06T01:00:00.000",
+   "level_m": 3.17,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2017-11-05T18:00:00.000",
+   "level_m": 16.78,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2017-11-06T01:00:00.000",
+   "level_m": 18.54,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2017-10-31T19:00:00.000",
+   "level_m": 0.96,
+   "year": 2017,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2017-11-04T23:00:00.000",
+   "level_m": 23.7,
+   "year": 2017,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2018-12-10T19:00:00.000",
+   "level_m": 5.0,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2018-12-09T23:00:00.000",
+   "level_m": 1.15,
+   "year": 2018,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2018-12-09T23:00:00.000",
+   "level_m": 1.35,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2018-12-15T19:00:00.000",
+   "level_m": 3.7,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2018-12-15T07:00:00.000",
+   "level_m": 17.76,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2018-12-09T22:00:00.000",
+   "level_m": 1.17,
+   "year": 2018,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2018-12-09T01:00:00.000",
+   "level_m": 10.46,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2018-12-15T13:00:00.000",
+   "level_m": 9.4,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2018-12-11T01:00:00.000",
+   "level_m": 0.68,
+   "year": 2018,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2018-12-09T01:00:00.000",
+   "level_m": 14.75,
+   "year": 2018,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2019-10-31T22:00:00.000",
+   "level_m": 7.07,
+   "year": 2019,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2019-11-01T00:00:00.000",
+   "level_m": 1.01,
+   "year": 2019,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2019-11-01T00:00:00.000",
+   "level_m": 1.57,
+   "year": 2019,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2019-10-31T19:00:00.000",
+   "level_m": 4.73,
+   "year": 2019,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2019-10-31T10:00:00.000",
+   "level_m": 19.67,
+   "year": 2019,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2019-10-30T23:00:00.000",
+   "level_m": 1.09,
+   "year": 2019,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2019-10-31T19:00:00.000",
+   "level_m": 12.14,
+   "year": 2019,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2019-10-31T15:00:00.000",
+   "level_m": 10.62,
+   "year": 2019,
+   "vs_alarm": "<BĐI"
+  },
+  {
+   "station_code": "SONTRA",
+   "t_vn": "2019-11-01T01:00:00.000",
+   "level_m": 0.79,
+   "year": 2019,
+   "vs_alarm": ""
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2019-10-31T16:00:00.000",
+   "level_m": 15.67,
+   "year": 2019,
+   "vs_alarm": "≥BĐI"
+  },
+  {
+   "station_code": "AINGHIA",
+   "t_vn": "2025-10-29T19:00:00.000",
+   "level_m": 10.6,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAMLE",
+   "t_vn": "2025-10-30T02:00:00.000",
+   "level_m": 3.25,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "CAULAU",
+   "t_vn": "2025-10-30T02:00:00.000",
+   "level_m": 5.62,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "GIAOTHUY",
+   "t_vn": "2025-10-29T22:00:00.000",
+   "level_m": 10.03,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HIEPDUC",
+   "t_vn": "2025-10-29T14:00:00.000",
+   "level_m": 29.82,
+   "year": 2025,
+   "vs_alarm": "≥BĐII"
+  },
+  {
+   "station_code": "HOIAN",
+   "t_vn": "2025-10-30T03:00:00.000",
+   "level_m": 3.39,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "HOIKHACH",
+   "t_vn": "2025-10-29T15:00:00.000",
+   "level_m": 19.32,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "NONGSON",
+   "t_vn": "2025-10-29T19:00:00.000",
+   "level_m": 18.68,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  },
+  {
+   "station_code": "THANHMY",
+   "t_vn": "2025-10-29T14:00:00.000",
+   "level_m": 27.2,
+   "year": 2025,
+   "vs_alarm": "≥BĐIII"
+  }
+ ],
+ "pctt_0319_sheets": {
+  "2019": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2018": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2017": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2016": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 4
+  },
+  "2015": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2014": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2013": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 1
+  },
+  "2012": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 1
+  },
+  "2011": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2010": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 8
+  },
+  "2009": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2008": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 1
+  },
+  "2007": {
+   "header_row": 0,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 24,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2006": {
+   "header_row": 0,
+   "date_col": 1,
+   "hour_col": 0,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 6
+  },
+  "2005": {
+   "header_row": 1,
+   "date_col": 1,
+   "hour_col": 0,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 0
+  },
+  "2004": {
+   "header_row": 1,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 65,
+   "rows_without_time": 68
+  },
+  "2003": {
+   "header_row": 1,
+   "date_col": 0,
+   "hour_col": 1,
+   "stations": [
+    "AINGHIA",
+    "CAMLE",
+    "CAULAU",
+    "GIAOTHUY",
+    "HIEPDUC",
+    "HOIAN",
+    "HOIKHACH",
+    "NONGSON",
+    "SONTRA",
+    "THANHMY"
+   ],
+   "dates_reinterpreted": 0,
+   "foreign_block_rows": 0,
+   "rows_without_time": 7
+  }
+ },
+ "continuous": {
+  "SONTRA_items": [
+   "Son tra-96",
+   "Son Tra-101"
+  ],
+  "SONTRA_0.2_offset_m": {
+   "offset": 0.96,
+   "n_overlap_h": 2798,
+   "note": "trừ khỏi số liệu Sơn Trà file 0.2 để cùng mặt chuẩn với chuỗi dfs0 1983–2009"
+  }
+ },
+ "duplicate_conflicts_gt_5cm": 5407,
+ "duplicates": 88063,
+ "conflicts_resolved_by_neighbours": 425,
+ "daily": {
+  "n": 71591,
+  "out_of_range": 492,
+  "stations": [
+   "AINGHIA",
+   "CAMLE",
+   "CAULAU",
+   "GIAOTHUY",
+   "HIEPDUC",
+   "HOIKHACH",
+   "NONGSON",
+   "THANHMY"
+  ]
+ }
+}

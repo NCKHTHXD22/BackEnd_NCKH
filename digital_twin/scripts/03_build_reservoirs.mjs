@@ -2,7 +2,7 @@
 //   - tọa độ tuyến đập:  web/src/utils/reservoirs.js (tọa độ HIỂN THỊ dùng chung với bản đồ 2D;
 //                        tọa độ trong src/api/config/reservoirs.js là đầu vào mô hình – không dùng ở đây)
 //   - tên có dấu, địa chỉ: src/script/seedRainLake.js  (mảng `lakes`)
-//   - thông số kỹ thuật:  src/script/seedLakeSpecs.js  (mảng `LAKE_SPECS`)
+//   - thông số kỹ thuật:  src/script/lakeSpecsData.js  (mảng `LAKE_SPECS`, theo QĐ 1865)
 // Hai file seed kết nối MongoDB khi import, nên ở đây chỉ đọc phần mảng dữ liệu.
 // Chạy: node digital_twin/scripts/03_build_reservoirs.mjs
 import fs from 'node:fs';
@@ -24,7 +24,8 @@ const readArray = (file, name) => {
 
 const { RESERVOIRS } = await import(pathToUrl(path.join(repo, 'web/src/utils/reservoirs.js')));
 const lakes = Object.fromEntries(readArray('src/script/seedRainLake.js', 'lakes').map(l => [l.Id_Lake, l]));
-const specs = Object.fromEntries(readArray('src/script/seedLakeSpecs.js', 'LAKE_SPECS').map(s => [s.lake_id, s]));
+const { LAKE_SPECS } = await import(pathToUrl(path.join(repo, 'src/script/lakeSpecsData.js')));   // QĐ 1865
+const specs = Object.fromEntries(LAKE_SPECS.map(s => [s.lake_id, s]));
 
 // Nhánh sông theo LSTM_Py_Backend_v2/config/reservoirs.py (RIVER_BRANCHES)
 const BRANCH = {

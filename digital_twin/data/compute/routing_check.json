@@ -1,0 +1,173 @@
+{
+ "method": "Chưa có lưu lượng đo / đường quan hệ H–Q chính thức → hai cách so:\n  1) Thời gian: đỉnh Q diễn toán so với đỉnh H đo tại cùng trạm (đỉnh Q và đỉnh H ở trạm không ảnh hưởng triều gần như\n     trùng nhau) – không cần quan hệ H–Q.\n  2) Hình dạng: dựng quan hệ H = a + b·Q^c TRÊN TRẬN HIỆU CHỈNH (Q diễn toán ↔ H đo), áp sang TRẬN KIỂM ĐỊNH → NSE, RMSE,\n     sai số đỉnh H. Trên trận hiệu chỉnh chỉ là độ khớp (trong mẫu); trận kiểm định mới là kiểm chứng.\nÁi Nghĩa so với Q cuối Vu Gia (J-VUGIA-END, trước khi chia sang Quảng Huế) – tỷ lệ chia hằng số được quan hệ H–Q hấp thụ.",
+ "events": {
+  "calibration": "calibration_20251029",
+  "validation": "validation_20251118"
+ },
+ "stations": {
+  "NONGSON": {
+   "rating_H=a+b*Q^c": [
+    -10.0,
+    4.9486,
+    0.1894
+   ],
+   "events": {
+    "calibration": {
+     "obs_missing_h_around_q_peak": 0,
+     "peak_comparable": true,
+     "n_h": 176,
+     "q_peak_m3s": 10874,
+     "h_peak_obs_m": 18.68,
+     "t_peak_q": "2025-10-29 13:00:00",
+     "t_peak_h": "2025-10-29 19:00:00",
+     "peak_time_error_h": -6.0,
+     "h_peak_sim_m": 18.76,
+     "h_peak_error_m": 0.08,
+     "nse_h": 0.761,
+     "rmse_h_m": 1.73,
+     "r_q_h": 0.791,
+     "role": "trong mẫu (dựng quan hệ H–Q)"
+    },
+    "validation": {
+     "obs_missing_h_around_q_peak": 13,
+     "peak_comparable": false,
+     "n_h": 125,
+     "q_peak_m3s": 8641,
+     "h_peak_obs_m": 15.42,
+     "t_peak_q": "2025-11-18 11:00:00",
+     "t_peak_h": "2025-11-17 21:00:00",
+     "peak_time_error_h": 14.0,
+     "h_peak_sim_m": 17.54,
+     "h_peak_error_m": 2.12,
+     "nse_h": 0.71,
+     "rmse_h_m": 1.38,
+     "r_q_h": 0.885,
+     "role": "kiểm chứng (quan hệ H–Q của trận hiệu chỉnh)"
+    }
+   }
+  },
+  "GIAOTHUY": {
+   "rating_H=a+b*Q^c": [
+    -10.0,
+    3.2838,
+    0.196
+   ],
+   "events": {
+    "calibration": {
+     "obs_missing_h_around_q_peak": 0,
+     "peak_comparable": true,
+     "n_h": 213,
+     "q_peak_m3s": 11420,
+     "h_peak_obs_m": 10.03,
+     "t_peak_q": "2025-10-29 17:00:00",
+     "t_peak_h": "2025-10-29 22:00:00",
+     "peak_time_error_h": -5.0,
+     "h_peak_sim_m": 10.5,
+     "h_peak_error_m": 0.47,
+     "nse_h": 0.768,
+     "rmse_h_m": 1.39,
+     "r_q_h": 0.794,
+     "role": "trong mẫu (dựng quan hệ H–Q)"
+    },
+    "validation": {
+     "obs_missing_h_around_q_peak": 0,
+     "peak_comparable": true,
+     "n_h": 197,
+     "q_peak_m3s": 9049,
+     "h_peak_obs_m": 8.04,
+     "t_peak_q": "2025-11-18 14:00:00",
+     "t_peak_h": "2025-11-18 00:00:00",
+     "peak_time_error_h": 14.0,
+     "h_peak_sim_m": 9.58,
+     "h_peak_error_m": 1.54,
+     "nse_h": 0.848,
+     "rmse_h_m": 0.82,
+     "r_q_h": 0.921,
+     "role": "kiểm chứng (quan hệ H–Q của trận hiệu chỉnh)"
+    }
+   }
+  },
+  "THANHMY": {
+   "rating_H=a+b*Q^c": [
+    5.3604,
+    1.6332,
+    0.289
+   ],
+   "events": {
+    "calibration": {
+     "obs_missing_h_around_q_peak": 0,
+     "peak_comparable": true,
+     "n_h": 204,
+     "q_peak_m3s": 6358,
+     "h_peak_obs_m": 27.2,
+     "t_peak_q": "2025-10-29 14:00:00",
+     "t_peak_h": "2025-10-29 14:00:00",
+     "peak_time_error_h": 0.0,
+     "h_peak_sim_m": 25.88,
+     "h_peak_error_m": -1.32,
+     "nse_h": 0.879,
+     "rmse_h_m": 1.41,
+     "r_q_h": 0.897,
+     "role": "trong mẫu (dựng quan hệ H–Q)"
+    },
+    "validation": {
+     "obs_missing_h_around_q_peak": 0,
+     "peak_comparable": true,
+     "n_h": 189,
+     "q_peak_m3s": 2124,
+     "h_peak_obs_m": 22.3,
+     "t_peak_q": "2025-11-18 12:00:00",
+     "t_peak_h": "2025-11-17 07:00:00",
+     "peak_time_error_h": 29.0,
+     "h_peak_sim_m": 20.31,
+     "h_peak_error_m": -1.99,
+     "nse_h": 0.696,
+     "rmse_h_m": 1.45,
+     "r_q_h": 0.817,
+     "role": "kiểm chứng (quan hệ H–Q của trận hiệu chỉnh)"
+    }
+   }
+  },
+  "AINGHIA": {
+   "rating_H=a+b*Q^c": [
+    -10.0,
+    6.092,
+    0.1329
+   ],
+   "events": {
+    "calibration": {
+     "obs_missing_h_around_q_peak": 3,
+     "peak_comparable": true,
+     "n_h": 208,
+     "q_peak_m3s": 13960,
+     "h_peak_obs_m": 10.6,
+     "t_peak_q": "2025-10-29 19:00:00",
+     "t_peak_h": "2025-10-29 19:00:00",
+     "peak_time_error_h": 0.0,
+     "h_peak_sim_m": 11.66,
+     "h_peak_error_m": 1.06,
+     "nse_h": 0.866,
+     "rmse_h_m": 0.89,
+     "r_q_h": 0.81,
+     "role": "trong mẫu (dựng quan hệ H–Q)"
+    },
+    "validation": {
+     "obs_missing_h_around_q_peak": 0,
+     "peak_comparable": true,
+     "n_h": 196,
+     "q_peak_m3s": 4277,
+     "h_peak_obs_m": 9.22,
+     "t_peak_q": "2025-11-18 14:00:00",
+     "t_peak_h": "2025-11-17 12:00:00",
+     "peak_time_error_h": 26.0,
+     "h_peak_sim_m": 8.51,
+     "h_peak_error_m": -0.71,
+     "nse_h": 0.868,
+     "rmse_h_m": 0.6,
+     "r_q_h": 0.943,
+     "role": "kiểm chứng (quan hệ H–Q của trận hiệu chỉnh)"
+    }
+   }
+  }
+ }
+}

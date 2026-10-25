@@ -50,6 +50,30 @@ digital_twin/.venv/Scripts/python digital_twin/scripts/04_hydrology.py         #
 digital_twin/.venv/Scripts/python digital_twin/scripts/05_osm_layers.py        # sông có tên, mặt hồ
 digital_twin/.venv/Scripts/python digital_twin/scripts/06_hoian_download.py    # Hội An: nhà, đường, mặt nước (OSM)
 digital_twin/.venv/Scripts/python digital_twin/scripts/07_hoian.py             # Hội An: nhà 3D, đường, lưới ngập
+digital_twin/.venv/Scripts/python digital_twin/scripts/08_dams.py              # đập 3D: tuyến đập, lòng hồ
+digital_twin/.venv/Scripts/python digital_twin/scripts/09_data_inventory.py    # kiểm kê dữ liệu 16 hồ, chọn trận lũ thử
+digital_twin/.venv/Scripts/python digital_twin/scripts/10_network.py          # mạng kết nối lưu vực – sông – hồ
+digital_twin/.venv/Scripts/python digital_twin/scripts/11_event_series.py     # chuỗi giờ 16 hồ trong các trận thử
+node digital_twin/scripts/12_reservoir_check.mjs                               # kiểm chứng cân bằng nước hồ (4.1)
+digital_twin/.venv/Scripts/python digital_twin/scripts/13_routing.py          # diễn toán Muskingum-Cunge (5.1)
+digital_twin/.venv/Scripts/python digital_twin/scripts/14_hand.py             # ngập HAND theo giờ (6.1) → lớp web
+digital_twin/.venv/Scripts/python digital_twin/scripts/15_zv_estimate.py      # ước tính lại bảng Z-V từ số liệu vận hành
+node digital_twin/scripts/12_reservoir_check.mjs --zv=estimated              # kiểm chứng với bảng Z-V ước tính
+node src/script/syncAutoStations.js 2025-10-24 2025-11-02                     # lấy lại độ sâu ngập tháp VRain (ghi CSDL)
+node digital_twin/scripts/16_tower_export.mjs                                  # xuất độ sâu tháp theo trận (chỉ đọc CSDL)
+digital_twin/.venv/Scripts/python digital_twin/scripts/16_tower_check.py      # kiểm định ngập HAND bằng tháp (6.3)
+digital_twin/.venv/Scripts/python digital_twin/scripts/17_station_levels.py   # chuẩn hóa mực nước trạm KTTV (Documents/Data_MucNuoc)
+digital_twin/.venv/Scripts/python digital_twin/scripts/18_tide_sontra.py      # hằng số điều hòa triều Sơn Trà (5.3)
+digital_twin/.venv/Scripts/python digital_twin/scripts/19_hand_stage.py       # ngập theo mực nước trạm đo + hiệu chỉnh lệch mặt chuẩn (6.1, 6.3)
+digital_twin/.venv/Scripts/python digital_twin/scripts/16_tower_check.py --model=stage   # kiểm định bản đồ theo mực nước trạm
+digital_twin/.venv/Scripts/python digital_twin/scripts/20_routing_check.py    # kiểm chứng diễn toán bằng mực nước trạm (5.1)
+node digital_twin/scripts/21_qd1865_replay.mjs                                 # chạy lại QĐ 1865 trên trận lũ thử (4.3)
+digital_twin/.venv/Scripts/python digital_twin/scripts/22_flood_scenarios.py  # kịch bản lũ lịch sử / cấp báo động + tần suất
+node src/script/importStationLevels.js 2025-01-01 2025-12-31 [--dry-run]       # nạp mực nước giờ vào CSDL (ghi production)
+
+digital_twin/.venv/Scripts/python digital_twin/scripts/23_sim_package.py     # gói dữ liệu "Mô phỏng diễn biến lũ" cho bản đồ 3D
+
+Thứ tự khi có số liệu mới: 17 → 09 → 11 → 12 → 13 → 14 → 16_tower_export → 16 → 18 → 19 → 16 --model=stage → 20 → 21 → 22 → 23.
 ```
 
 Bước 4 cần WhiteboxTools: lần đầu thư viện `whitebox` tự tải về; nếu mạng chặn, tải
@@ -62,6 +86,12 @@ Bước 4 cần WhiteboxTools: lần đầu thư viện `whitebox` tự tải v�
 | 03 | Ghép tọa độ (`src/api/config/reservoirs.js`), tên/địa chỉ (`seedRainLake.js`), thông số (`seedLakeSpecs.js`) | Không chép tay – đổi dữ liệu backend rồi chạy lại |
 | 04 | Ghép DEM → UTM 49N 30 m → biển (cao độ 0) thành không dữ liệu → BreachDepressions + FillDepressions → D8 → tích lũy dòng chảy → sông (ngưỡng 10 km²) → Strahler → lưu vực | Tuyến đập: cửa ra mặt hồ OSM gần nhất (≤ 1,5 km), nếu không có thì ô tích lũy lớn nhất trong 150 m |
 | 05 | Gộp sông OSM theo tên, cắt mặt nước theo lưu vực | Bỏ mặt nước < 0,05 km² |
+| 09 | Độ phủ số liệu thật (sau QC) của 16 hồ theo tháng; đỉnh lũ mùa 9–12; chọn trận cho chuỗi thí điểm Sông Tranh 2 + Đắk Mi 4 | Ra `Documents/QC_Kiem_Ke_Du_Lieu.xlsx`, `data/compute/events.json` |
+| 11–12 | Chuỗi giờ trận thử; chạy lõi cân bằng nước backend (`src/services/reservoirSim.js`) với Q đến/Q xả đo, so mực nước | Phát hiện bảng Z-V tự mâu thuẫn ở 3/4 hồ |
+| 13 | Muskingum-Cunge trên mạng bước 10; tham số từ DEM + Manning; khu giữa theo mô-đun dòng chảy hồ đầu nguồn | Kiểm chứng tại hồ hạ lưu; đồng bằng chưa diễn toán |
+| 14 | HAND + đường quan hệ tổng hợp, mặt nước đồng bằng làm trơn; phân lưu chia theo tỷ lệ giả định | Ra `web/public/data/dt/flood_hand/` (lớp “Ngập theo trận lũ”) |
+| 15 | Suy ngược dV/dH từ Q đến/Q xả/mực nước theo giờ (loại 2 trận thử), gom theo khoảng 1 m, tích phân thành Z-V | Đã ghi vào `src/script/seedLakeSpecs.js`; thay bằng bảng chính thức khi có |
+| 10 | Mạng kết nối: thượng nguồn dò D8 từ đập/trạm tới đầu đồng bằng; đồng bằng nối 12 sông có tên trên OSM (giữ phân lưu); khai báo chuyển nước Đắk Mi 4 | Ra `data/compute/network.json/.geojson`; cảnh báo trong `warnings` |
 
 ### Kết quả hiện tại
 

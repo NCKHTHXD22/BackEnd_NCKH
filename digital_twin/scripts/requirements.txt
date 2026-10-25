@@ -7,3 +7,11 @@ pyogrio
 requests
 whitebox
 scipy
+pyarrow
+networkx
+matplotlib
+pillow
+openpyxl
+xlrd
+mikeio
+utide

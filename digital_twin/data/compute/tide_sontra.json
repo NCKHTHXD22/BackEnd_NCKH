@@ -1,0 +1,146 @@
+{
+ "station": "Sơn Trà (Tiên Sa) 71545",
+ "lat": 16.1,
+ "datum": "như chuỗi giờ dfs0 1983–2009 (mực nước trung bình ≈ 0 m)",
+ "time_zone": "hằng số tính theo UTC; dự tính cho giờ Việt Nam = UTC+7",
+ "fit_period": [
+  "2000-01-01 00:00:00",
+  "2007-12-31 23:00:00"
+ ],
+ "n_fit": 67851,
+ "check_2008_2009": {
+  "rmse_m": 0.131,
+  "variance_explained": 0.808,
+  "residual_p99_m": 0.38,
+  "n": 17042
+ },
+ "mean_m": 0.0095,
+ "constituents": [
+  {
+   "name": "K1",
+   "amp_m": 0.1811,
+   "phase_deg": 183.01
+  },
+  {
+   "name": "SA",
+   "amp_m": 0.1734,
+   "phase_deg": 313.61
+  },
+  {
+   "name": "M2",
+   "amp_m": 0.1641,
+   "phase_deg": 101.06
+  },
+  {
+   "name": "O1",
+   "amp_m": 0.1144,
+   "phase_deg": 146.61
+  },
+  {
+   "name": "SSA",
+   "amp_m": 0.0603,
+   "phase_deg": 83.78
+  },
+  {
+   "name": "P1",
+   "amp_m": 0.0545,
+   "phase_deg": 182.0
+  },
+  {
+   "name": "S2",
+   "amp_m": 0.0543,
+   "phase_deg": 130.97
+  },
+  {
+   "name": "N2",
+   "amp_m": 0.0349,
+   "phase_deg": 80.94
+  },
+  {
+   "name": "Q1",
+   "amp_m": 0.0198,
+   "phase_deg": 143.94
+  },
+  {
+   "name": "K2",
+   "amp_m": 0.017,
+   "phase_deg": 149.87
+  },
+  {
+   "name": "MSF",
+   "amp_m": 0.0164,
+   "phase_deg": 102.98
+  },
+  {
+   "name": "MF",
+   "amp_m": 0.0121,
+   "phase_deg": 83.29
+  },
+  {
+   "name": "MM",
+   "amp_m": 0.0117,
+   "phase_deg": 42.59
+  },
+  {
+   "name": "MK3",
+   "amp_m": 0.0108,
+   "phase_deg": 234.49
+  },
+  {
+   "name": "MO3",
+   "amp_m": 0.0094,
+   "phase_deg": 183.63
+  },
+  {
+   "name": "NO1",
+   "amp_m": 0.0085,
+   "phase_deg": 171.76
+  },
+  {
+   "name": "J1",
+   "amp_m": 0.0083,
+   "phase_deg": 219.85
+  },
+  {
+   "name": "NU2",
+   "amp_m": 0.007,
+   "phase_deg": 86.73
+  },
+  {
+   "name": "H2",
+   "amp_m": 0.0062,
+   "phase_deg": 11.74
+  },
+  {
+   "name": "2N2",
+   "amp_m": 0.0059,
+   "phase_deg": 48.8
+  },
+  {
+   "name": "MU2",
+   "amp_m": 0.0055,
+   "phase_deg": 44.12
+  },
+  {
+   "name": "TAU1",
+   "amp_m": 0.0055,
+   "phase_deg": 269.99
+  },
+  {
+   "name": "MSM",
+   "amp_m": 0.0053,
+   "phase_deg": 252.47
+  },
+  {
+   "name": "M4",
+   "amp_m": 0.0053,
+   "phase_deg": 189.63
+  },
+  {
+   "name": "SO3",
+   "amp_m": 0.0051,
+   "phase_deg": 241.51
+  }
+ ],
+ "note": "Triều thiên văn – không gồm nước dâng bão/gió và lũ. Ngoài khoảng 2000–2009 có thể lệch do thay đổi mực nước biển trung bình."
+}

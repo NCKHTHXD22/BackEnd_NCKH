@@ -1,0 +1,25 @@
+{
+  "note": "Trận lũ đề xuất cho chuỗi thí điểm Sông Tranh 2 + Đắk Mi 4 → Thu Bồn (tạo bởi 09_data_inventory.py). Thời gian theo giờ Việt Nam (dữ liệu nguồn không ghi múi giờ).",
+  "window_hours": [
+    -72,
+    96
+  ],
+  "calibration": {
+    "peak_st2": "2025-10-29T10:00:00",
+    "q_peak_st2": 4995.3,
+    "peak_dm4": "2025-10-29T11:00:00",
+    "window_start": "2025-10-26T10:00:00",
+    "window_end": "2025-11-02T10:00:00",
+    "min_real_coverage_pct": 97.0,
+    "river_station_coverage_pct": 94.1
+  },
+  "validation": {
+    "peak_st2": "2025-11-18T05:00:00",
+    "q_peak_st2": 3567.1,
+    "peak_dm4": "2025-11-17T22:00:00",
+    "window_start": "2025-11-15T05:00:00",
+    "window_end": "2025-11-22T05:00:00",
+    "min_real_coverage_pct": 100.0,
+    "river_station_coverage_pct": 66.3
+  }
+}

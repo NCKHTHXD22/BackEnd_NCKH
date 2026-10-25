@@ -1,0 +1,215 @@
+{
+ "note": "Kiểm chứng cân bằng nước bằng Q đến/Q xả đo (12_reservoir_check.mjs)",
+ "report": [
+  {
+   "event": "calibration",
+   "lake_id": 1,
+   "lake": "A Vương",
+   "h_start": 370,
+   "h_end_obs": 379.6,
+   "h_end_sim": 379.22,
+   "h_max_obs": 380,
+   "h_max_sim": 380.03,
+   "rmse_m": 0.03,
+   "bias_m": 0.02,
+   "dV_flow_mm3": 77.7,
+   "dV_level_mm3": 81,
+   "real_pct": {
+    "inflow": 97,
+    "outflow": 97,
+    "wl": 86
+   },
+   "MNDBT": 380,
+   "MNGC": 382.2
+  },
+  {
+   "event": "calibration",
+   "lake_id": 2,
+   "lake": "Đắk Mi 4",
+   "h_start": 251.39,
+   "h_end_obs": 257.47,
+   "h_end_sim": 257.41,
+   "h_max_obs": 258,
+   "h_max_sim": 257.96,
+   "rmse_m": 0.05,
+   "bias_m": -0.05,
+   "dV_flow_mm3": 59.1,
+   "dV_level_mm3": 59.6,
+   "real_pct": {
+    "inflow": 100,
+    "outflow": 100,
+    "wl": 95
+   },
+   "MNDBT": 258,
+   "MNGC": 260.33
+  },
+  {
+   "event": "calibration",
+   "lake_id": 3,
+   "lake": "Sông Bung 4",
+   "h_start": 214.89,
+   "h_end_obs": 222.38,
+   "h_end_sim": 222.16,
+   "h_max_obs": 222.48,
+   "h_max_sim": 222.49,
+   "rmse_m": 0.01,
+   "bias_m": 0.01,
+   "dV_flow_mm3": 107.3,
+   "dV_level_mm3": 110.9,
+   "real_pct": {
+    "inflow": 98,
+    "outflow": 95,
+    "wl": 81
+   },
+   "MNDBT": 222.5,
+   "MNGC": 228.11
+  },
+  {
+   "event": "calibration",
+   "lake_id": 4,
+   "lake": "Sông Tranh 2",
+   "h_start": 164.3,
+   "h_end_obs": 174.96,
+   "h_end_sim": 172.01,
+   "h_max_obs": 175,
+   "h_max_sim": 172.05,
+   "rmse_m": 2.44,
+   "bias_m": -2.04,
+   "dV_flow_mm3": 144.7,
+   "dV_level_mm3": 205.2,
+   "real_pct": {
+    "inflow": 99,
+    "outflow": 98,
+    "wl": 67
+   },
+   "MNDBT": 175,
+   "MNGC": 178.51
+  },
+  {
+   "event": "calibration",
+   "lake_id": 9,
+   "lake": "Sông Bung 2",
+   "h_start": 594.52,
+   "h_end_obs": 604.78,
+   "h_end_sim": 603.67,
+   "h_max_obs": 604.78,
+   "h_max_sim": 604.07,
+   "rmse_m": 46.75,
+   "bias_m": 3.71,
+   "dV_flow_mm3": 23.4,
+   "dV_level_mm3": 26.5,
+   "real_pct": {
+    "inflow": 96,
+    "outflow": 94,
+    "wl": 60
+   },
+   "MNDBT": 605,
+   "MNGC": 608.11
+  },
+  {
+   "event": "validation",
+   "lake_id": 1,
+   "lake": "A Vương",
+   "h_start": 375.73,
+   "h_end_obs": 379.44,
+   "h_end_sim": 379.76,
+   "h_max_obs": 379.44,
+   "h_max_sim": 379.76,
+   "rmse_m": 0.05,
+   "bias_m": 0.04,
+   "dV_flow_mm3": 35.1,
+   "dV_level_mm3": 32.4,
+   "real_pct": {
+    "inflow": 93,
+    "outflow": 96,
+    "wl": 48
+   },
+   "MNDBT": 380,
+   "MNGC": 382.2
+  },
+  {
+   "event": "validation",
+   "lake_id": 2,
+   "lake": "Đắk Mi 4",
+   "h_start": 255.03,
+   "h_end_obs": 257.67,
+   "h_end_sim": 257.72,
+   "h_max_obs": 257.67,
+   "h_max_sim": 257.72,
+   "rmse_m": 0.06,
+   "bias_m": 0.05,
+   "dV_flow_mm3": 27.8,
+   "dV_level_mm3": 27.3,
+   "real_pct": {
+    "inflow": 100,
+    "outflow": 83,
+    "wl": 70
+   },
+   "MNDBT": 258,
+   "MNGC": 260.33
+  },
+  {
+   "event": "validation",
+   "lake_id": 3,
+   "lake": "Sông Bung 4",
+   "h_start": 216.6,
+   "h_end_obs": 221.77,
+   "h_end_sim": 221.67,
+   "h_max_obs": 221.77,
+   "h_max_sim": 221.67,
+   "rmse_m": 0.11,
+   "bias_m": -0.1,
+   "dV_flow_mm3": 75.3,
+   "dV_level_mm3": 76.9,
+   "real_pct": {
+    "inflow": 65,
+    "outflow": 64,
+    "wl": 57
+   },
+   "MNDBT": 222.5,
+   "MNGC": 228.11
+  },
+  {
+   "event": "validation",
+   "lake_id": 4,
+   "lake": "Sông Tranh 2",
+   "h_start": 170.03,
+   "h_end_obs": 174.8,
+   "h_end_sim": 174.8,
+   "h_max_obs": 174.8,
+   "h_max_sim": 174.8,
+   "rmse_m": 0.19,
+   "bias_m": -0.17,
+   "dV_flow_mm3": 97.5,
+   "dV_level_mm3": 97.5,
+   "real_pct": {
+    "inflow": 97,
+    "outflow": 95,
+    "wl": 53
+   },
+   "MNDBT": 175,
+   "MNGC": 178.51
+  },
+  {
+   "event": "validation",
+   "lake_id": 9,
+   "lake": "Sông Bung 2",
+   "h_start": 599.84,
+   "h_end_obs": 601.04,
+   "h_end_sim": 601.21,
+   "h_max_obs": 601.06,
+   "h_max_sim": 601.22,
+   "rmse_m": 0.12,
+   "bias_m": 0.12,
+   "dV_flow_mm3": 3.7,
+   "dV_level_mm3": 3.3,
+   "real_pct": {
+    "inflow": 97,
+    "outflow": 92,
+    "wl": 61
+   },
+   "MNDBT": 605,
+   "MNGC": 608.11
+  }
+ ]
+}
