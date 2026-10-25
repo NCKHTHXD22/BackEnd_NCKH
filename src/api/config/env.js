@@ -6,11 +6,10 @@ export const ENV = {
     PORT: process.env.PORT,
     NODE_ENV: process.env.NODE_ENV,
     MONGODB_URI: process.env.MONGODB_URI,
-    VRAIN_USERNAME: process.env.VRAIN_USERNAME,
-    VRAIN_PASSWORD: process.env.VRAIN_PASSWORD,
     RAIN_STATION_API: process.env.RAIN_STATION_API,
     VRAIN_COOKIE: process.env.VRAIN_COOKIE,
     VRAIN_ORG_UID: process.env.VRAIN_ORG_UID,
+    // Tài khoản mucnuoc.vrain.vn – tháp báo ngập/lũ (services/vrainFlood.service.js)
     VRAIN_USERNAME: process.env.VRAIN_USERNAME,
     VRAIN_PASSWORD: process.env.VRAIN_PASSWORD,
 
