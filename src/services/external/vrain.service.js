@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ENV } from "../../api/config/env.js";
 
 const vrainClient = axios.create({
   baseURL: "https://vrain.vn",
@@ -13,11 +14,13 @@ const vrainClient = axios.create({
     "X-Requested-With": "XMLHttpRequest",
 
     // 🔴 BẮT BUỘC
-    "X-Org-Uid": '1f3402a7-8c40-4517-bf5e-be1f77330056',
+    "X-Org-Uid": ENV.VRAIN_ORG_UID,
     "X-Vrain-User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
 
-    Cookie: '_account_sid=s%3Ax2KdKSjpoOnFpftBpyGF2gbD4ZqdlZyC.QtGGFu3RqPb3NrrekR8iky4PcDndIHSP2NK5Q4YBTEE ;sid=3094d396-3c92-42e7-8954-32ac8675d14a'
+    // Cookie phiên đăng nhập vrain.vn (tài khoản có quyền với tổ chức VRAIN_ORG_UID) – đặt trong .env, hết hạn thì
+    // đăng nhập lại trên vrain.vn và chép cookie mới; trước đây ghi cứng ở đây
+    Cookie: ENV.VRAIN_COOKIE ?? ''
   }
 });
 
