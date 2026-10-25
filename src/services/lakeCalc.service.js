@@ -9,6 +9,10 @@
 
 import ZVCurve from '../core/entities/ZVCurve.js';
 import LakeSpec from '../core/entities/LakeSpec.js';
+import { interpVolume, levelFromVolume, simulateReservoir } from './reservoirSim.js';
+import { evaluate1865 } from './lienHo1865.js';
+import { FLOW_RULES } from '../api/config/qd1865.js';
+import { controlStationStatus } from './pcttHydro.service.js';
 
 class LakeCalcService {
 
@@ -69,12 +73,7 @@ class LakeCalcService {
     }
 
     _interpVolume(pts, z) {
-        if (z <= pts[0].z) return pts[0].volume;
-        if (z >= pts[pts.length - 1].z) return pts[pts.length - 1].volume;
-        let i = 0;
-        while (i < pts.length - 1 && pts[i + 1].z < z) i++;
-        const p0 = pts[i], p1 = pts[i + 1];
-        return p0.volume + ((z - p0.z) / (p1.z - p0.z)) * (p1.volume - p0.volume);
+        return interpVolume(pts, z);
     }
 
     // ── 4. Tính công suất phát điện ───────────────────────────────────────────
@@ -96,74 +95,54 @@ class LakeCalcService {
 
     // ── 5. Cân bằng nước — dự báo Z theo chuỗi Q vào ─────────────────────────
     // q_in_series: [{ value: m³/s, dt_hours: số giờ }]  hoặc mảng số (mỗi bước = dt_hours)
+    // q_out: số (xả cố định) | mảng số theo từng bước, Qout(t) | hàm policy({ step, hour_offset, htl, volume, q_in })
     async waterBalance(lakeId, htl_now, q_in_series, q_out, dt_hours = 1) {
         const curve = await this.getZVCurve(lakeId);
         const spec  = await this.getSpec(lakeId);
-        const pts   = curve.points.sort((a, b) => a.z - b.z);
 
-        let vol_now = this._interpVolume(pts, htl_now); // triệu m³
-
-        const results = [];
-        let htl_cur = htl_now;
-
-        for (let step = 0; step < q_in_series.length; step++) {
-            const entry = q_in_series[step];
-            const q_in  = typeof entry === 'object' ? entry.value    : entry;
-            const dt    = typeof entry === 'object' ? entry.dt_hours : dt_hours;
-
-            // ΔV = (Q_vào - Q_xả) × Δt, đổi m³/s → triệu m³
-            const dV = (q_in - q_out) * dt * 3600 / 1e6;
-            vol_now  = Math.max(pts[0].volume, vol_now + dV);
-
-            // Z mới: nội suy ngược V → Z
-            htl_cur = this._levelFromVolume(pts, vol_now);
-
-            // Trạng thái cảnh báo
-            let alert = 'normal';
-            if (htl_cur >= spec.MNGC)  alert = 'danger';
-            else if (htl_cur >= spec.MNDBT) alert = 'warning';
-            else if (htl_cur <= spec.MNC)   alert = 'low';
-
-            results.push({
-                step: step + 1,
-                hour_offset: (step + 1) * dt,
-                htl:    Math.round(htl_cur   * 100) / 100,
-                volume: Math.round(vol_now   * 10)  / 10,
-                q_in,
-                q_out,
-                alert,
-            });
-        }
+        const steps = simulateReservoir({
+            points: curve.points, htl0: htl_now, qIn: q_in_series, qOut: q_out, dtHours: dt_hours, spec,
+        });
+        const results = steps.map(r => ({
+            ...r,
+            htl:    Math.round(r.htl    * 100) / 100,
+            volume: Math.round(r.volume * 10)  / 10,
+        }));
 
         return {
             htl_now,
-            q_out,
+            q_out: typeof q_out === 'number' ? q_out : 'series',
             forecast: results,
             max_htl:  Math.max(...results.map(r => r.htl)),
             alert_any: results.some(r => r.alert !== 'normal'),
         };
     }
 
+    async _controlStations(lakeId) {
+        const group = FLOW_RULES[lakeId]?.stations;
+        if (!group) return null;
+        try { return await controlStationStatus(group); } catch { return null; }
+    }
+
     _levelFromVolume(pts, volume) {
-        if (volume <= pts[0].volume) return pts[0].z;
-        if (volume >= pts[pts.length - 1].volume) return pts[pts.length - 1].z;
-        let i = 0;
-        while (i < pts.length - 1 && pts[i + 1].volume < volume) i++;
-        const p0 = pts[i], p1 = pts[i + 1];
-        const t = (volume - p0.volume) / (p1.volume - p0.volume);
-        return p0.z + t * (p1.z - p0.z);
+        return levelFromVolume(pts, volume);
     }
 
     // ── 6. Khuyến nghị vận hành ───────────────────────────────────────────────
     async operationRecommendation(lakeId, htl, q_in, q_out, forecast_peak) {
         const spec = await this.getSpec(lakeId);
-        const curve = await this.getZVCurve(lakeId);
-        const pts   = curve.points.sort((a, b) => a.z - b.z);
-
-        const vMNC   = this._interpVolume(pts, spec.MNC);
-        const vCrest = this._interpVolume(pts, spec.crest);
-        const vCur   = this._interpVolume(pts, htl);
-        const fill   = Math.max(0, Math.min(1, (vCur - vMNC) / (vCrest - vMNC)));
+        // Hồ chưa có bảng Z-V (QĐ 1865 Phụ lục II chỉ có 5 hồ): vẫn khuyến nghị theo mực nước MNGC/MNDBT/MNC,
+        // bỏ các nhánh theo % dung tích – trước đây ném lỗi nên các hồ này không bao giờ được cảnh báo
+        let curve = null;
+        try { curve = await this.getZVCurve(lakeId); } catch { /* không có bảng Z-V */ }
+        let fill = null;
+        if (curve) {
+            const pts    = curve.points.sort((a, b) => a.z - b.z);
+            const vMNC   = this._interpVolume(pts, spec.MNC);
+            const vCrest = this._interpVolume(pts, spec.crest);
+            const vCur   = this._interpVolume(pts, htl);
+            fill = Math.max(0, Math.min(1, (vCur - vMNC) / (vCrest - vMNC)));
+        }
         const q_peak = forecast_peak || q_in;
 
         let level   = 'ok';
@@ -193,7 +172,7 @@ class LakeCalcService {
                 'Báo trước hạ du ít nhất 2 giờ',
                 'Theo dõi dự báo LSTM mỗi 1 giờ',
             ];
-        } else if (fill >= 0.85) {
+        } else if (fill != null && fill >= 0.85) {
             level   = 'warning';
             q_rec   = q_in > q_out ? q_in * 1.05 : q_out;
             reason  = `Hồ đầy ${(fill*100).toFixed(1)}% — duy trì Q_xả ≥ Q_vào`;
@@ -212,7 +191,7 @@ class LakeCalcService {
                 `Duy trì Q_xả tối thiểu ${spec.min_env_flow} m³/s`,
                 'Báo cáo cơ quan quản lý nếu khô hạn kéo dài',
             ];
-        } else if (fill < 0.3 && q_in < 10) {
+        } else if (fill != null && fill < 0.3 && q_in < 10) {
             level   = 'ok';
             q_rec   = Math.max(q_out * 0.8, spec.min_env_flow);
             reason  = 'Hồ đang ở mức thấp — giảm xả để tích nước';
@@ -222,7 +201,7 @@ class LakeCalcService {
             level   = 'ok';
             q_rec   = q_out;
             reason  = 'Vận hành bình thường';
-            detail  = `Hồ vận hành ổn định (${(fill*100).toFixed(1)}% đầy, H=${htl.toFixed(2)}m). Duy trì Q_xả=${q_out.toFixed(0)} m³/s là phù hợp.`;
+            detail  = `Hồ vận hành ổn định (${fill != null ? `${(fill*100).toFixed(1)}% đầy, ` : ''}H=${htl.toFixed(2)}m). Duy trì Q_xả=${q_out.toFixed(0)} m³/s là phù hợp.`;
             actions = ['Tiếp tục phát điện theo kế hoạch', 'Theo dõi dự báo LSTM định kỳ'];
         }
 
@@ -235,7 +214,10 @@ class LakeCalcService {
             htl,
             q_in,
             q_out,
-            fill_pct: Math.round(fill * 1000) / 10,
+            fill_pct: fill == null ? null : Math.round(fill * 1000) / 10,   // null: hồ chưa có bảng Z-V
+            // Chế độ vận hành theo Quy trình liên hồ QĐ 1865/QĐ-TTg (Bảng 1, 2; ngưỡng lưu lượng; mùa cạn Phụ lục III),
+            // kèm mực nước trạm quyết định (Hội Khách, Ái Nghĩa / Nông Sơn, Câu Lâu) nếu có số liệu trong 3 giờ gần nhất
+            regulation: evaluate1865({ lakeId, date: new Date(), htl, qIn: q_in, stations: await this._controlStations(lakeId) }),
         };
     }
 }

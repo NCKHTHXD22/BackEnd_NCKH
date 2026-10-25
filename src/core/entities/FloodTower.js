@@ -8,7 +8,15 @@ const FloodTowerSchema = new mongoose.Schema({
         lat: Number,
         lng: Number
     },
-    floodLevel: Number,
+    floodLevel: Number,       // độ sâu ngập hiện tại (m)
+    // ── Tháp báo ngập/lũ tự động (VRain – mucnuoc.vrain.vn) ──
+    code: { type: String, unique: true, sparse: true },   // FT + mã trạm VRain (vd. FT431068)
+    sid: String,              // mã định danh trạm trên VRain
+    tower_type: String,       // flood_1m5 (tháp báo ngập) | flood_3m (tháp báo lũ)
+    area: String,
+    address: String,
+    source: String,
+    level_time: Date,
     thresholds: {
         level1: Number,
         level2: Number,
@@ -18,8 +26,8 @@ const FloodTowerSchema = new mongoose.Schema({
 });
 
 // Auto-increment ID
-FloodTowerSchema.pre("save", async function (next) {
-    if (this.id) return next();
+FloodTowerSchema.pre("save", async function () {   // Mongoose 9: hook async không nhận `next`
+    if (this.id) return;
 
     const counter = await Counter.findOneAndUpdate(
         { model: "FloodTower" },
@@ -28,7 +36,6 @@ FloodTowerSchema.pre("save", async function (next) {
     );
 
     this.id = counter.seq;
-    next();
 });
 
 export default mongoose.model("FloodTower", FloodTowerSchema);

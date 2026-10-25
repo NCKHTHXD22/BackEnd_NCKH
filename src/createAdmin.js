@@ -3,7 +3,9 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const MONGODB_URI = "mongodb+srv://annguyen14032004_db_user:rf3IE3SUW0iw27tW@cluster0.ugvzdvo.mongodb.net/NCKH?appName=Cluster0";
+// Chuỗi kết nối lấy từ .env – trước đây ghi cứng kèm mật khẩu (đã đổi), không đưa lại vào mã nguồn
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) { console.error("Thiếu MONGODB_URI trong .env"); process.exit(1); }
 
 async function createAdmin() {
     try {

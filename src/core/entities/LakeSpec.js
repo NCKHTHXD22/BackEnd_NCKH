@@ -34,6 +34,25 @@ const LakeSpecSchema = new mongoose.Schema(
 
         // ── Môi trường ─────────────────────────────────────────────────
         min_env_flow:       { type: Number, default: 4 },   // Q sinh thái tối thiểu (m³/s)
+        min_flow_rule:      { type: String },               // Quy định lưu lượng tối thiểu (QĐ 1865, Điều 13)
+
+        // ── Bổ sung theo Phụ lục I, QĐ 1865/QĐ-TTg ───────────────────
+        useful_volume:       { type: Number },  // Dung tích hữu ích (triệu m³)
+        catchment_km2:       { type: Number },  // Diện tích lưu vực (km²)
+        q_mean:              { type: Number },  // Lưu lượng trung bình nhiều năm (m³/s)
+        check_flood_P:       { type: Number },  // Tần suất lũ kiểm tra (%) theo Điều 1
+        flood_levels:        { type: mongoose.Schema.Types.Mixed },  // { P%: mực nước lớn nhất (m) }
+        flood_peaks:         { type: mongoose.Schema.Types.Mixed },  // { P%: lưu lượng đỉnh lũ (m³/s) }
+        dam_type:            { type: String },
+        dam_height:          { type: Number },  // Chiều cao đập lớn nhất (m)
+        dam_length:          { type: Number },  // Chiều dài đập theo đỉnh (m)
+        spillway_gates:      { type: Number },  // Số khoang tràn có cửa van
+        gate_size:           { type: String },  // Kích thước cửa van rộng x cao (m)
+        free_spillway_crest: { type: Number },  // Tràn tự do: cao trình ngưỡng (m)
+        free_spillway_width: { type: Number },  // Tràn tự do: chiều rộng (m)
+        MNGC_note:           { type: String },
+        tailwater_note:      { type: String },
+        note:                { type: String },
 
         updated_at: { type: Date, default: Date.now },
     },

@@ -15,6 +15,15 @@ async function updateRFForecast() {
     console.log(`\n🕒 [RF] STARTING UPDATE AT ${startTimeVN} (VN Time)`);
     console.log(`   Python API: ${PYTHON_API_URL}`);
 
+    // Dịch vụ RF chưa triển khai (26/10/2026: thiếu 24 file mô hình .joblib huấn luyện trên Kaggle) → kiểm tra /health
+    // một lần rồi bỏ qua, thay vì gọi lỗi cho cả 16 hồ mỗi giờ
+    try {
+        await axios.get(PYTHON_API_URL.replace(/\/predict-rf$/, "/health"), { timeout: 5000 });
+    } catch (error) {
+        console.warn(`⏭️  [RF] Bỏ qua: dịch vụ RF chưa sẵn sàng (${error.code ?? error.message})`);
+        return;
+    }
+
     let successCount = 0;
     let failCount = 0;
 

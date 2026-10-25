@@ -48,7 +48,7 @@ class LakeSpecController {
     }
 
     // POST /api/lake-specs/:lakeId/water-balance
-    // Body: { htl_now, q_in_series: [số hoặc {value, dt_hours}], q_out, dt_hours }
+    // Body: { htl_now, q_in_series: [số hoặc {value, dt_hours}], q_out: số hoặc [số theo từng bước], dt_hours }
     async waterBalance(req, res, next) {
         try {
             const { htl_now, q_in_series, q_out, dt_hours } = req.body;
@@ -58,7 +58,7 @@ class LakeSpecController {
                 req.params.lakeId,
                 Number(htl_now),
                 q_in_series,
-                Number(q_out),
+                Array.isArray(q_out) ? q_out.map(Number) : Number(q_out),
                 Number(dt_hours) || 1
             );
             res.json(result);

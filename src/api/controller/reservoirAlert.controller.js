@@ -1,5 +1,5 @@
 import floodAlertService from '../../services/floodAlert.service.js';
-import { runFloodAlertCheck } from '../../jobs/floodAlert.job.js';
+import { runFloodAlertCheck } from '../../services/floodAlert.service.js';   // không import file job: sẽ khởi động cron
 
 class ReservoirAlertController {
 

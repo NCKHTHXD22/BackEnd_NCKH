@@ -183,7 +183,7 @@ class FloodAlertService {
                     lake_name: spec.name,
                     htl, q_in, q_out, fill_pct, power_mw,
                     htl_forecast_max, hour_to_max,
-                    alert_level: rec.level,
+                    alert_level: rec.level === 'ok' ? 'normal' : rec.level,   // khuyến nghị dùng 'ok', OperationLog dùng 'normal'
                     q_recommended: rec.q_rec,
                     reason: rec.reason,
                     actions: rec.actions,
@@ -227,4 +227,27 @@ class FloodAlertService {
     }
 }
 
-export default new FloodAlertService();
+const floodAlertService = new FloodAlertService();
+export default floodAlertService;
+
+// Một lượt kiểm tra tất cả hồ + log tổng hợp. Đặt ở service (không ở file job) để controller gọi tay mà KHÔNG kéo
+// theo lịch cron: import file job là khởi động cron + lượt chạy lúc khởi động, kể cả khi DISABLE_JOBS=1.
+export async function runFloodAlertCheck() {
+    const t0 = Date.now();
+    const vnTime = new Date(t0 + 7 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+    console.log(`\n🚨 [FloodAlert] START CHECK @ ${vnTime} VN`);
+
+    try {
+        const results = await floodAlertService.checkAllLakes();
+
+        const danger  = results.filter(r => r.alert_level === 'danger').length;
+        const warning = results.filter(r => r.alert_level === 'warning').length;
+        const watch   = results.filter(r => r.alert_level === 'watch').length;
+        const normal  = results.filter(r => r.alert_level === 'normal').length;
+
+        console.log(`📊 [FloodAlert] Done ${((Date.now()-t0)/1000).toFixed(1)}s | ` +
+            `🔴 danger=${danger} 🟡 warning=${warning} 🔵 watch=${watch} ✅ normal=${normal}\n`);
+    } catch (err) {
+        console.error(`❌ [FloodAlert] FAILED: ${err.message}`);
+    }
+}

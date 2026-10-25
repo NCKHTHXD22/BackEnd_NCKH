@@ -17,8 +17,8 @@ const FloodWarningSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-FloodWarningSchema.pre("save", async function (next) {
-    if (this.id) return next();
+FloodWarningSchema.pre("save", async function () {   // Mongoose 9: hook async không nhận `next`
+    if (this.id) return;
 
     const counter = await Counter.findOneAndUpdate(
         { model: "FloodWarning" },
@@ -27,7 +27,6 @@ FloodWarningSchema.pre("save", async function (next) {
     );
 
     this.id = counter.seq;
-    next();
 });
 
 export default mongoose.model("FloodWarning", FloodWarningSchema);
