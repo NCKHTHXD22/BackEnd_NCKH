@@ -298,7 +298,18 @@
     "normal": "Normal",
     "waterLevelStation": "Water Level Station:",
     "waterLevel": "Water Level:",
-    "dssCenter": "Decision Support System (DSS) Center."
+    "waterLevelNoData": "no data yet",
+    "alarmLevels": "Alarm I / II / III:",
+    "dssCenter": "Decision Support System (DSS) Center.",
+    "levelChart": {
+      "recent": "3 days",
+      "flood1": "Oct 2025 flood",
+      "flood2": "Nov 2025 flood",
+      "loading": "Loading…",
+      "error": "Could not load data",
+      "empty": "No data in this period",
+      "legend": "Dashed: alarm I (yellow), II (orange), III (red)"
+    }
   },
   "reportType": {
     "floodPoint": "Flood Point",
@@ -451,7 +462,8 @@
       "loading": "loading…",
       "error": "no data yet",
       "idle": "turn on to load",
-      "opacity": "Opacity"
+      "opacity": "Opacity",
+      "illustrative": "illustrative"
     },
     "info": {
       "tabInfo": "Info",
@@ -469,6 +481,27 @@
       "forecastSoon": "12-hour inflow forecasts (LSTM/XGBoost, p10–p90 band) will appear here once the API is connected (phase 2).",
       "loadingLake": "Loading reservoir data…",
       "operationAdminOnly": "The reservoir operation panel (dam animation, operating advice) is for administrators – sign in to view it."
+    },
+    "hand": {
+      "eyebrow": "Baseline · events and scenarios",
+      "title": "Flooding over time",
+      "event": "Flood event",
+      "fly": "Fly to flood area",
+      "time": "Time",
+      "maxAll": "Event maximum",
+      "area": "km² flooded",
+      "maxDepth": "max depth",
+      "peak": "peak",
+      "note": "Physically based illustration: measured reservoir releases → Muskingum-Cunge routing → water level from HAND synthetic rating curves on a 30 m DEM. Not yet checked at river gauges; distributary splits assumed; no dikes or tide – to be replaced by a 2D hydraulic model.",
+      "groups": {
+        "stage": "From gauged water levels",
+        "flow": "From reservoir releases",
+        "scenario": "Scenarios"
+      },
+      "envelope": "Maximum flood envelope (not time-resolved)",
+      "returnPeriod": "Câu Lâu: return period ≈ {{years}} years",
+      "note_stage": "Water surface interpolated from hourly gauged levels at Nông Sơn, Giao Thủy, Ái Nghĩa, Câu Lâu, Hội An and Cẩm Lệ, minus the 30 m DEM (datum offset calibrated on VRain towers). Validation (Nov 2025): depth error −0.4 m. Ungauged areas (Túy Loan, Hòa Tiến), rain-driven urban flooding, dikes and culverts are not represented.",
+      "note_scenario": "Scenario built from gauge peak levels (historical floods) or alarm levels, using the gauged-level method. Gauge peaks are not simultaneous, so this is a maximum envelope; return periods come from 19 years of data and are indicative only."
     },
     "flood": {
       "eyebrow": "Hoi An pilot · Scenario",
@@ -530,6 +563,86 @@
     },
     "qualityHigh": "HD",
     "qualityStandard": "Standard",
-    "qualityHint": "Display quality: HD is sharper (heavier), Standard is lighter"
+    "qualityHint": "Display quality: HD is sharper (heavier), Standard is lighter",
+    "sim": {
+      "title": "Flood progression simulation",
+      "hour": "h",
+      "speed": "Playback speed",
+      "rainHeavy": "very heavy rain",
+      "rainModerate": "moderate rain",
+      "rainLight": "light rain",
+      "rainNone": "no rain",
+      "upstream": "Upstream · reservoirs",
+      "upstreamHint": "Hourly measurements at each reservoir; operating mode per Decision 1865 (5 regulated reservoirs).",
+      "flyUpstream": "Fly to the upstream area",
+      "qIn": "Inflow",
+      "qOut": "Outflow",
+      "rain": "Rain",
+      "showAll": "Show all {{n}} reservoirs",
+      "showLess": "Show less",
+      "noForecast": "no archived inflow forecast for this event (replaying measurements)",
+      "downstream": "Downstream · river gauges",
+      "belowAlarm": "< alarm I",
+      "impact": "Impacts · Hội An",
+      "houses": "Flooded houses",
+      "roads": "Flooded roads",
+      "roadHint": "Yellow: cars slow · orange: motorbikes stall · red: impassable for cars · dark red: life-threatening.",
+      "buildHint": "Build Hội An's 54,779 houses and 2,570 road segments to see them flood hour by hour (first time takes 1–2 minutes).",
+      "build": "Build Hội An houses and roads",
+      "flyHoian": "Fly to Hội An",
+      "beforeWindow": "Rain and reservoir filling phase – before the downstream flood-map window.",
+      "modes": {
+        "cut": "Flood cut",
+        "maintain": "Maintain",
+        "lower": "Lower level",
+        "lower_to_pre_flood": "Lower to pre-flood",
+        "safety": "Dam safety",
+        "normal": "Normal",
+        "store": "Storing",
+        "follow_inflow": "Pass inflow",
+        "cooperate": "Cooperate"
+      },
+      "methodNote": "Flood-map method and limitations"
+    },
+    "area": {
+      "button": "Build this area",
+      "eyebrow": "OSM + Open Buildings + Nominatim · called straight from the browser",
+      "title": "Build an area in 3D",
+      "close": "Close",
+      "hint": "Draw a rectangle (up to {{max}} km²) or pick an example. Buildings, roads, water, greenery and temples are fetched directly from OpenStreetMap and Open Buildings and built in 3D in the browser.",
+      "drawHint": "Click one corner, then the opposite corner of the area.",
+      "draw": "Draw area",
+      "build": "Build this area",
+      "cancel": "Stop",
+      "tooBig": "Area {{a}} km² – max {{max}} km²; draw a smaller one.",
+      "mirror": "Main Overpass server is slow – asked the fallback servers too.",
+      "examples": {
+        "hoianOld": "Example: Hội An old town",
+        "camLe": "Example: around Cẩm Lệ gauge"
+      },
+      "steps": {
+        "nominatim": "Nominatim / Photon – area name, country",
+        "overpass": "OpenStreetMap (Overpass) – mapped buildings, roads, water, trees",
+        "openBuildings": "Open Buildings – reading only this area's bytes",
+        "merge": "Merging both building sources, estimating floors",
+        "render": "Building 3D"
+      },
+      "newArea": "New area",
+      "builtIn": "built in {{s}} s",
+      "houses": "buildings",
+      "trees": "trees",
+      "roads": "roads",
+      "fromOsm": "OSM buildings (preferred)",
+      "fromOb": "Open Buildings",
+      "dropped": "Open Buildings: {{raw}} in the box; dropped {{low}} with confidence < 0.7, {{dup}} overlapping OSM, {{road}} on roads, {{water}} on water.",
+      "floodHint": "When the flood simulation runs, this area's buildings and roads are coloured by hourly flood depth.",
+      "fly": "Fly to area",
+      "remove": "Remove area",
+      "another": "Draw another",
+      "retry": "All three Overpass servers are busy – retrying in 8 seconds…",
+      "osmFailed": "The OpenStreetMap (Overpass) servers are overloaded or not responding – the area was built from Open Buildings only (no roads, trees, water or names yet). Try rebuilding in a few minutes.",
+      "rebuild": "Rebuild",
+      "placeVia": "Place name"
+    }
   }
 }

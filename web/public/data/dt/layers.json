@@ -1,5 +1,5 @@
 {
-  "_note": "Danh mục lớp bản đồ (vi + *_en). Thêm lớp mới = thêm 1 mục + file dữ liệu; không cần sửa mã giao diện. Khi có API: 'url' trỏ sang /api/dt/layers/:id/geojson.",
+  "_note": "Danh mục lớp bản đồ (vi + *_en). Thêm lớp mới = thêm 1 mục + file dữ liệu; không cần sửa mã giao diện. Khi có API: 'url' trỏ sang /api/dt/layers/:id/geojson. Trường 'purpose': display = chỉ để hiển thị; compute = dùng làm đầu vào tính toán; illustrative = minh họa, KHÔNG phải kết quả tính. 'accuracy' ghi độ chính xác/giới hạn.",
   "groups": [
     "Khu thí điểm Hội An",
     "Thủy văn",
@@ -32,7 +32,10 @@
       ],
       "source": "Footprint © OpenStreetMap; chiều cao ước tính theo loại nhà và diện tích nền",
       "name_en": "3D buildings (54,779)",
-      "source_en": "Footprints © OpenStreetMap; heights estimated from building type and footprint area"
+      "source_en": "Footprints © OpenStreetMap; heights estimated from building type and footprint area",
+      "purpose": "display",
+      "accuracy": "Chiều cao nhà ước tính theo loại nhà; chưa có cao độ nền",
+      "accuracy_en": "Building heights estimated by type; no floor elevation yet"
     },
     {
       "id": "hoian_roads",
@@ -54,7 +57,10 @@
         }
       ],
       "source": "© OpenStreetMap contributors (ODbL)",
-      "name_en": "Roads"
+      "name_en": "Roads",
+      "purpose": "display",
+      "accuracy": "Tuyến OSM, chưa có cao độ mặt đường",
+      "accuracy_en": "OSM centrelines, no road elevation yet"
     },
     {
       "id": "basin",
@@ -73,7 +79,10 @@
       ],
       "source": "Tách từ DEM Copernicus 30 m (WhiteboxTools, D8)",
       "name_en": "Basin boundary",
-      "source_en": "Delineated from Copernicus 30 m DEM (WhiteboxTools, D8)"
+      "source_en": "Delineated from Copernicus 30 m DEM (WhiteboxTools, D8)",
+      "purpose": "compute",
+      "accuracy": "DEM 30 m: 10.070 km², lệch ~3% so với số thường công bố",
+      "accuracy_en": "30 m DEM: 10,070 km², ~3% below commonly cited area"
     },
     {
       "id": "catchments",
@@ -107,7 +116,10 @@
       ],
       "source": "Tách từ DEM Copernicus 30 m (WhiteboxTools, D8)",
       "name_en": "Reservoir sub-catchments",
-      "source_en": "Delineated from Copernicus 30 m DEM (WhiteboxTools, D8)"
+      "source_en": "Delineated from Copernicus 30 m DEM (WhiteboxTools, D8)",
+      "purpose": "compute",
+      "accuracy": "DEM 30 m; khớp diện tích công bố của A Vương, Sông Bung 4, Sông Tranh 2",
+      "accuracy_en": "30 m DEM; matches published areas for A Vuong, Song Bung 4, Song Tranh 2"
     },
     {
       "id": "streams",
@@ -125,7 +137,10 @@
         }
       ],
       "source": "Trích từ DEM, ngưỡng 10 km²",
-      "name_en": "Stream network (from DEM)"
+      "name_en": "Stream network (from DEM)",
+      "purpose": "compute",
+      "accuracy": "Trích từ DEM 30 m (ngưỡng 10 km²); vùng đồng bằng kém chính xác",
+      "accuracy_en": "From 30 m DEM (10 km² threshold); less reliable on the delta"
     },
     {
       "id": "osm_rivers",
@@ -143,7 +158,10 @@
         }
       ],
       "source": "© OpenStreetMap contributors (ODbL)",
-      "name_en": "Main rivers (named, OSM)"
+      "name_en": "Main rivers (named, OSM)",
+      "purpose": "compute",
+      "accuracy": "Dùng dựng mạng phân lưu đồng bằng (bước 10)",
+      "accuracy_en": "Used for the delta distributary network (step 10)"
     },
     {
       "id": "lakes",
@@ -161,7 +179,10 @@
         }
       ],
       "source": "© OpenStreetMap contributors (ODbL)",
-      "name_en": "Reservoir water surfaces"
+      "name_en": "Reservoir water surfaces",
+      "purpose": "display",
+      "accuracy": "Đường bờ OSM, không theo mực nước thực",
+      "accuracy_en": "OSM shorelines, not the actual water level"
     },
     {
       "id": "reservoirs",
@@ -180,7 +201,10 @@
       ],
       "source": "Tọa độ đập: OpenStreetMap (web/src/utils/reservoirs.js); thông số: backend seedLakeSpecs.js",
       "name_en": "15 hydropower reservoirs",
-      "source_en": "Dam locations: OpenStreetMap (web/src/utils/reservoirs.js); specs: backend seedLakeSpecs.js"
+      "source_en": "Dam locations: OpenStreetMap (web/src/utils/reservoirs.js); specs: backend seedLakeSpecs.js",
+      "purpose": "display",
+      "accuracy": "Tọa độ đập theo OSM; thông số từ API lake-specs",
+      "accuracy_en": "Dam locations from OSM; specs from the lake-specs API"
     },
     {
       "id": "dams",
@@ -214,7 +238,10 @@
         }
       ],
       "source": "Tuyến đập: OpenStreetMap; kích thước: API lake-specs; mực nước, lưu lượng: API inflowLake (mỗi giờ)",
-      "source_en": "Dam axes: OpenStreetMap; dimensions: lake-specs API; level and flows: inflowLake API (hourly)"
+      "source_en": "Dam axes: OpenStreetMap; dimensions: lake-specs API; level and flows: inflowLake API (hourly)",
+      "purpose": "illustrative",
+      "accuracy": "Hình đập minh họa: kích thước ước tính (chưa theo bản vẽ); mực nước, lưu lượng là số liệu thật",
+      "accuracy_en": "Illustrative dam shape: dimensions estimated (not from drawings); water level and flows are real data"
     },
     {
       "id": "rain_stations",
@@ -244,13 +271,164 @@
       "pending_en": "LSTM/XGBoost via API (integration phase)"
     },
     {
-      "id": "flood",
+      "id": "flood_hand",
       "group": "Ngập",
-      "name": "Vùng ngập theo kịch bản",
-      "type": "pending",
-      "pending": "Cần kết quả HEC-RAS 2D",
-      "name_en": "Flood extent by scenario",
-      "pending_en": "Needs HEC-RAS 2D results"
+      "name": "Ngập theo trận lũ và kịch bản (mức cơ sở)",
+      "name_en": "Flooding by event and scenario (baseline)",
+      "type": "flood_hand",
+      "url": "/data/dt/flood_hand/",
+      "visible": false,
+      "lazy": true,
+      "events": [
+        {
+          "id": "stage_cal_2025",
+          "dir": "calibration_20251029",
+          "url": "/data/dt/flood_stage/",
+          "group": "stage",
+          "name": "26/10–02/11/2025 · theo mực nước trạm đo",
+          "name_en": "26 Oct–2 Nov 2025 · from gauged water levels"
+        },
+        {
+          "id": "stage_val_2025",
+          "dir": "validation_20251118",
+          "url": "/data/dt/flood_stage/",
+          "group": "stage",
+          "name": "15–22/11/2025 · theo mực nước trạm đo",
+          "name_en": "15–22 Nov 2025 · from gauged water levels"
+        },
+        {
+          "id": "flow_cal_2025",
+          "dir": "calibration_20251029",
+          "group": "flow",
+          "name": "26/10–02/11/2025 · theo lưu lượng xả hồ",
+          "name_en": "26 Oct–2 Nov 2025 · from reservoir releases"
+        },
+        {
+          "id": "flow_val_2025",
+          "dir": "validation_20251118",
+          "group": "flow",
+          "name": "15–22/11/2025 · theo lưu lượng xả hồ",
+          "name_en": "15–22 Nov 2025 · from reservoir releases"
+        },
+        {
+          "id": "sc_lu_2004",
+          "dir": "lu_2004",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 11/2004 (đỉnh 27/11)",
+          "name_en": "Flood Nov 2004 (peak 27 Nov)"
+        },
+        {
+          "id": "sc_lu_2007",
+          "dir": "lu_2007",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 11/2007 (đỉnh 12/11)",
+          "name_en": "Flood Nov 2007 (peak 12 Nov)"
+        },
+        {
+          "id": "sc_lu_2009",
+          "dir": "lu_2009",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 09/2009 (đỉnh 30/09)",
+          "name_en": "Flood Sep 2009 (peak 30 Sep)"
+        },
+        {
+          "id": "sc_lu_2010",
+          "dir": "lu_2010",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 11/2010 (đỉnh 17/11)",
+          "name_en": "Flood Nov 2010 (peak 17 Nov)"
+        },
+        {
+          "id": "sc_lu_2011",
+          "dir": "lu_2011",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 11/2011 (đỉnh 08/11)",
+          "name_en": "Flood Nov 2011 (peak 08 Nov)"
+        },
+        {
+          "id": "sc_lu_2013",
+          "dir": "lu_2013",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 11/2013 (đỉnh 16/11)",
+          "name_en": "Flood Nov 2013 (peak 16 Nov)"
+        },
+        {
+          "id": "sc_lu_2016",
+          "dir": "lu_2016",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 12/2016 (đỉnh 16/12)",
+          "name_en": "Flood Dec 2016 (peak 16 Dec)"
+        },
+        {
+          "id": "sc_lu_2017",
+          "dir": "lu_2017",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 11/2017 (đỉnh 06/11)",
+          "name_en": "Flood Nov 2017 (peak 06 Nov)"
+        },
+        {
+          "id": "sc_lu_2025",
+          "dir": "lu_2025",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Lũ 10/2025 (đỉnh 30/10)",
+          "name_en": "Flood Oct 2025 (peak 30 Oct)"
+        },
+        {
+          "id": "sc_bao_dong_I",
+          "dir": "bao_dong_I",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Mọi trạm ở mức báo động I",
+          "name_en": "All gauges at alarm level I"
+        },
+        {
+          "id": "sc_bao_dong_II",
+          "dir": "bao_dong_II",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Mọi trạm ở mức báo động II",
+          "name_en": "All gauges at alarm level II"
+        },
+        {
+          "id": "sc_bao_dong_III",
+          "dir": "bao_dong_III",
+          "url": "/data/dt/flood_scenarios/",
+          "group": "scenario",
+          "name": "Mọi trạm ở mức báo động III",
+          "name_en": "All gauges at alarm level III"
+        }
+      ],
+      "purpose": "illustrative",
+      "accuracy": "Theo mực nước trạm đo: kiểm định bằng 68 tháp VRain trận 11/2025 – sai số độ sâu −0,40 m, báo ngập sai 20 %, bỏ sót vùng Túy Loan – Hòa Tiến (không có trạm) và ngập đô thị do mưa. Theo lưu lượng xả hồ: ngập sâu hơn thực tế khoảng 2,3 m. DEM 30 m, chưa có đê, cống",
+      "accuracy_en": "From gauged levels: checked against 68 VRain towers (Nov 2025) – depth error −0.40 m, 20 % false alarms; misses the ungauged Tuy Loan – Hoa Tien area and rain-driven urban flooding. From reservoir releases: about 2.3 m too deep. 30 m DEM, no dikes or culverts",
+      "source": "digital_twin/scripts/09–22 (QC số liệu, diễn toán, HAND, mực nước trạm KTTV, kiểm định tháp VRain, kịch bản)",
+      "source_en": "digital_twin/scripts/09–22 (data QC, routing, HAND, KTTV gauge levels, VRain tower validation, scenarios)",
+      "legend": [
+        {
+          "color": "#b4dcff",
+          "label": "< 0,5 m",
+          "label_en": "< 0.5 m"
+        },
+        {
+          "color": "#3282dc",
+          "label": "1–2 m",
+          "label_en": "1–2 m"
+        },
+        {
+          "color": "#0a2882",
+          "label": "> 4 m",
+          "label_en": "> 4 m"
+        }
+      ]
     },
     {
       "id": "admin",

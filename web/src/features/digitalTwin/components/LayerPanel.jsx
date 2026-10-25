@@ -41,6 +41,10 @@ export default function LayerPanel({ catalog, state, onToggle, onOpacity, onClos
                       <input type="checkbox" className="accent-blue-600" checked={Boolean(s.visible)} disabled={!enabled}
                         onChange={e => onToggle(l.id, e.target.checked)} />
                       <span className="flex-1">{name}</span>
+                      {l.purpose === 'illustrative' && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded px-1"
+                          title={pick(l, 'accuracy', lang)}>{t('digitalTwin.layers.illustrative')}</span>
+                      )}
                       {s.status === 'loading' && <span className="text-[11px] text-blue-500 animate-pulse-soft">{t('digitalTwin.layers.loading')}</span>}
                       {s.status === 'idle' && <span className="text-[11px] text-slate-400">{t('digitalTwin.layers.idle')}</span>}
                       {s.status === 'error' && <span className="text-[11px] text-red-500">{t('digitalTwin.layers.error')}</span>}
@@ -58,6 +62,7 @@ export default function LayerPanel({ catalog, state, onToggle, onOpacity, onClos
                             </li>
                           ))}
                         </ul>
+                        {l.accuracy && <p className="mt-1 text-[11px] leading-snug text-slate-400">{pick(l, 'accuracy', lang)}</p>}
                       </div>
                     )}
                   </div>

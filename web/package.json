@@ -13,6 +13,7 @@
     "axios": "^1.11.0",
     "bootstrap": "^5.3.8",
     "cesium": "^1.140.0",
+    "flatgeobuf": "^3.38.0",
     "i18next": "^26.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",

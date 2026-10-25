@@ -1,0 +1,929 @@
+{
+ "event": "calibration_20251029",
+ "method": "Mặt nước nội suy từ mực nước trạm đo + triều dự tính, trừ DEM (HAND theo mực nước)",
+ "bounds": [
+  108.014746,
+  15.755025,
+  108.424054,
+  16.105358
+ ],
+ "frames": [
+  {
+   "t": 0,
+   "time": "2025-10-26T10:00:00",
+   "file": "t000.png",
+   "area_km2": 3.4,
+   "max_depth_m": 5.18,
+   "levels_m": {
+    "NONGSON": 9.5,
+    "GIAOTHUY": 2.15,
+    "AINGHIA": 3.41,
+    "CAULAU": 0.74,
+    "HOIAN": 0.45,
+    "CAMLE": 0.48
+   }
+  },
+  {
+   "t": 3,
+   "time": "2025-10-26T13:00:00",
+   "file": "t003.png",
+   "area_km2": 16.7,
+   "max_depth_m": 5.61,
+   "levels_m": {
+    "NONGSON": 11.74,
+    "GIAOTHUY": 3.59,
+    "AINGHIA": 3.43,
+    "CAULAU": 1.14,
+    "HOIAN": 0.87,
+    "CAMLE": 0.85
+   }
+  },
+  {
+   "t": 6,
+   "time": "2025-10-26T16:00:00",
+   "file": "t006.png",
+   "area_km2": 42.5,
+   "max_depth_m": 5.9,
+   "levels_m": {
+    "NONGSON": 12.95,
+    "GIAOTHUY": 4.85,
+    "AINGHIA": 4.81,
+    "CAULAU": 1.65,
+    "HOIAN": 1.06,
+    "CAMLE": 0.89
+   }
+  },
+  {
+   "t": 9,
+   "time": "2025-10-26T19:00:00",
+   "file": "t009.png",
+   "area_km2": 76.1,
+   "max_depth_m": 6.42,
+   "levels_m": {
+    "NONGSON": 13.94,
+    "GIAOTHUY": 6.01,
+    "AINGHIA": 7.51,
+    "CAULAU": 2.1,
+    "HOIAN": 1.22,
+    "CAMLE": 1.04
+   }
+  },
+  {
+   "t": 12,
+   "time": "2025-10-26T22:00:00",
+   "file": "t012.png",
+   "area_km2": 120.9,
+   "max_depth_m": 6.75,
+   "levels_m": {
+    "NONGSON": 14.96,
+    "GIAOTHUY": 7.17,
+    "AINGHIA": 8.36,
+    "CAULAU": 2.67,
+    "HOIAN": 1.5,
+    "CAMLE": 1.21
+   }
+  },
+  {
+   "t": 15,
+   "time": "2025-10-27T01:00:00",
+   "file": "t015.png",
+   "area_km2": 154.3,
+   "max_depth_m": 6.94,
+   "levels_m": {
+    "NONGSON": 15.58,
+    "GIAOTHUY": 7.84,
+    "AINGHIA": 8.73,
+    "CAULAU": 3.19,
+    "HOIAN": 1.72,
+    "CAMLE": 1.32
+   }
+  },
+  {
+   "t": 18,
+   "time": "2025-10-27T04:00:00",
+   "file": "t018.png",
+   "area_km2": 172.4,
+   "max_depth_m": 6.9,
+   "levels_m": {
+    "NONGSON": 15.94,
+    "GIAOTHUY": 8.17,
+    "AINGHIA": 8.91,
+    "CAULAU": 3.48,
+    "HOIAN": 1.78,
+    "CAMLE": 1.19
+   }
+  },
+  {
+   "t": 21,
+   "time": "2025-10-27T07:00:00",
+   "file": "t021.png",
+   "area_km2": 187.1,
+   "max_depth_m": 7.09,
+   "levels_m": {
+    "NONGSON": 16.42,
+    "GIAOTHUY": 8.43,
+    "AINGHIA": 9.01,
+    "CAULAU": 3.71,
+    "HOIAN": 1.81,
+    "CAMLE": 1.11
+   }
+  },
+  {
+   "t": 24,
+   "time": "2025-10-27T10:00:00",
+   "file": "t024.png",
+   "area_km2": 209.2,
+   "max_depth_m": 7.41,
+   "levels_m": {
+    "NONGSON": 16.85,
+    "GIAOTHUY": 8.76,
+    "AINGHIA": 9.29,
+    "CAULAU": 3.91,
+    "HOIAN": 1.94,
+    "CAMLE": 1.12
+   }
+  },
+  {
+   "t": 27,
+   "time": "2025-10-27T13:00:00",
+   "file": "t027.png",
+   "area_km2": 234.3,
+   "max_depth_m": 7.74,
+   "levels_m": {
+    "NONGSON": 17.42,
+    "GIAOTHUY": 9.09,
+    "AINGHIA": 9.52,
+    "CAULAU": 4.15,
+    "HOIAN": 2.15,
+    "CAMLE": 1.26
+   }
+  },
+  {
+   "t": 30,
+   "time": "2025-10-27T16:00:00",
+   "file": "t030.png",
+   "area_km2": 263.3,
+   "max_depth_m": 8.07,
+   "levels_m": {
+    "NONGSON": 18.0,
+    "GIAOTHUY": 9.43,
+    "AINGHIA": 9.8,
+    "CAULAU": 4.44,
+    "HOIAN": 2.42,
+    "CAMLE": 1.42
+   }
+  },
+  {
+   "t": 33,
+   "time": "2025-10-27T19:00:00",
+   "file": "t033.png",
+   "area_km2": 285.1,
+   "max_depth_m": 8.3,
+   "levels_m": {
+    "NONGSON": 18.06,
+    "GIAOTHUY": 9.66,
+    "AINGHIA": 9.95,
+    "CAULAU": 4.73,
+    "HOIAN": 2.66,
+    "CAMLE": 1.56
+   }
+  },
+  {
+   "t": 36,
+   "time": "2025-10-27T22:00:00",
+   "file": "t036.png",
+   "area_km2": 301.8,
+   "max_depth_m": 8.4,
+   "levels_m": {
+    "NONGSON": 18.15,
+    "GIAOTHUY": 9.76,
+    "AINGHIA": 10.09,
+    "CAULAU": 4.98,
+    "HOIAN": 2.89,
+    "CAMLE": 1.7
+   }
+  },
+  {
+   "t": 39,
+   "time": "2025-10-28T01:00:00",
+   "file": "t039.png",
+   "area_km2": 312.3,
+   "max_depth_m": 8.43,
+   "levels_m": {
+    "NONGSON": 17.84,
+    "GIAOTHUY": 9.79,
+    "AINGHIA": 10.14,
+    "CAULAU": 5.15,
+    "HOIAN": 3.06,
+    "CAMLE": 1.93
+   }
+  },
+  {
+   "t": 42,
+   "time": "2025-10-28T04:00:00",
+   "file": "t042.png",
+   "area_km2": 318.2,
+   "max_depth_m": 8.42,
+   "levels_m": {
+    "NONGSON": 17.77,
+    "GIAOTHUY": 9.77,
+    "AINGHIA": 10.18,
+    "CAULAU": 5.28,
+    "HOIAN": 3.13,
+    "CAMLE": 2.05
+   }
+  },
+  {
+   "t": 45,
+   "time": "2025-10-28T07:00:00",
+   "file": "t045.png",
+   "area_km2": 315.4,
+   "max_depth_m": 8.31,
+   "levels_m": {
+    "NONGSON": 17.3,
+    "GIAOTHUY": 9.66,
+    "AINGHIA": 10.05,
+    "CAULAU": 5.34,
+    "HOIAN": 3.12,
+    "CAMLE": 2.16
+   }
+  },
+  {
+   "t": 48,
+   "time": "2025-10-28T10:00:00",
+   "file": "t048.png",
+   "area_km2": 310.6,
+   "max_depth_m": 8.14,
+   "levels_m": {
+    "NONGSON": 16.56,
+    "GIAOTHUY": 9.49,
+    "AINGHIA": 9.95,
+    "CAULAU": 5.34,
+    "HOIAN": 3.09,
+    "CAMLE": 2.33
+   }
+  },
+  {
+   "t": 51,
+   "time": "2025-10-28T13:00:00",
+   "file": "t051.png",
+   "area_km2": 305.0,
+   "max_depth_m": 8.14,
+   "levels_m": {
+    "NONGSON": 16.22,
+    "GIAOTHUY": 9.29,
+    "AINGHIA": 9.85,
+    "CAULAU": 5.28,
+    "HOIAN": 3.09,
+    "CAMLE": 2.48
+   }
+  },
+  {
+   "t": 54,
+   "time": "2025-10-28T16:00:00",
+   "file": "t054.png",
+   "area_km2": 303.0,
+   "max_depth_m": 8.19,
+   "levels_m": {
+    "NONGSON": 16.08,
+    "GIAOTHUY": 9.2,
+    "AINGHIA": 9.92,
+    "CAULAU": 5.2,
+    "HOIAN": 3.07,
+    "CAMLE": 2.55
+   }
+  },
+  {
+   "t": 57,
+   "time": "2025-10-28T19:00:00",
+   "file": "t057.png",
+   "area_km2": 307.2,
+   "max_depth_m": 8.24,
+   "levels_m": {
+    "NONGSON": 16.24,
+    "GIAOTHUY": 9.28,
+    "AINGHIA": 10.1,
+    "CAULAU": 5.15,
+    "HOIAN": 3.05,
+    "CAMLE": 2.59
+   }
+  },
+  {
+   "t": 60,
+   "time": "2025-10-28T22:00:00",
+   "file": "t060.png",
+   "area_km2": 315.3,
+   "max_depth_m": 8.33,
+   "levels_m": {
+    "NONGSON": 16.53,
+    "GIAOTHUY": 9.41,
+    "AINGHIA": 10.25,
+    "CAULAU": 5.17,
+    "HOIAN": 3.07,
+    "CAMLE": 2.67
+   }
+  },
+  {
+   "t": 63,
+   "time": "2025-10-29T01:00:00",
+   "file": "t063.png",
+   "area_km2": 317.0,
+   "max_depth_m": 8.39,
+   "levels_m": {
+    "NONGSON": 16.6,
+    "GIAOTHUY": 9.42,
+    "AINGHIA": 10.17,
+    "CAULAU": 5.2,
+    "HOIAN": 3.11,
+    "CAMLE": 2.75
+   }
+  },
+  {
+   "t": 66,
+   "time": "2025-10-29T04:00:00",
+   "file": "t066.png",
+   "area_km2": 312.9,
+   "max_depth_m": 8.38,
+   "levels_m": {
+    "NONGSON": 16.76,
+    "GIAOTHUY": 9.33,
+    "AINGHIA": 9.96,
+    "CAULAU": 5.23,
+    "HOIAN": 3.11,
+    "CAMLE": 2.77
+   }
+  },
+  {
+   "t": 69,
+   "time": "2025-10-29T07:00:00",
+   "file": "t069.png",
+   "area_km2": 308.5,
+   "max_depth_m": 8.36,
+   "levels_m": {
+    "NONGSON": 16.78,
+    "GIAOTHUY": 9.24,
+    "AINGHIA": 9.91,
+    "CAULAU": 5.2,
+    "HOIAN": 3.06,
+    "CAMLE": 2.75
+   }
+  },
+  {
+   "t": 72,
+   "time": "2025-10-29T10:00:00",
+   "file": "t072.png",
+   "area_km2": 307.4,
+   "max_depth_m": 8.32,
+   "levels_m": {
+    "NONGSON": 17.18,
+    "GIAOTHUY": 9.26,
+    "AINGHIA": 9.9,
+    "CAULAU": 5.18,
+    "HOIAN": 3.01,
+    "CAMLE": 2.7
+   }
+  },
+  {
+   "t": 75,
+   "time": "2025-10-29T13:00:00",
+   "file": "t075.png",
+   "area_km2": 313.2,
+   "max_depth_m": 8.38,
+   "levels_m": {
+    "NONGSON": 17.84,
+    "GIAOTHUY": 9.38,
+    "AINGHIA": 10.01,
+    "CAULAU": 5.17,
+    "HOIAN": 2.99,
+    "CAMLE": 2.73
+   }
+  },
+  {
+   "t": 78,
+   "time": "2025-10-29T16:00:00",
+   "file": "t078.png",
+   "area_km2": 331.5,
+   "max_depth_m": 8.53,
+   "levels_m": {
+    "NONGSON": 18.34,
+    "GIAOTHUY": 9.68,
+    "AINGHIA": 10.34,
+    "CAULAU": 5.23,
+    "HOIAN": 3.06,
+    "CAMLE": 2.85
+   }
+  },
+  {
+   "t": 81,
+   "time": "2025-10-29T19:00:00",
+   "file": "t081.png",
+   "area_km2": 347.2,
+   "max_depth_m": 8.69,
+   "levels_m": {
+    "NONGSON": 18.68,
+    "GIAOTHUY": 9.94,
+    "AINGHIA": 10.6,
+    "CAULAU": 5.36,
+    "HOIAN": 3.14,
+    "CAMLE": 2.96
+   }
+  },
+  {
+   "t": 84,
+   "time": "2025-10-29T22:00:00",
+   "file": "t084.png",
+   "area_km2": 352.8,
+   "max_depth_m": 8.74,
+   "levels_m": {
+    "NONGSON": 18.44,
+    "GIAOTHUY": 10.03,
+    "AINGHIA": 10.5,
+    "CAULAU": 5.52,
+    "HOIAN": 3.26,
+    "CAMLE": 3.05
+   }
+  },
+  {
+   "t": 87,
+   "time": "2025-10-30T01:00:00",
+   "file": "t087.png",
+   "area_km2": 351.5,
+   "max_depth_m": 8.82,
+   "levels_m": {
+    "NONGSON": 17.95,
+    "GIAOTHUY": 9.88,
+    "AINGHIA": 10.29,
+    "CAULAU": 5.61,
+    "HOIAN": 3.37,
+    "CAMLE": 3.2
+   }
+  },
+  {
+   "t": 90,
+   "time": "2025-10-30T04:00:00",
+   "file": "t090.png",
+   "area_km2": 342.0,
+   "max_depth_m": 8.79,
+   "levels_m": {
+    "NONGSON": 17.23,
+    "GIAOTHUY": 9.64,
+    "AINGHIA": 10.04,
+    "CAULAU": 5.6,
+    "HOIAN": 3.39,
+    "CAMLE": 3.24
+   }
+  },
+  {
+   "t": 93,
+   "time": "2025-10-30T07:00:00",
+   "file": "t093.png",
+   "area_km2": 328.0,
+   "max_depth_m": 8.68,
+   "levels_m": {
+    "NONGSON": 16.44,
+    "GIAOTHUY": 9.4,
+    "AINGHIA": 9.83,
+    "CAULAU": 5.51,
+    "HOIAN": 3.32,
+    "CAMLE": 3.17
+   }
+  },
+  {
+   "t": 96,
+   "time": "2025-10-30T10:00:00",
+   "file": "t096.png",
+   "area_km2": 306.0,
+   "max_depth_m": 8.51,
+   "levels_m": {
+    "NONGSON": 15.4,
+    "GIAOTHUY": 9.05,
+    "AINGHIA": 9.55,
+    "CAULAU": 5.36,
+    "HOIAN": 3.18,
+    "CAMLE": 3.04
+   }
+  },
+  {
+   "t": 99,
+   "time": "2025-10-30T13:00:00",
+   "file": "t099.png",
+   "area_km2": 279.3,
+   "max_depth_m": 8.29,
+   "levels_m": {
+    "NONGSON": 14.49,
+    "GIAOTHUY": 8.64,
+    "AINGHIA": 9.27,
+    "CAULAU": 5.16,
+    "HOIAN": 3.0,
+    "CAMLE": 2.86
+   }
+  },
+  {
+   "t": 102,
+   "time": "2025-10-30T16:00:00",
+   "file": "t102.png",
+   "area_km2": 254.6,
+   "max_depth_m": 8.11,
+   "levels_m": {
+    "NONGSON": 13.73,
+    "GIAOTHUY": 8.24,
+    "AINGHIA": 9.02,
+    "CAULAU": 4.94,
+    "HOIAN": 2.85,
+    "CAMLE": 2.73
+   }
+  },
+  {
+   "t": 105,
+   "time": "2025-10-30T19:00:00",
+   "file": "t105.png",
+   "area_km2": 240.2,
+   "max_depth_m": 7.93,
+   "levels_m": {
+    "NONGSON": 12.95,
+    "GIAOTHUY": 7.82,
+    "AINGHIA": 8.78,
+    "CAULAU": 5.09,
+    "HOIAN": 2.72,
+    "CAMLE": 2.57
+   }
+  },
+  {
+   "t": 108,
+   "time": "2025-10-30T22:00:00",
+   "file": "t108.png",
+   "area_km2": 204.3,
+   "max_depth_m": 7.69,
+   "levels_m": {
+    "NONGSON": 12.24,
+    "GIAOTHUY": 7.38,
+    "AINGHIA": 8.58,
+    "CAULAU": 4.44,
+    "HOIAN": 2.56,
+    "CAMLE": 2.37
+   }
+  },
+  {
+   "t": 111,
+   "time": "2025-10-31T01:00:00",
+   "file": "t111.png",
+   "area_km2": 181.0,
+   "max_depth_m": 7.49,
+   "levels_m": {
+    "NONGSON": 11.6,
+    "GIAOTHUY": 6.94,
+    "AINGHIA": 8.39,
+    "CAULAU": 4.15,
+    "HOIAN": 2.4,
+    "CAMLE": 2.2
+   }
+  },
+  {
+   "t": 114,
+   "time": "2025-10-31T04:00:00",
+   "file": "t114.png",
+   "area_km2": 161.0,
+   "max_depth_m": 7.32,
+   "levels_m": {
+    "NONGSON": 11.2,
+    "GIAOTHUY": 6.6,
+    "AINGHIA": 8.34,
+    "CAULAU": 3.85,
+    "HOIAN": 2.21,
+    "CAMLE": 2.03
+   }
+  },
+  {
+   "t": 117,
+   "time": "2025-10-31T07:00:00",
+   "file": "t117.png",
+   "area_km2": 142.9,
+   "max_depth_m": 7.14,
+   "levels_m": {
+    "NONGSON": 10.8,
+    "GIAOTHUY": 6.35,
+    "AINGHIA": 8.33,
+    "CAULAU": 3.6,
+    "HOIAN": 1.98,
+    "CAMLE": 1.85
+   }
+  },
+  {
+   "t": 120,
+   "time": "2025-10-31T10:00:00",
+   "file": "t120.png",
+   "area_km2": 120.9,
+   "max_depth_m": 6.89,
+   "levels_m": {
+    "NONGSON": 10.33,
+    "GIAOTHUY": 6.05,
+    "AINGHIA": 8.15,
+    "CAULAU": 3.35,
+    "HOIAN": 1.73,
+    "CAMLE": 1.6
+   }
+  },
+  {
+   "t": 123,
+   "time": "2025-10-31T13:00:00",
+   "file": "t123.png",
+   "area_km2": 101.3,
+   "max_depth_m": 6.66,
+   "levels_m": {
+    "NONGSON": 9.98,
+    "GIAOTHUY": 5.69,
+    "AINGHIA": 7.97,
+    "CAULAU": 3.06,
+    "HOIAN": 1.52,
+    "CAMLE": 1.37
+   }
+  },
+  {
+   "t": 126,
+   "time": "2025-10-31T16:00:00",
+   "file": "t126.png",
+   "area_km2": 87.8,
+   "max_depth_m": 6.58,
+   "levels_m": {
+    "NONGSON": 9.79,
+    "GIAOTHUY": 5.39,
+    "AINGHIA": 7.83,
+    "CAULAU": 2.8,
+    "HOIAN": 1.39,
+    "CAMLE": 1.33
+   }
+  },
+  {
+   "t": 129,
+   "time": "2025-10-31T19:00:00",
+   "file": "t129.png",
+   "area_km2": 79.7,
+   "max_depth_m": 6.58,
+   "levels_m": {
+    "NONGSON": 9.68,
+    "GIAOTHUY": 5.13,
+    "AINGHIA": 7.69,
+    "CAULAU": 2.59,
+    "HOIAN": 1.34,
+    "CAMLE": 1.38
+   }
+  },
+  {
+   "t": 132,
+   "time": "2025-10-31T22:00:00",
+   "file": "t132.png",
+   "area_km2": 71.7,
+   "max_depth_m": 6.49,
+   "levels_m": {
+    "NONGSON": 9.48,
+    "GIAOTHUY": 4.92,
+    "AINGHIA": 7.59,
+    "CAULAU": 2.43,
+    "HOIAN": 1.27,
+    "CAMLE": 1.31
+   }
+  },
+  {
+   "t": 135,
+   "time": "2025-11-01T01:00:00",
+   "file": "t135.png",
+   "area_km2": 68.8,
+   "max_depth_m": 6.42,
+   "levels_m": {
+    "NONGSON": 9.4,
+    "GIAOTHUY": 4.83,
+    "AINGHIA": 7.62,
+    "CAULAU": 2.32,
+    "HOIAN": 1.21,
+    "CAMLE": 1.23
+   }
+  },
+  {
+   "t": 138,
+   "time": "2025-11-01T04:00:00",
+   "file": "t138.png",
+   "area_km2": 69.1,
+   "max_depth_m": 6.45,
+   "levels_m": {
+    "NONGSON": 9.94,
+    "GIAOTHUY": 4.9,
+    "AINGHIA": 7.65,
+    "CAULAU": 2.25,
+    "HOIAN": 1.17,
+    "CAMLE": 1.25
+   }
+  },
+  {
+   "t": 141,
+   "time": "2025-11-01T07:00:00",
+   "file": "t141.png",
+   "area_km2": 72.2,
+   "max_depth_m": 6.44,
+   "levels_m": {
+    "NONGSON": 10.97,
+    "GIAOTHUY": 5.21,
+    "AINGHIA": 7.72,
+    "CAULAU": 2.27,
+    "HOIAN": 1.13,
+    "CAMLE": 1.18
+   }
+  },
+  {
+   "t": 144,
+   "time": "2025-11-01T10:00:00",
+   "file": "t144.png",
+   "area_km2": 78.1,
+   "max_depth_m": 6.41,
+   "levels_m": {
+    "NONGSON": 12.16,
+    "GIAOTHUY": 5.68,
+    "AINGHIA": 7.8,
+    "CAULAU": 2.39,
+    "HOIAN": 1.08,
+    "CAMLE": 1.05
+   }
+  },
+  {
+   "t": 147,
+   "time": "2025-11-01T13:00:00",
+   "file": "t147.png",
+   "area_km2": 89.1,
+   "max_depth_m": 6.4,
+   "levels_m": {
+    "NONGSON": 12.98,
+    "GIAOTHUY": 6.15,
+    "AINGHIA": 7.98,
+    "CAULAU": 2.6,
+    "HOIAN": 1.11,
+    "CAMLE": 0.95
+   }
+  },
+  {
+   "t": 150,
+   "time": "2025-11-01T16:00:00",
+   "file": "t150.png",
+   "area_km2": 104.4,
+   "max_depth_m": 6.5,
+   "levels_m": {
+    "NONGSON": 13.41,
+    "GIAOTHUY": 6.56,
+    "AINGHIA": 8.18,
+    "CAULAU": 2.83,
+    "HOIAN": 1.28,
+    "CAMLE": 1.0
+   }
+  },
+  {
+   "t": 153,
+   "time": "2025-11-01T19:00:00",
+   "file": "t153.png",
+   "area_km2": 121.1,
+   "max_depth_m": 6.68,
+   "levels_m": {
+    "NONGSON": 13.25,
+    "GIAOTHUY": 6.79,
+    "AINGHIA": 8.35,
+    "CAULAU": 3.05,
+    "HOIAN": 1.49,
+    "CAMLE": 1.18
+   }
+  },
+  {
+   "t": 156,
+   "time": "2025-11-01T22:00:00",
+   "file": "t156.png",
+   "area_km2": 125.5,
+   "max_depth_m": 6.68,
+   "levels_m": {
+    "NONGSON": 12.68,
+    "GIAOTHUY": 6.78,
+    "AINGHIA": 8.32,
+    "CAULAU": 3.22,
+    "HOIAN": 1.61,
+    "CAMLE": 1.19
+   }
+  },
+  {
+   "t": 159,
+   "time": "2025-11-02T01:00:00",
+   "file": "t159.png",
+   "area_km2": 118.0,
+   "max_depth_m": 6.56,
+   "levels_m": {
+    "NONGSON": 11.98,
+    "GIAOTHUY": 6.55,
+    "AINGHIA": 8.1,
+    "CAULAU": 3.24,
+    "HOIAN": 1.62,
+    "CAMLE": 1.1
+   }
+  },
+  {
+   "t": 162,
+   "time": "2025-11-02T04:00:00",
+   "file": "t162.png",
+   "area_km2": 106.5,
+   "max_depth_m": 6.5,
+   "levels_m": {
+    "NONGSON": 11.79,
+    "GIAOTHUY": 6.14,
+    "AINGHIA": 7.81,
+    "CAULAU": 3.13,
+    "HOIAN": 1.62,
+    "CAMLE": 1.1
+   }
+  },
+  {
+   "t": 165,
+   "time": "2025-11-02T07:00:00",
+   "file": "t165.png",
+   "area_km2": 95.2,
+   "max_depth_m": 6.48,
+   "levels_m": {
+    "NONGSON": 11.8,
+    "GIAOTHUY": 5.81,
+    "AINGHIA": 7.63,
+    "CAULAU": 2.93,
+    "HOIAN": 1.53,
+    "CAMLE": 1.14
+   }
+  },
+  {
+   "t": 168,
+   "time": "2025-11-02T10:00:00",
+   "file": "t168.png",
+   "area_km2": 88.6,
+   "max_depth_m": 6.45,
+   "levels_m": {
+    "NONGSON": 12.49,
+    "GIAOTHUY": 5.75,
+    "AINGHIA": 7.64,
+    "CAULAU": 2.74,
+    "HOIAN": 1.38,
+    "CAMLE": 1.09
+   }
+  }
+ ],
+ "frame_every_h": 3,
+ "max": {
+  "file": "max.png",
+  "area_km2": 357.3,
+  "max_depth_m": 8.84
+ },
+ "station_peaks_m": {
+  "NONGSON": 18.68,
+  "GIAOTHUY": 10.03,
+  "AINGHIA": 10.6,
+  "CAULAU": 5.62,
+  "HOIAN": 3.39,
+  "CAMLE": 3.25
+ },
+ "station_coverage": {
+  "NONGSON": 1.0,
+  "GIAOTHUY": 1.0,
+  "AINGHIA": 1.0,
+  "CAULAU": 1.0,
+  "HOIAN": 1.0,
+  "CAMLE": 1.0
+ },
+ "datum_shift_m": -0.9,
+ "nodes": {
+  "NONGSON": {
+   "name": "Trạm Nông Sơn",
+   "lon": 108.02949,
+   "lat": 15.69786
+  },
+  "GIAOTHUY": {
+   "name": "Trạm Giao Thủy (đầu đồng bằng Thu Bồn)",
+   "lon": 108.10944,
+   "lat": 15.83819
+  },
+  "AINGHIA": {
+   "name": "Trạm Ái Nghĩa",
+   "lon": 108.11367,
+   "lat": 15.8835
+  },
+  "CAULAU": {
+   "name": "Trạm Câu Lâu",
+   "lon": 108.27163,
+   "lat": 15.86253
+  },
+  "HOIAN": {
+   "name": "Trạm Hội An",
+   "lon": 108.32548,
+   "lat": 15.87072
+  },
+  "CAMLE": {
+   "name": "Trạm Cẩm Lệ",
+   "lon": 108.1963,
+   "lat": 16.00119
+  }
+ },
+ "assumptions": [
+  "Lệch mặt chuẩn trạm–DEM -0.9 m hiệu chỉnh trên calibration_20251029 bằng tháp VRain",
+  "DEM Copernicus GLO-30 (mô hình bề mặt, 30 m); không đê, cống, đường chắn",
+  "Thượng Vu Gia trên Ái Nghĩa và sông Túy Loan không có trạm – mặt nước ngoại suy",
+  "Thiếu số liệu trạm ≤ 6 giờ được nội suy",
+  "Biên cửa sông: chưa đặt – mạng sông chưa ra tới cửa: OUT-Hàn (ô sông gần nhất cách 8.5 km); OUT-ThuBồn (ô sông gần nhất cách 5.5 km); trạm Hội An, Cẩm Lệ là biên hạ lưu"
+ ]
+}

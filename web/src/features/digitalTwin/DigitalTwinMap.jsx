@@ -3,21 +3,26 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem } from 'react-icons/fa';
+import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem, FaCube } from 'react-icons/fa';
 import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, setQuality, BASEMAPS } from './map/viewer.js';
 import { loadLayer, entityProps } from './map/layers.js';
 import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/hoian.js';
 import { loadDams } from './map/dams.js';
+import { loadFloodHand } from './map/floodHand.js';
+import { loadSimulation } from './map/simulation.js';
 import LayerPanel from './components/LayerPanel.jsx';
 import InfoPanel from './components/InfoPanel.jsx';
 import FloodPanel from './components/FloodPanel.jsx';
+import FloodTimelinePanel from './components/FloodTimelinePanel.jsx';
+import SimulationHUD from './components/SimulationHUD.jsx';
+import AreaBuilderPanel from './components/AreaBuilderPanel.jsx';
 import { IconButton, PILL_BTN, PILL_IDLE, PILL_ON, PILL_PRIMARY } from './components/ui.jsx';
 import LakeModal from '../../components/Map/LakeModal';
 import mapApi from '../../api/mapApi';
 import useIsMobile from '../../hooks/useIsMobile';
 
 // Kiểu lớp → hàm nạp. Lớp mới có kiểu riêng thì đăng ký thêm ở đây.
-const LOADERS = { geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, dams: loadDams };
+const LOADERS = { geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, dams: loadDams, flood_hand: loadFloodHand };
 const CATALOG_URL = '/data/dt/layers.json';
 
 export default function DigitalTwinMap() {
@@ -47,6 +52,18 @@ export default function DigitalTwinMap() {
   const [showLayers, setShowLayers] = useState(() => typeof window === 'undefined' || window.innerWidth >= 640);
   const [activeLake, setActiveLake] = useState(null);
   const [lakeData, setLakeData] = useState(null);
+  // Mô phỏng diễn biến lũ theo giờ (map/simulation.js) – gắn với lớp "Ngập theo trận lũ"
+  const simRef = useRef(null);                 // { dir, ctl, method }
+  const simSeq = useRef(0);                    // lượt nạp dữ liệu trận (hủy lượt cũ khi đổi trận)
+  const hourSeq = useRef(0);                   // lượt cập nhật giờ (bỏ kết quả về muộn)
+  const simHourRef = useRef(null);
+  const hudShown = useRef(false);
+  const [sim, setSim] = useState(null);        // controller đang dùng (để truyền xuống thanh thời gian)
+  const [simSnap, setSimSnap] = useState(null);
+  const [hoianReady, setHoianReady] = useState(false);
+  // "Dựng khu này" (builder/areaBuilder.js) – khu tự dựng đăng ký vào handles.current.area để bấm chọn và mô phỏng dùng
+  const [areaOpen, setAreaOpen] = useState(false);
+  const [areaHandle, setAreaHandle] = useState(null);
   const lakesRef = useRef(null);   // danh sách hồ từ API (dùng chung cho bảng thông tin và LakeModal)
   const lakeRecord = async lakeId => {
     if (!lakesRef.current) lakesRef.current = await mapApi.getReservoirs().then(l => (Array.isArray(l) ? l : [])).catch(() => []);
@@ -123,6 +140,7 @@ export default function DigitalTwinMap() {
 
       click = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       click.setInputAction(ev => {
+        if (viewer.__drawing) return;            // đang vẽ khung "Dựng khu này"
         const p = viewer.scene.pick(ev.position);
         select(Cesium.defined(p) ? p.id : null);
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -145,6 +163,7 @@ export default function DigitalTwinMap() {
     return () => {
       destroyed = true;
       click?.destroy();
+      simRef.current = null;
       if (viewer && !viewer.isDestroyed()) viewer.destroy();
       viewerRef.current = null;
       handles.current = {}; pending.current = {}; floodRef.current = null;
@@ -155,7 +174,7 @@ export default function DigitalTwinMap() {
 
   const onToggle = (id, on) => {
     const h = handles.current[id];
-    if (!h) { if (on) ensureLayer(id); return; }
+    if (!h) { if (on) ensureLayer(id).then(x => x.flyTo?.()).catch(() => {}); return; }
     h.setVisible(on); patch(id, { visible: on });
   };
   const onOpacity = (id, a) => { handles.current[id]?.setOpacity(a); patch(id, { opacity: a }); };
@@ -216,6 +235,67 @@ export default function DigitalTwinMap() {
     handles.current.hoian_roads?.setLevel?.(null);
     setFlood(f => ({ ...f, open: false }));
   };
+  // ---- Mô phỏng diễn biến lũ ------------------------------------------------------------
+  const hoianHandles = () => ({ buildings: handles.current.hoian_buildings, roads: handles.current.hoian_roads, area: handles.current.area });
+  const stopSim = useCallback(() => {
+    simSeq.current++;
+    simRef.current?.ctl.destroy(hoianHandles());
+    simRef.current = null;
+    simHourRef.current = null;
+    setSim(null); setSimSnap(null);
+  }, []);
+  const onSimEvent = async ev => {
+    const method = ev?.group === 'stage' ? 'stage' : ev?.group === 'flow' ? 'flow' : null;
+    if (!method || !ev.dir) { stopSim(); return; }
+    if (simRef.current?.dir === ev.dir) { simRef.current.method = method; return; }
+    stopSim();
+    const seq = simSeq.current;
+    try {
+      const ctl = await loadSimulation(viewerRef.current, { dir: ev.dir });
+      if (seq !== simSeq.current || !viewerRef.current) { ctl.destroy(); return; }
+      simRef.current = { dir: ev.dir, ctl, method };
+      setSim(ctl);
+    } catch (e) { console.warn('Không nạp được dữ liệu mô phỏng', e); }
+  };
+  const runSimHour = h => {
+    const s = simRef.current;
+    if (!s) return;
+    simHourRef.current = h;
+    if (h == null) { s.ctl.setVisible(false); hoianHandles().buildings?.setDepths(null); hoianHandles().roads?.setDepths(null); setSimSnap(null); return; }
+    if (flood.open) closeFlood();                       // kịch bản Hội An cũ cùng tô màu nhà → tắt
+    s.ctl.setVisible(true);
+    const seq = ++hourSeq.current;
+    const snap = s.ctl.setHour(h, {
+      method: s.method, ...hoianHandles(),
+      // tác động Hội An tính xong sau (lần đầu tải lưới, lấy mẫu địa hình) → cập nhật riêng phần đó
+      onImpact: (impact, hh) => { if (simRef.current === s && simHourRef.current === hh) setSimSnap(x => (x ? { ...x, impact } : x)); },
+    });
+    if (seq === hourSeq.current) {
+      setSimSnap(snap);
+      if (!hudShown.current && !isMobile) { hudShown.current = true; setShowLayers(false); }   // nhường chỗ cho bảng thượng nguồn
+    }
+  };
+  const buildHoian = async () => {
+    await Promise.all([ensureLayer('hoian_buildings'), ensureLayer('hoian_roads')]);
+    setHoianReady(true);
+    if (simHourRef.current != null) runSimHour(simHourRef.current);
+  };
+  useEffect(() => { if (!layerState.flood_hand?.visible) stopSim(); }, [layerState.flood_hand?.visible, stopSim]);
+  const onAreaBuilt = h => {
+    handles.current.area = h;
+    setAreaHandle(h);
+    if (simHourRef.current != null) runSimHour(simHourRef.current);   // khu mới tham gia mô phỏng ngay
+  };
+  const clearArea = () => {
+    const h = handles.current.area;
+    if (!h) return;
+    if (viewerRef.current?.__selectedHandle === h) select(null);
+    h.destroy();
+    delete handles.current.area;
+    setAreaHandle(null);
+    if (simHourRef.current != null) runSimHour(simHourRef.current);
+  };
+
   const toggleNight = () => {
     const on = !night;
     setNightState(on);
@@ -250,6 +330,8 @@ export default function DigitalTwinMap() {
     : 'absolute right-3 top-20 z-[1001] w-[min(1120px,calc(100%-5.5rem))] max-h-[calc(100%-6rem)]';
   const floodPos = isMobile ? sheet : 'absolute right-3 top-20 z-[1000] w-[360px] max-h-[calc(100%-6.5rem)]';
   const layerPos = isMobile ? sheet : 'absolute left-16 top-[4.5rem] z-[1000] w-72 max-h-[calc(100%-7rem)]';
+  const timelinePos = isMobile ? sheet : 'absolute bottom-3 left-1/2 -translate-x-1/2 z-[1000] w-[min(780px,calc(100%-2rem))]';
+  const handFlood = layerState.flood_hand?.visible && handles.current.flood_hand;
 
   return (
     <div className="absolute inset-0">
@@ -258,6 +340,9 @@ export default function DigitalTwinMap() {
       {/* Thanh công cụ trên cùng */}
       <div className="absolute top-3 left-16 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1000] flex gap-2 overflow-x-auto p-1.5 rounded-2xl bg-white/85 backdrop-blur border border-white/60 shadow-lg shadow-slate-900/10">
         <button onClick={openHoiAn} className={`${PILL_BTN} ${PILL_PRIMARY}`}><FaWater /> {t('digitalTwin.hoian')}</button>
+        <button onClick={() => { setAreaOpen(v => !v); setShowLayers(false); }} className={`${PILL_BTN} ${areaOpen ? PILL_ON : PILL_IDLE}`}>
+          <FaCube className="text-orange-500" /> {t('digitalTwin.area.button')}
+        </button>
         <button onClick={toggleNight} className={`${PILL_BTN} ${night ? PILL_ON : PILL_IDLE}`}>
           {night ? <FaMoon /> : <FaSun className="text-amber-500" />} {t(night ? 'digitalTwin.night' : 'digitalTwin.day')}
         </button>
@@ -291,6 +376,20 @@ export default function DigitalTwinMap() {
         <LayerPanel catalog={catalog} state={layerState} onToggle={onToggle} onOpacity={onOpacity}
           onClose={() => setShowLayers(false)} className={`${layerPos} animate-slide-in-left`}
           footer={env && <>{t('digitalTwin.terrainSource', { name: env.terrainName })}{!env.hasIonToken && <> · {t('digitalTwin.noIonToken')}</>}</>} />
+      )}
+      {handFlood && (   // bọc ngoài để căn giữa: hiệu ứng fade-in của panel ghi đè transform
+        <div className={timelinePos}>
+          <FloodTimelinePanel handle={handles.current.flood_hand} onClose={() => onToggle('flood_hand', false)}
+            sim={sim ? { hours: sim.hours, times: sim.times } : null} onEvent={onSimEvent} onHour={runSimHour} />
+        </div>
+      )}
+      {handFlood && simSnap && (
+        <SimulationHUD snap={simSnap} isMobile={isMobile} hoianReady={hoianReady || Boolean(handles.current.hoian_buildings)}
+          onBuildHoian={buildHoian} onFlyHoian={() => flyTo(viewerRef.current, 'hoian')} onFlyUpstream={() => sim?.flyUpstream()} />
+      )}
+      {areaOpen && viewerRef.current && (
+        <AreaBuilderPanel viewer={viewerRef.current} built={areaHandle} onBuilt={onAreaBuilt} onClear={clearArea}
+          onClose={() => setAreaOpen(false)} className={isMobile ? sheet : 'absolute left-16 top-[4.5rem] z-[1001] w-80 max-h-[calc(100%-7rem)] overflow-y-auto'} />
       )}
       {flood.open && <FloodPanel ready={flood.ready} curve={flood.curve} onLevel={onLevel} onClose={closeFlood} className={floodPos} />}
       <InfoPanel info={info} related={related} onClose={() => select(null)} onGoto={onGoto} onOpenLake={onOpenLake}

@@ -6,6 +6,9 @@ const mapApi = {
 
     // Get all water level stations
     getWaterLevelStations: () => axiosClient.get("/water-level").then((res) => res.data),
+    // Chuỗi mực nước giờ của trạm (tối đa 62 ngày) – from/to dạng ISO
+    getWaterLevelObservations: (code, from, to) =>
+        axiosClient.get(`/water-level/observations/${code}`, { params: { from, to } }).then((res) => res.data),
 
     // Get reservoirs (inflow lakes)
     getReservoirs: () => axiosClient.get("/inflowLake").then((res) => res.data),

@@ -1,0 +1,1004 @@
+{
+ "event": "validation",
+ "method": "HAND + đường quan hệ tổng hợp (mức cơ sở, minh họa có cơ sở vật lý)",
+ "bounds": [
+  108.014746,
+  15.755025,
+  108.424054,
+  16.105358
+ ],
+ "frames": [
+  {
+   "t": 0,
+   "time": "2025-11-13T05:00:00",
+   "file": "t000.png",
+   "area_km2": 176.1,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 699,
+    "ST-GIAOTHUY": 756,
+    "ST-THANHMY": 250,
+    "J-VUGIA-END": 750
+   }
+  },
+  {
+   "t": 3,
+   "time": "2025-11-13T08:00:00",
+   "file": "t003.png",
+   "area_km2": 176.1,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 699,
+    "ST-GIAOTHUY": 755,
+    "ST-THANHMY": 253,
+    "J-VUGIA-END": 750
+   }
+  },
+  {
+   "t": 6,
+   "time": "2025-11-13T11:00:00",
+   "file": "t006.png",
+   "area_km2": 174.9,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 677,
+    "ST-GIAOTHUY": 742,
+    "ST-THANHMY": 216,
+    "J-VUGIA-END": 749
+   }
+  },
+  {
+   "t": 9,
+   "time": "2025-11-13T14:00:00",
+   "file": "t009.png",
+   "area_km2": 173.4,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 658,
+    "ST-GIAOTHUY": 731,
+    "ST-THANHMY": 185,
+    "J-VUGIA-END": 742
+   }
+  },
+  {
+   "t": 12,
+   "time": "2025-11-13T17:00:00",
+   "file": "t012.png",
+   "area_km2": 169.4,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 648,
+    "ST-GIAOTHUY": 730,
+    "ST-THANHMY": 187,
+    "J-VUGIA-END": 701
+   }
+  },
+  {
+   "t": 15,
+   "time": "2025-11-13T20:00:00",
+   "file": "t015.png",
+   "area_km2": 154.5,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 647,
+    "ST-GIAOTHUY": 682,
+    "ST-THANHMY": 192,
+    "J-VUGIA-END": 624
+   }
+  },
+  {
+   "t": 18,
+   "time": "2025-11-13T23:00:00",
+   "file": "t018.png",
+   "area_km2": 157.3,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 653,
+    "ST-GIAOTHUY": 699,
+    "ST-THANHMY": 185,
+    "J-VUGIA-END": 638
+   }
+  },
+  {
+   "t": 21,
+   "time": "2025-11-14T02:00:00",
+   "file": "t021.png",
+   "area_km2": 164.7,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 736,
+    "ST-GIAOTHUY": 736,
+    "ST-THANHMY": 197,
+    "J-VUGIA-END": 671
+   }
+  },
+  {
+   "t": 24,
+   "time": "2025-11-14T05:00:00",
+   "file": "t024.png",
+   "area_km2": 168.6,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 812,
+    "ST-GIAOTHUY": 782,
+    "ST-THANHMY": 352,
+    "J-VUGIA-END": 672
+   }
+  },
+  {
+   "t": 27,
+   "time": "2025-11-14T08:00:00",
+   "file": "t027.png",
+   "area_km2": 183.8,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1090,
+    "ST-GIAOTHUY": 862,
+    "ST-THANHMY": 354,
+    "J-VUGIA-END": 737
+   }
+  },
+  {
+   "t": 30,
+   "time": "2025-11-14T11:00:00",
+   "file": "t030.png",
+   "area_km2": 215.5,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1021,
+    "ST-GIAOTHUY": 1112,
+    "ST-THANHMY": 357,
+    "J-VUGIA-END": 890
+   }
+  },
+  {
+   "t": 33,
+   "time": "2025-11-14T14:00:00",
+   "file": "t033.png",
+   "area_km2": 222.0,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1053,
+    "ST-GIAOTHUY": 1102,
+    "ST-THANHMY": 350,
+    "J-VUGIA-END": 978
+   }
+  },
+  {
+   "t": 36,
+   "time": "2025-11-14T17:00:00",
+   "file": "t036.png",
+   "area_km2": 231.7,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1117,
+    "ST-GIAOTHUY": 1097,
+    "ST-THANHMY": 322,
+    "J-VUGIA-END": 1102
+   }
+  },
+  {
+   "t": 39,
+   "time": "2025-11-14T20:00:00",
+   "file": "t039.png",
+   "area_km2": 235.6,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1110,
+    "ST-GIAOTHUY": 1165,
+    "ST-THANHMY": 318,
+    "J-VUGIA-END": 1095
+   }
+  },
+  {
+   "t": 42,
+   "time": "2025-11-14T23:00:00",
+   "file": "t042.png",
+   "area_km2": 236.5,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1071,
+    "ST-GIAOTHUY": 1182,
+    "ST-THANHMY": 320,
+    "J-VUGIA-END": 1092
+   }
+  },
+  {
+   "t": 45,
+   "time": "2025-11-15T02:00:00",
+   "file": "t045.png",
+   "area_km2": 234.7,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1123,
+    "ST-GIAOTHUY": 1151,
+    "ST-THANHMY": 316,
+    "J-VUGIA-END": 1096
+   }
+  },
+  {
+   "t": 48,
+   "time": "2025-11-15T05:00:00",
+   "file": "t048.png",
+   "area_km2": 234.7,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1118,
+    "ST-GIAOTHUY": 1168,
+    "ST-THANHMY": 293,
+    "J-VUGIA-END": 1082
+   }
+  },
+  {
+   "t": 51,
+   "time": "2025-11-15T08:00:00",
+   "file": "t051.png",
+   "area_km2": 237.6,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1038,
+    "ST-GIAOTHUY": 1155,
+    "ST-THANHMY": 290,
+    "J-VUGIA-END": 1128
+   }
+  },
+  {
+   "t": 54,
+   "time": "2025-11-15T11:00:00",
+   "file": "t054.png",
+   "area_km2": 235.9,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1041,
+    "ST-GIAOTHUY": 1131,
+    "ST-THANHMY": 304,
+    "J-VUGIA-END": 1126
+   }
+  },
+  {
+   "t": 57,
+   "time": "2025-11-15T14:00:00",
+   "file": "t057.png",
+   "area_km2": 229.6,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1079,
+    "ST-GIAOTHUY": 1090,
+    "ST-THANHMY": 280,
+    "J-VUGIA-END": 1081
+   }
+  },
+  {
+   "t": 60,
+   "time": "2025-11-15T17:00:00",
+   "file": "t060.png",
+   "area_km2": 227.9,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1097,
+    "ST-GIAOTHUY": 1123,
+    "ST-THANHMY": 212,
+    "J-VUGIA-END": 1034
+   }
+  },
+  {
+   "t": 63,
+   "time": "2025-11-15T20:00:00",
+   "file": "t063.png",
+   "area_km2": 230.0,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1069,
+    "ST-GIAOTHUY": 1150,
+    "ST-THANHMY": 202,
+    "J-VUGIA-END": 1039
+   }
+  },
+  {
+   "t": 66,
+   "time": "2025-11-15T23:00:00",
+   "file": "t066.png",
+   "area_km2": 228.9,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1062,
+    "ST-GIAOTHUY": 1148,
+    "ST-THANHMY": 265,
+    "J-VUGIA-END": 1025
+   }
+  },
+  {
+   "t": 69,
+   "time": "2025-11-16T02:00:00",
+   "file": "t069.png",
+   "area_km2": 226.3,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1013,
+    "ST-GIAOTHUY": 1145,
+    "ST-THANHMY": 307,
+    "J-VUGIA-END": 995
+   }
+  },
+  {
+   "t": 72,
+   "time": "2025-11-16T05:00:00",
+   "file": "t072.png",
+   "area_km2": 221.8,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1036,
+    "ST-GIAOTHUY": 1079,
+    "ST-THANHMY": 297,
+    "J-VUGIA-END": 995
+   }
+  },
+  {
+   "t": 75,
+   "time": "2025-11-16T08:00:00",
+   "file": "t075.png",
+   "area_km2": 216.0,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1011,
+    "ST-GIAOTHUY": 1093,
+    "ST-THANHMY": 272,
+    "J-VUGIA-END": 911
+   }
+  },
+  {
+   "t": 78,
+   "time": "2025-11-16T11:00:00",
+   "file": "t078.png",
+   "area_km2": 208.3,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 967,
+    "ST-GIAOTHUY": 1055,
+    "ST-THANHMY": 196,
+    "J-VUGIA-END": 849
+   }
+  },
+  {
+   "t": 81,
+   "time": "2025-11-16T14:00:00",
+   "file": "t081.png",
+   "area_km2": 222.8,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1082,
+    "ST-GIAOTHUY": 1166,
+    "ST-THANHMY": 284,
+    "J-VUGIA-END": 935
+   }
+  },
+  {
+   "t": 84,
+   "time": "2025-11-16T17:00:00",
+   "file": "t084.png",
+   "area_km2": 233.7,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1901,
+    "ST-GIAOTHUY": 1322,
+    "ST-THANHMY": 418,
+    "J-VUGIA-END": 947
+   }
+  },
+  {
+   "t": 87,
+   "time": "2025-11-16T20:00:00",
+   "file": "t087.png",
+   "area_km2": 286.7,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 2986,
+    "ST-GIAOTHUY": 2148,
+    "ST-THANHMY": 881,
+    "J-VUGIA-END": 1217
+   }
+  },
+  {
+   "t": 90,
+   "time": "2025-11-16T23:00:00",
+   "file": "t090.png",
+   "area_km2": 338.4,
+   "max_depth_m": 10.11,
+   "q": {
+    "ST-NONGSON": 3322,
+    "ST-GIAOTHUY": 3222,
+    "ST-THANHMY": 809,
+    "J-VUGIA-END": 1855
+   }
+  },
+  {
+   "t": 93,
+   "time": "2025-11-17T02:00:00",
+   "file": "t093.png",
+   "area_km2": 374.0,
+   "max_depth_m": 10.65,
+   "q": {
+    "ST-NONGSON": 3601,
+    "ST-GIAOTHUY": 3810,
+    "ST-THANHMY": 1093,
+    "J-VUGIA-END": 2934
+   }
+  },
+  {
+   "t": 96,
+   "time": "2025-11-17T05:00:00",
+   "file": "t096.png",
+   "area_km2": 385.0,
+   "max_depth_m": 10.92,
+   "q": {
+    "ST-NONGSON": 4310,
+    "ST-GIAOTHUY": 4138,
+    "ST-THANHMY": 1210,
+    "J-VUGIA-END": 3278
+   }
+  },
+  {
+   "t": 99,
+   "time": "2025-11-17T08:00:00",
+   "file": "t099.png",
+   "area_km2": 394.0,
+   "max_depth_m": 11.36,
+   "q": {
+    "ST-NONGSON": 4610,
+    "ST-GIAOTHUY": 4682,
+    "ST-THANHMY": 1179,
+    "J-VUGIA-END": 3380
+   }
+  },
+  {
+   "t": 102,
+   "time": "2025-11-17T11:00:00",
+   "file": "t102.png",
+   "area_km2": 399.8,
+   "max_depth_m": 11.5,
+   "q": {
+    "ST-NONGSON": 3925,
+    "ST-GIAOTHUY": 4875,
+    "ST-THANHMY": 1030,
+    "J-VUGIA-END": 3574
+   }
+  },
+  {
+   "t": 105,
+   "time": "2025-11-17T14:00:00",
+   "file": "t105.png",
+   "area_km2": 390.8,
+   "max_depth_m": 11.18,
+   "q": {
+    "ST-NONGSON": 3349,
+    "ST-GIAOTHUY": 4454,
+    "ST-THANHMY": 826,
+    "J-VUGIA-END": 3373
+   }
+  },
+  {
+   "t": 108,
+   "time": "2025-11-17T17:00:00",
+   "file": "t108.png",
+   "area_km2": 375.1,
+   "max_depth_m": 10.72,
+   "q": {
+    "ST-NONGSON": 3664,
+    "ST-GIAOTHUY": 3904,
+    "ST-THANHMY": 809,
+    "J-VUGIA-END": 2927
+   }
+  },
+  {
+   "t": 111,
+   "time": "2025-11-17T20:00:00",
+   "file": "t111.png",
+   "area_km2": 375.2,
+   "max_depth_m": 11.06,
+   "q": {
+    "ST-NONGSON": 4116,
+    "ST-GIAOTHUY": 4314,
+    "ST-THANHMY": 954,
+    "J-VUGIA-END": 2670
+   }
+  },
+  {
+   "t": 114,
+   "time": "2025-11-17T23:00:00",
+   "file": "t114.png",
+   "area_km2": 380.8,
+   "max_depth_m": 11.41,
+   "q": {
+    "ST-NONGSON": 5150,
+    "ST-GIAOTHUY": 4755,
+    "ST-THANHMY": 1247,
+    "J-VUGIA-END": 2650
+   }
+  },
+  {
+   "t": 117,
+   "time": "2025-11-18T02:00:00",
+   "file": "t117.png",
+   "area_km2": 398.9,
+   "max_depth_m": 12.19,
+   "q": {
+    "ST-NONGSON": 5096,
+    "ST-GIAOTHUY": 5858,
+    "ST-THANHMY": 1740,
+    "J-VUGIA-END": 2857
+   }
+  },
+  {
+   "t": 120,
+   "time": "2025-11-18T05:00:00",
+   "file": "t120.png",
+   "area_km2": 409.7,
+   "max_depth_m": 12.44,
+   "q": {
+    "ST-NONGSON": 6012,
+    "ST-GIAOTHUY": 6236,
+    "ST-THANHMY": 1848,
+    "J-VUGIA-END": 3185
+   }
+  },
+  {
+   "t": 123,
+   "time": "2025-11-18T08:00:00",
+   "file": "t123.png",
+   "area_km2": 423.6,
+   "max_depth_m": 12.73,
+   "q": {
+    "ST-NONGSON": 7682,
+    "ST-GIAOTHUY": 6718,
+    "ST-THANHMY": 2053,
+    "J-VUGIA-END": 3672
+   }
+  },
+  {
+   "t": 126,
+   "time": "2025-11-18T11:00:00",
+   "file": "t126.png",
+   "area_km2": 447.1,
+   "max_depth_m": 13.63,
+   "q": {
+    "ST-NONGSON": 8641,
+    "ST-GIAOTHUY": 8323,
+    "ST-THANHMY": 2092,
+    "J-VUGIA-END": 4074
+   }
+  },
+  {
+   "t": 129,
+   "time": "2025-11-18T14:00:00",
+   "file": "t129.png",
+   "area_km2": 457.2,
+   "max_depth_m": 13.99,
+   "q": {
+    "ST-NONGSON": 7380,
+    "ST-GIAOTHUY": 9049,
+    "ST-THANHMY": 2030,
+    "J-VUGIA-END": 4277
+   }
+  },
+  {
+   "t": 132,
+   "time": "2025-11-18T17:00:00",
+   "file": "t132.png",
+   "area_km2": 441.8,
+   "max_depth_m": 13.45,
+   "q": {
+    "ST-NONGSON": 4967,
+    "ST-GIAOTHUY": 7982,
+    "ST-THANHMY": 1483,
+    "J-VUGIA-END": 3964
+   }
+  },
+  {
+   "t": 135,
+   "time": "2025-11-18T20:00:00",
+   "file": "t135.png",
+   "area_km2": 409.4,
+   "max_depth_m": 12.08,
+   "q": {
+    "ST-NONGSON": 4100,
+    "ST-GIAOTHUY": 5697,
+    "ST-THANHMY": 911,
+    "J-VUGIA-END": 3541
+   }
+  },
+  {
+   "t": 138,
+   "time": "2025-11-18T23:00:00",
+   "file": "t138.png",
+   "area_km2": 387.8,
+   "max_depth_m": 11.39,
+   "q": {
+    "ST-NONGSON": 3852,
+    "ST-GIAOTHUY": 4725,
+    "ST-THANHMY": 1129,
+    "J-VUGIA-END": 3012
+   }
+  },
+  {
+   "t": 141,
+   "time": "2025-11-19T02:00:00",
+   "file": "t141.png",
+   "area_km2": 372.9,
+   "max_depth_m": 11.24,
+   "q": {
+    "ST-NONGSON": 4446,
+    "ST-GIAOTHUY": 4528,
+    "ST-THANHMY": 1261,
+    "J-VUGIA-END": 2434
+   }
+  },
+  {
+   "t": 144,
+   "time": "2025-11-19T05:00:00",
+   "file": "t144.png",
+   "area_km2": 379.9,
+   "max_depth_m": 11.64,
+   "q": {
+    "ST-NONGSON": 5487,
+    "ST-GIAOTHUY": 5058,
+    "ST-THANHMY": 1335,
+    "J-VUGIA-END": 2430
+   }
+  },
+  {
+   "t": 147,
+   "time": "2025-11-19T08:00:00",
+   "file": "t147.png",
+   "area_km2": 397.9,
+   "max_depth_m": 12.32,
+   "q": {
+    "ST-NONGSON": 6310,
+    "ST-GIAOTHUY": 6052,
+    "ST-THANHMY": 1453,
+    "J-VUGIA-END": 2698
+   }
+  },
+  {
+   "t": 150,
+   "time": "2025-11-19T11:00:00",
+   "file": "t150.png",
+   "area_km2": 409.6,
+   "max_depth_m": 12.77,
+   "q": {
+    "ST-NONGSON": 6485,
+    "ST-GIAOTHUY": 6774,
+    "ST-THANHMY": 1449,
+    "J-VUGIA-END": 2848
+   }
+  },
+  {
+   "t": 153,
+   "time": "2025-11-19T14:00:00",
+   "file": "t153.png",
+   "area_km2": 414.9,
+   "max_depth_m": 12.88,
+   "q": {
+    "ST-NONGSON": 5700,
+    "ST-GIAOTHUY": 6973,
+    "ST-THANHMY": 1316,
+    "J-VUGIA-END": 3006
+   }
+  },
+  {
+   "t": 156,
+   "time": "2025-11-19T17:00:00",
+   "file": "t156.png",
+   "area_km2": 406.0,
+   "max_depth_m": 12.47,
+   "q": {
+    "ST-NONGSON": 4952,
+    "ST-GIAOTHUY": 6291,
+    "ST-THANHMY": 1018,
+    "J-VUGIA-END": 2958
+   }
+  },
+  {
+   "t": 159,
+   "time": "2025-11-19T20:00:00",
+   "file": "t159.png",
+   "area_km2": 392.7,
+   "max_depth_m": 11.92,
+   "q": {
+    "ST-NONGSON": 4242,
+    "ST-GIAOTHUY": 5448,
+    "ST-THANHMY": 950,
+    "J-VUGIA-END": 2802
+   }
+  },
+  {
+   "t": 162,
+   "time": "2025-11-19T23:00:00",
+   "file": "t162.png",
+   "area_km2": 377.8,
+   "max_depth_m": 11.35,
+   "q": {
+    "ST-NONGSON": 3766,
+    "ST-GIAOTHUY": 4675,
+    "ST-THANHMY": 858,
+    "J-VUGIA-END": 2568
+   }
+  },
+  {
+   "t": 165,
+   "time": "2025-11-20T02:00:00",
+   "file": "t165.png",
+   "area_km2": 368.3,
+   "max_depth_m": 10.94,
+   "q": {
+    "ST-NONGSON": 3505,
+    "ST-GIAOTHUY": 4161,
+    "ST-THANHMY": 756,
+    "J-VUGIA-END": 2447
+   }
+  },
+  {
+   "t": 168,
+   "time": "2025-11-20T05:00:00",
+   "file": "t168.png",
+   "area_km2": 358.8,
+   "max_depth_m": 10.68,
+   "q": {
+    "ST-NONGSON": 3166,
+    "ST-GIAOTHUY": 3852,
+    "ST-THANHMY": 697,
+    "J-VUGIA-END": 2234
+   }
+  },
+  {
+   "t": 171,
+   "time": "2025-11-20T08:00:00",
+   "file": "t171.png",
+   "area_km2": 350.3,
+   "max_depth_m": 10.41,
+   "q": {
+    "ST-NONGSON": 2908,
+    "ST-GIAOTHUY": 3545,
+    "ST-THANHMY": 680,
+    "J-VUGIA-END": 2085
+   }
+  },
+  {
+   "t": 174,
+   "time": "2025-11-20T11:00:00",
+   "file": "t174.png",
+   "area_km2": 341.5,
+   "max_depth_m": 10.12,
+   "q": {
+    "ST-NONGSON": 2860,
+    "ST-GIAOTHUY": 3232,
+    "ST-THANHMY": 652,
+    "J-VUGIA-END": 1950
+   }
+  },
+  {
+   "t": 177,
+   "time": "2025-11-20T14:00:00",
+   "file": "t177.png",
+   "area_km2": 338.6,
+   "max_depth_m": 10.04,
+   "q": {
+    "ST-NONGSON": 2696,
+    "ST-GIAOTHUY": 3145,
+    "ST-THANHMY": 638,
+    "J-VUGIA-END": 1903
+   }
+  },
+  {
+   "t": 180,
+   "time": "2025-11-20T17:00:00",
+   "file": "t180.png",
+   "area_km2": 332.7,
+   "max_depth_m": 9.8,
+   "q": {
+    "ST-NONGSON": 2482,
+    "ST-GIAOTHUY": 2911,
+    "ST-THANHMY": 558,
+    "J-VUGIA-END": 1846
+   }
+  },
+  {
+   "t": 183,
+   "time": "2025-11-20T20:00:00",
+   "file": "t183.png",
+   "area_km2": 323.4,
+   "max_depth_m": 9.59,
+   "q": {
+    "ST-NONGSON": 2138,
+    "ST-GIAOTHUY": 2717,
+    "ST-THANHMY": 611,
+    "J-VUGIA-END": 1684
+   }
+  },
+  {
+   "t": 186,
+   "time": "2025-11-20T23:00:00",
+   "file": "t186.png",
+   "area_km2": 312.3,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 2117,
+    "ST-GIAOTHUY": 2371,
+    "ST-THANHMY": 667,
+    "J-VUGIA-END": 1587
+   }
+  },
+  {
+   "t": 189,
+   "time": "2025-11-21T02:00:00",
+   "file": "t189.png",
+   "area_km2": 307.0,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1934,
+    "ST-GIAOTHUY": 2281,
+    "ST-THANHMY": 609,
+    "J-VUGIA-END": 1518
+   }
+  },
+  {
+   "t": 192,
+   "time": "2025-11-21T05:00:00",
+   "file": "t192.png",
+   "area_km2": 298.3,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1755,
+    "ST-GIAOTHUY": 2137,
+    "ST-THANHMY": 582,
+    "J-VUGIA-END": 1420
+   }
+  },
+  {
+   "t": 195,
+   "time": "2025-11-21T08:00:00",
+   "file": "t195.png",
+   "area_km2": 281.9,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1616,
+    "ST-GIAOTHUY": 1955,
+    "ST-THANHMY": 518,
+    "J-VUGIA-END": 1234
+   }
+  },
+  {
+   "t": 198,
+   "time": "2025-11-21T11:00:00",
+   "file": "t198.png",
+   "area_km2": 269.8,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1704,
+    "ST-GIAOTHUY": 1812,
+    "ST-THANHMY": 484,
+    "J-VUGIA-END": 1130
+   }
+  },
+  {
+   "t": 201,
+   "time": "2025-11-21T14:00:00",
+   "file": "t201.png",
+   "area_km2": 270.2,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1712,
+    "ST-GIAOTHUY": 1860,
+    "ST-THANHMY": 464,
+    "J-VUGIA-END": 1109
+   }
+  },
+  {
+   "t": 204,
+   "time": "2025-11-21T17:00:00",
+   "file": "t204.png",
+   "area_km2": 268.6,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1608,
+    "ST-GIAOTHUY": 1873,
+    "ST-THANHMY": 430,
+    "J-VUGIA-END": 1077
+   }
+  },
+  {
+   "t": 207,
+   "time": "2025-11-21T20:00:00",
+   "file": "t207.png",
+   "area_km2": 257.0,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1515,
+    "ST-GIAOTHUY": 1742,
+    "ST-THANHMY": 472,
+    "J-VUGIA-END": 984
+   }
+  },
+  {
+   "t": 210,
+   "time": "2025-11-21T23:00:00",
+   "file": "t210.png",
+   "area_km2": 252.4,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1344,
+    "ST-GIAOTHUY": 1634,
+    "ST-THANHMY": 446,
+    "J-VUGIA-END": 986
+   }
+  },
+  {
+   "t": 213,
+   "time": "2025-11-22T02:00:00",
+   "file": "t213.png",
+   "area_km2": 249.0,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1240,
+    "ST-GIAOTHUY": 1517,
+    "ST-THANHMY": 418,
+    "J-VUGIA-END": 1016
+   }
+  },
+  {
+   "t": 216,
+   "time": "2025-11-22T05:00:00",
+   "file": "t216.png",
+   "area_km2": 239.9,
+   "max_depth_m": 9.47,
+   "q": {
+    "ST-NONGSON": 1260,
+    "ST-GIAOTHUY": 1354,
+    "ST-THANHMY": 403,
+    "J-VUGIA-END": 1007
+   }
+  }
+ ],
+ "frame_every_h": 3,
+ "max": {
+  "file": "max.png",
+  "area_km2": 457.2,
+  "max_depth_m": 13.99
+ },
+ "peak_flow_m3s": {
+  "ST-NONGSON": 8641.0,
+  "ST-GIAOTHUY": 9049.0,
+  "ST-THANHMY": 2124.0,
+  "J-VUGIA-END": 4277.0
+ },
+ "nodes": {
+  "ST-NONGSON": {
+   "name": "Trạm Nông Sơn",
+   "lon": 108.02949,
+   "lat": 15.69786
+  },
+  "ST-GIAOTHUY": {
+   "name": "Trạm Giao Thủy (đầu đồng bằng Thu Bồn)",
+   "lon": 108.10944,
+   "lat": 15.83819
+  },
+  "ST-THANHMY": {
+   "name": "Trạm Thành Mỹ",
+   "lon": 107.82986,
+   "lat": 15.76792
+  },
+  "J-VUGIA-END": {
+   "name": "Cuối sông Vu Gia (tách Quảng Huế / Ái Nghĩa)",
+   "lon": 108.11053,
+   "lat": 15.87965
+  }
+ },
+ "assumptions": [
+  "DEM 30 m, không đê, không triều, không vận tốc",
+  "Mặt nước đồng bằng làm trơn σ = 300 m; ảnh xuất 60 m/điểm ảnh",
+  "Đồng bằng (< 12.0 m): ô gán vào nhánh sông gần nhất; lòng sông sâu 4.0 m dưới mặt nước DEM (giả định)",
+  "Tỷ lệ chia phân lưu giả định: {\"J-VUGIA-END\": {\"Sông Quảng Huế\": 0.5, \"Sông Ái Nghĩa\": 0.5}, \"D01\": {\"Sông Yên\": 0.6, \"Sông Quá Giáng\": 0.4}, \"D10\": {\"Sông La Thọ\": 0.5, \"Sông Quá Giáng\": 0.5}, \"D12\": {\"Sông Vĩnh Điện\": 0.15, \"Sông Thu Bồn\": 0.85}}",
+  "Lưu lượng thượng nguồn từ diễn toán Muskingum-Cunge chưa kiểm chứng tại trạm sông",
+  "Manning n = 0.05; độ dốc đồng bằng 0.0001"
+ ],
+ "unresolved_reaches": 0
+}

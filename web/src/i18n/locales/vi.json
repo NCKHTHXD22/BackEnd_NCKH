@@ -298,7 +298,18 @@
     "normal": "Bình thường",
     "waterLevelStation": "Trạm mực nước:",
     "waterLevel": "Mực nước:",
-    "dssCenter": "Hệ thống hỗ trợ đưa ra quyết định (DSS) Trung tâm."
+    "waterLevelNoData": "chưa có số liệu",
+    "alarmLevels": "Báo động I / II / III:",
+    "dssCenter": "Hệ thống hỗ trợ đưa ra quyết định (DSS) Trung tâm.",
+    "levelChart": {
+      "recent": "3 ngày",
+      "flood1": "Lũ 10/2025",
+      "flood2": "Lũ 11/2025",
+      "loading": "Đang tải…",
+      "error": "Không tải được số liệu",
+      "empty": "Chưa có số liệu trong khoảng này",
+      "legend": "Nét đứt: báo động I (vàng), II (cam), III (đỏ)"
+    }
   },
   "reportType": {
     "floodPoint": "Điểm ngập",
@@ -451,7 +462,8 @@
       "loading": "đang tải…",
       "error": "chưa có dữ liệu",
       "idle": "bật để tải",
-      "opacity": "Độ trong suốt"
+      "opacity": "Độ trong suốt",
+      "illustrative": "minh họa"
     },
     "info": {
       "tabInfo": "Thông tin",
@@ -469,6 +481,27 @@
       "forecastSoon": "Dự báo lưu lượng 12 giờ (LSTM/XGBoost, dải p10–p90) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2).",
       "loadingLake": "Đang tải số liệu hồ…",
       "operationAdminOnly": "Bảng vận hành hồ (mô phỏng đập, khuyến nghị vận hành) dành cho tài khoản quản trị – đăng nhập để xem."
+    },
+    "hand": {
+      "eyebrow": "Mức cơ sở · trận lũ và kịch bản",
+      "title": "Ngập theo thời gian",
+      "event": "Chọn trận lũ",
+      "fly": "Bay tới vùng ngập",
+      "time": "Thời điểm",
+      "maxAll": "Lớn nhất cả trận",
+      "area": "km² ngập",
+      "maxDepth": "sâu nhất",
+      "peak": "đỉnh",
+      "note": "Minh họa có cơ sở vật lý: Q xả hồ đo → diễn toán Muskingum-Cunge → mực nước theo đường quan hệ tổng hợp HAND trên DEM 30 m. Chưa kiểm chứng tại trạm sông, tỷ lệ chia phân lưu giả định, chưa có đê và triều – sẽ thay bằng mô hình thủy lực 2D.",
+      "groups": {
+        "stage": "Theo mực nước trạm đo",
+        "flow": "Theo lưu lượng xả hồ",
+        "scenario": "Kịch bản"
+      },
+      "envelope": "Bao ngập lớn nhất (không theo thời gian)",
+      "returnPeriod": "Câu Lâu: chu kỳ lặp lại ≈ {{years}} năm",
+      "note_stage": "Mặt nước nội suy từ mực nước giờ đo tại Nông Sơn, Giao Thủy, Ái Nghĩa, Câu Lâu, Hội An, Cẩm Lệ, trừ DEM 30 m (lệch mặt chuẩn hiệu chỉnh bằng tháp VRain). Kiểm định trận 11/2025: sai số độ sâu −0,4 m. Chưa tính vùng không có trạm (Túy Loan, Hòa Tiến), ngập đô thị do mưa, đê và cống.",
+      "note_scenario": "Kịch bản dựng từ mực nước đỉnh các trạm (lũ lịch sử) hoặc mức báo động – cùng phương pháp bản đồ theo mực nước trạm. Đỉnh các trạm không cùng lúc nên đây là bao ngập lớn nhất; chu kỳ lặp lại từ 19 năm số liệu, chỉ để tham khảo."
     },
     "flood": {
       "eyebrow": "Khu thí điểm Hội An · Kịch bản",
@@ -530,6 +563,86 @@
     },
     "qualityHigh": "HD",
     "qualityStandard": "Tiêu chuẩn",
-    "qualityHint": "Chất lượng hiển thị: HD sắc nét hơn (tốn máy hơn), Tiêu chuẩn nhẹ máy"
+    "qualityHint": "Chất lượng hiển thị: HD sắc nét hơn (tốn máy hơn), Tiêu chuẩn nhẹ máy",
+    "sim": {
+      "title": "Mô phỏng diễn biến lũ",
+      "hour": "giờ",
+      "speed": "Tốc độ phát",
+      "rainHeavy": "mưa rất to",
+      "rainModerate": "mưa vừa",
+      "rainLight": "mưa nhỏ",
+      "rainNone": "không mưa",
+      "upstream": "Thượng nguồn · hồ chứa",
+      "upstreamHint": "Số liệu đo theo giờ tại hồ; chế độ vận hành theo QĐ 1865 (5 hồ có quy tắc).",
+      "flyUpstream": "Bay lên thượng nguồn",
+      "qIn": "Q đến",
+      "qOut": "Q xả",
+      "rain": "Mưa",
+      "showAll": "Xem đủ {{n}} hồ",
+      "showLess": "Thu gọn",
+      "noForecast": "chưa có dự báo Q đến lưu trữ cho trận này (đang xem lại số liệu đo)",
+      "downstream": "Hạ du · trạm thủy văn",
+      "belowAlarm": "< BĐ I",
+      "impact": "Tác động · Hội An",
+      "houses": "Nhà bị ngập",
+      "roads": "Đường ngập",
+      "roadHint": "Vàng: ô tô đi chậm · cam: xe máy chết máy · đỏ: ô tô không qua được · đỏ sẫm: nguy hiểm tính mạng.",
+      "buildHint": "Dựng 54.779 nhà và 2.570 đoạn đường Hội An để thấy nhà, đường bị ngập theo từng giờ (lần đầu mất 1–2 phút).",
+      "build": "Dựng nhà, đường Hội An",
+      "flyHoian": "Bay tới Hội An",
+      "beforeWindow": "Giai đoạn mưa và hồ tích nước – chưa tới cửa sổ bản đồ ngập hạ du.",
+      "modes": {
+        "cut": "Cắt lũ",
+        "maintain": "Duy trì",
+        "lower": "Hạ mực nước",
+        "lower_to_pre_flood": "Hạ về MN trước lũ",
+        "safety": "An toàn CT",
+        "normal": "Bình thường",
+        "store": "Tích nước",
+        "follow_inflow": "Xả theo Q đến",
+        "cooperate": "Phối hợp"
+      },
+      "methodNote": "Phương pháp và giới hạn của bản đồ ngập"
+    },
+    "area": {
+      "button": "Dựng khu này",
+      "eyebrow": "OSM + Open Buildings + Nominatim · trình duyệt gọi trực tiếp",
+      "title": "Dựng khu thành mô hình 3D",
+      "close": "Đóng",
+      "hint": "Vẽ một khung chữ nhật (tối đa {{max}} km²) hoặc chọn khu ví dụ. Nhà, đường, sông hồ, cây xanh, đình chùa được lấy trực tiếp từ OpenStreetMap và Open Buildings rồi dựng 3D ngay trên trình duyệt.",
+      "drawHint": "Bấm góc thứ nhất rồi góc đối diện của khu cần dựng.",
+      "draw": "Vẽ khu",
+      "build": "Dựng khu này",
+      "cancel": "Dừng",
+      "tooBig": "Khu {{a}} km² – tối đa {{max}} km²; vẽ khu nhỏ hơn.",
+      "mirror": "Máy chủ Overpass chính trả lời chậm – đã hỏi thêm máy dự phòng.",
+      "examples": {
+        "hoianOld": "Ví dụ: phố cổ Hội An",
+        "camLe": "Ví dụ: quanh trạm Cẩm Lệ"
+      },
+      "steps": {
+        "nominatim": "Nominatim / Photon – tên khu, mã nước",
+        "overpass": "OpenStreetMap (Overpass) – nhà vẽ tay, đường, sông hồ, cây",
+        "openBuildings": "Open Buildings – đọc đúng phần byte của khu",
+        "merge": "Ghép hai nguồn nhà, ước tính số tầng",
+        "render": "Dựng 3D"
+      },
+      "newArea": "Vùng mới",
+      "builtIn": "dựng xong trong {{s}} s",
+      "houses": "nhà",
+      "trees": "cây",
+      "roads": "đường",
+      "fromOsm": "nhà OSM (ưu tiên)",
+      "fromOb": "nhà Open Buildings",
+      "dropped": "Open Buildings: {{raw}} nhà trong khung; bỏ {{low}} độ tin cậy < 0,7, {{dup}} trùng nhà OSM, {{road}} trên lòng đường, {{water}} trên mặt nước.",
+      "floodHint": "Khi chạy mô phỏng diễn biến lũ, nhà và đường của khu này tự tô theo độ sâu ngập từng giờ.",
+      "fly": "Bay tới khu",
+      "remove": "Xóa khu",
+      "another": "Vẽ khu khác",
+      "retry": "Cả ba máy chủ Overpass đang quá tải – thử lại sau 8 giây…",
+      "osmFailed": "Máy chủ OpenStreetMap (Overpass) quá tải hoặc không trả lời – khu chỉ dựng từ Open Buildings (chưa có đường, cây, sông hồ, tên công trình). Thử dựng lại sau ít phút.",
+      "rebuild": "Dựng lại",
+      "placeVia": "Tên khu"
+    }
   }
 }

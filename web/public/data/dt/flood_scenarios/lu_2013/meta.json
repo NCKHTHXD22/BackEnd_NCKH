@@ -1,0 +1,73 @@
+{
+ "event": "lu_2013",
+ "title": "Lũ 11/2013 (đỉnh 16/11)",
+ "title_en": "Flood Nov 2013 (peak 16 Nov)",
+ "method": "Mặt nước nội suy từ mực nước đỉnh các trạm, trừ DEM (theo 19_hand_stage.py)",
+ "bounds": [
+  108.014746,
+  15.755025,
+  108.424054,
+  16.105358
+ ],
+ "frames": [],
+ "datum_shift_m": -0.9,
+ "max": {
+  "file": "max.png",
+  "area_km2": 278.1,
+  "max_depth_m": 8.25
+ },
+ "station_peaks_m": {
+  "AINGHIA": 10.0,
+  "CAMLE": 2.67,
+  "CAULAU": 4.55,
+  "GIAOTHUY": 8.94,
+  "HOIAN": 2.69,
+  "NONGSON": 16.47
+ },
+ "return_period_years": {
+  "AINGHIA": 3.9,
+  "CAMLE": 6.8,
+  "CAULAU": 3.5,
+  "GIAOTHUY": 3.7,
+  "HIEPDUC": 3.9,
+  "HOIAN": 4.6,
+  "HOIKHACH": 4.3,
+  "NONGSON": 3.6,
+  "THANHMY": 7.4
+ },
+ "nodes": {
+  "NONGSON": {
+   "name": "Trạm Nông Sơn",
+   "lon": 108.02949,
+   "lat": 15.69786
+  },
+  "GIAOTHUY": {
+   "name": "Trạm Giao Thủy (đầu đồng bằng Thu Bồn)",
+   "lon": 108.10944,
+   "lat": 15.83819
+  },
+  "AINGHIA": {
+   "name": "Trạm Ái Nghĩa",
+   "lon": 108.11367,
+   "lat": 15.8835
+  },
+  "CAULAU": {
+   "name": "Trạm Câu Lâu",
+   "lon": 108.27163,
+   "lat": 15.86253
+  },
+  "HOIAN": {
+   "name": "Trạm Hội An",
+   "lon": 108.32548,
+   "lat": 15.87072
+  },
+  "CAMLE": {
+   "name": "Trạm Cẩm Lệ",
+   "lon": 108.1963,
+   "lat": 16.00119
+  }
+ },
+ "kind": "historical",
+ "peak_time_caulau": "2013-11-16T14:00:00",
+ "note": "Bao ngập lớn nhất: mực nước đỉnh từng trạm trong ±48 giờ quanh đỉnh Câu Lâu"
+}

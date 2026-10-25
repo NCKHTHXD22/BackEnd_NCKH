@@ -19,6 +19,7 @@ import mapApi from '../../api/mapApi';
 import { RESERVOIRS } from '../../utils/reservoirs';
 import hydroDamImg from '../../assets/images/hydro-dam.png';
 import LakeModal from '../../components/Map/LakeModal';
+import StationLevelChart from '../../components/Map/StationLevelChart';
 import SubmitFloodReportModal from '../../components/Map/SubmitFloodReportModal';
 import { getReportTypeLabel, FLOOD_LEVEL_TYPES as REPORT_FLOOD_LEVEL_TYPES } from '../../utils/reportTypes';
 import vietnamBoundary from '../../utils/vietnamBoundary.json';
@@ -332,9 +333,15 @@ export default function HomePage() {
                         if (!lat || !lng) return null;
                         return (
                             <Marker key={`wl-${index}`} position={[lat, lng]}>
-                                <Popup>
+                                <Popup minWidth={station.code ? 310 : undefined}>
                                     <strong>{t('map.waterLevelStation')} {station.name || t('map.noName')}</strong><br />
-                                    {t('map.waterLevel')} {station.level || 0} m
+                                    {t('map.waterLevel')} {typeof station.level === 'number'
+                                        ? <>{station.level} m{station.level_time && <> ({new Date(station.level_time).toLocaleString(i18n.language === 'en' ? 'en-GB' : 'vi-VN')})</>}</>
+                                        : t('map.waterLevelNoData')}
+                                    {station.thresholds?.level1 != null && (
+                                        <><br />{t('map.alarmLevels')} {station.thresholds.level1} / {station.thresholds.level2} / {station.thresholds.level3} m</>
+                                    )}
+                                    {station.code && <StationLevelChart station={station} />}
                                 </Popup>
                             </Marker>
                         )

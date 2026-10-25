@@ -1,0 +1,69 @@
+{
+ "event": "bao_dong_I",
+ "title": "Mọi trạm ở mức báo động I",
+ "title_en": "All gauges at alarm level I",
+ "method": "Mặt nước nội suy từ mực nước đỉnh các trạm, trừ DEM (theo 19_hand_stage.py)",
+ "bounds": [
+  108.014746,
+  15.755025,
+  108.424054,
+  16.105358
+ ],
+ "frames": [],
+ "datum_shift_m": -0.9,
+ "max": {
+  "file": "max.png",
+  "area_km2": 62.9,
+  "max_depth_m": 6.24
+ },
+ "station_peaks_m": {
+  "AINGHIA": 6.5,
+  "CAMLE": 1.0,
+  "NONGSON": 11.0,
+  "GIAOTHUY": 6.5,
+  "CAULAU": 2.0,
+  "HOIAN": 1.0
+ },
+ "return_period_years": {
+  "AINGHIA": 1.1,
+  "CAMLE": 1.2,
+  "NONGSON": 1.1,
+  "GIAOTHUY": 1.5,
+  "CAULAU": 1.2,
+  "HOIAN": 1.1
+ },
+ "nodes": {
+  "NONGSON": {
+   "name": "Trạm Nông Sơn",
+   "lon": 108.02949,
+   "lat": 15.69786
+  },
+  "GIAOTHUY": {
+   "name": "Trạm Giao Thủy (đầu đồng bằng Thu Bồn)",
+   "lon": 108.10944,
+   "lat": 15.83819
+  },
+  "AINGHIA": {
+   "name": "Trạm Ái Nghĩa",
+   "lon": 108.11367,
+   "lat": 15.8835
+  },
+  "CAULAU": {
+   "name": "Trạm Câu Lâu",
+   "lon": 108.27163,
+   "lat": 15.86253
+  },
+  "HOIAN": {
+   "name": "Trạm Hội An",
+   "lon": 108.32548,
+   "lat": 15.87072
+  },
+  "CAMLE": {
+   "name": "Trạm Cẩm Lệ",
+   "lon": 108.1963,
+   "lat": 16.00119
+  }
+ },
+ "kind": "alarm",
+ "note": "Giả định mọi trạm cùng đạt mức báo động – trong thực tế hiếm khi đồng thời"
+}

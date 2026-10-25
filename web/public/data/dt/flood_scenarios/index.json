@@ -1,0 +1,296 @@
+{
+ "datum_shift_m": -0.9,
+ "scenarios": [
+  {
+   "id": "lu_2004",
+   "name": "Lũ 11/2004 (đỉnh 27/11)",
+   "name_en": "Flood Nov 2004 (peak 27 Nov)",
+   "area_km2": 257.9,
+   "station_peaks_m": {
+    "AINGHIA": 9.61,
+    "CAMLE": 1.87,
+    "CAULAU": 4.59,
+    "GIAOTHUY": 8.87,
+    "HOIAN": 2.48,
+    "NONGSON": 17.38
+   },
+   "return_period_years": {
+    "AINGHIA": 3.2,
+    "CAMLE": 2.5,
+    "CAULAU": 3.6,
+    "GIAOTHUY": 3.6,
+    "HIEPDUC": 4.3,
+    "HOIAN": 3.6,
+    "HOIKHACH": 3.1,
+    "NONGSON": 4.7,
+    "THANHMY": 2.6
+   }
+  },
+  {
+   "id": "lu_2007",
+   "name": "Lũ 11/2007 (đỉnh 12/11)",
+   "name_en": "Flood Nov 2007 (peak 12 Nov)",
+   "area_km2": 353.5,
+   "station_peaks_m": {
+    "AINGHIA": 10.36,
+    "CAMLE": 3.98,
+    "CAULAU": 5.39,
+    "GIAOTHUY": 9.6,
+    "HOIAN": 3.28,
+    "NONGSON": 18.65
+   },
+   "return_period_years": {
+    "AINGHIA": 4.6,
+    "CAMLE": 41.9,
+    "CAULAU": 6.0,
+    "GIAOTHUY": 4.9,
+    "HIEPDUC": 6.6,
+    "HOIAN": 9.5,
+    "HOIKHACH": 5.6,
+    "NONGSON": 7.0,
+    "THANHMY": 4.6
+   }
+  },
+  {
+   "id": "lu_2009",
+   "name": "Lũ 09/2009 (đỉnh 30/09)",
+   "name_en": "Flood Sep 2009 (peak 30 Sep)",
+   "area_km2": 347.4,
+   "station_peaks_m": {
+    "AINGHIA": 10.77,
+    "CAMLE": 3.16,
+    "CAULAU": 5.29,
+    "GIAOTHUY": 9.75,
+    "HOIAN": 3.2,
+    "NONGSON": 17.65
+   },
+   "return_period_years": {
+    "AINGHIA": 5.7,
+    "CAMLE": 13.2,
+    "CAULAU": 5.6,
+    "GIAOTHUY": 5.3,
+    "HIEPDUC": 6.6,
+    "HOIAN": 8.6,
+    "HOIKHACH": 7.9,
+    "NONGSON": 5.1,
+    "THANHMY": 9.9
+   }
+  },
+  {
+   "id": "lu_2010",
+   "name": "Lũ 11/2010 (đỉnh 17/11)",
+   "name_en": "Flood Nov 2010 (peak 17 Nov)",
+   "area_km2": 207.2,
+   "station_peaks_m": {
+    "AINGHIA": 8.97,
+    "CAMLE": 1.19,
+    "CAULAU": 4.03,
+    "GIAOTHUY": 8.49,
+    "HOIAN": 2.2,
+    "NONGSON": 16.45
+   },
+   "return_period_years": {
+    "AINGHIA": 2.4,
+    "CAMLE": 1.3,
+    "CAULAU": 2.6,
+    "GIAOTHUY": 3.0,
+    "HIEPDUC": 3.5,
+    "HOIAN": 2.7,
+    "HOIKHACH": 2.0,
+    "NONGSON": 3.5,
+    "THANHMY": 1.8
+   }
+  },
+  {
+   "id": "lu_2011",
+   "name": "Lũ 11/2011 (đỉnh 08/11)",
+   "name_en": "Flood Nov 2011 (peak 08 Nov)",
+   "area_km2": 292.6,
+   "station_peaks_m": {
+    "AINGHIA": 10.0,
+    "CAMLE": 2.82,
+    "CAULAU": 4.74,
+    "GIAOTHUY": 9.07,
+    "HOIAN": 2.85,
+    "NONGSON": 16.92
+   },
+   "return_period_years": {
+    "AINGHIA": 3.9,
+    "CAMLE": 8.3,
+    "CAULAU": 4.0,
+    "GIAOTHUY": 3.9,
+    "HIEPDUC": 3.5,
+    "HOIAN": 5.6,
+    "HOIKHACH": 4.0,
+    "NONGSON": 4.1,
+    "THANHMY": 3.0
+   }
+  },
+  {
+   "id": "lu_2013",
+   "name": "Lũ 11/2013 (đỉnh 16/11)",
+   "name_en": "Flood Nov 2013 (peak 16 Nov)",
+   "area_km2": 278.1,
+   "station_peaks_m": {
+    "AINGHIA": 10.0,
+    "CAMLE": 2.67,
+    "CAULAU": 4.55,
+    "GIAOTHUY": 8.94,
+    "HOIAN": 2.69,
+    "NONGSON": 16.47
+   },
+   "return_period_years": {
+    "AINGHIA": 3.9,
+    "CAMLE": 6.8,
+    "CAULAU": 3.5,
+    "GIAOTHUY": 3.7,
+    "HIEPDUC": 3.9,
+    "HOIAN": 4.6,
+    "HOIKHACH": 4.3,
+    "NONGSON": 3.6,
+    "THANHMY": 7.4
+   }
+  },
+  {
+   "id": "lu_2016",
+   "name": "Lũ 12/2016 (đỉnh 16/12)",
+   "name_en": "Flood Dec 2016 (peak 16 Dec)",
+   "area_km2": 235.0,
+   "station_peaks_m": {
+    "AINGHIA": 9.44,
+    "CAMLE": 1.9,
+    "CAULAU": 4.29,
+    "GIAOTHUY": 8.44,
+    "HOIAN": 2.53,
+    "NONGSON": 15.56
+   },
+   "return_period_years": {
+    "AINGHIA": 2.9,
+    "CAMLE": 2.6,
+    "CAULAU": 3.0,
+    "GIAOTHUY": 3.0,
+    "HIEPDUC": 2.4,
+    "HOIAN": 3.8,
+    "HOIKHACH": 3.1,
+    "NONGSON": 2.7,
+    "THANHMY": 2.8
+   }
+  },
+  {
+   "id": "lu_2017",
+   "name": "Lũ 11/2017 (đỉnh 06/11)",
+   "name_en": "Flood Nov 2017 (peak 06 Nov)",
+   "area_km2": 318.8,
+   "station_peaks_m": {
+    "AINGHIA": 10.11,
+    "CAMLE": 2.59,
+    "CAULAU": 5.15,
+    "GIAOTHUY": 9.5,
+    "HOIAN": 3.17,
+    "NONGSON": 18.54
+   },
+   "return_period_years": {
+    "AINGHIA": 4.1,
+    "CAMLE": 6.1,
+    "CAULAU": 5.1,
+    "GIAOTHUY": 4.7,
+    "HIEPDUC": 8.4,
+    "HOIAN": 8.3,
+    "HOIKHACH": 4.1,
+    "NONGSON": 6.8,
+    "THANHMY": 4.4
+   }
+  },
+  {
+   "id": "lu_2025",
+   "name": "Lũ 10/2025 (đỉnh 30/10)",
+   "name_en": "Flood Oct 2025 (peak 30 Oct)",
+   "area_km2": 362.1,
+   "station_peaks_m": {
+    "AINGHIA": 10.6,
+    "CAMLE": 3.25,
+    "CAULAU": 5.62,
+    "GIAOTHUY": 10.03,
+    "HOIAN": 3.39,
+    "NONGSON": 18.68
+   },
+   "return_period_years": {
+    "AINGHIA": 5.2,
+    "CAMLE": 15.0,
+    "CAULAU": 7.0,
+    "GIAOTHUY": 6.1,
+    "HIEPDUC": 8.0,
+    "HOIAN": 10.9,
+    "HOIKHACH": 10.7,
+    "NONGSON": 7.1,
+    "THANHMY": 10.6
+   }
+  },
+  {
+   "id": "bao_dong_I",
+   "name": "Mọi trạm ở mức báo động I",
+   "name_en": "All gauges at alarm level I",
+   "area_km2": 62.9,
+   "station_peaks_m": {
+    "AINGHIA": 6.5,
+    "CAMLE": 1.0,
+    "NONGSON": 11.0,
+    "GIAOTHUY": 6.5,
+    "CAULAU": 2.0,
+    "HOIAN": 1.0
+   },
+   "return_period_years": {
+    "AINGHIA": 1.1,
+    "CAMLE": 1.2,
+    "NONGSON": 1.1,
+    "GIAOTHUY": 1.5,
+    "CAULAU": 1.2,
+    "HOIAN": 1.1
+   }
+  },
+  {
+   "id": "bao_dong_II",
+   "name": "Mọi trạm ở mức báo động II",
+   "name_en": "All gauges at alarm level II",
+   "area_km2": 127.5,
+   "station_peaks_m": {
+    "AINGHIA": 8.0,
+    "CAMLE": 2.0,
+    "NONGSON": 13.0,
+    "GIAOTHUY": 7.5,
+    "CAULAU": 3.0,
+    "HOIAN": 1.5
+   },
+   "return_period_years": {
+    "AINGHIA": 1.6,
+    "CAMLE": 2.9,
+    "NONGSON": 1.5,
+    "GIAOTHUY": 2.0,
+    "CAULAU": 1.6,
+    "HOIAN": 1.4
+   }
+  },
+  {
+   "id": "bao_dong_III",
+   "name": "Mọi trạm ở mức báo động III",
+   "name_en": "All gauges at alarm level III",
+   "area_km2": 218.9,
+   "station_peaks_m": {
+    "AINGHIA": 9.0,
+    "CAMLE": 2.5,
+    "NONGSON": 15.0,
+    "GIAOTHUY": 8.8,
+    "CAULAU": 4.0,
+    "HOIAN": 2.0
+   },
+   "return_period_years": {
+    "AINGHIA": 2.4,
+    "CAMLE": 5.4,
+    "NONGSON": 2.4,
+    "GIAOTHUY": 3.4,
+    "CAULAU": 2.6,
+    "HOIAN": 2.2
+   }
+  }
+ ]
+}

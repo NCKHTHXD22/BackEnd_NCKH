@@ -16,7 +16,7 @@ export function depthColor(d) {
 const hash = n => ((n * 2654435761) >>> 0) / 4294967296;
 
 /** Lấy mẫu địa hình đang hiển thị trên lưới đều để đặt nhà sát mặt đất (mọi nguồn địa hình). */
-async function terrainSampler(viewer, b, nxs = 24, nys = 14) {
+export async function terrainSampler(viewer, b, nxs = 24, nys = 14) {
   const pts = [];
   for (let j = 0; j < nys; j++)
     for (let i = 0; i < nxs; i++)
@@ -36,13 +36,12 @@ async function terrainSampler(viewer, b, nxs = 24, nys = 14) {
   };
 }
 
-export async function loadHoiAnBuildings(viewer, def) {
-  const data = await (await fetch(def.url)).json();
-  const grid = await (await fetch(def.grid)).json();
-  const b = { west: grid.west, north: grid.north, east: grid.west + grid.dx * grid.nx, south: grid.north - grid.dy * grid.ny };
-  const terrainAt = await terrainSampler(viewer, b);
+const gridBounds = grid => ({ west: grid.west, north: grid.north, east: grid.west + grid.dx * grid.nx, south: grid.north - grid.dy * grid.ny });
 
-  // Chênh lệch giữa địa hình hiển thị và cao độ DEM (để đặt mặt nước đúng độ cao hiển thị)
+/** Chênh lệch (trung vị) giữa địa hình đang hiển thị và cao độ DEM của lưới Hội An – cộng vào cao độ DEM
+ *  (mặt nước, mực nước) để đặt đúng độ cao hiển thị. */
+export async function demOffset(viewer, grid, terrainAt = null) {
+  terrainAt = terrainAt ?? await terrainSampler(viewer, gridBounds(grid));
   const diffs = [];
   for (let k = 0; k < 200; k++) {
     const r = Math.floor(hash(k + 1) * grid.ny), c = Math.floor(hash(k + 7919) * grid.nx);
@@ -50,7 +49,14 @@ export async function loadHoiAnBuildings(viewer, def) {
     diffs.push(terrainAt(grid.west + (c + 0.5) * grid.dx, grid.north - (r + 0.5) * grid.dy) - grid.dtm[r * grid.nx + c]);
   }
   diffs.sort((a, z) => a - z);
-  const offset = diffs.length ? diffs[Math.floor(diffs.length / 2)] : 0;
+  return diffs.length ? diffs[Math.floor(diffs.length / 2)] : 0;
+}
+
+export async function loadHoiAnBuildings(viewer, def) {
+  const data = await (await fetch(def.url)).json();
+  const grid = await (await fetch(def.grid)).json();
+  const terrainAt = await terrainSampler(viewer, gridBounds(grid));
+  const offset = await demOffset(viewer, grid, terrainAt);
 
   const F = Object.fromEntries(data.fields.map((f, i) => [f, i]));
   const items = data.items;
@@ -62,6 +68,7 @@ export async function loadHoiAnBuildings(viewer, def) {
   // Primitive tìm thuộc tính theo id bằng so sánh tham chiếu (có nhớ vị trí lần trước, nên duyệt
   // tuần tự rất nhanh) → giữ sẵn mảng id dùng chung cho tạo hình và đổi màu.
   const ids = items.map((_, idx) => ({ layerId: def.id, idx }));
+  const cx = new Float64Array(items.length), cy = new Float64Array(items.length);   // tâm nhà – mô phỏng lấy độ sâu tại đây
   const instances = items.map((it, idx) => {
     const flat = it[F.ring];
     const deg = [];
@@ -71,6 +78,8 @@ export async function loadHoiAnBuildings(viewer, def) {
       x += flat[k]; y += flat[k + 1];
       deg.push(data.west + x / data.q, data.south + y / data.q);
     }
+    for (let k = 0; k < deg.length; k += 2) { cx[idx] += deg[k]; cy[idx] += deg[k + 1]; }
+    cx[idx] /= deg.length / 2; cy[idx] /= deg.length / 2;
     const base = terrainAt(deg[0], deg[1]) - 0.5; // chôn chân 0,5 m để không hở dưới đáy
     return new Cesium.GeometryInstance({
       geometry: new Cesium.PolygonGeometry({
@@ -96,11 +105,16 @@ export async function loadHoiAnBuildings(viewer, def) {
   });
 
   let level = null;
+  let depths = null;          // độ sâu từng nhà do mô phỏng theo thời gian đặt (ưu tiên hơn `level` của kịch bản)
+  const lastClass = new Int8Array(items.length).fill(-1);
+  const depthClass = d => (d > 0.05 ? DEPTH_STOPS.reduce((k, [t], i) => (d >= t ? i : k), 0) : -1);
   let selected = null;
   let night = false;
   const NIGHT = Cesium.Color.fromCssColorString('#3a3550');
   const colorOf = idx => {
-    if (level != null && items[idx][F.flood_from_m] < level && level > items[idx][F.ground_m]) {
+    if (depths) {
+      if (depths[idx] > 0.05) return depthColor(depths[idx]);
+    } else if (level != null && items[idx][F.flood_from_m] < level && level > items[idx][F.ground_m]) {
       return depthColor(level - items[idx][F.ground_m]);
     }
     return night ? Cesium.Color.lerp(baseColor[idx], NIGHT, 0.62, new Cesium.Color()) : baseColor[idx];
@@ -112,7 +126,7 @@ export async function loadHoiAnBuildings(viewer, def) {
   };
 
   return {
-    def, primitive, items, F, offset, grid,
+    def, primitive, items, F, offset, grid, centroids: { lon: cx, lat: cy },
     setVisible(on) { primitive.show = on; viewer.scene.requestRender(); },
     setOpacity() {},
     propsOf(id) {
@@ -120,8 +134,20 @@ export async function loadHoiAnBuildings(viewer, def) {
       const p = Object.fromEntries(data.fields.filter(f => f !== 'ring').map(f => [f, it[F[f]]]));
       p.code = `NHA-${it[F.osm_id]}`;
       p.name = it[F.name] || `${it[F.type]} · OSM ${it[F.osm_id]}`;
-      if (level != null) p.depth_now_m = level > it[F.flood_from_m] ? Math.max(0, +(level - it[F.ground_m]).toFixed(2)) : 0;
+      if (depths) p.depth_now_m = +Math.max(0, depths[id.idx]).toFixed(2);
+      else if (level != null) p.depth_now_m = level > it[F.flood_from_m] ? Math.max(0, +(level - it[F.ground_m]).toFixed(2)) : 0;
       return p;
+    },
+    /** Độ sâu ngập từng nhà (m, theo thứ tự items) do mô phỏng theo thời gian tính; null = trả về kịch bản/màu gốc.
+     *  Chỉ tô lại nhà đổi cấp màu (mô phỏng gọi mỗi bước giờ – tô lại cả 55 nghìn nhà mỗi bước sẽ giật). */
+    setDepths(arr) {
+      const full = !arr || !depths;
+      depths = arr;
+      for (let i = 0; i < items.length; i++) {
+        const c = arr ? depthClass(arr[i]) : -1;
+        if (full || c !== lastClass[i]) { lastClass[i] = c; paint(i); }
+      }
+      viewer.scene.requestRender();
     },
     highlight(id) {
       const prev = selected;
@@ -148,6 +174,16 @@ export async function loadHoiAnBuildings(viewer, def) {
       return n;
     },
   };
+}
+
+// Mức ngập đường theo khả năng đi lại: < 0,15 m coi như khô; < 0,3 m ô tô đi chậm được; 0,3–0,5 m xe máy chết máy;
+// 0,5–1 m ô tô không qua được; > 1 m nguy hiểm tính mạng
+export const ROAD_DEPTH_STOPS = [[0.15, '#facc15'], [0.3, '#fb923c'], [0.5, '#ef4444'], [1, '#7f1d1d']];
+const ROAD_COLORS = ROAD_DEPTH_STOPS.map(([d, c]) => [d, Cesium.Color.fromCssColorString(c)]);
+function roadDepthColor(d) {
+  let c = null;
+  for (const [t, col] of ROAD_COLORS) if (d >= t) c = col;
+  return c;
 }
 
 /** Đường Hội An: một GroundPolylinePrimitive, màu theo từng đoạn → đổi màu tức thì (ngập, ban đêm). */
@@ -178,7 +214,7 @@ export async function loadHoiAnRoads(viewer, def) {
   primitive.show = Boolean(def.visible);
   await new Promise(res => { const c = () => (primitive.ready ? res() : setTimeout(c, 200)); viewer.scene.requestRender(); c(); });
 
-  let level = null, night = false, selected = null;
+  let level = null, night = false, selected = null, depths = null;
   const C = s => Cesium.Color.fromCssColorString(s);
   const DAY = [null, C('#f6f1e7'), C('#f6f1e7'), C('#d9d4c7'), C('#cfc9bb')];
   const NIGHTC = [null, C('#ffd98a'), C('#ffd98a'), C('#ffb347'), C('#f29b38')];
@@ -187,7 +223,8 @@ export async function loadHoiAnRoads(viewer, def) {
   const repaint = () => {
     feats.forEach((f, idx) => {
       const cls = f.properties.cls ?? 4;
-      const col = idx === selected ? SEL : flooded(f) ? RED : (night ? NIGHTC : DAY)[cls] ?? DAY[4];
+      const wet = depths ? roadDepthColor(depths[idx]) : flooded(f) ? RED : null;
+      const col = idx === selected ? SEL : wet ?? (night ? NIGHTC : DAY)[cls] ?? DAY[4];
       const v = Cesium.ColorGeometryInstanceAttribute.toValue(col);
       for (const pid of partIds[idx]) primitive.getGeometryInstanceAttributes(pid).color = v;
     });
@@ -196,14 +233,17 @@ export async function loadHoiAnRoads(viewer, def) {
   repaint();
 
   return {
-    def, primitive,
+    def, primitive, features: feats,
     setVisible(on) { primitive.show = on; renderBurst(viewer, 500); },
     setOpacity() {},
     propsOf(id) {
       const p = { ...feats[id.idx].properties };
       p.name = p.name || `${p.highway} · ${p.code}`;
+      if (depths) p.depth_now_m = +Math.max(0, depths[id.idx]).toFixed(2);
       return p;
     },
+    /** Độ sâu ngập lớn nhất trên từng đoạn đường (m, theo thứ tự features) do mô phỏng tính; null = tắt. */
+    setDepths(arr) { depths = arr; repaint(); },
     highlight(id) { selected = id ? id.idx : null; repaint(); },
     setNight(on) { night = on; repaint(); },
     setLevel(wl) {
