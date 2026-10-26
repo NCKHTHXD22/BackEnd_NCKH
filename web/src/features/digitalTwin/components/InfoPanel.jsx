@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FaInfoCircle } from 'react-icons/fa';
 import { FIELDS, fmt, pick } from '../data/fields.js';
 import { PANEL, PANEL_HEAD, CloseButton } from './ui.jsx';
+import StationLive from './StationLive.jsx';
 import LakeModal from '../../../components/Map/LakeModal';
 import { getAdminToken } from '../../../services/auth';
 
@@ -12,12 +13,14 @@ export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, 
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const [tab, setTab] = useState('info');
-  useEffect(() => setTab('info'), [info?.props?.code]);
+  useEffect(() => setTab(info?.tab ?? 'info'), [info?.props?.code, info?.tab]);
   if (!info) return null;
   const { layer, props } = info;
   const fields = (FIELDS[layer.id] ?? []).filter(([k]) => props[k] != null && props[k] !== '');
-  const TABS = [['info', 'tabInfo'], ['live', 'tabLive'], ['fc', 'tabForecast']];
   const isLake = layer.id === 'reservoirs';
+  const isStation = layer.id === 'wl_stations' || layer.id === 'rain_stations';
+  // Chỉ hiện thẻ có nội dung: hồ chứa có cả hiện trạng và dự báo, trạm quan trắc có hiện trạng
+  const TABS = [['info', 'tabInfo'], ...(isLake || isStation ? [['live', 'tabLive']] : []), ...(isLake ? [['fc', 'tabForecast']] : [])];
   const wide = isLake && tab !== 'info';
   const isAdmin = !!getAdminToken();
   const lakeId = props.lake_id;
@@ -32,7 +35,7 @@ export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, 
         </div>
         <CloseButton onClick={onClose} label={t('digitalTwin.info.close')} />
       </div>
-      <div className="flex gap-1 px-3 pt-3">
+      <div className={`flex gap-1 px-3 pt-3 ${TABS.length < 2 ? 'hidden' : ''}`}>
         {TABS.map(([k, key]) => (
           <button key={k} onClick={() => setTab(k)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${tab === k ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700'}`}>
@@ -50,7 +53,8 @@ export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, 
                     <tr key={k} className="border-b border-slate-100 last:border-0">
                       <th className="text-left font-normal text-slate-500 py-1.5 pr-2 align-top w-[52%]">{t(`digitalTwin.field.${k}`)}</th>
                       <td className="py-1.5 font-medium text-slate-800">
-                        {fmt(props[k], lang)}{unit ? ` ${t(`digitalTwin.unit.${unit}`)}` : ''}
+                        {unit === 'enum' ? t(`digitalTwin.enum.${k}.${props[k]}`)
+                          : <>{fmt(props[k], lang)}{unit ? ` ${t(`digitalTwin.unit.${unit}`)}` : ''}</>}
                       </td>
                     </tr>
                   ))}
@@ -82,11 +86,7 @@ export default function InfoPanel({ info, related, onClose, onGoto, onOpenLake, 
             {layer.source && <p className="mt-3 text-[11px] text-slate-400">{t('digitalTwin.info.source', { src: pick(layer, 'source', lang) })}</p>}
           </>
         )}
-        {tab !== 'info' && !isLake && (
-          <p className="text-xs bg-blue-50 border-l-4 border-blue-400 text-slate-700 rounded px-2.5 py-2">
-            {t(tab === 'live' ? 'digitalTwin.info.liveSoon' : 'digitalTwin.info.forecastSoon')}
-          </p>
-        )}
+        {tab === 'live' && isStation && <StationLive layerId={layer.id} props={props} />}
         {wide && !lakeData && <p className="text-xs text-slate-500 animate-pulse-soft">{t('digitalTwin.info.loadingLake')}</p>}
         {wide && lakeData && (
           <div className="-mx-3 -mb-3 border-t border-slate-100">

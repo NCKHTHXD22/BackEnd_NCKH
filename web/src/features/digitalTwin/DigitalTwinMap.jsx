@@ -10,6 +10,8 @@ import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/ho
 import { loadDams } from './map/dams.js';
 import { loadFloodHand } from './map/floodHand.js';
 import { loadSimulation } from './map/simulation.js';
+import { loadRainStations, loadWaterStations } from './map/stations.js';
+import { loadForecast } from './map/forecast.js';
 import LayerPanel from './components/LayerPanel.jsx';
 import InfoPanel from './components/InfoPanel.jsx';
 import FloodPanel from './components/FloodPanel.jsx';
@@ -22,7 +24,10 @@ import mapApi from '../../api/mapApi';
 import useIsMobile from '../../hooks/useIsMobile';
 
 // Kiểu lớp → hàm nạp. Lớp mới có kiểu riêng thì đăng ký thêm ở đây.
-const LOADERS = { geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, dams: loadDams, flood_hand: loadFloodHand };
+const LOADERS = {
+  geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, dams: loadDams, flood_hand: loadFloodHand,
+  rain_stations: loadRainStations, wl_stations: loadWaterStations, forecast: loadForecast,
+};
 const CATALOG_URL = '/data/dt/layers.json';
 
 export default function DigitalTwinMap() {
@@ -78,8 +83,10 @@ export default function DigitalTwinMap() {
     viewer.__selectedHandle?.highlight?.(null);
     viewer.__selectedHandle = null;
     let h = picked?.layerId && handles.current[picked.layerId];
-    if (h?.redirect) {                     // bấm vào đập 3D → chọn hồ chứa tương ứng
+    let tab;
+    if (h?.redirect) {                     // bấm vào đập 3D, nhãn dự báo → chọn hồ chứa tương ứng (có thể mở sẵn một thẻ)
       const r = h.redirect(picked);
+      tab = r.tab;
       picked = handles.current[r.layerId]?.find(r.code) ?? null;
       h = picked && handles.current[r.layerId];
     }
@@ -91,7 +98,7 @@ export default function DigitalTwinMap() {
       setInfo({ layer: h.def, props: h.propsOf(picked), pickId: picked });
     } else {
       viewer.selectedEntity = picked;
-      setInfo({ layer: h.def, props: entityProps(picked) });
+      setInfo({ layer: h.def, props: entityProps(picked), tab });
     }
     viewer.scene.requestRender();
   }, []);

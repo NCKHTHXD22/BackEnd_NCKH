@@ -247,28 +247,61 @@
       "id": "rain_stations",
       "group": "Quan trắc",
       "name": "Trạm đo mưa",
-      "type": "pending",
-      "pending": "Lấy từ API backend (giai đoạn tích hợp)",
       "name_en": "Rain gauges",
-      "pending_en": "From the backend API (integration phase)"
+      "type": "rain_stations",
+      "visible": false,
+      "lazy": true,
+      "legend": [
+        { "color": "#e2e8f0", "label": "Không mưa", "label_en": "No rain" },
+        { "color": "#38bdf8", "label": "Dưới 10 mm", "label_en": "Below 10 mm" },
+        { "color": "#eab308", "label": "10–25 mm", "label_en": "10–25 mm" },
+        { "color": "#f97316", "label": "25–50 mm", "label_en": "25–50 mm" },
+        { "color": "#dc2626", "label": "50–100 mm", "label_en": "50–100 mm" },
+        { "color": "#7e22ce", "label": "Từ 100 mm", "label_en": "100 mm or more" },
+        { "color": "#94a3b8", "label": "Không có số liệu trong 6 giờ qua", "label_en": "No data in the last 6 hours" }
+      ],
+      "source": "vrain.vn qua API /rain-station (cập nhật mỗi giờ)",
+      "source_en": "vrain.vn via the /rain-station API (hourly)",
+      "accuracy": "Lượng mưa lũy kế theo vrain.vn; tự làm mới 10 phút/lần khi lớp đang bật",
+      "accuracy_en": "Accumulated rainfall as published by vrain.vn; refreshes every 10 minutes while shown"
     },
     {
       "id": "wl_stations",
       "group": "Quan trắc",
       "name": "Trạm thủy văn",
-      "type": "pending",
-      "pending": "Lấy từ API backend (giai đoạn tích hợp)",
       "name_en": "Hydrological stations",
-      "pending_en": "From the backend API (integration phase)"
+      "type": "wl_stations",
+      "visible": false,
+      "lazy": true,
+      "legend": [
+        { "color": "#22c55e", "label": "Dưới báo động I", "label_en": "Below alarm I" },
+        { "color": "#eab308", "label": "Báo động I", "label_en": "Alarm I" },
+        { "color": "#f97316", "label": "Báo động II", "label_en": "Alarm II" },
+        { "color": "#dc2626", "label": "Báo động III", "label_en": "Alarm III" },
+        { "color": "#3b82f6", "label": "Có số liệu, chưa có ngưỡng", "label_en": "Live level, no alarm thresholds" },
+        { "color": "#94a3b8", "label": "Không có số liệu trong 6 giờ qua", "label_en": "No data in the last 6 hours" }
+      ],
+      "source": "Trạm KTTV: ngưỡng báo động từ pctt.danang.gov.vn; trạm tự động: muangap, VRain (API /water-level)",
+      "source_en": "KTTV gauges: alarm levels from pctt.danang.gov.vn; automatic gauges: muangap, VRain (/water-level API)",
+      "accuracy": "Chấm lớn: trạm KTTV (hiện chưa có mực nước giờ công khai); chấm nhỏ: trạm tự động. Tọa độ trạm KTTV gần đúng",
+      "accuracy_en": "Large dots: KTTV gauges (no public hourly levels yet); small dots: automatic gauges. KTTV coordinates are approximate"
     },
     {
       "id": "forecast",
       "group": "Dự báo",
-      "name": "Dự báo lưu lượng 12 giờ",
-      "type": "pending",
-      "pending": "LSTM/XGBoost qua API (giai đoạn tích hợp)",
-      "name_en": "12-hour inflow forecast",
-      "pending_en": "LSTM/XGBoost via API (integration phase)"
+      "name": "Dự báo Q đến hồ (LSTM 12 giờ, XGBoost 24 giờ)",
+      "name_en": "Reservoir inflow forecast (LSTM 12 h, XGBoost 24 h)",
+      "type": "forecast",
+      "visible": false,
+      "lazy": true,
+      "legend": [
+        { "color": "#0f172a", "label": "Đỉnh Q đến dự báo của lần chạy mới nhất (↑ tăng, ↓ giảm so với hiện tại)", "label_en": "Forecast inflow peak of the latest run (↑ rising, ↓ falling vs now)" },
+        { "color": "#7c2d12", "label": "⚠ Hai mô hình lệch nhau quá 3 lần", "label_en": "⚠ Models disagree by more than 3×" }
+      ],
+      "source": "API /forecast-lstm, /forecast-xgb (chạy hằng giờ trên VPS); Q đến hiện tại: API inflowLake",
+      "source_en": "/forecast-lstm, /forecast-xgb APIs (hourly on the VPS); current inflow: inflowLake API",
+      "accuracy": "Dự báo từng mô hình, chưa gộp; bấm nhãn để xem chuỗi p10–p90 trong thẻ Dự báo của hồ",
+      "accuracy_en": "Per-model forecasts, not combined; click a label for the p10–p90 series in the reservoir's Forecast tab"
     },
     {
       "id": "flood_hand",
@@ -433,11 +466,24 @@
     {
       "id": "admin",
       "group": "Xã hội",
-      "name": "Ranh giới xã/phường",
-      "type": "pending",
-      "pending": "Cần bản đồ hành chính sau sáp nhập 2025",
-      "name_en": "Commune/ward boundaries",
-      "pending_en": "Needs post-2025 administrative boundaries"
+      "name": "Ranh giới xã/phường (sau sáp nhập 2025)",
+      "name_en": "Commune/ward boundaries (post-2025 merger)",
+      "type": "geojson",
+      "style": "admin",
+      "url": "/data/dt/admin_wards.geojson",
+      "labels": "ten_xa",
+      "labelFar": 60000,
+      "visible": false,
+      "lazy": true,
+      "legend": [
+        { "color": "#f472b6", "label": "Phường (23)", "label_en": "Ward (23)" },
+        { "color": "#a3e635", "label": "Xã (70)", "label_en": "Commune (70)" },
+        { "color": "#60a5fa", "label": "Đặc khu (1)", "label_en": "Special zone (1)" }
+      ],
+      "source": "bando.danang.gov.vn (Đà Nẵng Mới) – 94 đơn vị hành chính cấp xã từ 1/7/2025; diện tích, dân số theo nguồn",
+      "source_en": "bando.danang.gov.vn (Đà Nẵng Mới) – 94 commune-level units from 1 July 2025; area and population as published",
+      "accuracy": "Ranh giới giản lược ~10 m để hiển thị",
+      "accuracy_en": "Boundaries simplified to ~10 m for display"
     },
     {
       "id": "buildings",

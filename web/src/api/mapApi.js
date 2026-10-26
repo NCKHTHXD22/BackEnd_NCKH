@@ -3,6 +3,8 @@ import axiosClient from "./axiosClient";
 const mapApi = {
     // Get all rain stations
     getRainStations: () => axiosClient.get("/rain-station").then((res) => res.data),
+    // Lượng mưa lũy kế theo giờ của một trạm VRain, 24 giờ gần nhất
+    getRainHistory24h: (uuid) => axiosClient.get(`/rain-history/${uuid}/24h`).then((res) => res.data),
 
     // Get all water level stations
     getWaterLevelStations: () => axiosClient.get("/water-level").then((res) => res.data),

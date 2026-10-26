@@ -7,6 +7,7 @@ export const BRANCH_COLORS = {
   'Đắk Mi': '#e9c46a',
   'Sông Tranh': '#9b8bd4',
 };
+export const ADMIN_COLORS = { PHUONG: '#f472b6', XA: '#a3e635', DACKHU: '#60a5fa' };
 const css = c => Cesium.Color.fromCssColorString(c);
 const prop = (e, k) => e.properties?.[k]?.getValue();
 
@@ -46,6 +47,17 @@ const STYLES = {
     e.polyline.material = css('#3a86ff');
     return { line: 1 };
   },
+  // Ranh giới xã/phường sau sáp nhập (bước 24): nền nhạt theo loại đơn vị, viền vàng bám địa hình
+  admin(e) {
+    const c = css(ADMIN_COLORS[prop(e, 'loai_code')] ?? '#cbd5e1');
+    e.polygon.material = c.withAlpha(0.07);
+    e.polygon.outline = false;
+    const h = e.polygon.hierarchy.getValue();
+    e.polyline = new Cesium.PolylineGraphics({
+      positions: [...h.positions, h.positions[0]], width: 1.6, clampToGround: true, material: css('#fde047').withAlpha(0.9),
+    });
+    return { fill: 0.07, line: 0.9 };
+  },
   lakes(e) {
     e.polygon.material = css('#219ebc').withAlpha(0.8);
     e.polygon.outline = false;
@@ -83,6 +95,27 @@ export async function loadLayer(viewer, def) {
     e.layerId = def.id;
     base.set(e, STYLES[def.style]?.(e) ?? {});
   }
+  // Nhãn tên: một nhãn mỗi đối tượng (MultiPolygon tách thành nhiều entity) tại label_lon/label_lat tính sẵn trong pipeline
+  if (def.labels) {
+    const seen = new Set();
+    for (const e of [...ds.entities.values]) {
+      const code = prop(e, 'code'), lon = prop(e, 'label_lon'), lat = prop(e, 'label_lat');
+      if (seen.has(code) || lon == null) continue;
+      seen.add(code);
+      const l = ds.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(lon, lat),
+        label: {
+          text: prop(e, def.labels), font: '600 24px "Segoe UI", sans-serif', scale: 0.5,
+          fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.BLACK, outlineWidth: 5, style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, def.labelFar ?? 60000),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+        properties: e.properties,          // bấm vào nhãn = bấm vào đối tượng
+      });
+      l.layerId = def.id;
+    }
+  }
   ds.show = Boolean(def.visible);
   await viewer.dataSources.add(ds);
 
@@ -108,6 +141,7 @@ export async function loadLayer(viewer, def) {
 export function entityProps(e) {
   if (!e?.properties) return {};
   const out = {};
-  for (const k of e.properties.propertyNames) out[k] = e.properties[k].getValue();
+  // Thuộc tính khai báo với giá trị undefined vẫn có tên trong propertyNames nhưng không có Property
+  for (const k of e.properties.propertyNames) out[k] = e.properties[k]?.getValue();
   return out;
 }

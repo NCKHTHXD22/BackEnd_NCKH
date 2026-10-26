@@ -228,8 +228,17 @@ Làm theo thứ tự đợt. Cột "Điều kiện bắt đầu" là các việc
   - [ ] Xuất `Q(t)` cho mỗi nút của mạng 1.4
 - **Hoàn thành khi:** NSE/KGE trên trận kiểm định được ghi vào bảng đánh giá.
 
-### 3.3 Đánh giá AI trong điều kiện vận hành thật — ⬜
-- Phụ trách: · Bắt đầu: · Xong:
+### 3.3 Đánh giá AI trong điều kiện vận hành thật — 🟡 (sửa lỗi XGBoost production; chuỗi hạ du hindcast – `25_forecast_chain.py`)
+- Phụ trách: · Bắt đầu: 26/10/2026 · Xong:
+- **Kết quả 26/10/2026:**
+  - XGBoost production dự báo cao gấp ~14 lần Q đến thực đo (hồ 1, 2, 4; 45–48 giờ): mô hình học trên feature ĐÃ chuẩn hóa
+    (StandardScaler theo hồ của dataset v2) nhưng `main_api.py` đưa feature thô. Sửa: `config/feature_scalers.json`
+    (`export_feature_scalers.py`); thử lại 4 giờ phát báo × 3 hồ: MAE 224–508 → 10–32 m³/s. RF cùng lỗi, đã sửa (chưa deploy).
+    Kết quả đánh giá offline của XGBoost/RF (Excel) không bị ảnh hưởng – chỉ phần phục vụ sai.
+  - Chuỗi hạ du (dự báo ngược 2 trận 2025, 49 lần phát báo/trận): với thượng nguồn biết trước, MAE mực nước +24 h trận kiểm
+    định: Nông Sơn 0,83 m (giữ nguyên 2,90), Giao Thủy 0,60 (1,60), Ái Nghĩa 0,55 (1,31), Câu Lâu 0,35 (0,93); giữ nguyên Q
+    thượng nguồn chỉ hơn mốc giữ nguyên chút ít → giá trị nằm ở dự báo Q đến/Q xả. Quanh đỉnh, lệch thời gian diễn toán (−6 h /
+    +14 h, bước 20) làm bản đồ +18–24 h kém mốc giữ nguyên (CSI 0,57–0,65) → cần 3.2 (mưa – dòng chảy khu giữa).
 - **Mục đích:** tách "giỏi khi biết trước mưa" khỏi "dự báo thật với mưa dự báo" (RF/XGBoost huấn luyện với mưa thực đo dạng oracle).
 - **Phương pháp:** hindcast với bản dự báo mưa có tại thời điểm phát hành; NSE, KGE, sai số đỉnh, lệch thời điểm đỉnh theo hồ, trận, thời hạn 6/12/24/48/72 giờ.
 - **Công nghệ:** Python, Open-Meteo Historical Forecast API.
@@ -649,12 +658,14 @@ Chi tiết nguồn và mức ưu tiên xem sheet `4_Thong_tin_can_cung_cap` tron
 | Đặc tính xả, số liệu vận hành theo giờ các hồ | 4.1, 4.2 | Chủ hồ | ⬜ | ⬜ |
 | Mực nước triều Sơn Trà, Hội An | 5.3 | Đài KTTV | ⬜ | ⬜ |
 | Vết lũ, bản đồ ngập 2020, 2022 | 6.3 | BCH PCTT, xã/phường | ⬜ | ⬜ |
-| Ranh giới xã/phường mới, điểm sơ tán | 8.1, 8.2 | Sở NN&MT, xã/phường | ⬜ | ⬜ |
+| Ranh giới xã/phường mới, điểm sơ tán | 8.1, 8.2 | bando.danang.gov.vn (ranh giới); điểm sơ tán: xã/phường | ✅ | 🟡 94 xã/phường/đặc khu (`24_admin_boundaries.mjs`); chưa có điểm sơ tán |
+| **Mực nước giờ thời gian thực** 6 trạm KTTV hạ du | 3.3, 5.1, 8.3 (chạy chuỗi dự báo hằng giờ) | Đài KTTV / VNDMS | ⬜ | ⬜ chặn vận hành chuỗi dự báo hạ du |
 
 ## Nhật ký
 
 | Ngày | Việc | Kết quả | Commit / file |
 |---|---|---|---|
+| 26/10/2026 | Bản đồ 3D: lớp trạm đo mưa, trạm thủy văn (biểu đồ hiện trạng), dự báo Q đến hồ (LSTM/XGBoost, ⚠ khi lệch > 3 lần), ranh giới 94 xã/phường sau sáp nhập. Sửa lỗi XGBoost production thiếu chuẩn hóa feature (cao gấp ~14 lần); RF cùng lỗi. Chuỗi dự báo hạ du hindcast. Khóa route xóa dữ liệu không cần đăng nhập | 33/33 kiểm thử; XGBoost MAE 224–508 → 10–32 m³/s; chuỗi hạ du +24 h MAE 0,35–0,83 m (giữ nguyên 0,93–2,90) trận kiểm định | `map/stations.js`, `map/forecast.js`, `24_admin_boundaries.mjs`, `25_forecast_chain.py`, `XGBoost_Py_Backend/main_api.py`, `tests/routeAuth.test.js` |
 | 25/10/2026 | Mô phỏng diễn biến lũ theo giờ trên bản đồ 3D (thượng nguồn → sông → hạ du → nhà/đường) + "Dựng khu này" (OSM + Open Buildings + Nominatim trên trình duyệt) | Chạy được trên trình duyệt; Open Buildings khu 0,5 km² ≈ 2 MB/10 s; gói dữ liệu ~7 MB/trận | `map/simulation.js`, `components/SimulationHUD.jsx`, `builder/areaBuilder.js`, `23_sim_package.py` |
 | 25/10/2026 | Trận lũ thử đổi sang 10/2025 (hiệu chỉnh) + 11/2025 (kiểm định); ngập theo mực nước trạm đo; kiểm chứng diễn toán bằng mực nước; chạy lại QĐ 1865; mô hình triều Sơn Trà; thư viện kịch bản + tần suất; nạp 69.826 giá trị giờ 2025 vào CSDL; biểu đồ trạm (trang chủ), lớp ngập 3 nhóm (/ban-do-so) | Sai số độ sâu tại tháp +2,37 → −0,40 m; NSE mực nước 0,70–0,87; giảm đỉnh hồ 36–59 % (11/2025); triều RMSE 0,13 m; 29/29 kiểm thử, build web đạt, thử trên trình duyệt không lỗi | `digital_twin/scripts/18–22`, `stage_map.py`, `src/script/importStationLevels.js`, `web/src/components/Map/StationLevelChart.jsx` |
 | 25/10/2026 | Chuẩn hóa mực nước trạm KTTV từ `Documents/Data_MucNuoc` (51 file: VNDMS 2025, PCTT 2003–2019, MIKE dfs0, chuỗi liên tục, ngày 1976–2002); QC gắn cờ gai / điền sẵn / ngoài khoảng / trùng giờ; quy đổi mặt chuẩn Sơn Trà (−0,96 m) | 642.099 giá trị giờ dùng được, 10 trạm; đỉnh lũ khớp các trận 2007, 2009, 2013, 2017, 2025; trận 16–20/11/2025 đủ số liệu trạm + hồ → đề xuất thay trận kiểm định 2023 | `digital_twin/scripts/17_station_levels.py`, `Documents/Data_MucNuoc_ChuanHoa/` |

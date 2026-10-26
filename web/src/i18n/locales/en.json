@@ -477,8 +477,6 @@
       "gotoCatchment": "Show the reservoir's sub-catchment",
       "gotoReservoir": "Go to reservoir",
       "openLake": "Open reservoir operation panel",
-      "liveSoon": "Observed data (water level, inflow/outflow, rainfall) will appear here once the API is connected (phase 2).",
-      "forecastSoon": "12-hour inflow forecasts (LSTM/XGBoost, p10–p90 band) will appear here once the API is connected (phase 2).",
       "loadingLake": "Loading reservoir data…",
       "operationAdminOnly": "The reservoir operation panel (dam animation, operating advice) is for administrators – sign in to view it."
     },
@@ -551,7 +549,27 @@
       "flood_from_m": "Floods when water level reaches",
       "depth_now_m": "Flood depth in scenario",
       "highway": "Road type (OSM)",
-      "warning": "Data warning"
+      "warning": "Data warning",
+      "loai": "Unit type",
+      "sap_nhap": "Formed from (before 1 Jul 2025)",
+      "dtich_km2": "Area",
+      "dan_so": "Population",
+      "matdo_km2": "Population density",
+      "tru_so": "Office",
+      "ma_xa": "Administrative code",
+      "rain_mm": "Accumulated rainfall",
+      "rain_level": "Rain category",
+      "area": "Commune (VRain)",
+      "last_update": "Updated at",
+      "station_kind": "Station type",
+      "level_m": "Water level",
+      "alarm": "Alarm level",
+      "level_time": "Observed at",
+      "level1": "Alarm I",
+      "level2": "Alarm II",
+      "level3": "Alarm III",
+      "decision_level": "Operation decision level (Decision 1865)",
+      "location_note": "Location note"
     },
     "unit": {
       "m": "m",
@@ -559,7 +577,9 @@
       "km2": "km²",
       "m2": "m²",
       "mcm": "million m³",
-      "mw": "MW"
+      "mw": "MW",
+      "mm": "mm",
+      "perkm2": "people/km²"
     },
     "qualityHigh": "HD",
     "qualityStandard": "Standard",
@@ -643,6 +663,28 @@
       "osmFailed": "The OpenStreetMap (Overpass) servers are overloaded or not responding – the area was built from Open Buildings only (no roads, trees, water or names yet). Try rebuilding in a few minutes.",
       "rebuild": "Rebuild",
       "placeVia": "Place name"
+    },
+    "enum": {
+      "station_kind": {
+        "river_kttv": "KTTV gauge (data via Da Nang PCTT)",
+        "river_auto": "Automatic river gauge",
+        "reservoir_auto": "Automatic reservoir gauge"
+      },
+      "alarm": {
+        "0": "Below alarm I",
+        "1": "Alarm I",
+        "2": "Alarm II",
+        "3": "Alarm III"
+      }
+    },
+    "station": {
+      "noHourly": "KTTV gauge: pctt.danang.gov.vn currently publishes alarm levels only, no hourly levels. The chart has data for the two 2025 flood events (VNDMS data loaded).",
+      "stale": "No data from this station in the last 6 hours.",
+      "rainTitle": "Hourly accumulated rainfall – last 24 hours",
+      "rainEmpty": "No data in the last 24 hours."
+    },
+    "fc": {
+      "label": "Inflow now {{now}} m³/s – forecast peak"
     }
   }
 }

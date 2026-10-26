@@ -477,8 +477,6 @@
       "gotoCatchment": "Xem lưu vực bộ phận của hồ",
       "gotoReservoir": "Đến hồ chứa",
       "openLake": "Mở bảng vận hành hồ",
-      "liveSoon": "Số liệu thực đo (mực nước, lưu lượng đến/xả, mưa) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2).",
-      "forecastSoon": "Dự báo lưu lượng 12 giờ (LSTM/XGBoost, dải p10–p90) sẽ hiển thị ở đây khi kết nối API (giai đoạn 2).",
       "loadingLake": "Đang tải số liệu hồ…",
       "operationAdminOnly": "Bảng vận hành hồ (mô phỏng đập, khuyến nghị vận hành) dành cho tài khoản quản trị – đăng nhập để xem."
     },
@@ -551,7 +549,27 @@
       "flood_from_m": "Bắt đầu ngập khi mực nước đạt",
       "depth_now_m": "Độ sâu ngập theo kịch bản",
       "highway": "Loại đường (OSM)",
-      "warning": "Cảnh báo dữ liệu"
+      "warning": "Cảnh báo dữ liệu",
+      "loai": "Loại đơn vị",
+      "sap_nhap": "Hình thành từ (trước 1/7/2025)",
+      "dtich_km2": "Diện tích",
+      "dan_so": "Dân số",
+      "matdo_km2": "Mật độ dân số",
+      "tru_so": "Trụ sở",
+      "ma_xa": "Mã đơn vị hành chính",
+      "rain_mm": "Lượng mưa lũy kế",
+      "rain_level": "Cấp mưa",
+      "area": "Xã (theo VRain)",
+      "last_update": "Cập nhật lúc",
+      "station_kind": "Loại trạm",
+      "level_m": "Mực nước",
+      "alarm": "Cấp báo động",
+      "level_time": "Thời điểm đo",
+      "level1": "Báo động I",
+      "level2": "Báo động II",
+      "level3": "Báo động III",
+      "decision_level": "Mực nước quyết định vận hành (QĐ 1865)",
+      "location_note": "Ghi chú tọa độ"
     },
     "unit": {
       "m": "m",
@@ -559,7 +577,9 @@
       "km2": "km²",
       "m2": "m²",
       "mcm": "triệu m³",
-      "mw": "MW"
+      "mw": "MW",
+      "mm": "mm",
+      "perkm2": "người/km²"
     },
     "qualityHigh": "HD",
     "qualityStandard": "Tiêu chuẩn",
@@ -643,6 +663,28 @@
       "osmFailed": "Máy chủ OpenStreetMap (Overpass) quá tải hoặc không trả lời – khu chỉ dựng từ Open Buildings (chưa có đường, cây, sông hồ, tên công trình). Thử dựng lại sau ít phút.",
       "rebuild": "Dựng lại",
       "placeVia": "Tên khu"
+    },
+    "enum": {
+      "station_kind": {
+        "river_kttv": "Trạm KTTV (số liệu qua PCTT Đà Nẵng)",
+        "river_auto": "Trạm tự động trên sông",
+        "reservoir_auto": "Trạm tự động tại hồ"
+      },
+      "alarm": {
+        "0": "Dưới báo động I",
+        "1": "Báo động I",
+        "2": "Báo động II",
+        "3": "Báo động III"
+      }
+    },
+    "station": {
+      "noHourly": "Trạm KTTV: pctt.danang.gov.vn hiện chỉ công bố ngưỡng báo động, chưa có mực nước giờ. Biểu đồ có số liệu khi chọn hai trận lũ 2025 (số liệu VNDMS đã nạp).",
+      "stale": "Trạm không gửi số liệu trong 6 giờ qua.",
+      "rainTitle": "Lượng mưa lũy kế theo giờ – 24 giờ qua",
+      "rainEmpty": "Chưa có số liệu trong 24 giờ qua."
+    },
+    "fc": {
+      "label": "Q đến hiện tại {{now}} m³/s – đỉnh dự báo"
     }
   }
 }
