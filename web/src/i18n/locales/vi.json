@@ -494,12 +494,16 @@
       "groups": {
         "stage": "Theo mực nước trạm đo",
         "flow": "Theo lưu lượng xả hồ",
-        "scenario": "Kịch bản"
+        "scenario": "Kịch bản",
+        "forecast": "Dự báo (LSTM)"
       },
       "envelope": "Bao ngập lớn nhất (không theo thời gian)",
       "returnPeriod": "Câu Lâu: chu kỳ lặp lại ≈ {{years}} năm",
       "note_stage": "Mặt nước nội suy từ mực nước giờ đo tại Nông Sơn, Giao Thủy, Ái Nghĩa, Câu Lâu, Hội An, Cẩm Lệ, trừ DEM 30 m (lệch mặt chuẩn hiệu chỉnh bằng tháp VRain). Kiểm định trận 11/2025: sai số độ sâu −0,4 m. Chưa tính vùng không có trạm (Túy Loan, Hòa Tiến), ngập đô thị do mưa, đê và cống.",
-      "note_scenario": "Kịch bản dựng từ mực nước đỉnh các trạm (lũ lịch sử) hoặc mức báo động – cùng phương pháp bản đồ theo mực nước trạm. Đỉnh các trạm không cùng lúc nên đây là bao ngập lớn nhất; chu kỳ lặp lại từ 19 năm số liệu, chỉ để tham khảo."
+      "note_scenario": "Kịch bản dựng từ mực nước đỉnh các trạm (lũ lịch sử) hoặc mức báo động – cùng phương pháp bản đồ theo mực nước trạm. Đỉnh các trạm không cùng lúc nên đây là bao ngập lớn nhất; chu kỳ lặp lại từ 19 năm số liệu, chỉ để tham khảo.",
+      "maxForecast": "Lớn nhất trong 24 giờ tới",
+      "issued": "Phát báo {{time}} · LSTM {{scenario}} · {{min}}–{{max}} giờ đầu theo mô hình, sau đó tới +{{total}} giờ giữ nguyên Q đến",
+      "note_forecast": "Chuỗi dự báo: Q đến các hồ theo LSTM → Q xả theo quy tắc giả định (giữ Q xả hiện tại; hồ có bảng Z-V chạm MNDBT thì xả bằng Q đến; hồ nhỏ xả bằng Q đến) → diễn toán Muskingum-Cunge → mực nước trạm suy từ Q (chưa hiệu chỉnh theo số đo vì chưa có mực nước giờ thời gian thực của trạm KTTV; khi nước thấp không dưới mức thấp thường gặp) → mặt nước nội suy trừ DEM 30 m. Mưa: Open-Meteo. Kết quả chụp lúc chạy 26_forecast_package.py – chạy lại để cập nhật."
     },
     "flood": {
       "eyebrow": "Khu thí điểm Hội An · Kịch bản",
@@ -622,7 +626,18 @@
         "follow_inflow": "Xả theo Q đến",
         "cooperate": "Phối hợp"
       },
-      "methodNote": "Phương pháp và giới hạn của bản đồ ngập"
+      "methodNote": "Phương pháp và giới hạn của bản đồ ngập",
+      "titleForecast": "Dự báo diễn biến 24 giờ tới",
+      "fcNow": "Lúc phát báo",
+      "fcPast": "Đã qua {{h}} giờ",
+      "fcLead": "Dự báo +{{h}} giờ",
+      "upstreamHintForecast": "Trước lúc phát báo: số đo. Sau đó: Q đến theo LSTM; Q xả, mực nước hồ theo quy tắc giả định.",
+      "forecastNote": "dự báo – xem ghi chú phương pháp ở thanh thời gian",
+      "fcPhase": {
+        "model": "Q đến theo LSTM {{scenario}}",
+        "partial": "LSTM {{scenario}} – một số hồ đã hết tầm mô hình, giữ nguyên Q đến",
+        "hold": "Ngoài tầm LSTM – Q đến giữ nguyên, lũ tiếp tục truyền về hạ du"
+      }
     },
     "area": {
       "button": "Dựng khu này",
@@ -684,7 +699,10 @@
       "rainEmpty": "Chưa có số liệu trong 24 giờ qua."
     },
     "fc": {
-      "label": "Q đến hiện tại {{now}} m³/s – đỉnh dự báo"
-    }
+      "label": "Q đến hiện tại {{now}} m³/s – đỉnh {{h}} giờ tới:",
+      "at": "lúc {{time}}"
+    },
+    "forecastButton": "Dự báo 24 giờ",
+    "forecastHint": "Chạy diễn biến 24 giờ tới theo dự báo Q đến LSTM: hồ → sông → trạm → ngập"
   }
 }

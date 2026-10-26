@@ -494,12 +494,16 @@
       "groups": {
         "stage": "From gauged water levels",
         "flow": "From reservoir releases",
-        "scenario": "Scenarios"
+        "scenario": "Scenarios",
+        "forecast": "Forecast (LSTM)"
       },
       "envelope": "Maximum flood envelope (not time-resolved)",
       "returnPeriod": "Câu Lâu: return period ≈ {{years}} years",
       "note_stage": "Water surface interpolated from hourly gauged levels at Nông Sơn, Giao Thủy, Ái Nghĩa, Câu Lâu, Hội An and Cẩm Lệ, minus the 30 m DEM (datum offset calibrated on VRain towers). Validation (Nov 2025): depth error −0.4 m. Ungauged areas (Túy Loan, Hòa Tiến), rain-driven urban flooding, dikes and culverts are not represented.",
-      "note_scenario": "Scenario built from gauge peak levels (historical floods) or alarm levels, using the gauged-level method. Gauge peaks are not simultaneous, so this is a maximum envelope; return periods come from 19 years of data and are indicative only."
+      "note_scenario": "Scenario built from gauge peak levels (historical floods) or alarm levels, using the gauged-level method. Gauge peaks are not simultaneous, so this is a maximum envelope; return periods come from 19 years of data and are indicative only.",
+      "maxForecast": "Maximum over the next 24 h",
+      "issued": "Issued {{time}} · LSTM {{scenario}} · first {{min}}–{{max}} h from the model, then inflow held to +{{total}} h",
+      "note_forecast": "Forecast chain: reservoir inflow from LSTM → release by an assumed rule (keep the current release; reservoirs with a Z-V table release inflow once at normal water level; small reservoirs pass inflow) → Muskingum-Cunge routing → gauge levels from flow (not corrected to observations because KTTV gauges have no real-time hourly levels; at low water not below the usual low level) → interpolated water surface minus 30 m DEM. Rain: Open-Meteo. Snapshot taken when 26_forecast_package.py ran – rerun to update."
     },
     "flood": {
       "eyebrow": "Hoi An pilot · Scenario",
@@ -622,7 +626,18 @@
         "follow_inflow": "Pass inflow",
         "cooperate": "Cooperate"
       },
-      "methodNote": "Flood-map method and limitations"
+      "methodNote": "Flood-map method and limitations",
+      "titleForecast": "Forecast for the next 24 hours",
+      "fcNow": "Issue time",
+      "fcPast": "{{h}} h ago",
+      "fcLead": "Forecast +{{h}} h",
+      "upstreamHintForecast": "Before issue time: observations. After: inflow from LSTM; release and lake level by an assumed rule.",
+      "forecastNote": "forecast – see the method note on the timeline",
+      "fcPhase": {
+        "model": "Inflow from LSTM {{scenario}}",
+        "partial": "LSTM {{scenario}} – some reservoirs past the model horizon, inflow held",
+        "hold": "Beyond the LSTM horizon – inflow held, the flood keeps travelling downstream"
+      }
     },
     "area": {
       "button": "Build this area",
@@ -684,7 +699,10 @@
       "rainEmpty": "No data in the last 24 hours."
     },
     "fc": {
-      "label": "Inflow now {{now}} m³/s – forecast peak"
-    }
+      "label": "Inflow now {{now}} m³/s – peak in next {{h}} h:",
+      "at": "at {{time}}"
+    },
+    "forecastButton": "24 h forecast",
+    "forecastHint": "Run the next 24 hours from the LSTM inflow forecast: reservoirs → rivers → gauges → flooding"
   }
 }

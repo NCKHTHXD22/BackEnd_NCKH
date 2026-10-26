@@ -289,19 +289,19 @@
     {
       "id": "forecast",
       "group": "Dự báo",
-      "name": "Dự báo Q đến hồ (LSTM 12 giờ, XGBoost 24 giờ)",
-      "name_en": "Reservoir inflow forecast (LSTM 12 h, XGBoost 24 h)",
+      "name": "Dự báo Q đến hồ 12 giờ (LSTM)",
+      "name_en": "12-hour reservoir inflow forecast (LSTM)",
       "type": "forecast",
       "visible": false,
       "lazy": true,
       "legend": [
-        { "color": "#0f172a", "label": "Đỉnh Q đến dự báo của lần chạy mới nhất (↑ tăng, ↓ giảm so với hiện tại)", "label_en": "Forecast inflow peak of the latest run (↑ rising, ↓ falling vs now)" },
-        { "color": "#7c2d12", "label": "⚠ Hai mô hình lệch nhau quá 3 lần", "label_en": "⚠ Models disagree by more than 3×" }
+        { "color": "#0f172a", "label": "Đỉnh Q đến dự báo (P50) và P90 của lần chạy LSTM mới nhất", "label_en": "Forecast inflow peak (P50) and P90 of the latest LSTM run" },
+        { "color": "#9a3412", "label": "↑ Đỉnh dự báo cao hơn Q đến hiện tại trên 20 %", "label_en": "↑ Forecast peak more than 20 % above current inflow" }
       ],
-      "source": "API /forecast-lstm, /forecast-xgb (chạy hằng giờ trên VPS); Q đến hiện tại: API inflowLake",
-      "source_en": "/forecast-lstm, /forecast-xgb APIs (hourly on the VPS); current inflow: inflowLake API",
-      "accuracy": "Dự báo từng mô hình, chưa gộp; bấm nhãn để xem chuỗi p10–p90 trong thẻ Dự báo của hồ",
-      "accuracy_en": "Per-model forecasts, not combined; click a label for the p10–p90 series in the reservoir's Forecast tab"
+      "source": "API /forecast-lstm (LSTM chạy hằng giờ trên VPS); Q đến hiện tại: API inflowLake",
+      "source_en": "/forecast-lstm API (LSTM runs hourly on the VPS); current inflow: inflowLake API",
+      "accuracy": "Bấm nhãn để xem chuỗi p10–p90 trong thẻ Dự báo của hồ. Diễn biến cả lưu vực theo dự báo: nút “Dự báo 24 giờ” trên thanh công cụ",
+      "accuracy_en": "Click a label for the p10–p90 series in the reservoir's Forecast tab. Basin-wide forecast run: the “24 h forecast” toolbar button"
     },
     {
       "id": "flood_hand",
@@ -438,6 +438,22 @@
           "group": "scenario",
           "name": "Mọi trạm ở mức báo động III",
           "name_en": "All gauges at alarm level III"
+        },
+        {
+          "id": "forecast_p50",
+          "dir": "forecast_p50",
+          "url": "/data/dt/flood_forecast/",
+          "group": "forecast",
+          "name": "24 giờ tới · LSTM kỳ vọng (P50)",
+          "name_en": "Next 24 h · LSTM expected (P50)"
+        },
+        {
+          "id": "forecast_p90",
+          "dir": "forecast_p90",
+          "url": "/data/dt/flood_forecast/",
+          "group": "forecast",
+          "name": "24 giờ tới · LSTM kịch bản cao (P90)",
+          "name_en": "Next 24 h · LSTM high scenario (P90)"
         }
       ],
       "purpose": "illustrative",

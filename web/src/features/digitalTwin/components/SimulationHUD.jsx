@@ -8,6 +8,8 @@ import { ROAD_DEPTH_STOPS } from '../hoian/hoian.js';
 const HOUSE_COLORS = ['#9be7ff', '#3fa9f5', '#1f6fd1', '#7b3fe4', '#e63946'];   // DEPTH_STOPS của hoian.js
 const HOUSE_LABELS = ['< 0,5 m', '0,5–1 m', '1–2 m', '2–3 m', '> 3 m'];
 const ROAD_LABELS = ['0,15–0,3 m', '0,3–0,5 m', '0,5–1 m', '> 1 m'];
+// pha của gói dự báo: đã qua (đo + diễn toán) · theo LSTM · một số hồ hết tầm LSTM · ngoài tầm LSTM (giữ nguyên Q đến)
+const FC_PHASE_CLASS = { past: 'bg-slate-600', model: 'bg-violet-600', partial: 'bg-violet-500', hold: 'bg-amber-600' };
 
 /** Số nhà ngập theo độ sâu + km đường ngập theo mức nguy hiểm (Hội An hoặc khu tự dựng). */
 function Impact({ imp, t, fmt }) {
@@ -53,17 +55,28 @@ export default function SimulationHUD({ snap, hoianReady, onBuildHoian, onFlyHoi
   const rain = snap.rain_mm ?? 0;
   const rainLabel = rain >= 10 ? t('digitalTwin.sim.rainHeavy') : rain >= 3 ? t('digitalTwin.sim.rainModerate') : rain > 0.2 ? t('digitalTwin.sim.rainLight') : t('digitalTwin.sim.rainNone');
   const imp = snap.impact;
+  const fc = snap.forecast;              // chỉ có khi chạy gói dự báo theo LSTM
 
   return (
     <>
-      {/* thời gian + mưa */}
+      {/* thời gian + mưa (+ giờ so với lúc phát báo khi chạy dự báo) */}
       <div className={`absolute ${isMobile ? 'top-[4.5rem] left-2 right-2' : 'top-[4.6rem] left-1/2 -translate-x-1/2'} z-[1000] pointer-events-none`}>
         <div className="mx-auto w-fit flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-900/80 text-white shadow-lg animate-fade-in">
+          {fc && (
+            <span className={`text-[11px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ${FC_PHASE_CLASS[fc.phase]}`}>
+              {fc.lead === 0 ? t('digitalTwin.sim.fcNow') : fc.lead < 0 ? t('digitalTwin.sim.fcPast', { h: -fc.lead }) : t('digitalTwin.sim.fcLead', { h: fc.lead })}
+            </span>
+          )}
           <span className="text-sm font-semibold tabular-nums">{time}</span>
           <span className={`flex items-center gap-1.5 text-xs ${rain >= 3 ? 'text-sky-300' : 'text-slate-300'}`}>
             <FaCloudRain className={rain >= 3 ? 'animate-pulse' : ''} /> {fmt(rain, 1)} mm/{t('digitalTwin.sim.hour')} · {rainLabel}
           </span>
         </div>
+        {fc && fc.phase !== 'past' && (
+          <p className="mx-auto mt-1 w-fit text-[11px] text-white bg-slate-900/70 rounded-full px-3 py-0.5">
+            {t(`digitalTwin.sim.fcPhase.${fc.phase}`, { scenario: fc.scenario })}
+          </p>
+        )}
       </div>
 
       {!isMobile && (
@@ -72,7 +85,7 @@ export default function SimulationHUD({ snap, hoianReady, onBuildHoian, onFlyHoi
             <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2"><FaMountain className="text-emerald-600" /> {t('digitalTwin.sim.upstream')}</h3>
             <button onClick={onFlyUpstream} title={t('digitalTwin.sim.flyUpstream')} className="p-1.5 rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-700"><FaPlane /></button>
           </div>
-          <p className="text-[10.5px] text-slate-500 mb-1.5">{t('digitalTwin.sim.upstreamHint')}</p>
+          <p className="text-[10.5px] text-slate-500 mb-1.5">{t(fc ? 'digitalTwin.sim.upstreamHintForecast' : 'digitalTwin.sim.upstreamHint')}</p>
           <div className="space-y-1.5">
             {shown.map(l => {
               const trend = l.q_in != null && l.q_in_prev3 != null ? l.q_in - l.q_in_prev3 : 0;   // so với 3 giờ trước
@@ -102,7 +115,7 @@ export default function SimulationHUD({ snap, hoianReady, onBuildHoian, onFlyHoi
               {allLakes ? t('digitalTwin.sim.showLess') : t('digitalTwin.sim.showAll', { n: lakes.length })}
             </button>
           )}
-          <p className="mt-2 text-[10.5px] text-slate-500 leading-snug">↓ {t('digitalTwin.sim.qIn')} · ↑ {t('digitalTwin.sim.qOut')} (m³/s) · {t('digitalTwin.sim.noForecast')}</p>
+          <p className="mt-2 text-[10.5px] text-slate-500 leading-snug">↓ {t('digitalTwin.sim.qIn')} · ↑ {t('digitalTwin.sim.qOut')} (m³/s) · {t(fc ? 'digitalTwin.sim.forecastNote' : 'digitalTwin.sim.noForecast')}</p>
         </div>
       )}
 

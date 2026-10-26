@@ -7,7 +7,8 @@ import { demOffset } from '../hoian/hoian.js';
 //   hạ du         trạm KTTV: mực nước + màu theo cấp báo động
 //   Hội An        mặt nước 3D đặt ĐÚNG cao độ (địa hình tự che phần cao hơn mặt nước → nhà bị nước ngập chân),
 //                 nhà/đường tô theo độ sâu tại chỗ
-// Dữ liệu: /data/dt/sim/<trận>/ do digital_twin/scripts/23_sim_package.py tạo (số liệu đo xem lại, không phải dự báo).
+// Dữ liệu: /data/dt/sim/<trận>/ do digital_twin/scripts/23_sim_package.py tạo (số liệu đo xem lại) hoặc
+// /data/dt/sim/forecast_<p50|p90>/ do 26_forecast_package.py tạo (dự báo 24 giờ tới theo LSTM, có mục `forecast`).
 
 export const MODE_COLOR = {
   cut: '#dc2626', maintain: '#f59e0b', lower: '#2563eb', lower_to_pre_flood: '#2563eb', safety: '#7c3aed',
@@ -387,7 +388,17 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
     }
 
     if (hg) scheduleHoian(h, opts);
-    return { hour: i, time: sim.time[i], rain_mm: rain, lakes, stations, impact: lastImpact };
+    return { hour: i, time: sim.time[i], rain_mm: rain, lakes, stations, impact: lastImpact, forecast: forecastPhase(i) };
+  }
+
+  /** Gói dự báo (26_forecast_package.py): giờ so với lúc phát báo và pha – đã qua, theo LSTM (mọi hồ / một số hồ còn
+   *  trong tầm mô hình), ngoài tầm LSTM (Q đến giữ nguyên). null với gói xem lại trận lũ. */
+  function forecastPhase(i) {
+    const f = sim.forecast;
+    if (!f) return null;
+    const lead = i - f.issue_index;
+    const phase = lead <= 0 ? 'past' : lead <= f.model_horizon_min_h ? 'model' : lead <= f.model_horizon_h ? 'partial' : 'hold';
+    return { lead, phase, scenario: f.scenario_label, issue: f.issue_time };
   }
 
   // Phát nhanh (4×) đổi giờ nhanh hơn lượt tính Hội An (55 nghìn nhà + mặt nước) → không xếp hàng mọi giờ, chỉ giữ giờ mới nhất
@@ -487,7 +498,7 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
   let areaWater = null, lastArea = null;
 
   return {
-    sim, times: sim.time, hours: n, floodWindow: sim.flood_window, notes: sim.notes,
+    sim, times: sim.time, hours: n, floodWindow: sim.flood_window, notes: sim.notes, forecast: sim.forecast ?? null,
     setHour,
     get method() { return method; },
     setVisible(on) {

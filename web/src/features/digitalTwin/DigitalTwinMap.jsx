@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem, FaCube } from 'react-icons/fa';
+import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem, FaCube, FaCloudShowersHeavy } from 'react-icons/fa';
 import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, setQuality, BASEMAPS } from './map/viewer.js';
 import { loadLayer, entityProps } from './map/layers.js';
 import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/hoian.js';
@@ -252,7 +252,8 @@ export default function DigitalTwinMap() {
     setSim(null); setSimSnap(null);
   }, []);
   const onSimEvent = async ev => {
-    const method = ev?.group === 'stage' ? 'stage' : ev?.group === 'flow' ? 'flow' : null;
+    // gói dự báo (26_forecast_package.py) dựng mặt nước theo mực nước trạm suy từ Q → cùng phương án 'stage'
+    const method = ev?.group === 'stage' || ev?.group === 'forecast' ? 'stage' : ev?.group === 'flow' ? 'flow' : null;
     if (!method || !ev.dir) { stopSim(); return; }
     if (simRef.current?.dir === ev.dir) { simRef.current.method = method; return; }
     stopSim();
@@ -281,6 +282,15 @@ export default function DigitalTwinMap() {
       setSimSnap(snap);
       if (!hudShown.current && !isMobile) { hudShown.current = true; setShowLayers(false); }   // nhường chỗ cho bảng thượng nguồn
     }
+  };
+  // Nút "Dự báo 24 giờ": bật lớp ngập, chọn gói dự báo LSTM mới nhất, nhìn toàn lưu vực (hồ thượng nguồn → hạ du)
+  const [floodRequest, setFloodRequest] = useState(null);
+  const openForecast = async () => {
+    setFloodRequest({ id: 'forecast_p50', at: Date.now() });
+    const h = handles.current.flood_hand ?? await ensureLayer('flood_hand').catch(() => null);
+    if (!h || !viewerRef.current) return;
+    h.setVisible(true); patch('flood_hand', { visible: true });
+    flyHome(viewerRef.current);
   };
   const buildHoian = async () => {
     await Promise.all([ensureLayer('hoian_buildings'), ensureLayer('hoian_roads')]);
@@ -347,6 +357,10 @@ export default function DigitalTwinMap() {
       {/* Thanh công cụ trên cùng */}
       <div className="absolute top-3 left-16 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1000] flex gap-2 overflow-x-auto p-1.5 rounded-2xl bg-white/85 backdrop-blur border border-white/60 shadow-lg shadow-slate-900/10">
         <button onClick={openHoiAn} className={`${PILL_BTN} ${PILL_PRIMARY}`}><FaWater /> {t('digitalTwin.hoian')}</button>
+        <button onClick={openForecast} title={t('digitalTwin.forecastHint')}
+          className={`${PILL_BTN} ${sim?.forecast ? PILL_ON : PILL_IDLE}`}>
+          <FaCloudShowersHeavy className="text-violet-600" /> {t('digitalTwin.forecastButton')}
+        </button>
         <button onClick={() => { setAreaOpen(v => !v); setShowLayers(false); }} className={`${PILL_BTN} ${areaOpen ? PILL_ON : PILL_IDLE}`}>
           <FaCube className="text-orange-500" /> {t('digitalTwin.area.button')}
         </button>
@@ -387,7 +401,7 @@ export default function DigitalTwinMap() {
       {handFlood && (   // bọc ngoài để căn giữa: hiệu ứng fade-in của panel ghi đè transform
         <div className={timelinePos}>
           <FloodTimelinePanel handle={handles.current.flood_hand} onClose={() => onToggle('flood_hand', false)}
-            sim={sim ? { hours: sim.hours, times: sim.times } : null} onEvent={onSimEvent} onHour={runSimHour} />
+            sim={sim ? { hours: sim.hours, times: sim.times } : null} onEvent={onSimEvent} onHour={runSimHour} request={floodRequest} />
         </div>
       )}
       {handFlood && simSnap && (

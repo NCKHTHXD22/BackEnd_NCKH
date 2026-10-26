@@ -6,7 +6,7 @@ import { PANEL, CloseButton } from './ui.jsx';
 const FLOW_NODES = [['ST-NONGSON', 'Nông Sơn'], ['ST-GIAOTHUY', 'Giao Thủy'], ['ST-THANHMY', 'Thành Mỹ'], ['J-VUGIA-END', 'cuối Vu Gia']];
 const LEVEL_STATIONS = [['NONGSON', 'Nông Sơn'], ['GIAOTHUY', 'Giao Thủy'], ['AINGHIA', 'Ái Nghĩa'], ['CAULAU', 'Câu Lâu']];
 const DEPTH_LEGEND = [['#b4dcff', '< 0,5 m'], ['#6eb4f5', '0,5–1 m'], ['#3282dc', '1–2 m'], ['#1950be', '2–4 m'], ['#0a2882', '> 4 m']];
-const GROUPS = ['stage', 'flow', 'scenario'];
+const GROUPS = ['forecast', 'stage', 'flow', 'scenario'];
 const SPEEDS = [['1×', 600], ['2×', 300], ['4×', 150]];   // ms cho mỗi giờ của trận
 
 /** Khung ảnh ngập mới nhất không muộn hơn thời điểm ts (chuỗi ISO giờ VN cùng định dạng); −1 nếu chưa có khung nào. */
@@ -19,8 +19,9 @@ const frameAt = (frames, ts) => {
 /** Thanh thời gian cho lớp ngập theo trận lũ / kịch bản.
  *  - Có `sim` (trận lũ có dữ liệu mô phỏng): chạy theo TỪNG GIỜ của trận – ảnh ngập, mặt nước 3D, hồ, trạm, mưa và
  *    bảng thông tin (SimulationHUD) đổi cùng lúc qua `onHour`.
- *  - Không có `sim` (kịch bản, đang tải): chạy theo khung ảnh như trước. */
-export default function FloodTimelinePanel({ handle, onClose, onEvent, sim = null, onHour, className = '' }) {
+ *  - Không có `sim` (kịch bản, đang tải): chạy theo khung ảnh như trước.
+ *  `request` ({ id }) – chuyển sang mục đó từ bên ngoài (nút "Dự báo 24 giờ" trên thanh công cụ). */
+export default function FloodTimelinePanel({ handle, onClose, onEvent, sim = null, onHour, request = null, className = '' }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'en' ? 'en-GB' : 'vi-VN';
   const [eventId, setEventId] = useState(handle.events[0].id);
@@ -70,6 +71,7 @@ export default function FloodTimelinePanel({ handle, onClose, onEvent, sim = nul
       }
     }, useSim ? ms : 700);
   };
+  useEffect(() => { if (request && request.id !== eventId) changeEvent(request.id); }, [request]); // eslint-disable-line react-hooks/exhaustive-deps
   const toggle = () => (playing ? stop() : start(speed));
   const changeSpeed = ms => { setSpeed(ms); if (playing) start(ms); };
 
@@ -81,7 +83,11 @@ export default function FloodTimelinePanel({ handle, onClose, onEvent, sim = nul
   const evName = e => (i18n.language === 'en' ? e.name_en ?? e.name : e.name);
   const rp = meta.return_period_years?.CAULAU;
   const fmtTime = s => new Date(`${s.slice(0, 19)}+07:00`).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const label = useSim ? (hour == null ? t('digitalTwin.hand.maxAll') : fmtTime(sim.times[hour])) : cur ? fmtTime(cur.time) : t('digitalTwin.hand.maxAll');
+  const fc = group === 'forecast' ? meta.forecast : null;
+  const lead = fc && hour != null ? hour - fc.issue_index : null;          // giờ so với lúc phát báo
+  const label = useSim
+    ? (hour == null ? t(fc ? 'digitalTwin.hand.maxForecast' : 'digitalTwin.hand.maxAll') : `${fmtTime(sim.times[hour])}${lead != null ? ` (${lead > 0 ? '+' : ''}${lead} h)` : ''}`)
+    : cur ? fmtTime(cur.time) : t('digitalTwin.hand.maxAll');
   const beforeWindow = useSim && hour != null && simFrame < 0;
 
   return (
@@ -92,7 +98,7 @@ export default function FloodTimelinePanel({ handle, onClose, onEvent, sim = nul
             {t('digitalTwin.hand.eyebrow')}
             <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded px-1">{t('digitalTwin.layers.illustrative')}</span>
           </p>
-          <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2"><FaWater className="text-blue-600" /> {t(useSim ? 'digitalTwin.sim.title' : 'digitalTwin.hand.title')}</h2>
+          <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2"><FaWater className="text-blue-600" /> {t(fc ? 'digitalTwin.sim.titleForecast' : useSim ? 'digitalTwin.sim.title' : 'digitalTwin.hand.title')}</h2>
         </div>
         <div className="flex items-center gap-1.5">
           <select value={eventId} onChange={e => changeEvent(e.target.value)} aria-label={t('digitalTwin.hand.event')}
@@ -137,6 +143,12 @@ export default function FloodTimelinePanel({ handle, onClose, onEvent, sim = nul
         </p>
       )}
       {beforeWindow && <p className="mt-1 text-[11px] text-slate-500">{t('digitalTwin.sim.beforeWindow')}</p>}
+      {fc && (
+        <p className="mt-1 text-[11px] text-violet-800">
+          {t('digitalTwin.hand.issued', { time: fmtTime(fc.issue_time), scenario: fc.scenario_label,
+                                           min: fc.model_horizon_min_h, max: fc.model_horizon_h, total: fc.horizon_h })}
+        </p>
+      )}
 
       <div className="mt-2 grid grid-cols-2 sm:grid-cols-6 gap-1.5 text-center">
         <div className="rounded-lg bg-blue-50 px-2 py-1">
