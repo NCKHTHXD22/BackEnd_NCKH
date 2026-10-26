@@ -14,6 +14,7 @@ lai chinh xac cac ham fetch/feature-engineering da proven trong
 LSTM_Py_Backend/lstm_service (data_fetcher.py) + LSTM_Py_Backend_v2
 (feature_engineering.py, them temperature/relative_humidity/pressure).
 """
+import json
 import os
 import sys
 import numpy as np
@@ -41,7 +42,23 @@ from features.feature_engineering import (
 app = FastAPI(title="XGBoost Inflow Prediction API", version="1.0.0")
 
 ARTIFACT_DIR = "artifacts/xgb"
+SCALER_PATH = "config/feature_scalers.json"   # tao bang export_feature_scalers.py
 _model_cache: dict = {}   # (horizon_idx, quantile) -> xgb.Booster
+_scalers: dict = {}       # ten ho (HO_A_VUONG) -> (mean, scale), 47 feature hindcast
+
+
+def load_scalers() -> dict:
+    """StandardScaler theo tung ho cua dataset v2 -- model hoc tren feature DA chuan hoa."""
+    if _scalers:
+        return _scalers
+    with open(SCALER_PATH, encoding="utf-8") as f:
+        data = json.load(f)
+    if data["features"] != FEATURES:
+        raise RuntimeError(f"{SCALER_PATH} khong khop FEATURES -- chay lai export_feature_scalers.py")
+    for key, s in data["reservoirs"].items():
+        _scalers[key] = (np.asarray(s["mean"], dtype=np.float32), np.asarray(s["scale"], dtype=np.float32))
+    print(f"[OK] Loaded feature scalers cho {len(_scalers)} ho.")
+    return _scalers
 
 
 def load_models() -> dict:
@@ -65,13 +82,14 @@ def load_models() -> dict:
 async def startup_event():
     try:
         load_models()
-    except FileNotFoundError as e:
+        load_scalers()
+    except (FileNotFoundError, RuntimeError) as e:
         print(f"[WARN] {e} -- /predict-xgb se loi 500 cho toi khi co artifacts.")
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "models_loaded": len(_model_cache)}
+    return {"status": "ok", "models_loaded": len(_model_cache), "scalers_loaded": len(_scalers)}
 
 
 class PredictRequest(BaseModel):
@@ -141,6 +159,16 @@ async def predict_xgb(req: PredictRequest):
                 df[f] = 0.0
         last_row = df[FEATURES].iloc[-1].values.astype(np.float32)
         last_row = np.nan_to_num(last_row, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # ── 2a. Chuan hoa giong luc train: v2_X_hindcast.npy da qua StandardScaler fit
+        # rieng tung ho (LSTM_Py_Backend_v2/data/dataset_builder.py buoc 9). Thieu buoc
+        # nay -> du bao gap ~14 lan thuc do (loi truoc 26/10/2026). X_nwp KHONG chuan hoa.
+        scaler_key = info["name"].replace(" ", "_")
+        scalers = load_scalers()
+        if scaler_key not in scalers:
+            raise RuntimeError(f"Thieu feature scaler cho {scaler_key} trong {SCALER_PATH}")
+        mean, scale = scalers[scaler_key]
+        last_row = (last_row - mean) / scale
 
         # ── 2b. Du bao Open-Meteo thay the 6 "future feature" oracle luc train
         # (rain_fc/3h/6h/24h, temp_fc, wind_fc) -- xem data/data_fetcher.py::
