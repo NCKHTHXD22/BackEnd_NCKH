@@ -6,7 +6,7 @@ Phương pháp (kiểu bản đồ ngập quốc gia NOAA/OWP – Zheng và cs. 
   2) Đường quan hệ tổng hợp (SRC) cho từng đoạn: với mực nước h, từ HAND tính diện tích mặt nước, thể tích →
      mặt cắt ướt A = V/L, chu vi ướt P ≈ diện tích đáy/L → Q = (1/n)·A·R^(2/3)·S^(1/2).
   3) Lưu lượng từng đoạn theo giờ: thượng nguồn lấy từ diễn toán (bước 13); đồng bằng chia theo tỷ lệ GIẢ ĐỊNH
-     (SPLIT bên dưới – chưa có số liệu đo). Q → h theo SRC → độ sâu = h − HAND.
+     (SPLIT trong network_flows.py – chưa có số liệu đo). Q → h theo SRC → độ sâu = h − HAND.
 Giới hạn: DEM 30 m (mặt nước sông trên DEM coi là đáy), không tính triều, đê, dòng chảy 2D, vận tốc → kết quả là
 MỨC CƠ SỞ (minh họa có cơ sở vật lý), sẽ thay bằng mô hình 2D (6.2).
 
@@ -16,7 +16,6 @@ MỨC CƠ SỞ (minh họa có cơ sở vật lý), sẽ thay bằng mô hình 2
 Chạy:   digital_twin/.venv/Scripts/python digital_twin/scripts/14_hand.py
 """
 import json
-from collections import defaultdict
 
 import geopandas as gpd
 import numpy as np
@@ -30,6 +29,8 @@ from scipy import ndimage
 from shapely.geometry import shape
 
 from config import CRS_METRIC, OUT as WEB_OUT, ROOT, WORK, block_mean, hoian_window
+import network_flows
+from network_flows import SPLIT
 
 COMPUTE = ROOT / "data" / "compute"
 # Vùng tính: từ Nông Sơn – Thành Mỹ xuống biển (WGS84)
@@ -43,13 +44,7 @@ SMOOTH_CELLS = 10     # làm trơn mặt nước đồng bằng (σ = 10 ô = 30
 OUT_SCALE = 2         # ảnh xuất 60 m/điểm ảnh cho nhẹ
 FRAME_EVERY_H = 3
 KEY_NODES = ["ST-NONGSON", "ST-GIAOTHUY", "ST-THANHMY", "J-VUGIA-END"]   # lưu lượng ghi kèm mỗi khung
-# Tỷ lệ chia nước tại phân lưu – GIẢ ĐỊNH, cần hiệu chỉnh bằng số liệu đo/mô hình 1D
-SPLIT = {
-    "J-VUGIA-END": {"Sông Quảng Huế": 0.5, "Sông Ái Nghĩa": 0.5},
-    "D01": {"Sông Yên": 0.6, "Sông Quá Giáng": 0.4},
-    "D10": {"Sông La Thọ": 0.5, "Sông Quá Giáng": 0.5},
-    "D12": {"Sông Vĩnh Điện": 0.15, "Sông Thu Bồn": 0.85},
-}
+# Tỷ lệ chia nước tại phân lưu (SPLIT) – GIẢ ĐỊNH, khai báo trong network_flows.py (dùng chung với gói dự báo)
 
 net = json.loads((COMPUTE / "network.json").read_text(encoding="utf-8"))
 nodes = {n["id"]: n for n in net["nodes"]}
@@ -153,47 +148,10 @@ def stage_of(r, qv):
 
 # ------------------------------------------------------------------ lưu lượng từng đoạn theo giờ
 def reach_flows(flow_nodes, n):
-    """Thượng nguồn: Q của nút hạ lưu đoạn (hoặc thượng lưu nếu hạ lưu là đập). Đồng bằng: chia theo SPLIT."""
-    q = {}
-    for r in in_region:
-        e = r["edge"]
-        if e["source"] == "d8":
-            key = e["to"] if (e["to"] in flow_nodes and not e["to"].startswith("HO-")) else e["from"]
-            q[r["idx"]] = np.array(flow_nodes.get(key, np.zeros(n)))
-    # đồng bằng: duyệt theo thứ tự dòng chảy
-    out_of = defaultdict(list)
-    for r in in_region:
-        if r["edge"]["source"] == "osm":
-            out_of[r["edge"]["from"]].append(r)
-    node_q = {k: np.array(v) for k, v in flow_nodes.items() if k in ("ST-GIAOTHUY", "J-VUGIA-END")}
-    vg_spec = None
-    if "ST-THANHMY" in flow_nodes:                                    # nguồn sông nhánh (Túy Loan): mô-đun dòng chảy Thành Mỹ
-        vg_spec = np.array(flow_nodes["ST-THANHMY"]) / nodes["ST-THANHMY"]["area_km2"]
-    for nid, n_ in nodes.items():
-        if n_["type"] == "source" and vg_spec is not None:
-            node_q[nid] = vg_spec * (n_.get("area_km2") or 0)
-    pending = set(r["idx"] for r in in_region if r["edge"]["source"] == "osm")
-    inflow = defaultdict(lambda: np.zeros(n))
-    for _ in range(50):
-        progressed = False
-        for nid in list(out_of):
-            ins = [r for r in in_region if r["edge"]["source"] == "osm" and r["edge"]["to"] == nid]
-            if any(r["idx"] in pending for r in ins):
-                continue
-            total = node_q.get(nid, np.zeros(n)) + inflow[nid]
-            outs = [r for r in out_of[nid] if r["idx"] in pending]
-            if not outs:
-                continue
-            fr = SPLIT.get(nid, {})
-            for r in outs:
-                share = fr.get(r["edge"]["river"], 1.0 / len(out_of[nid]))
-                q[r["idx"]] = total * share
-                inflow[r["edge"]["to"]] = inflow[r["edge"]["to"]] + q[r["idx"]]
-                pending.discard(r["idx"])
-                progressed = True
-        if not progressed:
-            break
-    return q, pending
+    """Lưu lượng các đoạn trong vùng tính theo mã đoạn (network_flows.reach_flows)."""
+    q, pending = network_flows.reach_flows(flow_nodes, n, nodes, [r["edge"] for r in in_region])
+    idx_of = {(r["edge"]["from"], r["edge"]["to"]): r["idx"] for r in in_region}
+    return {idx_of[k]: v for k, v in q.items()}, {idx_of[k] for k in pending}
 
 
 # ------------------------------------------------------------------ chạy từng trận, xuất khung ảnh

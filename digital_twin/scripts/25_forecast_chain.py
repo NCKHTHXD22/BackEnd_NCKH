@@ -26,74 +26,22 @@ Chạy:   PYTHONUTF8=1 digital_twin/.venv/Scripts/python digital_twin/scripts/25
 """
 import importlib
 import json
-import pickle
 
 import numpy as np
 import pandas as pd
-import utide
 
-from config import ROOT, WORK
 import stage_map as sm
+from forecast_core import (COMPUTE, EVENTS, NAMES, RATING, ROUTED, SHIFT, STATIONS, TIDAL, calibration_tidal, design,
+                           load_event, observed, rating, tide)
 
 r13 = importlib.import_module("13_routing")
 
-COMPUTE = ROOT / "data" / "compute"
-LEAD_H, EVERY_H, MAX_LAG, FILL_H = 24, 3, 12, 3
+LEAD_H, EVERY_H, FILL_H = 24, 3, 3
 REPORT_LEADS = [1, 3, 6, 12, 18, 24]
 MAP_LEADS = [0, 6, 12, 18, 24]
 MAP_ISSUE_BEFORE_PEAK_H = 12          # bản đồ dự báo phát lúc 12 giờ trước đỉnh Giao Thủy
 WET_M = 0.1
 SCENARIOS = ["perfect", "hold_up", "persist"]
-ROUTED = {"NONGSON": "ST-NONGSON", "GIAOTHUY": "ST-GIAOTHUY", "THANHMY": "ST-THANHMY", "AINGHIA": "J-VUGIA-END"}
-TIDAL = {"CAULAU": ["GIAOTHUY", "AINGHIA"], "HOIAN": ["GIAOTHUY", "AINGHIA"], "CAMLE": ["AINGHIA", "GIAOTHUY"]}
-STATIONS = [*ROUTED, *TIDAL]
-
-EVENTS = json.loads((COMPUTE / "events.json").read_text(encoding="utf-8"))
-NAMES = {k: f"{k}_{EVENTS[k]['peak_st2'][:10].replace('-', '')}" for k in ("calibration", "validation")}
-RATING = {c: v["rating_H=a+b*Q^c"] for c, v in
-          json.loads((COMPUTE / "routing_check.json").read_text(encoding="utf-8"))["stations"].items()}
-SHIFT = json.loads((COMPUTE / "hand_stage_calibration.json").read_text(encoding="utf-8"))["value"]
-lv = pd.read_parquet(WORK / "station_levels_hourly.parquet")
-lv = lv[(lv.qc_flag == "ok") & lv.station_code.isin(STATIONS)]
-with open(WORK / "tide_sontra_coef.pkl", "rb") as f:
-    TIDE = pickle.load(f)
-
-
-def rating(q, a, b, c):
-    return a + b * np.power(np.maximum(q, 1.0), c)
-
-
-def observed(idx):
-    cols = {}
-    for code in STATIONS:
-        s = lv[lv.station_code == code].drop_duplicates("t_vn").set_index("t_vn").level_m.sort_index()
-        cols[code] = s.reindex(idx)
-    return pd.DataFrame(cols, index=idx)
-
-
-def tide(idx):
-    return pd.Series(utide.reconstruct((idx - pd.Timedelta(hours=7)).to_pydatetime(), TIDE, verbose=False).h, index=idx)
-
-
-def design(inputs, td, lag):
-    """Ma trận hồi quy: mực nước trạm thượng lưu trễ `lag` giờ + triều + hằng số."""
-    return pd.concat([inputs.shift(lag), td.rename("tide")], axis=1).assign(one=1.0)
-
-
-def fit_tidal(obs, td):
-    out = {}
-    for tgt, ups in TIDAL.items():
-        best = None
-        for lag in range(MAX_LAG + 1):
-            X = design(obs[ups], td, lag)
-            d = pd.concat([X, obs[tgt].rename("y")], axis=1).dropna()
-            beta = np.linalg.lstsq(d[X.columns].to_numpy(), d.y.to_numpy(), rcond=None)[0]
-            r2 = 1 - float(((d.y - d[X.columns].to_numpy() @ beta) ** 2).sum() / ((d.y - d.y.mean()) ** 2).sum())
-            if best is None or r2 > best["r2"]:
-                best = {"inputs": ups, "lag_h": lag, "coef": dict(zip(X.columns, np.round(beta, 4).tolist())),
-                        "beta": beta, "r2": round(r2, 3), "n": len(d)}
-        out[tgt] = best
-    return out
 
 
 def scenario_event(ev, i0, n, scenario):
@@ -145,16 +93,14 @@ def wet_mask(levels):
 
 report = {"method": __doc__.split("\n\n")[1].strip(), "events": NAMES, "lead_h": LEAD_H, "issue_every_h": EVERY_H,
           "datum_shift_m": SHIFT, "rating_from_step20": {c: RATING[c] for c in ROUTED}}
-cal_ev = json.loads((COMPUTE / "events" / f"{NAMES['calibration']}.json").read_text(encoding="utf-8"))
-cal_idx = pd.DatetimeIndex(pd.to_datetime(cal_ev["time"]))
-tidal = fit_tidal(observed(cal_idx), tide(cal_idx))
+tidal = calibration_tidal()
 report["tidal_regression"] = {k: {kk: vv for kk, vv in v.items() if kk != "beta"} for k, v in tidal.items()}
 for k, v in tidal.items():
     print(f"Hồi quy {k}: trễ {v['lag_h']} giờ, R² {v['r2']}, hệ số {v['coef']}")
 
 report["skill"], report["flood_map"] = {}, {}
 for key, name in NAMES.items():
-    ev = json.loads((COMPUTE / "events" / f"{name}.json").read_text(encoding="utf-8"))
+    ev = load_event(key)
     idx = pd.DatetimeIndex(pd.to_datetime(ev["time"]))
     obs, td = observed(idx), tide(idx)
     obs_past = obs.ffill(limit=FILL_H)                 # chỉ lấp bằng giá trị trước đó – không nhìn trước

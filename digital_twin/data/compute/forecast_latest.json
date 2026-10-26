@@ -1,0 +1,67 @@
+{
+ "issue_time": "2026-10-26T11:00:00",
+ "model": "LSTM (production, /forecast-lstm)",
+ "horizon_h": 24,
+ "scenarios": {
+  "p50": {
+   "label": "kỳ vọng (P50)",
+   "station_peaks_m": {
+    "NONGSON": 5.1,
+    "GIAOTHUY": 0.51,
+    "THANHMY": 11.49,
+    "AINGHIA": 2.97,
+    "CAULAU": -0.04,
+    "HOIAN": 0.46,
+    "CAMLE": 0.34
+   },
+   "flood_peak_km2": 0.1,
+   "lake_inflow_peak": {
+    "Sông Tranh 4": 266.59,
+    "Sông Bung 6": 160.04,
+    "Sông Bung 5": 99.44,
+    "Sông Tranh 3": 72.73,
+    "Sông Tranh 2": 68.51,
+    "Đắk Mi 4": 52.93,
+    "Sông Bung 4A": 44.31,
+    "Sông Côn 2": 26.46,
+    "Đắk Mi 4C": 55.12,
+    "A Vương": 35.83,
+    "Za Hung": 27.76,
+    "Đắk Mi 3": 44.27,
+    "Sông Bung 4": 37.58,
+    "Sông Bung 2": 8.66,
+    "Khe Diên": 4.83
+   }
+  },
+  "p90": {
+   "label": "kịch bản cao (P90)",
+   "station_peaks_m": {
+    "NONGSON": 5.12,
+    "GIAOTHUY": 0.6,
+    "THANHMY": 11.85,
+    "AINGHIA": 4.09,
+    "CAULAU": 0.02,
+    "HOIAN": 0.51,
+    "CAMLE": 0.34
+   },
+   "flood_peak_km2": 0.2,
+   "lake_inflow_peak": {
+    "Sông Bung 6": 492.59,
+    "Sông Tranh 4": 463.79,
+    "Sông Bung 5": 320.08,
+    "Sông Bung 4A": 243.02,
+    "Sông Tranh 3": 199.55,
+    "Sông Côn 2": 110.96,
+    "Đắk Mi 4C": 112.43,
+    "Sông Tranh 2": 111.18,
+    "Đắk Mi 3": 97.45,
+    "Đắk Mi 4": 92.88,
+    "Za Hung": 78.26,
+    "Sông Bung 4": 70.66,
+    "A Vương": 66.05,
+    "Sông Bung 2": 31.65,
+    "Khe Diên": 12.89
+   }
+  }
+ }
+}

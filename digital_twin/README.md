@@ -74,9 +74,14 @@ node src/script/importStationLevels.js 2025-01-01 2025-12-31 [--dry-run]       #
 digital_twin/.venv/Scripts/python digital_twin/scripts/23_sim_package.py     # gói dữ liệu "Mô phỏng diễn biến lũ" cho bản đồ 3D
 node digital_twin/scripts/24_admin_boundaries.mjs [--refresh]                  # ranh giới 94 xã/phường sau sáp nhập (bando.danang.gov.vn)
 digital_twin/.venv/Scripts/python digital_twin/scripts/25_forecast_chain.py   # chuỗi dự báo hồ → trạm → ngập: hindcast 1–24 giờ (3.3, 5.1, 6.1)
+digital_twin/.venv/Scripts/python digital_twin/scripts/26_forecast_package.py # dự báo 24 giờ tới theo LSTM (đọc API production) → gói mô phỏng "Dự báo 24 giờ"
+                                                                               # chạy lại rồi push để cập nhật bản đồ (kết quả là ảnh chụp lúc chạy)
 
 Thứ tự khi có số liệu mới: 17 → 09 → 11 → 12 → 13 → 14 → 16_tower_export → 16 → 18 → 19 → 16 --model=stage → 20 → 21 → 22 → 23 → 25.
-Script gọi `node` bên trong (13, 25) cần `PYTHONUTF8=1` trên Windows.
+Script gọi `node` bên trong (13, 23, 25, 26) cần `PYTHONUTF8=1` trên Windows.
+Mô-đun dùng chung: `network_flows.py` (lưu lượng từng đoạn sông, tỷ lệ chia phân lưu – 14, 26), `sim_common.py` (lưới,
+mã hóa mặt nước, hồ/trạm/sông của gói mô phỏng – 23, 26), `forecast_core.py` (mực nước trạm từ Q + triều – 25, 26),
+`stage_map.py` (mặt nước từ mực nước trạm – 19, 22, 25, 26).
 ```
 
 Bước 4 cần WhiteboxTools: lần đầu thư viện `whitebox` tự tải về; nếu mạng chặn, tải
