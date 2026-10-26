@@ -26,6 +26,7 @@ import subprocess
 from collections import defaultdict
 
 import numpy as np
+from scipy.signal import lfilter
 
 from config import ROOT
 
@@ -119,12 +120,8 @@ def route(inflow, length_km, slope):
     c0, c1, c2 = (dt - 2 * ks * x) / den, (dt + 2 * ks * x) / den, (2 * ks * (1 - x) - dt) / den
     fine_t = np.arange(len(inflow) * SUB) / SUB
     q = np.interp(fine_t, np.arange(len(inflow)), inflow)
-    for _ in range(m):
-        out = np.empty_like(q)
-        out[0] = q[0]
-        for i in range(1, len(q)):
-            out[i] = c0 * q[i] + c1 * q[i - 1] + c2 * out[i - 1]
-        q = out
+    for _ in range(m):   # out[i] = c0·q[i] + c1·q[i−1] + c2·out[i−1], out[0] = q[0]
+        q = lfilter([c0, c1], [1.0, -c2], q, zi=[q[0] * (1 - c0)])[0]
     return q[::SUB].copy(), {"K_h": round(k / 3600, 2), "X": round(x, 2), "celerity_ms": round(c, 2), "sub_reaches": m}
 
 
@@ -144,9 +141,10 @@ def metrics(sim, obs, real):
 
 
 # ------------------------------------------------------------------ chạy từng trận
-summary = []
-for f in sorted((COMPUTE / "events").glob("*.json")):
-    ev = json.loads(f.read_text(encoding="utf-8"))
+def run_event(ev, mass=None):
+    """Diễn toán một trận (dict như data/compute/events/<trận>.json) → dict kết quả (lưu lượng mọi nút, kiểm chứng).
+    mass: kết quả kiểm tra cân bằng khối lượng có sẵn – chế độ dự báo (bước 25) dùng lại kết quả của cả trận đo để
+    tập hồ "tin cậy" không đổi theo giờ phát báo; None thì tự tính."""
     L = {int(k): v for k, v in ev["lakes"].items()}
     n = len(ev["time"])
     arr = lambda rid, k: np.array([np.nan if x is None else x for x in L[rid][k]], float)
@@ -159,7 +157,9 @@ for f in sorted((COMPUTE / "events").glob("*.json")):
     flow, inflow_pred, notes, reach_par = {}, {}, [], {}
 
     # Kiểm tra cân bằng khối lượng: so với các hồ thượng lưu gần nhất ĐÃ tin cậy (bỏ qua hồ không cân bằng)
-    trusted, mass = set(), {}
+    given = mass is not None
+    mass = dict(mass or {})
+    trusted = {k for k, v in mass.items() if v["balanced"]}
 
     def upstream_trusted(d):
         res, stack, seen = [], [d], set()
@@ -175,7 +175,7 @@ for f in sorted((COMPUTE / "events").glob("*.json")):
                     stack.append(u)
         return res
 
-    for nid in ORDER:
+    for nid in ([] if given else ORDER):
         if not nid.startswith("HO-") or int(nid[3:]) not in L:
             continue
         rid = int(nid[3:])
@@ -251,19 +251,28 @@ for f in sorted((COMPUTE / "events").glob("*.json")):
            "checks": checks, "mass_balance": mass,
            "flow": {k: [round(float(x), 1) for x in v] for k, v in flow.items()},
            "stations_unverified": {k: round(float(np.max(flow[k])), 0) for k in ("ST-THANHMY", "ST-NONGSON", "ST-GIAOTHUY", "J-VUGIA-END")}}
-    name = f.stem
-    (OUT / f"{name}.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    return out
 
-    print(f"\n=== {name} ===")
-    for w in notes:
-        print("  ghi chú:", w)
-    print(f"  {'hồ':16s} {'khu giữa':>9s} {'NSE':>6s} {'KGE':>6s} {'đỉnh đo':>8s} {'đỉnh tính':>9s} {'sai đỉnh':>8s} {'lệch giờ':>8s} {'%thật':>6s}")
-    for nid, c in sorted(checks.items(), key=lambda kv: -kv[1]["NSE"]):
-        print(f"  {c['lake'][:16]:16s} {c['local_share_pct']:>8d}% {c['NSE']:>6.2f} {c['KGE']:>6.2f} {c['peak_obs']:>8.0f} "
-              f"{c['peak_sim']:>9.0f} {c['peak_err_pct']:>7.1f}% {c['peak_lag_h']:>8d} {c['real_pct']:>5d}%")
-    print("  Đỉnh tính (CHƯA kiểm chứng – thiếu số liệu trạm):", out["stations_unverified"])
-    summary.append((name, checks))
 
-print("\nTham số đoạn (trận cuối):")
-for k, p in list(reach_par.items())[:12]:
-    print(" ", k, p)
+if __name__ == "__main__":
+    summary = []
+    for f in sorted((COMPUTE / "events").glob("*.json")):
+        ev = json.loads(f.read_text(encoding="utf-8"))
+        out = run_event(ev)
+        notes, checks, reach_par = out["notes"], out["checks"], out["reach_params"]
+        name = f.stem
+        (OUT / f"{name}.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+
+        print(f"\n=== {name} ===")
+        for w in notes:
+            print("  ghi chú:", w)
+        print(f"  {'hồ':16s} {'khu giữa':>9s} {'NSE':>6s} {'KGE':>6s} {'đỉnh đo':>8s} {'đỉnh tính':>9s} {'sai đỉnh':>8s} {'lệch giờ':>8s} {'%thật':>6s}")
+        for nid, c in sorted(checks.items(), key=lambda kv: -kv[1]["NSE"]):
+            print(f"  {c['lake'][:16]:16s} {c['local_share_pct']:>8d}% {c['NSE']:>6.2f} {c['KGE']:>6.2f} {c['peak_obs']:>8.0f} "
+                  f"{c['peak_sim']:>9.0f} {c['peak_err_pct']:>7.1f}% {c['peak_lag_h']:>8d} {c['real_pct']:>5d}%")
+        print("  Đỉnh tính (CHƯA kiểm chứng – thiếu số liệu trạm):", out["stations_unverified"])
+        summary.append((name, checks))
+
+    print("\nTham số đoạn (trận cuối):")
+    for k, p in list(reach_par.items())[:12]:
+        print(" ", k, p)

@@ -72,8 +72,11 @@ digital_twin/.venv/Scripts/python digital_twin/scripts/22_flood_scenarios.py  # 
 node src/script/importStationLevels.js 2025-01-01 2025-12-31 [--dry-run]       # nạp mực nước giờ vào CSDL (ghi production)
 
 digital_twin/.venv/Scripts/python digital_twin/scripts/23_sim_package.py     # gói dữ liệu "Mô phỏng diễn biến lũ" cho bản đồ 3D
+node digital_twin/scripts/24_admin_boundaries.mjs [--refresh]                  # ranh giới 94 xã/phường sau sáp nhập (bando.danang.gov.vn)
+digital_twin/.venv/Scripts/python digital_twin/scripts/25_forecast_chain.py   # chuỗi dự báo hồ → trạm → ngập: hindcast 1–24 giờ (3.3, 5.1, 6.1)
 
-Thứ tự khi có số liệu mới: 17 → 09 → 11 → 12 → 13 → 14 → 16_tower_export → 16 → 18 → 19 → 16 --model=stage → 20 → 21 → 22 → 23.
+Thứ tự khi có số liệu mới: 17 → 09 → 11 → 12 → 13 → 14 → 16_tower_export → 16 → 18 → 19 → 16 --model=stage → 20 → 21 → 22 → 23 → 25.
+Script gọi `node` bên trong (13, 25) cần `PYTHONUTF8=1` trên Windows.
 ```
 
 Bước 4 cần WhiteboxTools: lần đầu thư viện `whitebox` tự tải về; nếu mạng chặn, tải

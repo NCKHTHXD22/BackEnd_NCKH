@@ -1,0 +1,1244 @@
+{
+ "method": "Câu hỏi: đứng ở giờ t0 trong trận lũ, chuỗi hồ → diễn toán → mực nước trạm → vùng ngập dự báo 1–24 giờ tới tốt đến đâu,\nvà sai số nằm ở thượng nguồn hay hạ du?",
+ "events": {
+  "calibration": "calibration_20251029",
+  "validation": "validation_20251118"
+ },
+ "lead_h": 24,
+ "issue_every_h": 3,
+ "datum_shift_m": -0.9,
+ "rating_from_step20": {
+  "NONGSON": [
+   -10.0,
+   4.9486,
+   0.1894
+  ],
+  "GIAOTHUY": [
+   -10.0,
+   3.2838,
+   0.196
+  ],
+  "THANHMY": [
+   5.3604,
+   1.6332,
+   0.289
+  ],
+  "AINGHIA": [
+   -10.0,
+   6.092,
+   0.1329
+  ]
+ },
+ "tidal_regression": {
+  "CAULAU": {
+   "inputs": [
+    "GIAOTHUY",
+    "AINGHIA"
+   ],
+   "lag_h": 5,
+   "coef": {
+    "GIAOTHUY": 0.7113,
+    "AINGHIA": -0.1464,
+    "tide": 0.1996,
+    "one": -0.191
+   },
+   "r2": 0.98,
+   "n": 194
+  },
+  "HOIAN": {
+   "inputs": [
+    "GIAOTHUY",
+    "AINGHIA"
+   ],
+   "lag_h": 9,
+   "coef": {
+    "GIAOTHUY": 0.5807,
+    "AINGHIA": -0.3421,
+    "tide": 0.4448,
+    "one": 0.7534
+   },
+   "r2": 0.935,
+   "n": 193
+  },
+  "CAMLE": {
+   "inputs": [
+    "AINGHIA",
+    "GIAOTHUY"
+   ],
+   "lag_h": 12,
+   "coef": {
+    "AINGHIA": -0.23,
+    "GIAOTHUY": 0.4365,
+    "tide": 0.4695,
+    "one": 0.537
+   },
+   "r2": 0.801,
+   "n": 166
+  }
+ },
+ "skill": {
+  "calibration": {
+   "issues": 49,
+   "first_issue": "2025-10-26 10:00:00",
+   "last_issue": "2025-11-01 10:00:00",
+   "in_sample": true,
+   "stations": {
+    "NONGSON": {
+     "+1h": {
+      "mae_perfect_m": 0.193,
+      "mae_hold_up_m": 0.197,
+      "mae_persist_m": 0.197,
+      "bias_perfect_m": -0.041,
+      "bias_hold_up_m": -0.046,
+      "skill_perfect": 0.02,
+      "skill_hold_up": 0.0,
+      "n": 46
+     },
+     "+3h": {
+      "mae_perfect_m": 0.476,
+      "mae_hold_up_m": 0.473,
+      "mae_persist_m": 0.534,
+      "bias_perfect_m": -0.062,
+      "bias_hold_up_m": -0.067,
+      "skill_perfect": 0.11,
+      "skill_hold_up": 0.12,
+      "n": 49
+     },
+     "+6h": {
+      "mae_perfect_m": 0.866,
+      "mae_hold_up_m": 0.86,
+      "mae_persist_m": 1.009,
+      "bias_perfect_m": -0.141,
+      "bias_hold_up_m": -0.123,
+      "skill_perfect": 0.14,
+      "skill_hold_up": 0.15,
+      "n": 49
+     },
+     "+12h": {
+      "mae_perfect_m": 1.471,
+      "mae_hold_up_m": 1.601,
+      "mae_persist_m": 1.801,
+      "bias_perfect_m": -0.33,
+      "bias_hold_up_m": -0.101,
+      "skill_perfect": 0.18,
+      "skill_hold_up": 0.11,
+      "n": 49
+     },
+     "+18h": {
+      "mae_perfect_m": 1.97,
+      "mae_hold_up_m": 2.195,
+      "mae_persist_m": 2.38,
+      "bias_perfect_m": -0.469,
+      "bias_hold_up_m": 0.037,
+      "skill_perfect": 0.17,
+      "skill_hold_up": 0.08,
+      "n": 49
+     },
+     "+24h": {
+      "mae_perfect_m": 2.404,
+      "mae_hold_up_m": 2.548,
+      "mae_persist_m": 2.748,
+      "bias_perfect_m": -0.524,
+      "bias_hold_up_m": 0.201,
+      "skill_perfect": 0.13,
+      "skill_hold_up": 0.07,
+      "n": 49
+     },
+     "window_peak_mae_m": {
+      "perfect": 1.202,
+      "hold_up": 1.339,
+      "persist": 1.701
+     }
+    },
+    "GIAOTHUY": {
+     "+1h": {
+      "mae_perfect_m": 0.107,
+      "mae_hold_up_m": 0.106,
+      "mae_persist_m": 0.111,
+      "bias_perfect_m": -0.023,
+      "bias_hold_up_m": -0.028,
+      "skill_perfect": 0.04,
+      "skill_hold_up": 0.04,
+      "n": 49
+     },
+     "+3h": {
+      "mae_perfect_m": 0.295,
+      "mae_hold_up_m": 0.305,
+      "mae_persist_m": 0.325,
+      "bias_perfect_m": -0.072,
+      "bias_hold_up_m": -0.079,
+      "skill_perfect": 0.09,
+      "skill_hold_up": 0.06,
+      "n": 49
+     },
+     "+6h": {
+      "mae_perfect_m": 0.551,
+      "mae_hold_up_m": 0.556,
+      "mae_persist_m": 0.618,
+      "bias_perfect_m": -0.143,
+      "bias_hold_up_m": -0.145,
+      "skill_perfect": 0.11,
+      "skill_hold_up": 0.1,
+      "n": 49
+     },
+     "+12h": {
+      "mae_perfect_m": 0.965,
+      "mae_hold_up_m": 0.926,
+      "mae_persist_m": 1.087,
+      "bias_perfect_m": -0.31,
+      "bias_hold_up_m": -0.216,
+      "skill_perfect": 0.11,
+      "skill_hold_up": 0.15,
+      "n": 49
+     },
+     "+18h": {
+      "mae_perfect_m": 1.286,
+      "mae_hold_up_m": 1.255,
+      "mae_persist_m": 1.393,
+      "bias_perfect_m": -0.45,
+      "bias_hold_up_m": -0.168,
+      "skill_perfect": 0.08,
+      "skill_hold_up": 0.1,
+      "n": 49
+     },
+     "+24h": {
+      "mae_perfect_m": 1.586,
+      "mae_hold_up_m": 1.465,
+      "mae_persist_m": 1.593,
+      "bias_perfect_m": -0.534,
+      "bias_hold_up_m": -0.066,
+      "skill_perfect": 0.0,
+      "skill_hold_up": 0.08,
+      "n": 49
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.753,
+      "hold_up": 0.803,
+      "persist": 1.009
+     }
+    },
+    "THANHMY": {
+     "+1h": {
+      "mae_perfect_m": 0.377,
+      "mae_hold_up_m": 0.332,
+      "mae_persist_m": 0.401,
+      "bias_perfect_m": -0.057,
+      "bias_hold_up_m": -0.071,
+      "skill_perfect": 0.06,
+      "skill_hold_up": 0.17,
+      "n": 47
+     },
+     "+3h": {
+      "mae_perfect_m": 0.877,
+      "mae_hold_up_m": 0.843,
+      "mae_persist_m": 1.078,
+      "bias_perfect_m": -0.124,
+      "bias_hold_up_m": -0.112,
+      "skill_perfect": 0.19,
+      "skill_hold_up": 0.22,
+      "n": 47
+     },
+     "+6h": {
+      "mae_perfect_m": 1.008,
+      "mae_hold_up_m": 1.412,
+      "mae_persist_m": 1.72,
+      "bias_perfect_m": -0.235,
+      "bias_hold_up_m": -0.189,
+      "skill_perfect": 0.41,
+      "skill_hold_up": 0.18,
+      "n": 47
+     },
+     "+12h": {
+      "mae_perfect_m": 1.307,
+      "mae_hold_up_m": 2.114,
+      "mae_persist_m": 2.126,
+      "bias_perfect_m": -0.37,
+      "bias_hold_up_m": -0.031,
+      "skill_perfect": 0.39,
+      "skill_hold_up": 0.01,
+      "n": 47
+     },
+     "+18h": {
+      "mae_perfect_m": 1.36,
+      "mae_hold_up_m": 2.219,
+      "mae_persist_m": 2.123,
+      "bias_perfect_m": -0.465,
+      "bias_hold_up_m": 0.128,
+      "skill_perfect": 0.36,
+      "skill_hold_up": -0.05,
+      "n": 47
+     },
+     "+24h": {
+      "mae_perfect_m": 1.405,
+      "mae_hold_up_m": 2.301,
+      "mae_persist_m": 2.479,
+      "bias_perfect_m": -0.488,
+      "bias_hold_up_m": 0.285,
+      "skill_perfect": 0.43,
+      "skill_hold_up": 0.07,
+      "n": 47
+     },
+     "window_peak_mae_m": {
+      "perfect": 1.053,
+      "hold_up": 2.03,
+      "persist": 2.311
+     }
+    },
+    "AINGHIA": {
+     "+1h": {
+      "mae_perfect_m": 0.101,
+      "mae_hold_up_m": 0.097,
+      "mae_persist_m": 0.088,
+      "bias_perfect_m": -0.013,
+      "bias_hold_up_m": -0.015,
+      "skill_perfect": -0.14,
+      "skill_hold_up": -0.1,
+      "n": 48
+     },
+     "+3h": {
+      "mae_perfect_m": 0.261,
+      "mae_hold_up_m": 0.257,
+      "mae_persist_m": 0.249,
+      "bias_perfect_m": -0.042,
+      "bias_hold_up_m": -0.045,
+      "skill_perfect": -0.05,
+      "skill_hold_up": -0.03,
+      "n": 48
+     },
+     "+6h": {
+      "mae_perfect_m": 0.432,
+      "mae_hold_up_m": 0.427,
+      "mae_persist_m": 0.487,
+      "bias_perfect_m": -0.128,
+      "bias_hold_up_m": -0.129,
+      "skill_perfect": 0.11,
+      "skill_hold_up": 0.12,
+      "n": 48
+     },
+     "+12h": {
+      "mae_perfect_m": 0.604,
+      "mae_hold_up_m": 0.614,
+      "mae_persist_m": 0.798,
+      "bias_perfect_m": -0.252,
+      "bias_hold_up_m": -0.223,
+      "skill_perfect": 0.24,
+      "skill_hold_up": 0.23,
+      "n": 48
+     },
+     "+18h": {
+      "mae_perfect_m": 0.64,
+      "mae_hold_up_m": 0.84,
+      "mae_persist_m": 0.923,
+      "bias_perfect_m": -0.332,
+      "bias_hold_up_m": -0.178,
+      "skill_perfect": 0.31,
+      "skill_hold_up": 0.09,
+      "n": 48
+     },
+     "+24h": {
+      "mae_perfect_m": 0.739,
+      "mae_hold_up_m": 0.93,
+      "mae_persist_m": 1.051,
+      "bias_perfect_m": -0.372,
+      "bias_hold_up_m": -0.104,
+      "skill_perfect": 0.3,
+      "skill_hold_up": 0.12,
+      "n": 48
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.614,
+      "hold_up": 0.591,
+      "persist": 0.786
+     }
+    },
+    "CAULAU": {
+     "+1h": {
+      "mae_perfect_m": 0.058,
+      "mae_hold_up_m": 0.058,
+      "mae_persist_m": 0.083,
+      "bias_perfect_m": 0.041,
+      "bias_hold_up_m": 0.041,
+      "skill_perfect": 0.31,
+      "skill_hold_up": 0.31,
+      "n": 47
+     },
+     "+3h": {
+      "mae_perfect_m": 0.08,
+      "mae_hold_up_m": 0.08,
+      "mae_persist_m": 0.191,
+      "bias_perfect_m": -0.0,
+      "bias_hold_up_m": -0.0,
+      "skill_perfect": 0.58,
+      "skill_hold_up": 0.58,
+      "n": 49
+     },
+     "+6h": {
+      "mae_perfect_m": 0.157,
+      "mae_hold_up_m": 0.159,
+      "mae_persist_m": 0.363,
+      "bias_perfect_m": -0.004,
+      "bias_hold_up_m": -0.007,
+      "skill_perfect": 0.57,
+      "skill_hold_up": 0.56,
+      "n": 49
+     },
+     "+12h": {
+      "mae_perfect_m": 0.464,
+      "mae_hold_up_m": 0.467,
+      "mae_persist_m": 0.677,
+      "bias_perfect_m": -0.071,
+      "bias_hold_up_m": -0.069,
+      "skill_perfect": 0.32,
+      "skill_hold_up": 0.31,
+      "n": 49
+     },
+     "+18h": {
+      "mae_perfect_m": 0.653,
+      "mae_hold_up_m": 0.667,
+      "mae_persist_m": 0.917,
+      "bias_perfect_m": -0.171,
+      "bias_hold_up_m": -0.091,
+      "skill_perfect": 0.29,
+      "skill_hold_up": 0.27,
+      "n": 49
+     },
+     "+24h": {
+      "mae_perfect_m": 0.832,
+      "mae_hold_up_m": 0.825,
+      "mae_persist_m": 1.09,
+      "bias_perfect_m": -0.261,
+      "bias_hold_up_m": -0.058,
+      "skill_perfect": 0.24,
+      "skill_hold_up": 0.24,
+      "n": 49
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.374,
+      "hold_up": 0.416,
+      "persist": 0.695
+     }
+    },
+    "HOIAN": {
+     "+1h": {
+      "mae_perfect_m": 0.036,
+      "mae_hold_up_m": 0.036,
+      "mae_persist_m": 0.041,
+      "bias_perfect_m": -0.005,
+      "bias_hold_up_m": -0.005,
+      "skill_perfect": 0.14,
+      "skill_hold_up": 0.14,
+      "n": 49
+     },
+     "+3h": {
+      "mae_perfect_m": 0.096,
+      "mae_hold_up_m": 0.096,
+      "mae_persist_m": 0.116,
+      "bias_perfect_m": -0.005,
+      "bias_hold_up_m": -0.005,
+      "skill_perfect": 0.17,
+      "skill_hold_up": 0.17,
+      "n": 49
+     },
+     "+6h": {
+      "mae_perfect_m": 0.163,
+      "mae_hold_up_m": 0.163,
+      "mae_persist_m": 0.223,
+      "bias_perfect_m": -0.004,
+      "bias_hold_up_m": -0.004,
+      "skill_perfect": 0.27,
+      "skill_hold_up": 0.27,
+      "n": 49
+     },
+     "+12h": {
+      "mae_perfect_m": 0.245,
+      "mae_hold_up_m": 0.249,
+      "mae_persist_m": 0.415,
+      "bias_perfect_m": -0.01,
+      "bias_hold_up_m": -0.014,
+      "skill_perfect": 0.41,
+      "skill_hold_up": 0.4,
+      "n": 49
+     },
+     "+18h": {
+      "mae_perfect_m": 0.391,
+      "mae_hold_up_m": 0.443,
+      "mae_persist_m": 0.567,
+      "bias_perfect_m": -0.051,
+      "bias_hold_up_m": -0.04,
+      "skill_perfect": 0.31,
+      "skill_hold_up": 0.22,
+      "n": 49
+     },
+     "+24h": {
+      "mae_perfect_m": 0.476,
+      "mae_hold_up_m": 0.552,
+      "mae_persist_m": 0.694,
+      "bias_perfect_m": -0.103,
+      "bias_hold_up_m": -0.025,
+      "skill_perfect": 0.32,
+      "skill_hold_up": 0.2,
+      "n": 49
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.224,
+      "hold_up": 0.261,
+      "persist": 0.419
+     }
+    },
+    "CAMLE": {
+     "+1h": {
+      "mae_perfect_m": 0.042,
+      "mae_hold_up_m": 0.042,
+      "mae_persist_m": 0.04,
+      "bias_perfect_m": -0.004,
+      "bias_hold_up_m": -0.004,
+      "skill_perfect": -0.05,
+      "skill_hold_up": -0.05,
+      "n": 41
+     },
+     "+3h": {
+      "mae_perfect_m": 0.102,
+      "mae_hold_up_m": 0.102,
+      "mae_persist_m": 0.121,
+      "bias_perfect_m": 0.015,
+      "bias_hold_up_m": 0.015,
+      "skill_perfect": 0.16,
+      "skill_hold_up": 0.16,
+      "n": 38
+     },
+     "+6h": {
+      "mae_perfect_m": 0.165,
+      "mae_hold_up_m": 0.165,
+      "mae_persist_m": 0.215,
+      "bias_perfect_m": 0.023,
+      "bias_hold_up_m": 0.023,
+      "skill_perfect": 0.23,
+      "skill_hold_up": 0.23,
+      "n": 38
+     },
+     "+12h": {
+      "mae_perfect_m": 0.269,
+      "mae_hold_up_m": 0.269,
+      "mae_persist_m": 0.387,
+      "bias_perfect_m": 0.071,
+      "bias_hold_up_m": 0.071,
+      "skill_perfect": 0.3,
+      "skill_hold_up": 0.3,
+      "n": 38
+     },
+     "+18h": {
+      "mae_perfect_m": 0.363,
+      "mae_hold_up_m": 0.381,
+      "mae_persist_m": 0.518,
+      "bias_perfect_m": 0.032,
+      "bias_hold_up_m": 0.029,
+      "skill_perfect": 0.3,
+      "skill_hold_up": 0.26,
+      "n": 39
+     },
+     "+24h": {
+      "mae_perfect_m": 0.433,
+      "mae_hold_up_m": 0.501,
+      "mae_persist_m": 0.631,
+      "bias_perfect_m": 0.037,
+      "bias_hold_up_m": 0.07,
+      "skill_perfect": 0.31,
+      "skill_hold_up": 0.21,
+      "n": 40
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.239,
+      "hold_up": 0.258,
+      "persist": 0.259
+     }
+    }
+   }
+  },
+  "validation": {
+   "issues": 49,
+   "first_issue": "2025-11-15 05:00:00",
+   "last_issue": "2025-11-21 05:00:00",
+   "in_sample": false,
+   "stations": {
+    "NONGSON": {
+     "+1h": {
+      "mae_perfect_m": 0.151,
+      "mae_hold_up_m": 0.14,
+      "mae_persist_m": 0.164,
+      "bias_perfect_m": -0.021,
+      "bias_hold_up_m": -0.024,
+      "skill_perfect": 0.08,
+      "skill_hold_up": 0.14,
+      "n": 25
+     },
+     "+3h": {
+      "mae_perfect_m": 0.43,
+      "mae_hold_up_m": 0.426,
+      "mae_persist_m": 0.493,
+      "bias_perfect_m": -0.107,
+      "bias_hold_up_m": -0.135,
+      "skill_perfect": 0.13,
+      "skill_hold_up": 0.13,
+      "n": 27
+     },
+     "+6h": {
+      "mae_perfect_m": 0.72,
+      "mae_hold_up_m": 0.729,
+      "mae_persist_m": 0.945,
+      "bias_perfect_m": -0.273,
+      "bias_hold_up_m": -0.344,
+      "skill_perfect": 0.24,
+      "skill_hold_up": 0.23,
+      "n": 27
+     },
+     "+12h": {
+      "mae_perfect_m": 1.017,
+      "mae_hold_up_m": 1.201,
+      "mae_persist_m": 1.74,
+      "bias_perfect_m": -0.499,
+      "bias_hold_up_m": -0.436,
+      "skill_perfect": 0.42,
+      "skill_hold_up": 0.31,
+      "n": 26
+     },
+     "+18h": {
+      "mae_perfect_m": 0.967,
+      "mae_hold_up_m": 1.757,
+      "mae_persist_m": 2.334,
+      "bias_perfect_m": -0.598,
+      "bias_hold_up_m": -0.45,
+      "skill_perfect": 0.59,
+      "skill_hold_up": 0.25,
+      "n": 26
+     },
+     "+24h": {
+      "mae_perfect_m": 0.827,
+      "mae_hold_up_m": 2.543,
+      "mae_persist_m": 2.899,
+      "bias_perfect_m": -0.555,
+      "bias_hold_up_m": -0.517,
+      "skill_perfect": 0.71,
+      "skill_hold_up": 0.12,
+      "n": 28
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.434,
+      "hold_up": 1.468,
+      "persist": 1.973
+     }
+    },
+    "GIAOTHUY": {
+     "+1h": {
+      "mae_perfect_m": 0.08,
+      "mae_hold_up_m": 0.087,
+      "mae_persist_m": 0.077,
+      "bias_perfect_m": -0.002,
+      "bias_hold_up_m": -0.009,
+      "skill_perfect": -0.04,
+      "skill_hold_up": -0.14,
+      "n": 46
+     },
+     "+3h": {
+      "mae_perfect_m": 0.237,
+      "mae_hold_up_m": 0.254,
+      "mae_persist_m": 0.228,
+      "bias_perfect_m": -0.008,
+      "bias_hold_up_m": -0.019,
+      "skill_perfect": -0.04,
+      "skill_hold_up": -0.11,
+      "n": 45
+     },
+     "+6h": {
+      "mae_perfect_m": 0.43,
+      "mae_hold_up_m": 0.481,
+      "mae_persist_m": 0.44,
+      "bias_perfect_m": -0.003,
+      "bias_hold_up_m": -0.019,
+      "skill_perfect": 0.02,
+      "skill_hold_up": -0.09,
+      "n": 45
+     },
+     "+12h": {
+      "mae_perfect_m": 0.66,
+      "mae_hold_up_m": 0.654,
+      "mae_persist_m": 0.864,
+      "bias_perfect_m": 0.067,
+      "bias_hold_up_m": 0.051,
+      "skill_perfect": 0.24,
+      "skill_hold_up": 0.24,
+      "n": 45
+     },
+     "+18h": {
+      "mae_perfect_m": 0.619,
+      "mae_hold_up_m": 1.076,
+      "mae_persist_m": 1.242,
+      "bias_perfect_m": 0.09,
+      "bias_hold_up_m": -0.014,
+      "skill_perfect": 0.5,
+      "skill_hold_up": 0.13,
+      "n": 45
+     },
+     "+24h": {
+      "mae_perfect_m": 0.603,
+      "mae_hold_up_m": 1.474,
+      "mae_persist_m": 1.598,
+      "bias_perfect_m": 0.072,
+      "bias_hold_up_m": -0.017,
+      "skill_perfect": 0.62,
+      "skill_hold_up": 0.08,
+      "n": 46
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.591,
+      "hold_up": 0.894,
+      "persist": 0.946
+     }
+    },
+    "THANHMY": {
+     "+1h": {
+      "mae_perfect_m": 0.202,
+      "mae_hold_up_m": 0.152,
+      "mae_persist_m": 0.168,
+      "bias_perfect_m": 0.046,
+      "bias_hold_up_m": 0.031,
+      "skill_perfect": -0.2,
+      "skill_hold_up": 0.09,
+      "n": 43
+     },
+     "+3h": {
+      "mae_perfect_m": 0.435,
+      "mae_hold_up_m": 0.501,
+      "mae_persist_m": 0.483,
+      "bias_perfect_m": -0.018,
+      "bias_hold_up_m": -0.057,
+      "skill_perfect": 0.1,
+      "skill_hold_up": -0.04,
+      "n": 43
+     },
+     "+6h": {
+      "mae_perfect_m": 0.634,
+      "mae_hold_up_m": 0.831,
+      "mae_persist_m": 0.828,
+      "bias_perfect_m": -0.048,
+      "bias_hold_up_m": -0.065,
+      "skill_perfect": 0.23,
+      "skill_hold_up": -0.0,
+      "n": 43
+     },
+     "+12h": {
+      "mae_perfect_m": 0.909,
+      "mae_hold_up_m": 1.343,
+      "mae_persist_m": 1.325,
+      "bias_perfect_m": 0.07,
+      "bias_hold_up_m": 0.028,
+      "skill_perfect": 0.31,
+      "skill_hold_up": -0.01,
+      "n": 43
+     },
+     "+18h": {
+      "mae_perfect_m": 1.215,
+      "mae_hold_up_m": 1.776,
+      "mae_persist_m": 1.786,
+      "bias_perfect_m": 0.092,
+      "bias_hold_up_m": -0.085,
+      "skill_perfect": 0.32,
+      "skill_hold_up": 0.01,
+      "n": 43
+     },
+     "+24h": {
+      "mae_perfect_m": 1.474,
+      "mae_hold_up_m": 2.35,
+      "mae_persist_m": 2.348,
+      "bias_perfect_m": 0.179,
+      "bias_hold_up_m": -0.005,
+      "skill_perfect": 0.37,
+      "skill_hold_up": -0.0,
+      "n": 43
+     },
+     "window_peak_mae_m": {
+      "perfect": 1.059,
+      "hold_up": 1.463,
+      "persist": 1.586
+     }
+    },
+    "AINGHIA": {
+     "+1h": {
+      "mae_perfect_m": 0.065,
+      "mae_hold_up_m": 0.065,
+      "mae_persist_m": 0.07,
+      "bias_perfect_m": -0.001,
+      "bias_hold_up_m": -0.004,
+      "skill_perfect": 0.07,
+      "skill_hold_up": 0.07,
+      "n": 45
+     },
+     "+3h": {
+      "mae_perfect_m": 0.171,
+      "mae_hold_up_m": 0.176,
+      "mae_persist_m": 0.188,
+      "bias_perfect_m": -0.005,
+      "bias_hold_up_m": -0.007,
+      "skill_perfect": 0.09,
+      "skill_hold_up": 0.07,
+      "n": 45
+     },
+     "+6h": {
+      "mae_perfect_m": 0.286,
+      "mae_hold_up_m": 0.293,
+      "mae_persist_m": 0.342,
+      "bias_perfect_m": 0.025,
+      "bias_hold_up_m": 0.021,
+      "skill_perfect": 0.16,
+      "skill_hold_up": 0.14,
+      "n": 45
+     },
+     "+12h": {
+      "mae_perfect_m": 0.381,
+      "mae_hold_up_m": 0.483,
+      "mae_persist_m": 0.675,
+      "bias_perfect_m": 0.048,
+      "bias_hold_up_m": 0.05,
+      "skill_perfect": 0.44,
+      "skill_hold_up": 0.28,
+      "n": 45
+     },
+     "+18h": {
+      "mae_perfect_m": 0.455,
+      "mae_hold_up_m": 0.825,
+      "mae_persist_m": 1.004,
+      "bias_perfect_m": 0.06,
+      "bias_hold_up_m": 0.049,
+      "skill_perfect": 0.55,
+      "skill_hold_up": 0.18,
+      "n": 45
+     },
+     "+24h": {
+      "mae_perfect_m": 0.551,
+      "mae_hold_up_m": 1.133,
+      "mae_persist_m": 1.307,
+      "bias_perfect_m": 0.043,
+      "bias_hold_up_m": 0.07,
+      "skill_perfect": 0.58,
+      "skill_hold_up": 0.13,
+      "n": 46
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.41,
+      "hold_up": 0.635,
+      "persist": 0.717
+     }
+    },
+    "CAULAU": {
+     "+1h": {
+      "mae_perfect_m": 0.051,
+      "mae_hold_up_m": 0.051,
+      "mae_persist_m": 0.068,
+      "bias_perfect_m": -0.017,
+      "bias_hold_up_m": -0.017,
+      "skill_perfect": 0.25,
+      "skill_hold_up": 0.25,
+      "n": 47
+     },
+     "+3h": {
+      "mae_perfect_m": 0.07,
+      "mae_hold_up_m": 0.07,
+      "mae_persist_m": 0.151,
+      "bias_perfect_m": 0.004,
+      "bias_hold_up_m": 0.004,
+      "skill_perfect": 0.54,
+      "skill_hold_up": 0.54,
+      "n": 45
+     },
+     "+6h": {
+      "mae_perfect_m": 0.123,
+      "mae_hold_up_m": 0.13,
+      "mae_persist_m": 0.274,
+      "bias_perfect_m": 0.032,
+      "bias_hold_up_m": 0.028,
+      "skill_perfect": 0.55,
+      "skill_hold_up": 0.52,
+      "n": 45
+     },
+     "+12h": {
+      "mae_perfect_m": 0.331,
+      "mae_hold_up_m": 0.346,
+      "mae_persist_m": 0.511,
+      "bias_perfect_m": 0.07,
+      "bias_hold_up_m": 0.053,
+      "skill_perfect": 0.35,
+      "skill_hold_up": 0.32,
+      "n": 45
+     },
+     "+18h": {
+      "mae_perfect_m": 0.414,
+      "mae_hold_up_m": 0.449,
+      "mae_persist_m": 0.722,
+      "bias_perfect_m": 0.097,
+      "bias_hold_up_m": 0.02,
+      "skill_perfect": 0.43,
+      "skill_hold_up": 0.38,
+      "n": 45
+     },
+     "+24h": {
+      "mae_perfect_m": 0.348,
+      "mae_hold_up_m": 0.697,
+      "mae_persist_m": 0.928,
+      "bias_perfect_m": 0.11,
+      "bias_hold_up_m": 0.026,
+      "skill_perfect": 0.63,
+      "skill_hold_up": 0.25,
+      "n": 46
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.36,
+      "hold_up": 0.405,
+      "persist": 0.576
+     }
+    },
+    "HOIAN": {
+     "+1h": {
+      "mae_perfect_m": 0.031,
+      "mae_hold_up_m": 0.031,
+      "mae_persist_m": 0.034,
+      "bias_perfect_m": 0.0,
+      "bias_hold_up_m": 0.0,
+      "skill_perfect": 0.08,
+      "skill_hold_up": 0.08,
+      "n": 45
+     },
+     "+3h": {
+      "mae_perfect_m": 0.079,
+      "mae_hold_up_m": 0.079,
+      "mae_persist_m": 0.111,
+      "bias_perfect_m": 0.008,
+      "bias_hold_up_m": 0.008,
+      "skill_perfect": 0.29,
+      "skill_hold_up": 0.29,
+      "n": 45
+     },
+     "+6h": {
+      "mae_perfect_m": 0.118,
+      "mae_hold_up_m": 0.118,
+      "mae_persist_m": 0.19,
+      "bias_perfect_m": 0.014,
+      "bias_hold_up_m": 0.014,
+      "skill_perfect": 0.38,
+      "skill_hold_up": 0.38,
+      "n": 45
+     },
+     "+12h": {
+      "mae_perfect_m": 0.169,
+      "mae_hold_up_m": 0.167,
+      "mae_persist_m": 0.282,
+      "bias_perfect_m": 0.049,
+      "bias_hold_up_m": 0.041,
+      "skill_perfect": 0.4,
+      "skill_hold_up": 0.41,
+      "n": 45
+     },
+     "+18h": {
+      "mae_perfect_m": 0.296,
+      "mae_hold_up_m": 0.259,
+      "mae_persist_m": 0.385,
+      "bias_perfect_m": 0.063,
+      "bias_hold_up_m": 0.031,
+      "skill_perfect": 0.23,
+      "skill_hold_up": 0.33,
+      "n": 45
+     },
+     "+24h": {
+      "mae_perfect_m": 0.333,
+      "mae_hold_up_m": 0.316,
+      "mae_persist_m": 0.465,
+      "bias_perfect_m": 0.098,
+      "bias_hold_up_m": 0.055,
+      "skill_perfect": 0.28,
+      "skill_hold_up": 0.32,
+      "n": 46
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.291,
+      "hold_up": 0.233,
+      "persist": 0.312
+     }
+    },
+    "CAMLE": {
+     "+1h": {
+      "mae_perfect_m": 0.041,
+      "mae_hold_up_m": 0.041,
+      "mae_persist_m": 0.04,
+      "bias_perfect_m": 0.001,
+      "bias_hold_up_m": 0.001,
+      "skill_perfect": -0.01,
+      "skill_hold_up": -0.01,
+      "n": 44
+     },
+     "+3h": {
+      "mae_perfect_m": 0.097,
+      "mae_hold_up_m": 0.097,
+      "mae_persist_m": 0.109,
+      "bias_perfect_m": 0.011,
+      "bias_hold_up_m": 0.011,
+      "skill_perfect": 0.11,
+      "skill_hold_up": 0.11,
+      "n": 44
+     },
+     "+6h": {
+      "mae_perfect_m": 0.15,
+      "mae_hold_up_m": 0.15,
+      "mae_persist_m": 0.166,
+      "bias_perfect_m": 0.026,
+      "bias_hold_up_m": 0.026,
+      "skill_perfect": 0.09,
+      "skill_hold_up": 0.09,
+      "n": 44
+     },
+     "+12h": {
+      "mae_perfect_m": 0.194,
+      "mae_hold_up_m": 0.194,
+      "mae_persist_m": 0.186,
+      "bias_perfect_m": 0.038,
+      "bias_hold_up_m": 0.038,
+      "skill_perfect": -0.05,
+      "skill_hold_up": -0.05,
+      "n": 44
+     },
+     "+18h": {
+      "mae_perfect_m": 0.276,
+      "mae_hold_up_m": 0.265,
+      "mae_persist_m": 0.232,
+      "bias_perfect_m": 0.063,
+      "bias_hold_up_m": 0.049,
+      "skill_perfect": -0.19,
+      "skill_hold_up": -0.14,
+      "n": 44
+     },
+     "+24h": {
+      "mae_perfect_m": 0.346,
+      "mae_hold_up_m": 0.282,
+      "mae_persist_m": 0.258,
+      "bias_perfect_m": 0.083,
+      "bias_hold_up_m": 0.056,
+      "skill_perfect": -0.34,
+      "skill_hold_up": -0.09,
+      "n": 45
+     },
+     "window_peak_mae_m": {
+      "perfect": 0.283,
+      "hold_up": 0.231,
+      "persist": 0.24
+     }
+    }
+   }
+  }
+ },
+ "flood_map": {
+  "calibration": {
+   "issue_time": "2025-10-29 10:00:00",
+   "peak_giaothuy": "2025-10-29 22:00:00",
+   "leads": {
+    "+0h": {
+     "valid_time": "2025-10-29 10:00:00",
+     "wet_km2_observed_levels": 302.5,
+     "perfect": {
+      "wet_km2": 302.5,
+      "csi": 1.0,
+      "far": 0.0
+     },
+     "hold_up": {
+      "wet_km2": 302.5,
+      "csi": 1.0,
+      "far": 0.0
+     },
+     "persist": {
+      "wet_km2": 302.5,
+      "csi": 1.0,
+      "far": 0.0
+     }
+    },
+    "+6h": {
+     "valid_time": "2025-10-29 16:00:00",
+     "wet_km2_observed_levels": 326.5,
+     "perfect": {
+      "wet_km2": 346.4,
+      "csi": 0.943,
+      "far": 0.057
+     },
+     "hold_up": {
+      "wet_km2": 351.6,
+      "csi": 0.929,
+      "far": 0.071
+     },
+     "persist": {
+      "wet_km2": 302.5,
+      "csi": 0.926,
+      "far": 0.0
+     }
+    },
+    "+12h": {
+     "valid_time": "2025-10-29 22:00:00",
+     "wet_km2_observed_levels": 348.5,
+     "perfect": {
+      "wet_km2": 331.5,
+      "csi": 0.944,
+      "far": 0.004
+     },
+     "hold_up": {
+      "wet_km2": 393.5,
+      "csi": 0.884,
+      "far": 0.115
+     },
+     "persist": {
+      "wet_km2": 302.5,
+      "csi": 0.868,
+      "far": 0.0
+     }
+    },
+    "+18h": {
+     "valid_time": "2025-10-30 04:00:00",
+     "wet_km2_observed_levels": 337.6,
+     "perfect": {
+      "wet_km2": 262.9,
+      "csi": 0.779,
+      "far": 0.0
+     },
+     "hold_up": {
+      "wet_km2": 414.0,
+      "csi": 0.815,
+      "far": 0.185
+     },
+     "persist": {
+      "wet_km2": 302.5,
+      "csi": 0.896,
+      "far": 0.0
+     }
+    },
+    "+24h": {
+     "valid_time": "2025-10-30 10:00:00",
+     "wet_km2_observed_levels": 300.7,
+     "perfect": {
+      "wet_km2": 195.3,
+      "csi": 0.649,
+      "far": 0.0
+     },
+     "hold_up": {
+      "wet_km2": 411.7,
+      "csi": 0.73,
+      "far": 0.27
+     },
+     "persist": {
+      "wet_km2": 302.5,
+      "csi": 0.948,
+      "far": 0.029
+     }
+    }
+   }
+  },
+  "validation": {
+   "issue_time": "2025-11-17 12:00:00",
+   "peak_giaothuy": "2025-11-18 00:00:00",
+   "leads": {
+    "+0h": {
+     "valid_time": "2025-11-17 12:00:00",
+     "wet_km2_observed_levels": 160.5,
+     "perfect": {
+      "wet_km2": 160.5,
+      "csi": 1.0,
+      "far": 0.0
+     },
+     "hold_up": {
+      "wet_km2": 160.5,
+      "csi": 1.0,
+      "far": 0.0
+     },
+     "persist": {
+      "wet_km2": 160.5,
+      "csi": 1.0,
+      "far": 0.0
+     }
+    },
+    "+6h": {
+     "valid_time": "2025-11-17 18:00:00",
+     "wet_km2_observed_levels": 179.6,
+     "perfect": {
+      "wet_km2": 173.0,
+      "csi": 0.858,
+      "far": 0.059
+     },
+     "hold_up": {
+      "wet_km2": 171.0,
+      "csi": 0.843,
+      "far": 0.062
+     },
+     "persist": {
+      "wet_km2": 160.5,
+      "csi": 0.89,
+      "far": 0.002
+     }
+    },
+    "+12h": {
+     "valid_time": "2025-11-18 00:00:00",
+     "wet_km2_observed_levels": 190.6,
+     "perfect": {
+      "wet_km2": 176.2,
+      "csi": 0.881,
+      "far": 0.025
+     },
+     "hold_up": {
+      "wet_km2": 145.5,
+      "csi": 0.736,
+      "far": 0.021
+     },
+     "persist": {
+      "wet_km2": 160.5,
+      "csi": 0.829,
+      "far": 0.008
+     }
+    },
+    "+18h": {
+     "valid_time": "2025-11-18 06:00:00",
+     "wet_km2_observed_levels": 173.9,
+     "perfect": {
+      "wet_km2": 223.0,
+      "csi": 0.78,
+      "far": 0.22
+     },
+     "hold_up": {
+      "wet_km2": 125.5,
+      "csi": 0.705,
+      "far": 0.013
+     },
+     "persist": {
+      "wet_km2": 160.5,
+      "csi": 0.84,
+      "far": 0.049
+     }
+    },
+    "+24h": {
+     "valid_time": "2025-11-18 12:00:00",
+     "wet_km2_observed_levels": 163.8,
+     "perfect": {
+      "wet_km2": 287.6,
+      "csi": 0.57,
+      "far": 0.43
+     },
+     "hold_up": {
+      "wet_km2": 128.2,
+      "csi": 0.769,
+      "far": 0.01
+     },
+     "persist": {
+      "wet_km2": 160.5,
+      "csi": 0.805,
+      "far": 0.099
+     }
+    }
+   }
+  }
+ },
+ "notes": [
+  "Chưa có lưu trữ dự báo Q đến cho các trận 2025 (forecast_LSTM/forecast_XGB lưu từ 30/3/2026) → chưa chấm được chuỗi với dự báo thật; 'perfect' là cận trên, 'hold_up' là cận dưới của phần thượng nguồn.",
+  "Quan hệ H–Q bước 20 chạm biên a = −10 khi tìm tham số – dạng đường cong chưa có ý nghĩa vật lý; neo theo số đo lúc t0 làm giảm ảnh hưởng nhưng cần quan hệ H–Q chính thức của trạm.",
+  "Vận hành thời gian thực cần mực nước giờ 6 trạm KTTV lúc phát báo – pctt.danang.gov.vn hiện chỉ công bố ngưỡng (xem pcttHydro.service.js); chưa có nguồn công khai."
+ ]
+}
