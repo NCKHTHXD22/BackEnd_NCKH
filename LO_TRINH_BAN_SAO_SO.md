@@ -2,7 +2,7 @@
 
 File gốc để theo dõi tiến độ phát triển bản sao số: mưa → dòng chảy → hồ chứa → truyền lũ → ngập hạ du → tác động → hiển thị 3D.
 
-- Tạo: 24/10/2026 · Cập nhật lần cuối: 25/10/2026
+- Tạo: 24/10/2026 · Cập nhật lần cuối: 01/11/2026
 - Tài liệu đi kèm: [Documents/Lo_Trinh_Ban_Sao_So_DaNang_2027.xlsx](Documents/Lo_Trinh_Ban_Sao_So_DaNang_2027.xlsx) (bảng chi tiết, thông tin cần cung cấp, khái toán) · [Documents/De_Xuat_Ban_Sao_So_DaNang_2027.docx](Documents/De_Xuat_Ban_Sao_So_DaNang_2027.docx) (đề xuất gửi Sở KH&CN)
 
 ## Cách dùng file này
@@ -33,7 +33,7 @@ File gốc để theo dõi tiến độ phát triển bản sao số: mưa → d
 | HM6 | Ngập hạ du | 2. Chuỗi tính toán | 🟡 | 6.1 mức cơ sở HAND theo giờ cho 2 trận (đồng bằng Vu Gia – Thu Bồn); chưa kiểm chứng |
 | HM7 | Điều phối mô phỏng và kho kết quả | 3. Hệ thống | ⬜ | |
 | HM8 | Tác động và cảnh báo | 3. Hệ thống | 🟡 | Có cảnh báo theo trạm, cảnh báo gần điểm ngập, push |
-| HM9 | Hiển thị Cesium và cảnh quan | 4. Hiển thị | 🟡 | 9.1: lớp “Ngập theo trận lũ” + thanh thời gian trên /ban-do-so (local, chưa deploy) |
+| HM9 | Hiển thị Cesium và cảnh quan | 4. Hiển thị | 🟡 | 9.1 mô phỏng ngập theo giờ + dự báo 24 giờ đã lên web; Hội An toàn khu: nhà có chiều cao đo, màu mái, cây minh họa (9.2, 9.3 một phần); chưa có 3D Tiles, đèn, cầu |
 | HM10 | Kiểm định, vận hành, triển khai | Xuyên suốt | 🟡 | Có DISABLE_JOBS, workflow deploy |
 
 ### Các mốc
@@ -516,7 +516,7 @@ Làm theo thứ tự đợt. Cột "Điều kiện bắt đầu" là các việc
 **Mục đích:** hiển thị đúng kết quả tính theo thời gian; cảnh quan đẹp ở khu pilot mà vẫn nhẹ.
 **Phương pháp:** ba cấp: toàn lưu vực (địa hình, sông, hồ, mưa) · đô thị (nhà, đường, cầu, ngập) · quan sát gần (cây, đèn, xe, người).
 **Công nghệ:** CesiumJS, 3D Tiles, glTF, Blender.
-**Đã có:** `/ban-do-so` với địa hình, sông, 15 hồ, lưu vực, đập 3D 13 hồ có số liệu sống, nhà/đường Hội An, chế độ HD.
+**Đã có:** `/ban-do-so` với địa hình, sông, 15 hồ, lưu vực, đập 3D 13 hồ có số liệu sống, trạm mưa/thủy văn, ranh giới 94 xã/phường, Hội An toàn khu (58.725 nhà có chiều cao đo/ước lượng và màu mái, 3.224 đoạn đường, 68.190 cây minh họa), chế độ HD, ban đêm.
 
 ### 9.1 Lớp nước động theo thời gian — 🟡 (bản đầu)
 - Phụ trách: Claude · Bắt đầu: 25/10/2026 · Xong:
@@ -543,6 +543,7 @@ Làm theo thứ tự đợt. Cột "Điều kiện bắt đầu" là các việc
 - **Phương pháp:** sinh từ footprint OSM; suy kiểu mái, số tầng; texture theo loại nhà.
 - **Công nghệ:** Blender + Blosm hoặc Python trimesh → glTF; 3d-tiles-tools/py3dtiles.
 - **Việc cần làm:**
+  - [x] Trên web: chiều cao nhà đo từ Google Open Buildings 2.5D (68% số nhà), màu mái theo loại nhà (ngói/bê tông/tôn) bằng shader – vẫn là khối đứng, chưa có hình mái
   - [ ] Pilot phố cổ Hội An 1–2 km²
     - [x] Sinh hình khối: 8.235 nhà khu phố cổ 1,3 km², mái dốc hai mái cho nhà thấp gần chữ nhật → `.dae` (SketchUp) + `.glb` (từng nhà / gộp vật liệu) tại `digital_twin/data/export/hoian_phoco/`
     - [ ] Chuyển glTF → 3D Tiles, nạp vào bản đồ Cesium
@@ -550,12 +551,13 @@ Làm theo thứ tự đợt. Cột "Điều kiện bắt đầu" là các việc
   - [ ] Đo hiệu năng; mở rộng toàn Hội An khi đạt
 - **Hoàn thành khi:** khu pilot hiển thị nhà có mái, bấm được từng nhà, đạt ngân sách hiệu năng 9.5.
 
-### 9.3 Đường, cầu, cây, đèn — ⬜
+### 9.3 Đường, cầu, cây, đèn — 🟡 (cây minh họa từ ESA WorldCover; đường phát sáng ban đêm; chưa có cầu, đèn, vạch kẻ)
 - Phụ trách: · Bắt đầu: · Xong:
 - **Mục đích:** hoàn thiện cảnh quan đường phố.
 - **Phương pháp:** mặt đường theo cấp có vạch kẻ; cầu theo cao độ thật (2.3); cây, đèn instancing.
 - **Công nghệ:** glTF `EXT_mesh_gpu_instancing`; vật liệu phát sáng + bloom ban đêm.
 - **Việc cần làm:**
+  - [x] Cây minh họa toàn Hội An: 68.190 cây khối low-poly gộp theo ô ~1 km (`loadHoiAnTrees`), vị trí theo ô phủ cây WorldCover 2021
   - [ ] 5–10 mẫu cây, đèn trong Blender
   - [ ] Sinh vị trí từ OSM; xuất tile riêng
   - [ ] Mặt đường có vạch kẻ cho vùng pilot
@@ -580,7 +582,7 @@ Làm theo thứ tự đợt. Cột "Điều kiện bắt đầu" là các việc
 - **Đã có:** chế độ HD/Tiêu chuẩn, giảm tải khi rê chuột, hoạt ảnh nước giới hạn khung hình.
 - **Việc cần làm:**
   - [ ] Đặt ngân sách mỗi cấp (tam giác, dung lượng tải)
-  - [ ] Đo trên máy có GPU thật và một điện thoại tầm trung
+  - [ ] Đo trên máy có GPU thật và một điện thoại tầm trung – đã đo máy RTX 3050 Ti (Hội An toàn khu: tổng cảnh 37–40, cận cảnh 53–68 hình/giây); chưa đo điện thoại
 - **Hoàn thành khi:** có số đo khung hình/giây thực tế cho từng cấp, đạt ngân sách.
 
 ### 9.6 Xe và người — ⬜ (giai đoạn sau)
@@ -667,8 +669,8 @@ Chi tiết nguồn và mức ưu tiên xem sheet `4_Thong_tin_can_cung_cap` tron
 
 | Ngày | Việc | Kết quả | Commit / file |
 |---|---|---|---|
-| 31/10/2026 | Mở rộng lớp Hội An ra toàn bộ phường Hội An, Hội An Đông, Hội An Tây + xã Tân Hiệp (Cù Lao Chàm), gắn phường/xã cho từng nhà; cố định khung mô phỏng theo thời gian (`HOIAN_SIM_FRAME`) để gói mô phỏng cũ vẫn khớp; nhà ngoài khung lấy mặt nước lưới toàn vùng. Xuất khu phố cổ ra 3D cho SketchUp (9.2); bản vẽ dựng khối có 2 mốc định vị M1/M2 (WGS84) cho plugin AICuongCoVua đặt đúng chỗ trên địa hình DEM của plugin | 58.725 nhà (giữ đủ 54.779 nhà cũ), 3.224 đoạn đường / 726 km; lưới cao độ trùng tuyệt đối trong khung cũ; phố cổ 1,3 km²: 8.235 nhà, 7.914 mái dốc, 137 nghìn tam giác; build web đạt, eslint sạch | `digital_twin/scripts/06_hoian_download.py`, `07_hoian.py`, `27_hoian_export_3d.py`, `config.py`, `sim_common.py`, `web/src/features/digitalTwin/hoian/hoian.js`, `map/simulation.js` |
-| 31/10/2026 | Nhà Hội An lấy chiều cao đo từ Google Open Buildings 2.5D Temporal 2023 (CC BY 4.0; trung vị trong nền nhà, trường `h_src` osm/google/est hiện trong bảng thông tin); mái theo loại nhà (ngói/bê tông/tôn – shader tô mặt hướng lên, chỉ số mái gửi trong kênh alpha màu nhà); cây minh họa từ ô phủ cây ESA WorldCover 2021, dựng thành khối low-poly gộp theo ô ~1 km (bản billboard 68 nghìn cây làm tụt còn 1–15 hình/giây nên bỏ) | 39.818 nhà Google, 120 OSM, 18.787 ước lượng; P50 5,2 m, P90 8,1 m; số nhà ngập không đổi (4.129 / 8.252 / 14.563); 68.190 cây; trên máy RTX 3050 Ti: tổng cảnh 37–40 hình/giây có hoặc không có cây, cận cảnh 53–68; build web đạt, eslint sạch; chưa deploy | `digital_twin/scripts/06_hoian_download.py`, `07_hoian.py`, `27_hoian_export_3d.py`, `web/src/features/digitalTwin/hoian/hoian.js`, `DigitalTwinMap.jsx`, `data/fields.js`, `web/public/data/dt/layers.json` |
+| 31/10/2026 | Mở rộng lớp Hội An ra toàn bộ phường Hội An, Hội An Đông, Hội An Tây + xã Tân Hiệp (Cù Lao Chàm), gắn phường/xã cho từng nhà; cố định khung mô phỏng theo thời gian (`HOIAN_SIM_FRAME`) để gói mô phỏng cũ vẫn khớp; nhà ngoài khung lấy mặt nước lưới toàn vùng. Xuất khu phố cổ ra 3D cho SketchUp (9.2); bản vẽ dựng khối có 2 mốc định vị M1/M2 (WGS84) cho plugin AICuongCoVua đặt đúng chỗ trên địa hình DEM của plugin | 58.725 nhà (giữ đủ 54.779 nhà cũ), 3.224 đoạn đường / 726 km; lưới cao độ trùng tuyệt đối trong khung cũ; phố cổ 1,3 km²: 8.235 nhà, 7.914 mái dốc, 137 nghìn tam giác; build web đạt, eslint sạch | commit `5b93b83`: `digital_twin/scripts/06_hoian_download.py`, `07_hoian.py`, `27_hoian_export_3d.py`, `config.py`, `sim_common.py`, `web/src/features/digitalTwin/hoian/hoian.js`, `map/simulation.js` |
+| 31/10/2026 | Nhà Hội An lấy chiều cao đo từ Google Open Buildings 2.5D Temporal 2023 (CC BY 4.0; trung vị trong nền nhà, trường `h_src` osm/google/est hiện trong bảng thông tin); mái theo loại nhà (ngói/bê tông/tôn – shader tô mặt hướng lên, chỉ số mái gửi trong kênh alpha màu nhà); cây minh họa từ ô phủ cây ESA WorldCover 2021, dựng thành khối low-poly gộp theo ô ~1 km (bản billboard 68 nghìn cây làm tụt còn 1–15 hình/giây nên bỏ) | 39.818 nhà Google, 120 OSM, 18.787 ước lượng; P50 5,2 m, P90 8,1 m; số nhà ngập không đổi (4.129 / 8.252 / 14.563); 68.190 cây; trên máy RTX 3050 Ti: tổng cảnh 37–40 hình/giây có hoặc không có cây, cận cảnh 53–68; build web đạt, eslint sạch; đã deploy 01/11/2026 | commit `5b93b83`: `digital_twin/scripts/06_hoian_download.py`, `07_hoian.py`, `27_hoian_export_3d.py`, `web/src/features/digitalTwin/hoian/hoian.js`, `DigitalTwinMap.jsx`, `data/fields.js`, `web/public/data/dt/layers.json` |
 | 26/10/2026 | "Dự báo 24 giờ" trên bản đồ 3D: Q đến LSTM (P50, P90) → Q xả giả định → diễn toán → mực nước trạm suy từ Q → ngập theo giờ, cùng giao diện mô phỏng (huy hiệu đã qua / +giờ / ngoài tầm LSTM). Lớp nhãn dự báo chỉ dùng LSTM (XGBoost chưa đưa vào vận hành). Tách mô-đun dùng chung `network_flows`, `sim_common`, `forecast_core` (đầu ra 14, 23, 25 không đổi) | Phát báo 11:00 26/10: không ngập (trời khô); LSTM phủ 8–11 giờ sau phát báo (chạy từ giờ đo cuối từng hồ), 11/15 hồ chỉ có 8–9 số đo/48 giờ; gói 2,1 MB/kịch bản | `26_forecast_package.py`, `map/simulation.js`, `SimulationHUD.jsx`, `FloodTimelinePanel.jsx` |
 | 26/10/2026 | Bản đồ 3D: lớp trạm đo mưa, trạm thủy văn (biểu đồ hiện trạng), dự báo Q đến hồ (LSTM/XGBoost, ⚠ khi lệch > 3 lần), ranh giới 94 xã/phường sau sáp nhập. Sửa lỗi XGBoost production thiếu chuẩn hóa feature (cao gấp ~14 lần); RF cùng lỗi. Chuỗi dự báo hạ du hindcast. Khóa route xóa dữ liệu không cần đăng nhập | 33/33 kiểm thử; XGBoost MAE 224–508 → 10–32 m³/s; chuỗi hạ du +24 h MAE 0,35–0,83 m (giữ nguyên 0,93–2,90) trận kiểm định | `map/stations.js`, `map/forecast.js`, `24_admin_boundaries.mjs`, `25_forecast_chain.py`, `XGBoost_Py_Backend/main_api.py`, `tests/routeAuth.test.js` |
 | 25/10/2026 | Mô phỏng diễn biến lũ theo giờ trên bản đồ 3D (thượng nguồn → sông → hạ du → nhà/đường) + "Dựng khu này" (OSM + Open Buildings + Nominatim trên trình duyệt) | Chạy được trên trình duyệt; Open Buildings khu 0,5 km² ≈ 2 MB/10 s; gói dữ liệu ~7 MB/trận | `map/simulation.js`, `components/SimulationHUD.jsx`, `builder/areaBuilder.js`, `23_sim_package.py` |
