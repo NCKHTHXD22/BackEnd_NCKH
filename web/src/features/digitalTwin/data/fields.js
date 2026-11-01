@@ -15,7 +15,7 @@ export const FIELDS = {
   osm_rivers: [['name_en'], ['length_km', 'km']],
   lakes: [['area_km2', 'km2']],
   hoian_buildings: [
-    ['type'], ['levels'], ['height_m', 'm'], ['area_m2', 'm2'], ['ground_m', 'm'],
+    ['ward'], ['type'], ['levels'], ['height_m', 'm'], ['h_src', 'enum'], ['area_m2', 'm2'], ['ground_m', 'm'],
     ['flood_from_m', 'm'], ['depth_now_m', 'm'],
   ],
   hoian_roads: [['highway'], ['length_km', 'km'], ['flood_from_m', 'm']],

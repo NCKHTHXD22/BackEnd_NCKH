@@ -10,3 +10,4 @@ app/.env.local
 
 # WhiteboxTools tự ghi file cấu hình vào thư mục chạy
 settings.json
+data/export/

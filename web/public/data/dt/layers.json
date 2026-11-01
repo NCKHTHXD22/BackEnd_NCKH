@@ -1,7 +1,7 @@
 {
   "_note": "Danh mục lớp bản đồ (vi + *_en). Thêm lớp mới = thêm 1 mục + file dữ liệu; không cần sửa mã giao diện. Khi có API: 'url' trỏ sang /api/dt/layers/:id/geojson. Trường 'purpose': display = chỉ để hiển thị; compute = dùng làm đầu vào tính toán; illustrative = minh họa, KHÔNG phải kết quả tính. 'accuracy' ghi độ chính xác/giới hạn.",
   "groups": [
-    "Khu thí điểm Hội An",
+    "Hội An (3 phường + Cù Lao Chàm)",
     "Thủy văn",
     "Công trình",
     "Quan trắc",
@@ -12,8 +12,8 @@
   "layers": [
     {
       "id": "hoian_buildings",
-      "group": "Khu thí điểm Hội An",
-      "name": "Nhà 3D (54.779 nhà)",
+      "group": "Hội An (3 phường + Cù Lao Chàm)",
+      "name": "Nhà 3D (58.725 nhà)",
       "type": "hoian_buildings",
       "url": "/data/dt/hoian/buildings.json",
       "grid": "/data/dt/hoian/flood_grid.json",
@@ -21,8 +21,18 @@
       "legend": [
         {
           "color": "#e8c872",
-          "label": "Nhà (màu tường ngẫu nhiên)",
-          "label_en": "Houses (random wall colours)"
+          "label": "Tường (màu ngẫu nhiên tông vàng Hội An)",
+          "label_en": "Walls (random Hoi An yellow tones)"
+        },
+        {
+          "color": "#9c4a2f",
+          "label": "Mái ngói (phố cổ phần lớn mái ngói)",
+          "label_en": "Tiled roofs (most of the old town)"
+        },
+        {
+          "color": "#8e8f8c",
+          "label": "Mái bê tông / tôn",
+          "label_en": "Concrete / metal roofs"
         },
         {
           "color": "#e63946",
@@ -30,16 +40,16 @@
           "label_en": "Red/purple: flooded in scenario"
         }
       ],
-      "source": "Footprint © OpenStreetMap; chiều cao ước tính theo loại nhà và diện tích nền",
-      "name_en": "3D buildings (54,779)",
-      "source_en": "Footprints © OpenStreetMap; heights estimated from building type and footprint area",
+      "source": "Footprint © OpenStreetMap; chiều cao: Google Open Buildings 2.5D 2023 (CC BY 4.0) cho ~68 % số nhà, còn lại theo số tầng OSM hoặc ước tính theo loại nhà và diện tích nền",
+      "name_en": "3D buildings (58,725)",
+      "source_en": "Footprints © OpenStreetMap; heights: Google Open Buildings 2.5D 2023 (CC BY 4.0) for ~68 % of buildings, the rest from OSM floors or estimated from type and footprint area",
       "purpose": "display",
-      "accuracy": "Chiều cao nhà ước tính theo loại nhà; chưa có cao độ nền",
-      "accuracy_en": "Building heights estimated by type; no floor elevation yet"
+      "accuracy": "Chiều cao đo từ ảnh vệ tinh có độ nét ~4 m (nhà ống hẹp lẫn nhà bên cạnh); màu mái minh họa theo loại nhà, không phải mái thật; chưa có cao độ nền",
+      "accuracy_en": "Satellite-derived heights have ~4 m effective resolution (narrow tube houses blend with neighbours); roof colours are illustrative by building type; no floor elevation yet"
     },
     {
       "id": "hoian_roads",
-      "group": "Khu thí điểm Hội An",
+      "group": "Hội An (3 phường + Cù Lao Chàm)",
       "name": "Đường giao thông",
       "type": "hoian_roads",
       "url": "/data/dt/hoian/roads.geojson",
@@ -61,6 +71,27 @@
       "purpose": "display",
       "accuracy": "Tuyến OSM, chưa có cao độ mặt đường",
       "accuracy_en": "OSM centrelines, no road elevation yet"
+    },
+    {
+      "id": "hoian_trees",
+      "group": "Hội An (3 phường + Cù Lao Chàm)",
+      "name": "Cây xanh (minh họa)",
+      "name_en": "Trees (illustrative)",
+      "type": "hoian_trees",
+      "url": "/data/dt/hoian/trees.json",
+      "lazy": true,
+      "legend": [
+        {
+          "color": "#4f9a3c",
+          "label": "Cây – mỗi ô phủ cây 10 m một cây",
+          "label_en": "Tree – one per 10 m tree-cover cell"
+        }
+      ],
+      "source": "Vùng phủ cây: ESA WorldCover 2021 (CC BY 4.0); vị trí từng cây là minh họa",
+      "source_en": "Tree cover: ESA WorldCover 2021 (CC BY 4.0); individual tree positions are illustrative",
+      "purpose": "illustrative",
+      "accuracy": "Đất liền giữ 1/2 số ô cây, Cù Lao Chàm 1/8 (tán to hơn); bỏ cây sát nhà/đường",
+      "accuracy_en": "Mainland keeps 1/2 of tree cells, Cu Lao Cham 1/8 (bigger crowns); trees next to buildings/roads removed"
     },
     {
       "id": "basin",
@@ -252,13 +283,41 @@
       "visible": false,
       "lazy": true,
       "legend": [
-        { "color": "#e2e8f0", "label": "Không mưa", "label_en": "No rain" },
-        { "color": "#38bdf8", "label": "Dưới 10 mm", "label_en": "Below 10 mm" },
-        { "color": "#eab308", "label": "10–25 mm", "label_en": "10–25 mm" },
-        { "color": "#f97316", "label": "25–50 mm", "label_en": "25–50 mm" },
-        { "color": "#dc2626", "label": "50–100 mm", "label_en": "50–100 mm" },
-        { "color": "#7e22ce", "label": "Từ 100 mm", "label_en": "100 mm or more" },
-        { "color": "#94a3b8", "label": "Không có số liệu trong 6 giờ qua", "label_en": "No data in the last 6 hours" }
+        {
+          "color": "#e2e8f0",
+          "label": "Không mưa",
+          "label_en": "No rain"
+        },
+        {
+          "color": "#38bdf8",
+          "label": "Dưới 10 mm",
+          "label_en": "Below 10 mm"
+        },
+        {
+          "color": "#eab308",
+          "label": "10–25 mm",
+          "label_en": "10–25 mm"
+        },
+        {
+          "color": "#f97316",
+          "label": "25–50 mm",
+          "label_en": "25–50 mm"
+        },
+        {
+          "color": "#dc2626",
+          "label": "50–100 mm",
+          "label_en": "50–100 mm"
+        },
+        {
+          "color": "#7e22ce",
+          "label": "Từ 100 mm",
+          "label_en": "100 mm or more"
+        },
+        {
+          "color": "#94a3b8",
+          "label": "Không có số liệu trong 6 giờ qua",
+          "label_en": "No data in the last 6 hours"
+        }
       ],
       "source": "vrain.vn qua API /rain-station (cập nhật mỗi giờ)",
       "source_en": "vrain.vn via the /rain-station API (hourly)",
@@ -274,12 +333,36 @@
       "visible": false,
       "lazy": true,
       "legend": [
-        { "color": "#22c55e", "label": "Dưới báo động I", "label_en": "Below alarm I" },
-        { "color": "#eab308", "label": "Báo động I", "label_en": "Alarm I" },
-        { "color": "#f97316", "label": "Báo động II", "label_en": "Alarm II" },
-        { "color": "#dc2626", "label": "Báo động III", "label_en": "Alarm III" },
-        { "color": "#3b82f6", "label": "Có số liệu, chưa có ngưỡng", "label_en": "Live level, no alarm thresholds" },
-        { "color": "#94a3b8", "label": "Không có số liệu trong 6 giờ qua", "label_en": "No data in the last 6 hours" }
+        {
+          "color": "#22c55e",
+          "label": "Dưới báo động I",
+          "label_en": "Below alarm I"
+        },
+        {
+          "color": "#eab308",
+          "label": "Báo động I",
+          "label_en": "Alarm I"
+        },
+        {
+          "color": "#f97316",
+          "label": "Báo động II",
+          "label_en": "Alarm II"
+        },
+        {
+          "color": "#dc2626",
+          "label": "Báo động III",
+          "label_en": "Alarm III"
+        },
+        {
+          "color": "#3b82f6",
+          "label": "Có số liệu, chưa có ngưỡng",
+          "label_en": "Live level, no alarm thresholds"
+        },
+        {
+          "color": "#94a3b8",
+          "label": "Không có số liệu trong 6 giờ qua",
+          "label_en": "No data in the last 6 hours"
+        }
       ],
       "source": "Trạm KTTV: ngưỡng báo động từ pctt.danang.gov.vn; trạm tự động: muangap, VRain (API /water-level)",
       "source_en": "KTTV gauges: alarm levels from pctt.danang.gov.vn; automatic gauges: muangap, VRain (/water-level API)",
@@ -295,8 +378,16 @@
       "visible": false,
       "lazy": true,
       "legend": [
-        { "color": "#0f172a", "label": "Đỉnh Q đến dự báo (P50) và P90 của lần chạy LSTM mới nhất", "label_en": "Forecast inflow peak (P50) and P90 of the latest LSTM run" },
-        { "color": "#9a3412", "label": "↑ Đỉnh dự báo cao hơn Q đến hiện tại trên 20 %", "label_en": "↑ Forecast peak more than 20 % above current inflow" }
+        {
+          "color": "#0f172a",
+          "label": "Đỉnh Q đến dự báo (P50) và P90 của lần chạy LSTM mới nhất",
+          "label_en": "Forecast inflow peak (P50) and P90 of the latest LSTM run"
+        },
+        {
+          "color": "#9a3412",
+          "label": "↑ Đỉnh dự báo cao hơn Q đến hiện tại trên 20 %",
+          "label_en": "↑ Forecast peak more than 20 % above current inflow"
+        }
       ],
       "source": "API /forecast-lstm (LSTM chạy hằng giờ trên VPS); Q đến hiện tại: API inflowLake",
       "source_en": "/forecast-lstm API (LSTM runs hourly on the VPS); current inflow: inflowLake API",
@@ -492,9 +583,21 @@
       "visible": false,
       "lazy": true,
       "legend": [
-        { "color": "#f472b6", "label": "Phường (23)", "label_en": "Ward (23)" },
-        { "color": "#a3e635", "label": "Xã (70)", "label_en": "Commune (70)" },
-        { "color": "#60a5fa", "label": "Đặc khu (1)", "label_en": "Special zone (1)" }
+        {
+          "color": "#f472b6",
+          "label": "Phường (23)",
+          "label_en": "Ward (23)"
+        },
+        {
+          "color": "#a3e635",
+          "label": "Xã (70)",
+          "label_en": "Commune (70)"
+        },
+        {
+          "color": "#60a5fa",
+          "label": "Đặc khu (1)",
+          "label_en": "Special zone (1)"
+        }
       ],
       "source": "bando.danang.gov.vn (Đà Nẵng Mới) – 94 đơn vị hành chính cấp xã từ 1/7/2025; diện tích, dân số theo nguồn",
       "source_en": "bando.danang.gov.vn (Đà Nẵng Mới) – 94 commune-level units from 1 July 2025; area and population as published",
@@ -512,7 +615,7 @@
     }
   ],
   "groups_en": [
-    "Hoi An pilot area",
+    "Hoi An (3 wards + Cu Lao Cham)",
     "Hydrology",
     "Infrastructure",
     "Monitoring",

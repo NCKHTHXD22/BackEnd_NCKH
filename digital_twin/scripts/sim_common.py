@@ -11,7 +11,7 @@ from affine import Affine
 from rasterio.warp import transform as warp_xy
 from shapely.geometry import LineString
 
-from config import CRS_METRIC, OUT as WEB_OUT, ROOT, WORK
+from config import CRS_METRIC, HOIAN_SIM_FRAME, OUT as WEB_OUT, ROOT, WORK
 
 COMPUTE = ROOT / "data" / "compute"
 SIM = WEB_OUT / "sim"
@@ -41,8 +41,8 @@ def geo_grid(west, north, east, south, step):
     return {"west": west, "north": north, "dx": step, "dy": step, "nx": nx, "ny": ny, "xs": np.array(xs), "ys": np.array(ys)}
 
 
-# lưới đích khu Hội An (địa lý, 3″) – cùng khung flood_grid.json; lưới toàn vùng hạ du (~300 m) – khung bản đồ ngập
-_hg = json.loads((WEB_OUT / "hoian" / "flood_grid.json").read_text(encoding="utf-8"))
+# lưới đích khu Hội An (địa lý, 3″) – khung mô phỏng cố định HOIAN_SIM_FRAME; lưới toàn vùng hạ du (~300 m) – khung bản đồ ngập
+_hg = HOIAN_SIM_FRAME
 HOIAN = geo_grid(_hg["west"], _hg["north"], _hg["west"] + _hg["dx"] * _hg["nx"], _hg["north"] - _hg["dy"] * _hg["ny"], HOIAN_STEP)
 _vb = np.load(WORK / "hand_grid.npz")["view_bounds"]
 REGION = geo_grid(float(_vb[0]), float(_vb[3]), float(_vb[2]), float(_vb[1]), REGION_STEP)

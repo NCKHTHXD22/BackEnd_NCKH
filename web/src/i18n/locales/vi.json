@@ -506,7 +506,7 @@
       "note_forecast": "Chuỗi dự báo: Q đến các hồ theo LSTM → Q xả theo quy tắc giả định (giữ Q xả hiện tại; hồ có bảng Z-V chạm MNDBT thì xả bằng Q đến; hồ nhỏ xả bằng Q đến) → diễn toán Muskingum-Cunge → mực nước trạm suy từ Q (chưa hiệu chỉnh theo số đo vì chưa có mực nước giờ thời gian thực của trạm KTTV; khi nước thấp không dưới mức thấp thường gặp) → mặt nước nội suy trừ DEM 30 m. Mưa: Open-Meteo. Kết quả chụp lúc chạy 26_forecast_package.py – chạy lại để cập nhật."
     },
     "flood": {
-      "eyebrow": "Khu thí điểm Hội An · Kịch bản",
+      "eyebrow": "Hội An · Kịch bản",
       "title": "Mô phỏng nguy cơ ngập",
       "close": "Tắt kịch bản",
       "building": "Đang dựng 54 nghìn nhà 3D và 2.570 đoạn đường… (lần đầu có thể mất 1–2 phút tùy máy)",
@@ -545,9 +545,11 @@
       "strahler": "Cấp sông (Strahler)",
       "length_km": "Chiều dài",
       "name_en": "Tên khác",
+      "ward": "Phường/xã",
       "type": "Loại công trình",
-      "levels": "Số tầng (ước tính)",
+      "levels": "Số tầng (suy từ chiều cao)",
       "height_m": "Chiều cao",
+      "h_src": "Nguồn chiều cao",
       "area_m2": "Diện tích nền",
       "ground_m": "Cao độ nền",
       "flood_from_m": "Bắt đầu ngập khi mực nước đạt",
@@ -680,6 +682,11 @@
       "placeVia": "Tên khu"
     },
     "enum": {
+      "h_src": {
+        "osm": "OpenStreetMap (chiều cao/số tầng gắn sẵn)",
+        "google": "Đo từ ảnh vệ tinh – Google Open Buildings 2.5D (2023)",
+        "est": "Ước lượng theo loại nhà và diện tích nền"
+      },
       "station_kind": {
         "river_kttv": "Trạm KTTV (số liệu qua PCTT Đà Nẵng)",
         "river_auto": "Trạm tự động trên sông",

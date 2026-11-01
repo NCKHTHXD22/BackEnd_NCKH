@@ -32,13 +32,19 @@ for p in (RAW, WORK, OUT):
     p.mkdir(parents=True, exist_ok=True)
 
 
+# Khung mô phỏng mặt nước Hội An (lưới 1″ của flood_grid.json bản thí điểm 19/10/2026). Cố định ở đây vì 07_hoian.py
+# đã mở rộng lưới hiển thị ra toàn bộ Hội An: 14/19 (cắt mặt nước), 23/26 (gói mô phỏng) và các gói .bin đã sinh
+# phải giữ đúng khung này. simulation.js tự căn lưới flood_grid.json (lớn hơn) theo gốc của khung này.
+HOIAN_SIM_FRAME = dict(west=108.28986111111112, north=15.910138888888888,
+                       dx=1 / 3600, dy=1 / 3600, nx=360, ny=198)
+
+
 def hoian_window(transform, shape, crs="EPSG:32649", pad=10):
-    """Cửa sổ (hàng, cột) trên lưới UTM `transform`/`shape` phủ khu thí điểm Hội An (lưới flood_grid.json của 07_hoian.py)
+    """Cửa sổ (hàng, cột) trên lưới UTM `transform`/`shape` phủ khung mô phỏng Hội An (HOIAN_SIM_FRAME)
     + `pad` ô – để 14/19 lưu mặt nước khu này cho mô phỏng 3D (23_sim_package.py)."""
-    import json
     from rasterio.warp import transform_bounds
     from rasterio.windows import from_bounds
-    g = json.loads((OUT / "hoian" / "flood_grid.json").read_text(encoding="utf-8"))
+    g = HOIAN_SIM_FRAME
     b = (g["west"], g["north"] - g["dy"] * g["ny"], g["west"] + g["dx"] * g["nx"], g["north"])
     w = from_bounds(*transform_bounds("EPSG:4326", crs, *b), transform=transform).round_offsets().round_lengths()
     r0, c0 = max(int(w.row_off) - pad, 0), max(int(w.col_off) - pad, 0)

@@ -6,7 +6,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { FaLayerGroup, FaGlobeAsia, FaMap, FaMoon, FaSun, FaWater, FaGem, FaCube, FaCloudShowersHeavy } from 'react-icons/fa';
 import { createViewer, flyHome, flyTo, flyToPoint, currentView, setBasemap, setNight, setQuality, BASEMAPS } from './map/viewer.js';
 import { loadLayer, entityProps } from './map/layers.js';
-import { loadHoiAnBuildings, loadHoiAnRoads, createFloodLayer } from './hoian/hoian.js';
+import { loadHoiAnBuildings, loadHoiAnRoads, loadHoiAnTrees, createFloodLayer } from './hoian/hoian.js';
 import { loadDams } from './map/dams.js';
 import { loadFloodHand } from './map/floodHand.js';
 import { loadSimulation } from './map/simulation.js';
@@ -25,7 +25,7 @@ import useIsMobile from '../../hooks/useIsMobile';
 
 // Kiểu lớp → hàm nạp. Lớp mới có kiểu riêng thì đăng ký thêm ở đây.
 const LOADERS = {
-  geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, dams: loadDams, flood_hand: loadFloodHand,
+  geojson: loadLayer, hoian_buildings: loadHoiAnBuildings, hoian_roads: loadHoiAnRoads, hoian_trees: loadHoiAnTrees, dams: loadDams, flood_hand: loadFloodHand,
   rain_stations: loadRainStations, wl_stations: loadWaterStations, forecast: loadForecast,
 };
 const CATALOG_URL = '/data/dt/layers.json';
@@ -223,6 +223,8 @@ export default function DigitalTwinMap() {
     if (!floodRef.current) floodRef.current = createFloodLayer(viewerRef.current, bld.grid);
     roads.setNight?.(night);
     bld.setNight?.(night);
+    // cây (~68 nghìn khối 3D) nạp sau, không chặn bảng ngập; điện thoại tự bật trong danh sách lớp nếu muốn
+    if (!isMobile) ensureLayer('hoian_trees').then(tr => tr.setNight?.(night)).catch(() => {});
     const curve = [];
     for (let wl = 0.5; wl <= 5.001; wl += 0.25) {
       curve.push({ wl, area: floodRef.current.stats(wl).areaKm2, houses: bld.countFlooded(wl) });
@@ -319,6 +321,7 @@ export default function DigitalTwinMap() {
     setNight(viewerRef.current, on);
     handles.current.hoian_roads?.setNight?.(on);
     handles.current.hoian_buildings?.setNight?.(on);
+    handles.current.hoian_trees?.setNight?.(on);
   };
   const toggleQuality = () => {
     const q = quality === 'high' ? 'standard' : 'high';

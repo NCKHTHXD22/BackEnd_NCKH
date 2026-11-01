@@ -164,12 +164,14 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
     if (cell || !hg) return;
     fine = await (await fetch('/data/dt/hoian/flood_grid.json')).json();
     const ratio = Math.round(hg.dx / fine.dx);
+    // flood_grid.json phủ cả Hội An, rộng hơn khung mô phỏng → căn theo gốc khung mô phỏng (cùng mạng ô DEM 1″)
+    const r0 = Math.round((fine.north - hg.north) / fine.dy), c0 = Math.round((hg.west - fine.west) / fine.dx);
     const N = hg.nx * hg.ny;
     const landMin = new Float32Array(N).fill(NaN), hasWater = new Uint8Array(N);
     for (let r = 0; r < hg.ny; r++) for (let c = 0; c < hg.nx; c++) {
       let m = Infinity, w = 0;
-      for (let rr = r * ratio; rr < Math.min((r + 1) * ratio, fine.ny); rr++)
-        for (let cc = c * ratio; cc < Math.min((c + 1) * ratio, fine.nx); cc++) {
+      for (let rr = r0 + r * ratio; rr < Math.min(r0 + (r + 1) * ratio, fine.ny); rr++)
+        for (let cc = c0 + c * ratio; cc < Math.min(c0 + (c + 1) * ratio, fine.nx); cc++) {
           const k = rr * fine.nx + cc;
           if (fine.source[k]) w = 1; else m = Math.min(m, fine.dtm[k]);
         }
@@ -228,6 +230,16 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
     return wsum > 0 ? s / wsum : NaN;
   };
   const inGrid = (g, lon, lat) => g && lon >= g.west && lon <= g.west + g.dx * g.nx && lat <= g.north && lat >= g.north - g.dy * g.ny;
+  // lớp nhà có nhà nằm ngoài khung mô phỏng không (lớp nhà phủ cả Hội An, khung mô phỏng nhỏ hơn) – tính một lần
+  const outsideOf = new WeakMap();
+  const hasOutside = bld => {
+    if (!outsideOf.has(bld)) {
+      let any = false;
+      for (let k = 0; k < bld.items.length && !any; k++) any = !inGrid(hg, bld.centroids.lon[k], bld.centroids.lat[k]);
+      outsideOf.set(bld, any);
+    }
+    return outsideOf.get(bld);
+  };
 
   /** Mặt nước 3D cho khu tự dựng: lưới nút ~40 m trên khung khu, cao độ mặt nước tại nút + lệch địa hình; ô vẽ khi có
    *  ít nhất một nút ngập (địa hình tự che phần cao hơn mặt nước). */
@@ -428,12 +440,20 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
       if (old) scene.primitives.remove(old);
       impact.water = Boolean(water);
       const sample = wse && sampler(wse);
-      const bld = opts.buildings;
+      const bld = opts.buildings, area = opts.area;
+      // mặt nước toàn vùng ~300 m: cho nhà/đường nằm ngoài khung mô phỏng Hội An và cho khu người dùng tự dựng
+      const needRegion = rg && (area || (bld && hasOutside(bld)));
+      const rb = needRegion ? await frames(method, 'region') : null;
+      if (!active || hourNow !== h) return null;
+      const rw = wseAt(rb, h);
+      const sRe = rw && sampler(rw, rg);
+      // nhà/đường trong khung chỉ dùng lưới Hội An (ô không có số liệu = khô, không lấy lưới thô bù vào)
+      const sampleHoian = (lon, lat) => (inGrid(hg, lon, lat) ? (sample ? sample(lon, lat) : NaN) : sRe ? sRe(lon, lat) : NaN);
       if (bld) {
         const depths = new Float32Array(bld.items.length);
         const counts = [0, 0, 0, 0, 0, 0];
         for (let k = 0; k < depths.length; k++) {
-          const z = sample ? sample(bld.centroids.lon[k], bld.centroids.lat[k]) : NaN;
+          const z = sampleHoian(bld.centroids.lon[k], bld.centroids.lat[k]);
           depths[k] = Number.isFinite(z) ? z - bld.items[k][bld.F.ground_m] : 0;
           counts[cls(depths[k], BUILDING_STOPS)]++;
         }
@@ -446,7 +466,7 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
         const depths = new Float32Array(pts.length), km = [0, 0, 0, 0];
         pts.forEach((p, k) => {
           let d = 0;
-          if (sample) for (const [lon, lat, z0] of p) { const z = sample(lon, lat); if (Number.isFinite(z) && Number.isFinite(z0)) d = Math.max(d, z - z0); }
+          for (const [lon, lat, z0] of p) { const z = sampleHoian(lon, lat); if (Number.isFinite(z) && Number.isFinite(z0)) d = Math.max(d, z - z0); }
           depths[k] = d;
           const c = cls(d, ROAD_STOPS);
           if (c) km[c - 1] += roads.features[k].properties.length_km ?? 0;
@@ -456,12 +476,7 @@ export async function loadSimulation(viewer, { dir, base = '/data/dt/sim/' }) {
       }
 
       // khu người dùng tự dựng: lưới Hội An nếu nằm trong, ngoài ra mặt nước toàn vùng ~300 m
-      const area = opts.area;
       if (area) {
-        const rb = rg ? await frames(method, 'region') : null;
-        if (!active || hourNow !== h) return null;
-        const rw = wseAt(rb, h);
-        const sRe = rw && sampler(rw, rg);
         const sampleAny = (lon, lat) => {
           if (sample && inGrid(hg, lon, lat)) { const v = sample(lon, lat); if (Number.isFinite(v)) return v; }
           return sRe ? sRe(lon, lat) : NaN;

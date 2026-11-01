@@ -506,7 +506,7 @@
       "note_forecast": "Forecast chain: reservoir inflow from LSTM → release by an assumed rule (keep the current release; reservoirs with a Z-V table release inflow once at normal water level; small reservoirs pass inflow) → Muskingum-Cunge routing → gauge levels from flow (not corrected to observations because KTTV gauges have no real-time hourly levels; at low water not below the usual low level) → interpolated water surface minus 30 m DEM. Rain: Open-Meteo. Snapshot taken when 26_forecast_package.py ran – rerun to update."
     },
     "flood": {
-      "eyebrow": "Hoi An pilot · Scenario",
+      "eyebrow": "Hoi An · Scenario",
       "title": "Flood risk simulation",
       "close": "Close scenario",
       "building": "Building 54 thousand 3D houses and 2,570 road segments… (first load may take 1–2 minutes)",
@@ -545,9 +545,11 @@
       "strahler": "Stream order (Strahler)",
       "length_km": "Length",
       "name_en": "Other name",
+      "ward": "Ward/commune",
       "type": "Building type",
-      "levels": "Floors (estimated)",
+      "levels": "Floors (derived from height)",
       "height_m": "Height",
+      "h_src": "Height source",
       "area_m2": "Footprint area",
       "ground_m": "Ground elevation",
       "flood_from_m": "Floods when water level reaches",
@@ -680,6 +682,11 @@
       "placeVia": "Place name"
     },
     "enum": {
+      "h_src": {
+        "osm": "OpenStreetMap (tagged height/floors)",
+        "google": "Measured from satellite imagery – Google Open Buildings 2.5D (2023)",
+        "est": "Estimated from building type and footprint area"
+      },
       "station_kind": {
         "river_kttv": "KTTV gauge (data via Da Nang PCTT)",
         "river_auto": "Automatic river gauge",
